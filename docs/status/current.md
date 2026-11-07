@@ -1,11 +1,16 @@
 # Current handoff — 2026-11-07
 
-## Pending 0.59.1
+## Delivered 0.59.1
+
+Both crates are published as 0.59.1. Release
+`5eef59bf7bae6a9b8db602e96bef7a6ba73d60ca` and annotated `backup-v0.59.1`
+were verified on origin/main; qualified source is
+`eaa8b1eb3bda9659435cd5503a30629789409979`. The normal checkout is reconciled.
 
 Adopt published Testkit 0.92.0, source
 `ceb99e1c682a92026a80d743bfccada350319c08`. Its source matches 0.91.0; the
 dependency change aligns client codec errors with Platform 0.24.0 and removes
-Platform 0.23.6 from the development graph. The pending 0.91 adoption already
+Platform 0.23.6 from the development graph. The intervening 0.91 adoption also
 aligned startup/cleanup errors with Host 0.75.0 and removed three older Host
 0.74.4 packages. No unrelated lock versions changed. Production and test graphs
 now share Platform 0.24.0; Testkit remains development-only. Rust 1.99.1,
@@ -25,8 +30,19 @@ through validation. Follow-up review found no further source migration: local
 Testkit setup/check routing and original-selection refusal fixtures pass, along
 with six exact management-request and ten reply codec/bounds cases on the unified
 Platform graph. Their logs remain with the 0.92 adoption evidence.
-Changes are uncommitted; package versions remain 0.59.0. No new complete release
-gate, publication, native macOS or current Canic acceptance is claimed.
+
+Batch `batch-lETTlHeO` passed the complete Linux gate: compiler/snapshot/tools,
+strict Clippy, boundaries/goldens/formatting, tooling/release/hook regressions,
+527 tests, documentation, independent Rust 1.99.1 consumers and archive checks.
+The gate's sole ignored case is explicit online registry preparation; that setup
+and registry-only authenticated capture/restore/application acceptance/terminal
+replay passed separately after publication. Registry checksums and VCS metadata
+match the release; all 324 packaged Rust files (279 Core, 45 Agent) and original
+manifests match the delivered source. Evidence is under
+`target/evidence/deploy-0591/`; published graph/runtime roots are
+`target/tmp/ic-backup-agent-independent-build-2981378-0/` and
+`target/tmp/ic-backup-agent-pocketic-2981378-1/`. No live IC/provider work occurred.
+Native macOS and current Canic acceptance remain separate.
 
 ## Delivered 0.59.0
 
@@ -153,6 +169,10 @@ is under `target/evidence/deploy-05811/`, including its registry-only 2256280
 consumer roots and explicit 2252982 preparation. No live IC/provider work occurred.
 
 ## Preserved delivery and recovery state
+
+Batch `batch-lETTlHeO` is complete/reconciled, not retired. Preserve
+`target/release-frozen/batch-lETTlHeO/`, its source pin and durable receipts under
+`.git/release-state/frozen/batch-lETTlHeO/`. Earlier batches remain intact.
 
 Batch `batch-Cm_12MIv` is complete/reconciled, not retired. Preserve its candidate
 at `target/release-frozen/batch-Cm_12MIv/`, source pin and durable receipts under

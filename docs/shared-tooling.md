@@ -14,8 +14,8 @@ create parents on fresh runs. Backup's four override-aware validation scripts no
 create their selected scratch parent. The 0.31.2 release-editor repair changes
 Shared's own fixture; it supplies no additional consumer payload.
 Host/Cargo/IC catalogs and Rust **1.99.1** are unchanged. Snapshot payloads are
-never locally patched. Delivered **0.59.0** qualifies Host **0.75.0**, Platform
-**0.24.0** and Testkit **0.90.0** through the complete Linux release gate and independent
+never locally patched. Delivered **0.59.1** qualifies Host **0.75.0**, Platform
+**0.24.0** and Testkit **0.92.0** through the complete Linux release gate and independent
 registry-only backup/restore acceptance. [The handoff](status/current.md) records
 the exact source, receipts and separate native macOS/Canic scope. Focused adoption
 and subsequent release evidence retain their distinct identities.
@@ -112,7 +112,7 @@ executable generations and failed bundles; no old selection supplies a fallback.
 
 The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
 The compiler floor and exact development/release toolchain both remain 1.99.1.
-The last delivered qualification selected Testkit **0.90.0** for simulator
+The last delivered qualification selected Testkit **0.92.0** for simulator
 assets/lifecycle and Build **0.74.4** for metadata editing. Incoming lockfile
 updates retain their separate dependency qualification. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 
