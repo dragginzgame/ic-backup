@@ -1,6 +1,11 @@
 # Current handoff — 2026-11-07
 
-## Pending 0.59.2
+## Delivered 0.59.2
+
+Both crates are published as 0.59.2. Release
+`80b01575239c466e426798a0beb8da7040a4243b` and annotated `backup-v0.59.2`
+were verified on origin/main; qualified source is
+`8c02ef0754065abf452334f86a08d11ceef3f12c`. The normal checkout is reconciled.
 
 Adopt published Platform 0.25.0, source
 `0a32e8a2f7977a71062d4edec542bea96d63c508`. Its removal of ordinary facade
@@ -21,8 +26,19 @@ The online registry-preparation case remains ignored. Evidence is under
 `target/evidence/adopt-platform025/`; independent public consumers are under
 `target/msrv-consumers.VHaXXp/`, and the Agent log records the 1337746 candidate
 graph/runtime fixture family. The selected lock stayed stable through validation.
-Changes are uncommitted; package versions remain 0.59.1 with pending 0.59.2 notes.
-No full release gate, publication, native macOS or current Canic acceptance is claimed.
+
+Batch `batch-SH7N5XLz` passed the complete Linux gate: compiler/snapshot/tools,
+strict Clippy, boundaries/goldens/formatting, tooling/release/hook regressions,
+527 tests, documentation, independent Rust 1.99.1 consumers and archive checks.
+The gate's sole ignored case is explicit online registry preparation; that setup
+and registry-only authenticated capture/restore/application acceptance/terminal
+replay passed separately after publication. Registry checksums and VCS metadata
+match the release; all 324 packaged Rust files (279 Core, 45 Agent) and original
+manifests match the delivered source. Evidence is under
+`target/evidence/deploy-0592/`; published graph/runtime roots are
+`target/tmp/ic-backup-agent-independent-build-3706494-0/` and
+`target/tmp/ic-backup-agent-pocketic-3706494-1/`. No live IC/provider work occurred.
+Native macOS and current Canic acceptance remain separate.
 
 ## Delivered 0.59.1
 
@@ -193,6 +209,10 @@ is under `target/evidence/deploy-05811/`, including its registry-only 2256280
 consumer roots and explicit 2252982 preparation. No live IC/provider work occurred.
 
 ## Preserved delivery and recovery state
+
+Batch `batch-SH7N5XLz` is complete/reconciled, not retired. Preserve
+`target/release-frozen/batch-SH7N5XLz/`, its source pin and durable receipts under
+`.git/release-state/frozen/batch-SH7N5XLz/`. Earlier batches remain intact.
 
 Batch `batch-lETTlHeO` is complete/reconciled, not retired. Preserve
 `target/release-frozen/batch-lETTlHeO/`, its source pin and durable receipts under
