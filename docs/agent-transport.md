@@ -1,19 +1,17 @@
 # Direct Agent transport
 
-The maintained product transport is `crates/ic-backup-agent`, using registry
-Platform’s native `agent` feature over the unchanged `ic-agent` 0.49.2
-identity. Reqwest is an explicit consumer dependency for the bounded HTTP client.
+The maintained product transport is `crates/ic-backup-agent`. Platform's native
+`agent` feature owns the SDK selection; [the lockfile](../Cargo.lock) records its
+exact version. Reqwest remains an explicit consumer dependency for bounded HTTP.
 All SDK imports, including `CallResponse` and `AnonymousIdentity`, use Platform;
-there is no direct SDK declaration. The maintainer selected the transport hard cut on 2026-10-08; the complete
-transport was first released in 0.8.0. The core 0.28 hard cut removes the local
-`PublicationError` mirror: `PersistenceError::Publication` directly carries
-`ic_host_fs::durable::NamedWriteError<std::io::Error>`. Consumers matching that
-variant use Host's enum and align direct Host FS with the
-[workspace selection](../Cargo.toml). The ICP transport/probe is retired;
-historical evidence and original journals remain retained. Testkit owns explicit simulator selection/admission
-through the [current setup contract](development.md); shared IC executables
-provide no product backend.
+there is no direct SDK declaration. Core's `PersistenceError::Publication` carries
+Host FS's `NamedWriteError<std::io::Error>` directly. Consumers matching that variant
+align direct Host FS imports with [the workspace selection](../Cargo.toml).
 
+The ICP transport/probe and older transport/error surfaces are retired. Original
+journals and historical evidence remain retained; [the extraction boundary](extraction-boundary.md#direct-agent-transport-hard-cut)
+records that cut. Testkit owns simulator selection/admission through
+[the setup contract](development.md); shared IC executables supply no product backend.
 
 `ic-backup` owns generic models, policy and local persistence; it has no Agent
 runtime dependency. `ic-backup-agent` depends on those original public request
@@ -45,12 +43,12 @@ wrapper. No automatic root-key fetch, query substitution, request-status wait,
 polling or capability-discovery call exists. Each invoked HTTP request has a
 finite deadline and 4 MiB body ceiling. Signed envelopes are at most 3 MiB;
 method replies reuse the existing core limits (metadata/status/list/lifecycle
-1 MiB, data 2 MiB, upload 4 KiB). Opaque application fence replies have a separate
+1 MiB, data 2 MiB, upload 4 KiB). Opaque application replies have a separate
 1 MiB transport ceiling. A per-request timeout is not a complete workflow deadline
 or a hard cycle cap. Trusted signing providers own their own resource/custody limits.
 
 `ReservedUpdate` accepts exact original mutation, recovery observation, transfer
-read, upload, allocation observation, data readback, fence acquisition or opaque
+read, upload, allocation observation, data readback or opaque
 application mutation/observation requests.
 The configured provider rechecks the original current journal and signs canonical
 receiver, effective target, method and argument bytes. Hold the original guarded

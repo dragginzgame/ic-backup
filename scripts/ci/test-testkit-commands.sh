@@ -8,7 +8,7 @@ ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 # shellcheck source=scripts/ci/fixture-lifecycle.sh
 source "$ROOT/scripts/ci/fixture-lifecycle.sh"
-mkdir -p "$ROOT/target"
+mkdir -p "${TMPDIR:-$ROOT/target}"
 fixture="$(fixture_create "${TMPDIR:-$ROOT/target}/testkit-commands.XXXXXX")"
 fixture_complete=false
 finish() {

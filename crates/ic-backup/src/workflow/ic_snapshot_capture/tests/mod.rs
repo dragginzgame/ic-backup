@@ -3,7 +3,7 @@
 use super::*;
 use crate::ops::persistence::AttemptJournalGuard;
 use crate::tests::support::execution_workflow::assert_pending;
-use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::execution_workflow::{prepare_single_operation, workflow};
 use crate::tests::support::provider::{Provider, SuspendedProvider};
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_capture::IcSnapshotCaptureReplyError;
@@ -13,7 +13,7 @@ use crate::{
         attempt_journal::{AttemptJournalRecord, MutationOutcomeRecord, MutationReceiptRequest},
         execution_workflow::ExecutionStageBindingRecord,
         ic_request::IcManagementRequest,
-        operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
+        operation_plan::OperationPlanRecord,
     },
     ops::persistence::BackupLayoutGuard,
     tests::support::ic_mutation::reply,
@@ -62,25 +62,11 @@ fn prepare(
     ExecutionStageBindingRecord,
     OperationPlanRecord,
 ) {
-    let workflow = workflow();
-    let mut child = child_request(0);
-    child.operations = vec![
-        PlannedOperationRecord::new(PlannedOperationRequest {
-            operation_sequence: 42,
-            target: payload.target().into(),
-            request: payload.digest().hash().into(),
-            budget: workflow.stage(0).unwrap().budget().clone(),
-        })
-        .unwrap(),
-    ];
-    let plan = OperationPlanRecord::new(child).unwrap();
-    let (root, layout, binding) = crate::tests::support::execution_workflow::prepare_stage(
+    prepare_single_operation(
         "ic-backup-capture-step",
-        &workflow,
-        0,
-        plan.clone(),
-    );
-    (root, layout, binding, plan)
+        payload.target(),
+        payload.digest().hash(),
+    )
 }
 fn admit(_: &IcMutationRequest<'_>) -> impl std::future::Future<Output = Result<(), Infallible>> {
     std::future::ready(Ok(()))

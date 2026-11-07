@@ -38,11 +38,12 @@ use ic_backup::{
     },
 };
 use ic_backup_agent::{PreparedUpdate, ReservedUpdate};
+use ic_host_fs::durable::{RetainedWriteError, write_retained_at_with};
 use std::{
     collections::BTreeMap,
     fs,
     io::{self, Write},
-    os::unix::fs::{DirBuilderExt, OpenOptionsExt},
+    os::{fd::AsFd, unix::fs::DirBuilderExt},
     path::{Path, PathBuf},
 };
 
@@ -50,6 +51,7 @@ const TOKEN: &str = "independent-original";
 const CHUNK: u64 = 1024 * 1024;
 
 /// Durably retain create-only private evidence under a caller-owned directory.
+/// Failed writes leave the original name and partial bytes for reconciliation.
 /// # Errors
 /// Refuses existing entries and IO failures without overwriting evidence.
 pub fn retain(path: &Path, bytes: &[u8]) -> io::Result<()> {
@@ -59,14 +61,16 @@ pub fn retain(path: &Path, bytes: &[u8]) -> io::Result<()> {
     } else {
         parent
     };
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .open(path)?;
-    file.write_all(bytes)?;
-    file.sync_all()?;
-    fs::File::open(parent)?.sync_all()
+    let name = path.file_name().ok_or(io::ErrorKind::InvalidInput)?;
+    let directory = fs::File::open(parent)?;
+    write_retained_at_with(directory.as_fd(), name, 0o600, |file| file.write_all(bytes))
+        // This example's io::Result keeps the original native kind and OS error.
+        .map_err(|error| match error {
+            RetainedWriteError::Create(source)
+            | RetainedWriteError::Produce(source)
+            | RetainedWriteError::SyncFile(source)
+            | RetainedWriteError::SyncDirectory(source) => source,
+        })
 }
 
 /// Read bounded regular evidence without following a final symlink.
@@ -373,3 +377,6 @@ fn retained(
     }
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests;

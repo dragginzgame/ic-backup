@@ -37,38 +37,36 @@ use restore::check_empty_restore_source;
 
 #[test]
 fn insufficient_allocation_refuses_before_any_source_verification_or_journal_changes() {
-    let root = root();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let original = source_plan();
-    let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = contract::encode_one(upload_values()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let source = retained(&layout, &original, &metadata, &raw);
-    let payload = source
-        .prepare_ic_snapshot_upload_metadata(&original, TOKEN, &metadata)
-        .unwrap();
-    let reply = IcSnapshotUploadReply::decode(
-        &payload,
-        &unhex("4449444c026c01b6b897890f016d7b0100031500ff"),
-    )
-    .unwrap();
-    let workflow: ExecutionWorkflowRecord = data_workflow(&payload, 1);
-    let before = fs::read(source.path()).unwrap();
-    fs::rename(
-        root.join(format!("artifacts/{TARGET}")),
-        root.join("retained-missing-tree"),
-    )
-    .unwrap();
-    assert!(matches!(
-        source.prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &reply, 4),
-        Err(IcSnapshotDataUploadPreparationError::Planning(
-            IcSnapshotDataUploadPlanningError::InsufficientAllowance {
-                required: 6,
-                original: 1
-            }
-        ))
-    ));
-    assert_eq!(fs::read(source.path()).unwrap(), before);
+    with_source(
+        upload_values(),
+        |root, _layout, original, metadata, source| {
+            let payload = source
+                .prepare_ic_snapshot_upload_metadata(original, TOKEN, metadata)
+                .unwrap();
+            let reply = IcSnapshotUploadReply::decode(
+                &payload,
+                &unhex("4449444c026c01b6b897890f016d7b0100031500ff"),
+            )
+            .unwrap();
+            let workflow: ExecutionWorkflowRecord = data_workflow(&payload, 1);
+            let before = fs::read(source.path()).unwrap();
+            fs::rename(
+                root.join(format!("artifacts/{TARGET}")),
+                root.join("retained-missing-tree"),
+            )
+            .unwrap();
+            assert!(matches!(
+                source.prepare_ic_snapshot_data_upload_plan(&workflow, 7, TOKEN, &reply, 4),
+                Err(IcSnapshotDataUploadPreparationError::Planning(
+                    IcSnapshotDataUploadPlanningError::InsufficientAllowance {
+                        required: 6,
+                        original: 1
+                    }
+                ))
+            ));
+            assert_eq!(fs::read(source.path()).unwrap(), before);
+        },
+    );
 }
 
 #[test]

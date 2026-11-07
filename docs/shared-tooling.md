@@ -2,15 +2,20 @@
 
 ## What this adoption means
 
-Shared Tooling **0.31.0**, committed revision
-`74313941af2fce4399bec0e6909ca6229673c3f8`, owns the reviewed engineering
+Shared Tooling **0.31.3**, committed revision
+`d2a2f395bc06b22cb3f18afc7d2978a150726360`, owns the reviewed engineering
 baseline and common setup, formatting, hook, validation and release mechanisms.
-The canonical refresh from `8ae6268` selects **160 payloads**: nine updates,
-two additions, two retirements and 149 unchanged. Host/Cargo/IC catalogs and Rust
-**1.99.1** are unchanged. Snapshot payloads are never locally patched. The
-Platform 0.23.4/Testkit 0.89.3 lock selection is qualified by delivered **0.58.10**:
-the complete Linux release gate and registry-only backup/restore acceptance pass.
-This focused tooling review and the delivery evidence retain their separate scopes.
+The canonical refresh from `7431394` selects **160 payloads**: three updates and
+157 unchanged, with no additions or retirements. It adopts Bash 3.2 checksum
+parsing, missing-scratch diagnostics and the rule requiring output owners to
+create parents on fresh runs. Backup's four override-aware validation scripts now
+create their selected scratch parent. The 0.31.2 release-editor repair changes
+Shared's own fixture; it supplies no additional consumer payload.
+Host/Cargo/IC catalogs and Rust **1.99.1** are unchanged. Snapshot payloads are
+never locally patched. The current Testkit **0.90.0** request-budget adoption has
+focused consumer evidence in [the handoff](status/current.md); the complete Linux
+release gate and registry-only acceptance for Platform 0.23.4/Testkit 0.89.3 belong
+to delivered **0.58.10** and do not qualify this new selection.
 
 Backup owns product contracts, qualification selection, the ordered Testkit setup
 extension, release metadata adapter and exact resume receipt checks. Owner CI or
@@ -104,7 +109,7 @@ executable generations and failed bundles; no old selection supplies a fallback.
 
 The common host/Rust catalogs belong to [ci/tool-versions.env](../ci/tool-versions.env).
 The compiler floor and exact development/release toolchain both remain 1.99.1.
-The last delivered qualification selected Testkit **0.89.0** for simulator
+The last delivered qualification selected Testkit **0.89.3** for simulator
 assets/lifecycle and Build **0.74.4** for metadata editing. Incoming lockfile
 updates retain their separate dependency qualification. [The Platform boundary](ic-platform.md) owns dependency compatibility.
 

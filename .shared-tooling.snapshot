@@ -1,8 +1,8 @@
 # Shared Tooling snapshot v1
-# version	0.31.0
+# version	0.31.3
 format	1
 source	https://github.com/dragginzgame/shared-tooling
-revision	74313941af2fce4399bec0e6909ca6229673c3f8
+revision	d2a2f395bc06b22cb3f18afc7d2978a150726360
 # entrypoint	docs/verification-helpers.md
 # entrypoint	scripts/ci/check-documentation-links.pl
 # entrypoint	scripts/ci/test-documentation-links.pl
@@ -130,7 +130,7 @@ file	68b4c6d68b807a6c491404654b68203cff29e8a6af4dd48a6fd0e2906ef0d313	-	docs/pri
 file	457fd38e0073c91ba470b918d4facd9faac3c5200ebd38c97e9d6b76acdaea55	-	docs/principles/simplicity-and-maintainability.md
 file	ca7f97ab18edabde94fb209480cad84070f68e403feea4558a63501b02e517e1	-	docs/consuming-snapshots.md
 file	162617ce20162932ec03c925eebc88d699c147d63d4602bdb957e3df38692d59	-	docs/supported-hosts.md
-file	163ee69a2de9d371432462e47bdf09d9d1655e590567a2ed386ef7ba56d896c0	x	scripts/ci/verify-file-checksum.sh
+file	578a5f7217e378280fe378328d39e4b7dcea653bd868159b57362461bd4e8555	x	scripts/ci/verify-file-checksum.sh
 file	23c23beef41fda5f0acc1a404e40b04e5c362399a415524f16dbc4899120a5dd	x	scripts/ci/verify-shared-tooling-snapshot.sh
 file	476e5bd1acf2033b75eed5eed080e4d306fa81bc3519eef7b79239294ab637e2	x	scripts/ci/run-validation-targets.sh
 file	8c8ac6647ff62eec4393676e6a314a1bf1d23854c16337154639b03b9f506302	x	scripts/ci/test-validation-target-runner.sh
@@ -219,7 +219,7 @@ file	3eccf509c260f7471d138b79f8edbe6ff86616a471e7d09caea029e92d408b55	-	docs/ci-
 file	c8693a4bc058f31c1592c86e7037f0ed02a9719a8a0269038e0a45e16ca93c0b	-	scripts/ci/validation-input-checkpoint.pl
 file	1fd11f64f7698c1b5b17049d2b1551daba3af33bbdaba92228d7fc1f743e9055	-	scripts/ci/release-validation-plan.pl
 file	ec0ee173807556f931a08a173fc4e38397f26bab00539b748b829cb24d310138	x	scripts/ci/prepare-script-fixture.sh
-file	c19319d552bab2fc3bde4efa10a313e47f01dbef1494137c6a8820142d93e34b	-	rules/engineering-details.md
+file	ee7c0f9db3b62d06ef1c70cec7d0e3b9c0e502652425f35d51b547b58c2b5a67	-	rules/engineering-details.md
 file	e3aed908dd9b08bf93255328bb056bed57298dab39944e3726aad2726548e653	-	rules/rpc-budgets.md
 file	e3a3bf0428523b590be16ec8a697d17105432e70f1a495e156c7e37a2dbe873a	-	docs/cargo-publication.md
 file	a8dcf0bfa4f93b0cff1f891823b8ce20e039fca5f8ebb0996c83c8409a35eed0	-	docs/release-group-validation.md
@@ -229,7 +229,7 @@ file	d2670d079e6fe54ccb72f0f6fab328723bf1baf7829b852ba8157cc9ddebd27b	x	scripts/
 file	40c83cfc937b5115c3e7eb10db0194c455cc5179e465cdd7d62cb56d305c3e27	-	scripts/ci/check-retained-state.pl
 file	c8a83509add7a7e7ef5a3932db105cd7d4207f486ad9c382e36ca96dda25ae5f	-	ci/examples/platform-owner-boundaries.json
 file	ec5bb55c605efae8b2acce32fedb7e912ace1cbe375b9962ef187bb6d7191499	-	scripts/ci/select-rust-formatting-sources.sh
-file	0e656238706f9a423f1b3c1e22d625e249365b3974a0eb4cffbff7e1b0d2136a	-	scripts/dev/cloc-classify.pl
+file	07506742c2878f3f8c93a78bbbb6292259a8aaaa01c6bbf15d254884206a1431	-	scripts/dev/cloc-classify.pl
 file	f06fab74d51ec386133feeda6cd26509e8a9797ae14d93afdf5fb7369b0141a0	-	scripts/dev/tool-store-maintenance.pl
 file	172ab2415f4816bdad7955720ef45445b4bd81283c928d7ef2ee3de9064b69b5	x	scripts/ci/collect-tool-evidence.sh
 file	d517344568e02a638cd19b99bfbcc63f000a0cf1df7b7713f901f52518b1e2ee	x	scripts/ci/formatting-evidence.sh

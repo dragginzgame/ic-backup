@@ -3,7 +3,7 @@
 use super::*;
 use crate::policy::ResponseIdentityMismatch;
 use crate::tests::support::execution_workflow::assert_pending;
-use crate::tests::support::execution_workflow::{child_request, workflow};
+use crate::tests::support::execution_workflow::{prepare_single_operation, workflow};
 use crate::tests::support::provider::{Provider, SuspendedProvider};
 use crate::tests::support::ready::ready;
 use crate::workflow::ic_snapshot_transfer_read::IcSnapshotTransferReadReplyError;
@@ -14,7 +14,7 @@ use crate::{
         execution_workflow::ExecutionStageBindingRecord,
         ic_snapshot_data::IcSnapshotDataRequest,
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
-        operation_plan::{OperationPlanRecord, PlannedOperationRecord, PlannedOperationRequest},
+        operation_plan::OperationPlanRecord,
     },
     ops::persistence::BackupLayoutGuard,
 };
@@ -36,25 +36,11 @@ fn prepare(
     ExecutionStageBindingRecord,
     OperationPlanRecord,
 ) {
-    let workflow = workflow();
-    let mut child = child_request(0);
-    child.operations = vec![
-        PlannedOperationRecord::new(PlannedOperationRequest {
-            operation_sequence: 42,
-            target: payload.target().into(),
-            request: payload.digest().hash().into(),
-            budget: workflow.stage(0).unwrap().budget().clone(),
-        })
-        .unwrap(),
-    ];
-    let plan = OperationPlanRecord::new(child).unwrap();
-    let (root, layout, binding) = crate::tests::support::execution_workflow::prepare_stage(
+    prepare_single_operation(
         "ic-backup-transfer-step",
-        &workflow,
-        0,
-        plan.clone(),
-    );
-    (root, layout, binding, plan)
+        payload.target(),
+        payload.digest().hash(),
+    )
 }
 fn admit(
     _: &IcSnapshotTransferReadRequest<'_, '_>,

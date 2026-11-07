@@ -18,14 +18,18 @@ impl ControllerSet {
     /// Normalize and sort exact principals; equivalent duplicate entries reject.
     /// # Errors
     /// Rejects excessive counts, malformed principals and canonical duplicates.
-    pub fn new(principals: Vec<String>) -> Result<Self, ControlObservationError> {
-        let principals = super::principal::canonical_set(
-            principals,
-            MAX_CONTROLLERS,
-            || ControlObservationError::TooManyControllers,
-            || ControlObservationError::InvalidPrincipal,
-            || ControlObservationError::DuplicateController,
-        )?;
+    pub fn new(mut principals: Vec<String>) -> Result<Self, ControlObservationError> {
+        if principals.len() > MAX_CONTROLLERS {
+            return Err(ControlObservationError::TooManyControllers);
+        }
+        for principal in &mut principals {
+            *principal = super::principal::canonical_text(principal)
+                .ok_or(ControlObservationError::InvalidPrincipal)?;
+        }
+        principals.sort();
+        if principals.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err(ControlObservationError::DuplicateController);
+        }
         Ok(Self { principals })
     }
     /// Read canonical controllers; ordering grants no routing or lifecycle semantics.

@@ -99,8 +99,7 @@ impl Backend {
             digest.sha256.to_string().as_bytes(),
         )
         .expect("retain private original server identity");
-        let builder = PocketIcBuilder::new()
-            .with_max_request_time_ms(Some(60_000))
+        let builder = PocketIcBuilder::new(Duration::from_secs(60))
             .with_state_dir(root.join("simulator"))
             .with_application_subnet();
         let managed = PocketIcStartupConfig::Spawn {

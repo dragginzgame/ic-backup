@@ -1,16 +1,16 @@
 //! Real guarded source descriptors, unchanged journals and exact SDK upload bytes.
 use ic_platform::candid::contract;
+mod fixture;
 mod plan;
+use super::file_change::Replacement;
 use super::*;
 use crate::tests::support::ic_snapshot_metadata::raw as upload_raw;
 use crate::{
     model::ic_snapshot_upload::{IcSnapshotUploadError, IcSnapshotUploadRequest},
     ops::persistence::{IcSnapshotUploadArtifactError, create_operation_plan},
-    tests::support::{
-        create_private_fifo,
-        ic_snapshot_upload::{DESTINATION_ID, source_plan},
-    },
+    tests::support::ic_snapshot_upload::{DESTINATION_ID, source_plan},
 };
+use fixture::with_source;
 use ic_platform::management_canister_types::{
     UploadCanisterSnapshotDataArgs, UploadCanisterSnapshotMetadataArgs,
 };
@@ -29,85 +29,80 @@ fn upload_values() -> ReadCanisterSnapshotMetadataResult {
 
 #[test]
 fn fresh_metadata_and_all_region_chunk_bytes_preserve_original_records_and_empty_values() {
-    let root = root();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let plan = source_plan();
-    let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = contract::encode_one(upload_values()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let guard = retained(&layout, &plan, &metadata, &raw);
-    let journal_bytes = fs::read(guard.path()).unwrap();
-    let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
-    let upload = guard
-        .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
-        .unwrap();
-    let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
-        upload.arguments(),
-        crate::tests::support::WIRE_ORACLE_LIMITS,
-    )
-    .unwrap();
-    assert_eq!(args.replace_snapshot, None);
-    assert_eq!(args.globals.len(), metadata.metadata().globals.len());
-    assert_eq!(
-        upload.source_checksum(),
-        guard.record().unwrap().artifacts()[0].checksum().unwrap()
-    );
-    let cases = [
-        (
-            SnapshotDataKind::WasmModule { offset: 1, size: 3 },
-            vec![8, 10, 10],
-        ),
-        (
-            SnapshotDataKind::WasmMemory { offset: 1, size: 2 },
-            vec![7, 7],
-        ),
-        (
-            SnapshotDataKind::StableMemory { offset: 0, size: 1 },
-            vec![9],
-        ),
-        (
-            SnapshotDataKind::WasmChunk {
-                hash: metadata.metadata().wasm_chunk_store[0].hash.clone(),
-            },
-            vec![0, 255, 17],
-        ),
-        (
-            SnapshotDataKind::WasmChunk {
-                hash: metadata.metadata().wasm_chunk_store[1].hash.clone(),
-            },
-            vec![],
-        ),
-    ];
-    for (kind, expected) in cases {
-        let payload = guard
-            .prepare_source_fixture_chunk(&plan, TOKEN, &upload, DESTINATION_ID, kind)
+    with_source(upload_values(), |root, layout, plan, metadata, guard| {
+        let journal_bytes = fs::read(guard.path()).unwrap();
+        let plan_bytes = fs::read(root.join("operation-plan.json")).unwrap();
+        let upload = guard
+            .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
             .unwrap();
-        let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
-            payload.arguments(),
+        let args: UploadCanisterSnapshotMetadataArgs = ic_platform::candid::decode_one(
+            upload.arguments(),
             crate::tests::support::WIRE_ORACLE_LIMITS,
         )
         .unwrap();
-        assert_eq!(args.chunk, expected);
-        assert_eq!(args.snapshot_id, DESTINATION_ID);
-        assert_eq!(args.canister_id.to_text(), TARGET);
-        assert_eq!(payload.source_checksum(), upload.source_checksum());
-        assert_eq!(fs::read(guard.path()).unwrap(), journal_bytes);
+        assert_eq!(args.replace_snapshot, None);
+        assert_eq!(args.globals.len(), metadata.metadata().globals.len());
         assert_eq!(
-            fs::read(root.join("operation-plan.json")).unwrap(),
-            plan_bytes
+            upload.source_checksum(),
+            guard.record().unwrap().artifacts()[0].checksum().unwrap()
         );
-    }
-    drop(guard);
-    let reopened = DownloadJournalGuard::open(&layout, plan.digest().hash()).unwrap();
-    assert_eq!(
-        reopened
-            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
-            .unwrap()
-            .binding_digest(),
-        upload.binding_digest()
-    );
-    assert!(reopened.record().unwrap().resume_view().is_complete);
-    assert_eq!(fs::read(reopened.path()).unwrap(), journal_bytes);
+        let cases = [
+            (
+                SnapshotDataKind::WasmModule { offset: 1, size: 3 },
+                vec![8, 10, 10],
+            ),
+            (
+                SnapshotDataKind::WasmMemory { offset: 1, size: 2 },
+                vec![7, 7],
+            ),
+            (
+                SnapshotDataKind::StableMemory { offset: 0, size: 1 },
+                vec![9],
+            ),
+            (
+                SnapshotDataKind::WasmChunk {
+                    hash: metadata.metadata().wasm_chunk_store[0].hash.clone(),
+                },
+                vec![0, 255, 17],
+            ),
+            (
+                SnapshotDataKind::WasmChunk {
+                    hash: metadata.metadata().wasm_chunk_store[1].hash.clone(),
+                },
+                vec![],
+            ),
+        ];
+        for (kind, expected) in cases {
+            let payload = guard
+                .prepare_source_fixture_chunk(plan, TOKEN, &upload, DESTINATION_ID, kind)
+                .unwrap();
+            let args: UploadCanisterSnapshotDataArgs = ic_platform::candid::decode_one(
+                payload.arguments(),
+                crate::tests::support::WIRE_ORACLE_LIMITS,
+            )
+            .unwrap();
+            assert_eq!(args.chunk, expected);
+            assert_eq!(args.snapshot_id, DESTINATION_ID);
+            assert_eq!(args.canister_id.to_text(), TARGET);
+            assert_eq!(payload.source_checksum(), upload.source_checksum());
+            assert_eq!(fs::read(guard.path()).unwrap(), journal_bytes);
+            assert_eq!(
+                fs::read(root.join("operation-plan.json")).unwrap(),
+                plan_bytes
+            );
+        }
+        drop(guard);
+        let reopened = DownloadJournalGuard::open(layout, plan.digest().hash()).unwrap();
+        assert_eq!(
+            reopened
+                .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
+                .unwrap()
+                .binding_digest(),
+            upload.binding_digest()
+        );
+        assert!(reopened.record().unwrap().resume_view().is_complete);
+        assert_eq!(fs::read(reopened.path()).unwrap(), journal_bytes);
+    });
 }
 
 #[test]
@@ -133,155 +128,140 @@ fn changed_unsafe_missing_and_extra_sources_reject_with_original_evidence_retain
         SourceFault::Metadata,
         SourceFault::Layout,
     ] {
-        let root = root();
-        let layout = BackupLayoutGuard::acquire(&root).unwrap();
-        let plan = source_plan();
-        let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-        let raw = contract::encode_one(upload_values()).unwrap();
-        let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-        let guard = retained(&layout, &plan, &metadata, &raw);
-        let upload = guard
-            .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
-            .unwrap();
-        let before = fs::read(guard.path()).unwrap();
-        let directory = root.join(format!("artifacts/{TARGET}"));
-        let module = directory.join(REGIONS[0]);
-        if matches!(
-            case,
-            SourceFault::Missing
-                | SourceFault::Symlink
-                | SourceFault::Fifo
-                | SourceFault::Directory
-        ) {
-            fs::remove_file(&module).unwrap();
-        }
-        match case {
-            SourceFault::Changed => fs::write(&module, [42; 5]).unwrap(),
-            SourceFault::Symlink => symlink(directory.join(REGIONS[1]), &module).unwrap(),
-            SourceFault::Fifo => create_private_fifo(&module),
-            SourceFault::Directory => fs::create_dir(&module).unwrap(),
-            SourceFault::Extra => fs::write(directory.join("extra"), []).unwrap(),
-            SourceFault::Metadata => fs::write(directory.join("metadata.candid"), []).unwrap(),
-            SourceFault::Layout => {
-                fs::rename(
-                    root.join("operation-plan.json"),
-                    root.join("retained-plan.json"),
-                )
+        with_source(upload_values(), |root, _layout, plan, metadata, guard| {
+            let upload = guard
+                .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
                 .unwrap();
+            let before = fs::read(guard.path()).unwrap();
+            let directory = root.join(format!("artifacts/{TARGET}"));
+            let module = directory.join(REGIONS[0]);
+            match case {
+                SourceFault::Changed => fs::write(&module, [42; 5]).unwrap(),
+                SourceFault::Symlink => {
+                    Replacement::Symlink.apply(&module, &root.join("retained-module"))
+                }
+                SourceFault::Fifo => {
+                    Replacement::Fifo.apply(&module, &root.join("retained-module"))
+                }
+                SourceFault::Directory => {
+                    Replacement::Directory.apply(&module, &root.join("retained-module"))
+                }
+                SourceFault::Extra => fs::write(directory.join("extra"), []).unwrap(),
+                SourceFault::Metadata => fs::write(directory.join("metadata.candid"), []).unwrap(),
+                SourceFault::Layout => {
+                    fs::rename(
+                        root.join("operation-plan.json"),
+                        root.join("retained-plan.json"),
+                    )
+                    .unwrap();
+                }
+                SourceFault::Missing => {
+                    Replacement::Missing.apply(&module, &root.join("retained-module"))
+                }
             }
-            SourceFault::Missing => {}
-        }
-        assert!(matches!(
-            guard.prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata),
-            Err(IcSnapshotUploadArtifactError::Artifact(_))
-        ));
-        assert!(matches!(
-            guard.prepare_source_fixture_chunk(
-                &plan,
-                TOKEN,
-                &upload,
-                DESTINATION_ID,
-                SnapshotDataKind::WasmModule { offset: 0, size: 1 }
-            ),
-            Err(IcSnapshotUploadArtifactError::Artifact(_))
-        ));
-        assert_eq!(fs::read(guard.path()).unwrap(), before);
-        assert_eq!(
-            guard.record().unwrap().artifacts()[0].state(),
-            ArtifactStateRecord::Durable
-        );
-        if case == SourceFault::Missing {
-            assert!(!module.exists());
-        }
-        if case == SourceFault::Changed {
-            assert_eq!(fs::read(module).unwrap(), [42; 5]);
-        }
+            assert!(matches!(
+                guard.prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata),
+                Err(IcSnapshotUploadArtifactError::Artifact(_))
+            ));
+            assert!(matches!(
+                guard.prepare_source_fixture_chunk(
+                    plan,
+                    TOKEN,
+                    &upload,
+                    DESTINATION_ID,
+                    SnapshotDataKind::WasmModule { offset: 0, size: 1 }
+                ),
+                Err(IcSnapshotUploadArtifactError::Artifact(_))
+            ));
+            assert_eq!(fs::read(guard.path()).unwrap(), before);
+            assert_eq!(
+                guard.record().unwrap().artifacts()[0].state(),
+                ArtifactStateRecord::Durable
+            );
+            if case == SourceFault::Missing {
+                assert!(!module.exists());
+            }
+            if case == SourceFault::Changed {
+                assert_eq!(fs::read(module).unwrap(), [42; 5]);
+            }
+        });
     }
 }
 
 #[test]
 fn declared_source_drift_invalid_destination_ranges_and_unavailable_globals_reject() {
-    let root = root();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let plan = source_plan();
-    let request = IcSnapshotMetadataRequest::new(TARGET, &[0, 255, 17]).unwrap();
-    let raw = contract::encode_one(upload_values()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let guard = retained(&layout, &plan, &metadata, &raw);
-    let before = fs::read(guard.path()).unwrap();
-    let upload = guard
-        .prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata)
+    with_source(upload_values(), |_root, _layout, plan, metadata, guard| {
+        let before = fs::read(guard.path()).unwrap();
+        let upload = guard
+            .prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata)
+            .unwrap();
+        let wrong = IcSnapshotUploadRequest::metadata(
+            plan,
+            metadata,
+            &ArtifactChecksumRecord::from_bytes(b"different tree"),
+        )
         .unwrap();
-    let wrong = IcSnapshotUploadRequest::metadata(
-        &plan,
-        &metadata,
-        &ArtifactChecksumRecord::from_bytes(b"different tree"),
-    )
-    .unwrap();
-    assert!(matches!(
-        guard.prepare_source_fixture_chunk(
-            &plan,
-            TOKEN,
-            &wrong,
-            DESTINATION_ID,
-            SnapshotDataKind::WasmModule { offset: 0, size: 1 }
-        ),
-        Err(IcSnapshotUploadArtifactError::SourceMismatch)
-    ));
-    let other = crate::tests::support::ic_snapshot_upload::plan(&"12".repeat(32));
-    assert!(matches!(
-        guard.prepare_source_fixture_chunk(
-            &other,
-            TOKEN,
-            &upload,
-            DESTINATION_ID,
-            SnapshotDataKind::WasmModule { offset: 0, size: 1 }
-        ),
-        Err(IcSnapshotUploadArtifactError::SourceMismatch)
-    ));
-    assert!(matches!(
-        guard.prepare_source_fixture_chunk(
-            &plan,
-            TOKEN,
-            &upload,
-            &[0, 255, 17],
-            SnapshotDataKind::WasmModule { offset: 0, size: 1 }
-        ),
-        Err(IcSnapshotUploadArtifactError::Upload(
-            IcSnapshotUploadError::DestinationReusesSource
-        ))
-    ));
-    assert!(matches!(
-        guard.prepare_source_fixture_chunk(
-            &plan,
-            TOKEN,
-            &upload,
-            DESTINATION_ID,
-            SnapshotDataKind::WasmModule { offset: 5, size: 1 }
-        ),
-        Err(IcSnapshotUploadArtifactError::Upload(
-            IcSnapshotUploadError::Data(_)
-        ))
-    ));
-    assert!(matches!(
-        guard.prepare_ic_snapshot_upload_metadata(&plan, "wrong token", &metadata),
-        Err(IcSnapshotUploadArtifactError::Artifact(_))
-    ));
-    assert_eq!(fs::read(guard.path()).unwrap(), before);
-
-    let root = super::root();
-    let layout = BackupLayoutGuard::acquire(&root).unwrap();
-    let raw = contract::encode_one(values()).unwrap();
-    let metadata = IcSnapshotMetadataReply::decode(&request, &raw).unwrap();
-    let guard = retained(&layout, &plan, &metadata, &raw);
-    let before = fs::read(guard.path()).unwrap();
-    assert!(matches!(
-        guard.prepare_ic_snapshot_upload_metadata(&plan, TOKEN, &metadata),
-        Err(IcSnapshotUploadArtifactError::Upload(
-            IcSnapshotUploadError::UnavailableGlobal
-        ))
-    ));
-    assert_eq!(fs::read(guard.path()).unwrap(), before);
+        assert!(matches!(
+            guard.prepare_source_fixture_chunk(
+                plan,
+                TOKEN,
+                &wrong,
+                DESTINATION_ID,
+                SnapshotDataKind::WasmModule { offset: 0, size: 1 }
+            ),
+            Err(IcSnapshotUploadArtifactError::SourceMismatch)
+        ));
+        let other = crate::tests::support::ic_snapshot_upload::plan(&"12".repeat(32));
+        assert!(matches!(
+            guard.prepare_source_fixture_chunk(
+                &other,
+                TOKEN,
+                &upload,
+                DESTINATION_ID,
+                SnapshotDataKind::WasmModule { offset: 0, size: 1 }
+            ),
+            Err(IcSnapshotUploadArtifactError::SourceMismatch)
+        ));
+        assert!(matches!(
+            guard.prepare_source_fixture_chunk(
+                plan,
+                TOKEN,
+                &upload,
+                &[0, 255, 17],
+                SnapshotDataKind::WasmModule { offset: 0, size: 1 }
+            ),
+            Err(IcSnapshotUploadArtifactError::Upload(
+                IcSnapshotUploadError::DestinationReusesSource
+            ))
+        ));
+        assert!(matches!(
+            guard.prepare_source_fixture_chunk(
+                plan,
+                TOKEN,
+                &upload,
+                DESTINATION_ID,
+                SnapshotDataKind::WasmModule { offset: 5, size: 1 }
+            ),
+            Err(IcSnapshotUploadArtifactError::Upload(
+                IcSnapshotUploadError::Data(_)
+            ))
+        ));
+        assert!(matches!(
+            guard.prepare_ic_snapshot_upload_metadata(plan, "wrong token", metadata),
+            Err(IcSnapshotUploadArtifactError::Artifact(_))
+        ));
+        assert_eq!(fs::read(guard.path()).unwrap(), before);
+    });
+    with_source(values(), |_root, _layout, plan, metadata, guard| {
+        let before = fs::read(guard.path()).unwrap();
+        assert!(matches!(
+            guard.prepare_ic_snapshot_upload_metadata(plan, TOKEN, metadata),
+            Err(IcSnapshotUploadArtifactError::Upload(
+                IcSnapshotUploadError::UnavailableGlobal
+            ))
+        ));
+        assert_eq!(fs::read(guard.path()).unwrap(), before);
+    });
 }
 
 #[test]

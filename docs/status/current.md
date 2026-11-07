@@ -1,127 +1,125 @@
-# Current handoff — 2026-11-06
+# Current handoff — 2026-11-07
+
+## Pending Testkit and Shared Tooling adoption
+
+Testkit **0.90.0** from `c03161b9f1395c343756fda6b8721e957798c3df` is selected
+through the root catalog/registry lock. Both managed builders pass explicit
+60-second request budgets; 120-second startup bounds, original custody and
+same-ID restore semantics remain. Other incoming package selections are preserved;
+three unused packages and obsolete dependency edges leave the graph.
+
+Shared **0.31.3** at `d2a2f395bc06b22cb3f18afc7d2978a150726360` exports 160
+payloads: three updates, 157 unchanged. Provenance, actual Make checksum-NUL
+refusal, dependency admission, fresh-parent LOC, Testkit routing and CI-evidence
+callers pass. Four local override-aware scripts create their scratch parents.
+The exact Testkit CLI/server is prepared and admitted offline. Strict Clippy
+passes for Core's PocketIC target and Agent's standalone example on Rust 1.99.1.
+Five installed acceptance cases pass: three Core capture/load-recovery cases and
+two Agent cases covering pending authority and independent normal-consumer
+capture/restore/acceptance/terminal replay. Evidence is in
+`target/evidence/adopt-testkit090-shared0313/`, including exact registry archive
+checksum/VCS provenance. [#79](https://github.com/dragginzgame/ic-backup/issues/79)
+meets its migration and focused Linux acceptance; leave it open until these
+uncommitted changes land. Native macOS and full release qualification remain
+separate. No delivery or issue-state change has occurred.
+
+## Pending cleanup
+
+Tests share settlement faults, workflow declarations, native replay setup,
+completed upload sources and positive single-operation plans. Original-preserving
+filesystem replacements remain distinct from in-place corruption; decoding,
+coverage, spent-attempt and recovery assertions remain independent.
+
+The standalone example delegates private evidence writes to Host FS's retained
+writer, preserving partial entries and native I/O errors. Test support reuses it.
+Endpoint admission owns its rejection matrix with one public-constructor case;
+the copied Host Process fragmented-capture regression is retired while required
+Content-Length and retained HTTP diagnostics remain.
+
+Restore-target, fence/context and controller-set admission lives with its concrete
+owner. Three private helper modules and their generic callbacks/intermediate
+errors are removed, preserving validation order and public errors. Shared principal
+parsing and distinct JSON/Candid visitors remain.
+
+Guides link canonical coordination/settlement contracts and separate current
+Platform, Agent and simulator behavior from exact-revision history. Simulator
+library admission is distinct from the CLI/tool check. Retired fence recovery and
+original evidence remain. The release fixture map separates frozen delivery from
+historical adapters and retains its original review/hash.
+
+Focused Linux checks use Rust **1.99.1**:
+
+| Batch | Passing checks | Evidence beneath `target/evidence/` |
+| --- | --- | --- |
+| Core tests/contracts | 29 selected tests; strict Clippy for Core library and metadata/data targets | `cleanup-20261107/` |
+| Artifact fixtures | 13 upload/source/restore-source tests | `artifact-cleanup-20261107/` |
+| Agent retention/admission | 18 endpoint, retention, HTTP and independent normal-consumer journey tests; strict Clippy for Agent library and standalone example | `agent-cleanup-20261107/` |
+| Restore/controller localization | 30 controller, restore, lifecycle codec and retained-evidence tests; strict all-feature Core library Clippy | `restore-localization-20261107/` |
+| Public plan fixtures/simulator guide | Both operation-plan and restore-safety integration tests; strict all-feature Clippy for those targets | `plan-fixture-cleanup-20261107/` |
+
+Formatting, edited Markdown links, JSON and diff checks pass. The initial Agent
+HTTP check's sandbox loopback denial is retained; its local-network retry passes.
+The independent consumer exercised actual managed PocketIC, normal dependencies,
+capture/restore, application acceptance and effect-free terminal replay.
+
+Cleanup preserved its incoming lockfile byte-for-byte and its focused receipts
+used Platform **0.23.5** and Testkit **0.89.4**. The adoption above has its own
+evidence. Core/Agent APIs
+and v1 bytes/hashes are unchanged; the example writer is the maintained behavior
+change. Native macOS, current Canic acceptance and full release qualification
+remain separate. Cleanup has caused no live IC or publication effect.
 
 ## Delivered 0.58.10 through Shared release batches
 
-Both **ic-backup 0.58.10** and **ic-backup-agent 0.58.10** are published on crates.io.
-Release `b1aa039c68621af7c89570c78c1f0e38f601bed2` and annotated
-`backup-v0.58.10` are on `origin/main`; qualified source is
-`8dd5949bb438e5f69bbb8afc14626b6553281916`. Registry readback confirms non-yanked
-versions, matching checksums/VCS provenance and all **330 packaged Rust files**
-matching the release commit. Remote refs matched before the documentation handoff.
+Both **ic-backup 0.58.10** and **ic-backup-agent 0.58.10** are published. Release
+`b1aa039c68621af7c89570c78c1f0e38f601bed2` and annotated `backup-v0.58.10` were
+verified on `origin/main`; qualified source is
+`8dd5949bb438e5f69bbb8afc14626b6553281916`. Registry readback verified checksums,
+VCS provenance and all **330 packaged Rust files** against the release commit.
 
 Shared **0.31.0** at `74313941af2fce4399bec0e6909ca6229673c3f8` supplies 160
-canonical payloads and the integrated checksum fixes. Schema-2 batch
-**`batch-DM8XPVj6`** captured the source, ran the complete gate, committed/tagged,
-atomically pushed and invoked its saved two-crate publication hook. The initial
-preflight refused a busy shared tool-store lock before validation/preparation;
-after its owner released it, exact batch resume completed on the original source.
-The normal checkout was fast-forwarded through Shared's reconciliation command.
+canonical payloads. Schema-2 batch **`batch-DM8XPVj6`** completed the full gate,
+commit/tag, atomic push, publication and normal-checkout reconciliation. Its first
+busy tool-store refusal and exact resume evidence remain retained. The batch is
+**complete and reconciled, not retired**.
 
-The full Linux gate passes strict all-target/all-feature Clippy, **544 tests**,
-documentation, tooling/release/hook regressions, independent normal consumers and
-archive verification. Post-publication cache preparation and registry-only
-authenticated capture/restore, application acceptance and effect-free terminal
-replay also pass against the exact published pair. The one online setup case stays
-ignored in normal tests. Native macOS, Canic acceptance and hosted CI are separate.
+The delivered Linux gate passed strict Clippy, **544 tests**, docs/tooling/release/
+hook regressions, independent consumers and archive checks. Registry-only
+capture/restore, acceptance and terminal replay also passed. Qualified selections
+were Platform **0.23.4**, Types **0.18.2**, Testkit **0.89.3** with its exact CLI,
+Host/Build **0.74.4**, PocketIC **16.1.0** and Rust **1.99.1**. Native macOS,
+Canic acceptance and hosted CI were separate.
 
-Qualified selections are Platform **0.23.4**, Platform Types **0.18.2**, Testkit
-**0.89.3** with its exact CLI, Host/Build **0.74.4** and PocketIC **16.1.0**.
-Dependency archive checksums match the lock; Platform `31649c1` has unchanged
-production source from 0.23.3, and Testkit `5d9cdbf` changes pool lifecycle behavior
-unused by Backup. Minimum/pinned Rust **1.99.1**, product APIs, v1 bytes/hashes and
-explicit server/application custody remain unchanged.
-
-Hooks and docs use `RELEASE_GROUPS`, `RELEASE_PUBLISH_TARGET`, `RELEASE_SETUP_TARGET`,
-`RELEASE_SETUP_MODE` and `RELEASE_BATCH_ACTIVE`; retired settings refuse even empty.
-`run-release-batch.pl`/`release-batches.md` replace their old names. Schema-2 batch
-journals require the recorded publication commit, with no HEAD inference. There
-are no real pre-0.31 batch journals here; finish any external older batch with its original
-tooling rather than rewriting schemas. Recovery storage paths/source pins stay.
-Backup now enables the shared frozen workflow for one coordinated `backup` group.
-Workspace-version inheritance and the root changelog remain; the root catalog now
-includes both members. New tags/plans carry the `backup-` prefix. Historical `v…`
-recovery explicitly selects an empty group in its original qualified checkout.
-Candidate setup prepares tools before version lookup; recovery checks them offline.
-Exact v1 receipts and mandatory resumed-validation checks remain unchanged.
-Publication is explicit and requires the exact delivered commit/tag/receipt.
-
-Delivery logs, registry artifacts/provenance, refs and reconciliation evidence are
-in `target/evidence/deploy-05810/`. The managed checkout remains
-`target/release-frozen/batch-DM8XPVj6/`; its Git store, exact validation/plan and
-publication receipts remain under `.git/release-state/frozen/batch-DM8XPVj6/`.
-The batch is complete and reconciled, **not retired**. Preserve its source pin,
-records, artifacts and failure evidence until explicit safe disposition.
-Registry consumer evidence is beneath that checkout's `target/tmp/`, in
+Preserve `target/evidence/deploy-05810/`, the managed checkout
+`target/release-frozen/batch-DM8XPVj6/` and durable records beneath
+`.git/release-state/frozen/batch-DM8XPVj6/`, including its source pin, exact
+validation/plan/publication receipts and failed evidence. Registry consumer roots
+beneath the managed checkout's `target/tmp/` are
 `ic-backup-agent-independent-build-2023157-0/` and
-`ic-backup-agent-pocketic-2023157-1/`. [The snapshot review](../shared-tooling-review.json)
-retains focused adoption evidence in `target/evidence/shared-031/`; earlier
-adoption, cache/setup and pending-deletion fixture failures remain retained.
+`ic-backup-agent-pocketic-2023157-1/`. Snapshot review evidence remains in
+`target/evidence/shared-031/` and [its reviewed manifest](../shared-tooling-review.json).
 
-## Delivered 0.58.9
-
-Both **ic-backup 0.58.9** and **ic-backup-agent 0.58.9** are published on crates.io.
-Release `478602d53b8043ec6cdfb92e030269fe82102224` and annotated `v0.58.9` are on
-`origin/main`; qualified source is `b9327a33e9459505991bac3146b94f5e0438575c`.
-Registry readback confirms non-yanked versions, matching archive checksums and VCS
-provenance; all **330 packaged Rust files** match the release commit byte for byte.
-Remote branch/tag identities match; the subsequent handoff commit is documentation only.
-
-The complete Linux `release-verify` gate passes: strict all-target/all-feature
-Clippy, **544 tests**, documentation, tooling/release/hook regressions, independent
-consumers and packaging. Explicit registry cache preparation passes separately;
-the registry-only normal consumer then passes authenticated capture/restore,
-application acceptance and effect-free terminal replay against both exact published
-packages. Native macOS and Canic acceptance remain separate; hosted CI was not
-manually dispatched.
-
-Delivered 0.58.9 used Shared **0.30.7**, the normal-checkout release path and
-Rust **1.99.1**. Detailed historical decisions remain at `806965f`. Current batch
-adoption above retains the full gate without stage reuse or selective mapping;
-independent consumer/archive proofs remain distinct. No timing saving is claimed.
-
-The qualified lockfile selects Platform **0.23.3**, Platform Types **0.18.2**,
-Testkit **0.89.1**, its exact CLI and PocketIC **16.1.0**. Published archive checksums
-match the lockfile; source review binds Platform `e71e8a6` and Testkit `7d7ffbf`.
-Platform's production changes concern the unused ledger adapter and dependency
-feature declarations; Testkit's library source is unchanged. Product Rust source,
-public APIs, records, IC protocols and custody requirements remain unchanged.
-
-Delivery logs, registry archives, byte/provenance verification and remote refs are
-in `target/evidence/deploy-0589/`; receipts/publication attempts remain under
-`.git/release-state/` and [the release receipt](../release.json). Registry-only
-graph/build evidence is in `target/tmp/ic-backup-agent-independent-build-41051-0/`
-and authenticated runtime evidence in `target/tmp/ic-backup-agent-pocketic-41051-1/`.
-Focused snapshot provenance remains in `target/evidence/shared-0307.qztZdV/`;
-full-gate release fixtures remain in `target/shared-release-tests.6XoOya/`.
-No journals, artifacts, failed bundles or earlier release evidence were removed.
-
-## Earlier delivery and qualification
-
-Full prior handoffs remain at `ab19b40` (0.58.8), `95d39fc` (0.58.7) and
-`8be4f62` (0.58.6/0.58.5). Registry journeys, exact source/ref identities and
-compiler qualification remain in Git and their original evidence directories.
-Delivery evidence stays under `target/evidence/deploy-0588.vRuWtx/`,
-`target/evidence/deploy-0587.yiDOdu/` and `target/evidence/deploy-0585.b88i271n/`;
-issue-78 qualification remains under `target/evidence/issue-78/`.
-Test consolidation/case mappings and cleanup evidence remain in their original
-directories. All 36 external Candid allowances remain live; there is no CBOR
-exception or product-format migration. Public planning-error consolidation remains
-deferred to an intentional API break; distinct settlement errors retain their owner.
-[Coverage ownership](../development.md#simulator-coverage-ownership) identifies
-retained IC effects, signed transport probes and native rejection matrices.
+The [complete prior handoff](https://github.com/dragginzgame/ic-backup/blob/b1c1c33f1e9d80c2c22a605ed4b39383b281ede7/docs/status/current.md)
+retains 0.58.9 and earlier release/source/compiler identities, evidence paths and
+release-adoption details. Exact v1 receipts and mandatory resumed-validation
+checks remain binding. Historical `v…` recovery uses the original qualified
+checkout and explicit empty group. No journals, artifacts or failed bundles were
+removed. Public planning-error consolidation remains deferred to an API break;
+[coverage ownership](../development.md#simulator-coverage-ownership) remains local.
 
 ## Recovery and retained contracts
 
-Standalone host-driven backup/restore, mandatory application admission and fenced
-same-ID restore safety remain. Current v1 records/hashes and bounded attempt
-spending are unchanged; persist intent before effects, reconcile lost replies,
-and preserve unfinished journals, artifacts, references and external obligations.
+Preserve standalone host-driven same-release/same-ID backup/restore, mandatory
+application admission and fenced restore safety. Persist intent before effects,
+reconcile lost replies and preserve original bounded spending, unfinished
+journals, artifacts, references and external obligations. Terminal replay is
+effect-free.
 
 Layouts containing `consistency-requirement.json` or `fence-obligation.json` refuse
 before record use/spending, including malformed bytes and symlinks. Distinct-edge
 learned continuations refuse without rewriting bindings. Recover those originals
 with **0.57.1 and the original qualified integration before upgrading**. Never
-remove markers, rebuild plans, reinterpret payloads, re-sign requests or reset
-accounting to bypass admission. No migration, evidence cleanup or refund is provided.
-See [the migration](../canic-adoption.md#058-api-migration) and
+remove markers, rebuild plans, reinterpret payloads, re-sign or reset accounting
+to bypass admission. No migration, evidence cleanup or refund is provided. See
+[the migration](../canic-adoption.md#058-api-migration) and
 [implementation contracts](../implementation-contracts.md).

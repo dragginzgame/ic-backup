@@ -8,6 +8,7 @@ ROOT="${ROOT%/.}"
 export PATH="$ROOT/.tools/host/bin:$PATH"
 # shellcheck source=scripts/ci/fixture-lifecycle.sh
 source "$ROOT/scripts/ci/fixture-lifecycle.sh"
+mkdir -p "${TMPDIR:-$ROOT/target}"
 fixture="$(fixture_create "${TMPDIR:-$ROOT/target}/failure-evidence.XXXXXX")"
 fixture_complete=false
 trap 'fixture_finish "$?" "$fixture" "CI evidence fixture retained"' EXIT

@@ -7,15 +7,7 @@
 mod support;
 
 use ic_backup::{
-    model::{
-        attempt_journal::{AttemptBudgetRecord, AttemptJournalRecordError},
-        effect_graph::{EffectGraphRecord, EffectNodeRecord, EffectNodeRequest},
-        inventory::{InventoryRecord, InventoryTargetRecord, InventoryTargetRequest},
-        operation_plan::{
-            OperationPlanRecord, OperationPlanRequest, PlanBudgetRecord, PlanContextRecord,
-            PlanContextRequest, PlannedOperationRecord, PlannedOperationRequest,
-        },
-    },
+    model::attempt_journal::AttemptJournalRecordError,
     ops::persistence::{
         AttemptJournalError, AttemptJournalGuard, BackupLayoutGuard, create_operation_plan,
         read_operation_plan,
@@ -27,44 +19,7 @@ use std::fs;
 fn original_plan_authority_reopens_consumed_attempts_without_rebinding_or_replenishment() {
     let root = support::temp_root("ic-backup-public-plan");
     let layout = BackupLayoutGuard::acquire(&root).expect("exclusion");
-    let plan = OperationPlanRecord::new(OperationPlanRequest {
-        context: PlanContextRecord::new(&PlanContextRequest {
-            network: "ab".repeat(32),
-            caller: "2vxsx-fae".into(),
-            release: "cd".repeat(32),
-        })
-        .expect("declared context"),
-        inventory: InventoryRecord::new(vec![
-            InventoryTargetRecord::new(&InventoryTargetRequest {
-                canister_id: "aaaaa-aa".into(),
-                parent_canister_id: None,
-                role: None,
-                module_hash: None,
-            })
-            .expect("row"),
-        ])
-        .expect("explicit inventory"),
-        selected_targets: vec!["aaaaa-aa".into()],
-        graph: EffectGraphRecord::new(vec![
-            EffectNodeRecord::new(EffectNodeRequest {
-                operation_sequence: 7,
-                depends_on: vec![],
-            })
-            .expect("node"),
-        ])
-        .expect("graph"),
-        operations: vec![
-            PlannedOperationRecord::new(PlannedOperationRequest {
-                operation_sequence: 7,
-                target: "aaaaa-aa".into(),
-                request: "ef".repeat(32),
-                budget: AttemptBudgetRecord::new(1, 1).expect("original limits"),
-            })
-            .expect("binding"),
-        ],
-        budget: PlanBudgetRecord::new(1, 1).expect("aggregate ceilings"),
-    })
-    .expect("bound declaration");
+    let plan = support::single_operation_plan("aaaaa-aa", 7, &"ef".repeat(32));
     let intent = plan.digest();
     create_operation_plan(&layout, &plan).expect("retain exact intent");
     let original = fs::read(root.join("operation-plan.json")).expect("original bytes");

@@ -1,13 +1,12 @@
 //! Pure same-source and current application safety matching; no IO, effects or settlement.
 
-use super::restore_fence::{self, RestoreFenceMismatch};
 use crate::model::{
     artifacts::ArtifactChecksumRecord,
     ic_request::IcManagementMethodRecord,
     restore_safety::{
-        RestoreFenceEvidence, RestoreSafetyEvidence, RestoreSafetyLaneRecord,
-        RestoreSafetyObservation, RestoreSafetyRequest, RestoreSafetyRequirementRecord,
-        TargetRestoreEvidence,
+        ApplicationFenceState, RestoreFenceEvidence, RestoreSafetyEvidence,
+        RestoreSafetyLaneRecord, RestoreSafetyObservation, RestoreSafetyRequest,
+        RestoreSafetyRequirementRecord, TargetRestoreEvidence,
     },
 };
 use ic_platform::management_canister_types::CanisterStatusType;
@@ -78,14 +77,12 @@ pub fn validate<'a>(
 ) -> Result<RestoreSafetyView<'a>, RestoreSafetyError> {
     let digest = request.digest();
     let binding = request.binding();
-    super::observed_context::admit_request_context(
-        &digest,
-        observation.request(),
-        binding,
-        observation.context(),
-        RestoreSafetyError::RequestMismatch,
-        RestoreSafetyError::ContextMismatch,
-    )?;
+    if observation.request() != &digest {
+        return Err(RestoreSafetyError::RequestMismatch);
+    }
+    if let Some(field) = observation.context().binding_mismatch(binding) {
+        return Err(RestoreSafetyError::ContextMismatch(field));
+    }
     if observation.inventory() != request.inventory() {
         return Err(RestoreSafetyError::InventoryMismatch);
     }
@@ -104,11 +101,12 @@ pub fn validate<'a>(
     if observation.source_artifacts() != requirement.source_artifacts() {
         return Err(RestoreSafetyError::SourceArtifactsMismatch);
     }
-    super::observed_context::admit_limit(
-        request.max_remote_observations(),
-        observation.remote_observations(),
-        |limit, reported| RestoreSafetyError::ObservationLimitExceeded { limit, reported },
-    )?;
+    if observation.remote_observations() > request.max_remote_observations() {
+        return Err(RestoreSafetyError::ObservationLimitExceeded {
+            limit: request.max_remote_observations(),
+            reported: observation.remote_observations(),
+        });
+    }
     let method = request.wire().method();
     validate_targets(method, binding.target(), observation.targets())?;
     validate_safety(requirement, observation.safety(), method)?;
@@ -163,16 +161,19 @@ fn validate_safety(
             let original = requirement
                 .expected_fence()
                 .ok_or(RestoreSafetyError::FenceMismatch)?;
-            restore_fence::validate(original, fence).map_err(|mismatch| match mismatch {
-                RestoreFenceMismatch::Identity => RestoreSafetyError::FenceMismatch,
-                RestoreFenceMismatch::MembershipRevision => {
-                    RestoreSafetyError::MembershipRevisionMismatch
-                }
-                RestoreFenceMismatch::ExternalObligationsRevision => {
-                    RestoreSafetyError::ExternalObligationsRevisionMismatch
-                }
-                RestoreFenceMismatch::Inactive => RestoreSafetyError::FenceNotActive,
-            })?;
+            if fence.binding.identity != original.identity {
+                return Err(RestoreSafetyError::FenceMismatch);
+            }
+            if fence.binding.membership_revision != original.membership_revision {
+                return Err(RestoreSafetyError::MembershipRevisionMismatch);
+            }
+            if fence.binding.external_obligations_revision != original.external_obligations_revision
+            {
+                return Err(RestoreSafetyError::ExternalObligationsRevisionMismatch);
+            }
+            if fence.state != ApplicationFenceState::Active {
+                return Err(RestoreSafetyError::FenceNotActive);
+            }
             if method == IcManagementMethodRecord::StartCanister
                 && fence.controlled_execution.is_none()
             {

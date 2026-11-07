@@ -1,17 +1,9 @@
 # Ownership boundary and extraction cleanup
 
-Reviewed 2026-10-18 against the pending working tree over released `ic-backup`
-0.31.0, commit `3317b4e6e49c0fe59e343069f68eb539324c0612`. This review uses the vendored
-[flow convergence](../audits/flow-convergence-and-duplication.md) and
-[module cleanup](../audits/module-cleanup.md) methods from Shared Tooling
-0.24.0 at `cab12cd3dfa4fdb34846b25397f0d72881bb9ae0`, with the local
-[overlay](../AGENTS.md). The repeat review preserves the incoming uncommitted
-implementation, Platform adoption and tooling work.
-It inventories maintained source, manifests, tests, fixtures, scripts, CI and
-active architecture guidance, with focused traces through the shared owners. Historical provenance and audit reports are retained as
-evidence rather than treated as current interfaces. Platform adoption is complete;
-the repeat review removes unused producer fixtures and corrects active ownership
-guidance. Downstream application qualification still belongs to its owner.
+This guide maps maintained code and dependencies to their owners. Historical cleanup
+conclusions below retain the scope of the 2026-10-18 review over `3317b4e6`, using
+Shared Tooling 0.24.0. They do not qualify the current dependency graph; current
+source-specific evidence belongs to [the handoff](status/current.md).
 
 ## What this repository owns
 
@@ -34,22 +26,23 @@ findings below retain their original review sources and qualification scope.
 | --- | --- |
 | `ic_backup::{model, policy, view}` | Backup records, validation and read-only projections; policy performs no IO |
 | `ic_backup::{ops, workflow}` | Guarded product persistence and ordered single-step coordination over explicit ports |
-| `ic_backup::ports` | Integration contracts for fresh membership, permissions, consistency, restore safety and separately accounted IC effects |
+| `ic_backup::ports` | Separately accounted IC effects; mandatory admission callbacks leave current membership, permissions, consistency and application safety with the integration |
 | `ic_backup_agent::AgentTransport` and providers | Separate package depending on Core and Platform’s native Agent feature; uses Platform for all SDK exports and keeps explicit Reqwest policy; signs and submits one original reserved update after mandatory retention |
 | Artifact hash primitives and directory framing | `ic-host-artifacts`; Backup translates raw digests into its persisted checksum records |
 | Descriptor IO, publication and filesystem identity | `ic-host-fs`; Backup selects record budgets, closed snapshot layouts and recovery transitions |
 | Inherited process custody | `ic-host-process`; Backup binds custody to its original journal and quiescence requirements |
 | Candid decoder setup and exact-result mechanics | Published `ic-platform` with its `candid` feature; Backup retains bounded wire projections, method quotas and redacted errors |
 | Management DTOs and principal identity | Platform’s management exports over exact upstream 0.11.0; owned root `Principal` for internal admission, contract/external principal exports for Candid and SDK boundaries |
-| Simulator process/assets and PocketIC SDK | Development-only Testkit owns managed servers/assets and harness extensions; Platform's development-only `pocket-ic` feature owns clients/DTOs. Fixture intent, bytes, logs and application assertions remain here |
+| Simulator process/assets and PocketIC SDK | Development-only Testkit owns managed servers/assets, harness extensions and `ic_testkit::pocket_ic` clients/DTOs. Production management identities remain Platform-owned; fixture intent, bytes, logs and application assertions remain here |
 | Common developer/release tooling | Exact reviewed Shared Tooling snapshot; consumer package, registry, delivery and resume policy remains local |
 | Fleet membership, routing, release identity, quiescence and external obligations | Canic or another application integration, through Core ports; Core has no Canic runtime/control-plane dependency |
 
 Core does not depend on Agent. Applications can use the public Core ports with
 another explicitly qualified implementation. Agent's public write entry is
 `AgentUpdateProvider`, implementing mutation and source-bound upload ports.
-Transfer reads, recovery observations and fence acquisition have their own
-providers and retain their distinct request/error/evidence contracts.
+Transfer reads and recovery observations retain their distinct provider contracts.
+Application protocols use opaque `AgentApplicationIngressProvider` updates/readbacks;
+fence semantics and fresh authority remain with the integration.
 `PreparedUpdate` is a passive retention view, not a public preparation or reissue
 API. The [transport contract](agent-transport.md) owns its detailed limits.
 

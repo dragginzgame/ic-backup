@@ -1,4 +1,5 @@
 use super::admit_written_origin;
+use crate::TransportError;
 
 #[test]
 fn admits_https_and_literal_loopback_without_written_paths() {
@@ -15,6 +16,9 @@ fn admits_https_and_literal_loopback_without_written_paths() {
 #[test]
 fn rejects_normalized_paths_and_nonliteral_http_hosts() {
     for endpoint in [
+        " https://example.com/",
+        "https://example.com ",
+        "https://example.com/path",
         "https://example.com/path/..",
         "https://example.com\\path\\..",
         "http://localhost/",
@@ -26,6 +30,12 @@ fn rejects_normalized_paths_and_nonliteral_http_hosts() {
         "https://example.com/\n",
         "ftp://example.com/",
     ] {
-        assert!(admit_written_origin(endpoint).is_err(), "{endpoint}");
+        assert!(
+            matches!(
+                admit_written_origin(endpoint),
+                Err(TransportError::Configuration)
+            ),
+            "{endpoint}"
+        );
     }
 }

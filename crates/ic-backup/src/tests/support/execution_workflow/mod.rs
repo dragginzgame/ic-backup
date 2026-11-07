@@ -44,6 +44,33 @@ pub(crate) fn child(sequence: u64) -> OperationPlanRecord {
     OperationPlanRecord::new(child_request(sequence)).unwrap()
 }
 
+/// Bind one exact payload to the fixture's original stage and operation.
+pub(crate) fn prepare_single_operation(
+    prefix: &str,
+    target: &str,
+    request: &str,
+) -> (
+    PathBuf,
+    BackupLayoutGuard,
+    ExecutionStageBindingRecord,
+    OperationPlanRecord,
+) {
+    let workflow = workflow();
+    let mut child = child_request(0);
+    child.operations = vec![
+        PlannedOperationRecord::new(PlannedOperationRequest {
+            operation_sequence: 42,
+            target: target.into(),
+            request: request.into(),
+            budget: workflow.stage(0).unwrap().budget().clone(),
+        })
+        .unwrap(),
+    ];
+    let plan = OperationPlanRecord::new(child).unwrap();
+    let (root, layout, binding) = prepare_stage(prefix, &workflow, 0, plan.clone());
+    (root, layout, binding, plan)
+}
+
 /// Prepare one fresh fixture stage; plans, effects and assertions remain with each scenario.
 pub(crate) fn prepare_stage(
     prefix: &str,

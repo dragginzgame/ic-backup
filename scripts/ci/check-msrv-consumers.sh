@@ -11,7 +11,7 @@ ROOT="$(cd -P "${ROOT%/*}/../.." && printf '%s/.' "$PWD")"
 ROOT="${ROOT%/.}"
 source "$ROOT/scripts/ci/consumer-fixture.sh"
 msrv="$(bash "$ROOT/scripts/ci/check-rust-toolchain.sh")"
-mkdir -p "$ROOT/target"
+mkdir -p "${TMPDIR:-$ROOT/target}"
 fixture="$(mktemp -d "${TMPDIR:-$ROOT/target}/msrv-consumers.XXXXXX")"
 finish() {
     local status=$?

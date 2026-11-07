@@ -145,15 +145,6 @@ pub struct TargetRestoreEvidence {
     /// A module hash or load acknowledgement alone cannot supply this evidence.
     pub restored_acceptance: Option<ArtifactChecksumRecord>,
 }
-impl super::observed_targets::ObservedTargetRow for TargetRestoreEvidence {
-    fn target(&self) -> &str {
-        &self.target
-    }
-
-    fn target_mut(&mut self) -> &mut String {
-        &mut self.target
-    }
-}
 /// Passive exact fence evidence; every opaque field requires application qualification.
 #[derive(Clone, Debug)]
 pub struct RestoreFenceEvidence {
@@ -217,14 +208,26 @@ impl RestoreSafetyObservation {
     pub fn new(
         mut input: RestoreSafetyObservationInput,
     ) -> Result<Self, RestoreSafetyObservationError> {
-        input.targets = super::observed_targets::canonicalize(
-            input.targets,
-            &input.inventory,
-            || RestoreSafetyObservationError::InvalidTargetCount,
-            || RestoreSafetyObservationError::InvalidPrincipal,
-            || RestoreSafetyObservationError::TargetAbsentFromInventory,
-            || RestoreSafetyObservationError::DuplicateTarget,
-        )?;
+        if input.targets.is_empty() || input.targets.len() > MAX_INVENTORY_TARGETS {
+            return Err(RestoreSafetyObservationError::InvalidTargetCount);
+        }
+        for row in &mut input.targets {
+            row.target = super::principal::canonical_text(&row.target)
+                .ok_or(RestoreSafetyObservationError::InvalidPrincipal)?;
+            if input.inventory.canonical_target(&row.target).is_none() {
+                return Err(RestoreSafetyObservationError::TargetAbsentFromInventory);
+            }
+        }
+        input
+            .targets
+            .sort_by(|left, right| left.target.cmp(&right.target));
+        if input
+            .targets
+            .windows(2)
+            .any(|pair| pair[0].target == pair[1].target)
+        {
+            return Err(RestoreSafetyObservationError::DuplicateTarget);
+        }
         Ok(Self { input })
     }
     /// Read current request identity.

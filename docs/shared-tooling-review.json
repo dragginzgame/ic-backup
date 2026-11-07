@@ -1,57 +1,56 @@
 {
   "source": "https://github.com/dragginzgame/shared-tooling",
-  "revision": "74313941af2fce4399bec0e6909ca6229673c3f8",
-  "label": "0.31.0",
-  "reviewed_on": "2026-11-06",
-  "previous_revision": "8ae62680fa2d3ea590c4e85061664612957efd68",
-  "uncommitted_previous_review": "target/evidence/shared-031/previous-review-03010.json",
+  "revision": "d2a2f395bc06b22cb3f18afc7d2978a150726360",
+  "label": "0.31.3",
+  "reviewed_on": "2026-11-07",
+  "previous_revision": "74313941af2fce4399bec0e6909ca6229673c3f8",
   "previous_review": {
-    "commit": "806965fd6768e16181ed71782c59d9b33f555085",
+    "commit": "b1c1c33f1e9d80c2c22a605ed4b39383b281ede7",
     "path": "docs/shared-tooling-review.json"
   },
   "consumer_baseline": {
-    "commit": "806965fd6768e16181ed71782c59d9b33f555085",
-    "version": "0.58.9",
-    "pending_notes": "0.58.10",
-    "incoming_work": "Continue the uncommitted frozen-delivery batch, preserving the Agent member catalog entry and incoming Platform 0.23.4/Testkit 0.89.3 lock selection. No package-version or dependency edits."
+    "commit": "b1c1c33f1e9d80c2c22a605ed4b39383b281ede7",
+    "version": "0.58.10",
+    "pending_notes": "0.58.11",
+    "incoming_work": "Preserve the uncommitted cleanup and incoming Platform 0.23.5 graph; adopt only the requested Testkit 0.90.0 dependency and Shared snapshot. No package version, Git delivery or registry publication effects."
   },
   "provenance": {
-    "selection": "GitHub's revision-bound VERSION confirms 0.31.0 at 7431394, including the integrated checksum fixes. Canonical impact/export uses that full --revision from the normal clean supplier checkout. No sibling edits.",
+    "selection": "GitHub VERSION confirms 0.31.3. Canonical impact/export and independently revision-bound verification select the complete committed d2a2f395 tree; no supplier edits or locally patched payloads.",
     "export": {
       "payloads": 160,
-      "added": 2,
-      "removed": 2,
-      "updated": 9,
-      "unchanged": 149
+      "added": 0,
+      "removed": 0,
+      "updated": 3,
+      "unchanged": 157
     },
-    "catalogs": "Host/Cargo/IC catalogs and local Rust 1.99.1 declarations are unchanged."
+    "catalogs": "Host/Cargo/IC catalogs and compiler declarations remain unchanged at Rust 1.99.1."
   },
   "consumer_decisions": [
-    "Hard-cut local hooks, fixture context and documentation to RELEASE_GROUPS/RELEASE_PUBLISH_TARGET/RELEASE_SETUP_TARGET/RELEASE_SETUP_MODE/RELEASE_BATCH_ACTIVE. Use the renamed canonical runner/guide without aliases. Actual Make tests reject every retired setting from CLI/environment, including empty values.",
-    "Require schema-2 intent and the recorded publication commit in the actual consumer integration. There are no real pre-0.31 batch journals here; preserve all earlier fixture evidence and recovery paths. Finish any external older batch with its original tooling, never by rewriting schema or inferring identity.",
-    "Adopt snapshot checksum NUL/backend-status fixes and annotated-export admission. Qualify Backup's actual Make bootstrap against NUL output. VERSION base alignment/npm schema-3 changes need no local migration because those maintained roots are absent.",
-    "Adopt canonical candidate setup/context, saved phase/index admission, publication identity checks and batch lifecycle interfaces, retaining the 0.30.8 underscore fix. Upstream owns execution/lifecycle regressions; do not copy or rerun producer matrices here.",
-    "Use Shared's automatic single-group frozen selection from RELEASE_GROUP. Remove the duplicate local RELEASE_FROZEN_GROUPS default; qualify the actual Make refusal when a selected Backup group attempts to clear its frozen roster.",
-    "Enable frozen delivery for one coordinated backup group, preserving workspace inheritance/root ledger and completing the root member catalog. Shared owns all dispatch and lifecycle orchestration. Candidate setup prepares tools before version lookup and checks selections offline during recovery; exact receipt checks remain mandatory. New tags/plans carry the backup prefix; historical recovery explicitly selects an empty group.",
-    "Clear new setup/batch/publication context variables only within the isolated release fixture child process; preserve the calling environment.",
-    "Keep full-gate-only release validation, with no stage reuse or selective mapping. No timing improvement or new product behavior is claimed.",
-    "Keep Candid/CBOR source selection, exact external allowances, generated-consumer gates, compiler policy and original product custody/recovery unchanged. No source/record migration or package version change.",
-    "Preserve incoming dependency edits, tool stores, release receipts, journals, artifacts and failed evidence. Execute actual managed checkouts/Git effects only in reproducible fixtures; no primary-repository delivery or registry upload. Publication remains explicit and binds the exact delivered commit/tag/receipt."
+    "Adopt the Bash 3.2-compatible checksum reader without weakening NUL rejection or backend error propagation; qualify the actual Backup Make bootstrap with NUL-emitting checksum output.",
+    "Adopt missing captured-scratch diagnostics in the LOC classifier. Run Backup's actual LOC command with a previously absent TMPDIR parent; retain complete schema-2 output, without cleaning the existing target or recovery evidence.",
+    "Apply the fresh-output-parent rule to override-aware local package/MSRV and Testkit/failure-evidence fixtures. Existing default-only owners and the documentation checker already create their selected parents.",
+    "The 0.31.2 release-editor repair is an upstream fixture correction and changes no selected consumer payload. No production batch runner, release contract or custody migration is introduced.",
+    "Preserve the coordinated backup group, full release gate, schema-2 batch recovery, exact resume receipts and original 0.58.10 completed-but-not-retired batch. Do not replay unrelated producer regression matrices or perform delivery.",
+    "Migrate both development-only PocketIC builders to published Testkit 0.90.0 with explicit 60-second request budgets; retain separate 120-second startup allowances, original journals, signed transport, failure evidence and same-ID restore/terminal assertions. No compatibility wrappers or sibling Cargo patches."
   ],
   "qualification": {
-    "status": "Passed focused consumer qualification",
-    "evidence_directory": "/home/adam/projects/ic-backup/target/evidence/shared-031",
-    "snapshot_evidence": "Canonical impact/export selects 160 payloads: nine updates, two additions/two retirements and 149 unchanged. No snapshot payload was locally patched.",
-    "selection": "Actual batch setup/native/archive/recovery integration, complete historical receipt/publication adapter suite, local routing/cleared-roster/retired-setting refusal, Make checksum-NUL admission, shell/Perl syntax, formatting, compiler, dependency and documentation admission. No package version change.",
-    "results": "All selected checks pass. All 160 canonical payload bytes/modes match the pinned supplier, including required annotations. The schema-2 fixture binds its recorded publication commit and passes actual installed setup/native/archive checks, deferred lock custody, exact recovery, uncertain publication, completed replay, reconciliation and retirement. Manifest, incoming lockfile and compiler declarations remain byte-identical to this refresh baseline.",
-    "batch_fixture": "target/frozen-delivery-tests.L8NVJc (batch-gpmNJuIq), captured Platform 0.23.4/Testkit 0.89.3. Actual sources/tools/Git/archives; only upload and one lost reply substituted. Required receipts remain outside its retired batch.",
-    "legacy_fixture": "target/shared-release-tests.hlWtN8: complete historical Make/gate/recovery/publication substitutes and real private-index boundaries pass with empty group/roster.",
-    "fixture_capture": "The initial attempt correctly failed on the two canonically retired tracked files. The fixture inventory now respects pending working-tree deletions while admitting only regular files; the full retry passes. Original failure/evidence retained.",
-    "previous_qualification": "0.30.10 actual setup/build/archive/lifecycle integration passed on Platform 0.23.4/Testkit 0.89.3; its source, receipts and failed setup evidence remain in target/evidence/shared-0310 and the original fixture directories.",
+    "status": "Passed focused Linux consumer qualification",
+    "evidence_directory": "target/evidence/adopt-testkit090-shared0313/",
+    "selection": "Canonical snapshot provenance; actual Make checksum refusal, fresh-parent LOC, Testkit routing and CI-evidence callers; selected Core PocketIC/Agent standalone strict Clippy and five installed recovery/capture/restore cases.",
+    "results": "All 160 payload bytes/modes match the independently selected commit. Actual Make rejects NUL checksum output. Fresh-parent LOC produces complete schema-2 output; local routing and five CI-evidence modes pass. Both selected Clippy targets and all five actual PocketIC cases pass: three Core capture/recovery and two Agent pending-authority/independent normal-consumer round-trip cases. Compiler, dependency admission, formatting, edited documentation links, JSON and diff checks pass.",
+    "testkit": {
+      "version": "0.90.0",
+      "source_commit": "c03161b9f1395c343756fda6b8721e957798c3df",
+      "registry_checksum": "aeeb9dd0920b5a4343aed61f2cb7c0266488823dab5f7b19e0b632b54b7d8f5a",
+      "server": "PocketIC 16.1.0",
+      "consumer_graph": "Platform 0.23.5, Types 0.18.2, Host 0.74.4, Agent SDK 0.49.3, Rust 1.99.1",
+      "issue": "https://github.com/dragginzgame/ic-backup/issues/79",
+      "disposition": "Migration and focused Linux acceptance pass locally; issue remains open until uncommitted consumer changes land. No issue-state mutation or delivery."
+    },
     "limits": [
-      "Linux focused tooling checks; no new full product CI, release, native macOS or Canic qualification.",
-      "Frozen adapter qualification is Linux-only. The fixture narrows validation to actual native/source/archive leaves; real releases still run the complete gate. Upload is substituted, never a live registry operation.",
-      "Current Platform 0.23.4/Testkit 0.89.3 lockfile requires the complete product release gate; focused native/archive integration does not replace it."
+      "Linux focused consumer qualification, not a new full release gate or registry-only qualification.",
+      "Native macOS and current Canic application acceptance remain separate.",
+      "All original delivery, recovery, failed fixture and tool-store evidence remains retained."
     ]
   }
 }

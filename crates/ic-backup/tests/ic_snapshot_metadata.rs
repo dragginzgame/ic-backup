@@ -12,11 +12,10 @@ use ic_backup::{
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
     },
-    ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
-    },
+    ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, read_operation_plan},
 };
 use std::fs;
+use support::observation_replay::PendingObservation;
 
 #[test]
 fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_release() {
@@ -31,20 +30,7 @@ fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_rel
     let request = IcSnapshotMetadataRequest::new(capture.target(), &[0, 255, 17]).unwrap();
     let plan: OperationPlanRecord =
         support::single_operation_plan(capture.target(), 7, capture.digest().hash());
-    create_operation_plan(&layout, &plan).unwrap();
-    layout
-        .retain_restore(&root.join("restore-reference.json"), plan.digest().hash())
-        .unwrap();
-    let references = layout.restore_references().unwrap();
-    let authority = plan.attempt_authority(7).unwrap();
-    let mut journal = AttemptJournalGuard::create(&layout, authority).unwrap();
-    let mutation = journal.reserve_mutation().unwrap();
-    let observation = journal
-        .reserve_observation(mutation, request.digest().hash())
-        .unwrap();
-    let original_journal = fs::read(journal.path()).unwrap();
-    let original_plan = fs::read(root.join("operation-plan.json")).unwrap();
-    let original_view = journal.record().unwrap().view();
+    let (journal, original) = PendingObservation::reserve(&layout, &plan, request.digest().hash());
     let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!(
         "../src/model/ic_snapshot_metadata/tests/golden.json"
     ))
@@ -77,29 +63,7 @@ fn replays_exact_metadata_bytes_without_settlement_new_spending_or_reference_rel
     assert_eq!(admitted.digest(), digest);
     assert_eq!(admitted.metadata().wasm_module_size, u64::MAX);
     assert!(admitted.metadata().globals[5].is_none());
-    assert_eq!(journal.record().unwrap().view(), original_view);
-    assert_eq!(original_view.pending_mutation, Some(mutation));
-    assert_eq!(original_view.pending_observation, Some(observation));
-    assert!(!original_view.applied);
-    assert_eq!(
-        (
-            original_view.mutations_remaining,
-            original_view.observations_remaining
-        ),
-        (0, 0)
-    );
-    assert!(journal.reserve_mutation().is_err());
-    assert!(
-        journal
-            .reserve_observation(mutation, request.digest().hash())
-            .is_err()
-    );
-    assert_eq!(fs::read(journal.path()).unwrap(), original_journal);
-    assert_eq!(
-        fs::read(root.join("operation-plan.json")).unwrap(),
-        original_plan
-    );
-    assert_eq!(layout.restore_references().unwrap(), references);
+    original.assert_unchanged(&layout, &mut journal, request.digest().hash());
     assert_eq!(fs::read(root.join("metadata.candid")).unwrap(), raw);
     drop(admitted);
     drop(journal);

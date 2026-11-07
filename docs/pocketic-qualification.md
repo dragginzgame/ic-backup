@@ -2,335 +2,153 @@
 
 ## Current server ownership cut
 
-The simulator suites use the exact locked Testkit CLI for explicit
-`make install-testkit-server` and offline `make testkit-server-check`. The check
-returns the authenticated absolute server path for both simulator suites;
-server selection/asset/version admission belongs to Testkit. Caller-owned private
-logs, server digests, topology, spending and lost-reply assertions remain local.
-Shared 0.2.0's five-tool bundle supplies no PocketIC binary or fallback.
-Qualification for this candidate is recorded in the current handoff; older results
-below retain their actual sources and graphs.
+Testkit owns authenticated server assets, version admission and managed processes.
+`make install-testkit-server` explicitly prepares the locked selection;
+`make testkit-server-check` is the standalone CLI/tool gate and prints its admitted
+absolute server path. The unique locked Testkit package selects that exact CLI.
 
-## Historical fence-specific qualification
-
-The fence-specific acquisition/reconciliation fixtures retired with the 0.58 API
-cut. Their frozen qualification and original recovery behavior remain in
-[0.57.1](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/pocketic-qualification.md).
-Current application ingress qualification covers mandatory signed/reply retention,
-bounded pending attempts, cancellation and separately reserved recovery. Canic owns
-actual application checkpoint/fence semantics. Fenced restore rejection and source/
-reference custody continue to qualify through the maintained restore workflows.
+Both simulator suites independently call the locked library's
+`ic_testkit::pic::server_assets::check(&bundle)` before startup. They do not spawn
+Make or the CLI, download assets during admission or substitute another server.
+Shared's optional IC executable bundle supplies no PocketIC fallback. Backup owns
+fixture topology, private output paths, server digests, original evidence and
+product spending/recovery assertions. Current source/graph receipts belong to
+[the handoff](status/current.md).
 
 ## Current simulator dependency boundary
 
-Testkit 0.87.0 owns the maintained async `ic_testkit::pocket_ic` client, managed
-server startup, authenticated assets and harness extensions. Both libraries use
-that published client directly in simulator tests, with no Platform simulator
-feature or separate client package. Production management DTOs remain Platform's
-qualified 0.11.0 identities; canonical Types remains 0.18.
-Each fixture awaits Testkit's bounded `build_instance`,
-retaining its original topology, state directory and output files. The managed
-owner stays intact through fixture setup, then transfers the client/server pair
-into explicit client-before-server field order. Network operations and lifecycle
-helpers run on the caller's test runtime; there is no blocking client wrapper.
-Successful fixtures await deletion before releasing the server and retain any
-teardown failure. Preserve typed client failures, original output paths and
-managed cleanup custody; panic cleanup still stops/reaps the owned server.
-Testkit 0.85 requires an explicit client endpoint and removes implicit server
-launch/download. The managed builders supply that endpoint from the admitted
-server; Backup uses no client-owned launcher or endpoint-free constructor.
-No forwarding module or production simulator dependency is retained. The existing
-exact management bytes, bounded calls, signed transport, original journals and
-independent readback assertions remain local.
+The suites use the published async `ic_testkit::pocket_ic` client directly as a
+development dependency. Production management DTOs remain Platform's qualified
+0.11.0 identities. There is no production simulator dependency, Platform simulator
+feature, forwarding client or client-owned launcher. Dependency versions belong
+to manifests and the lockfile; adoption history remains in
+[the changelog](../CHANGELOG.md).
 
-Testkit has no Metrics dependency, and its optional Wire interface is disabled.
-The earlier 0.86 Wire-only upgrade needed no fixture migration. The 0.87 async
-client migration changes fixture execution and explicit teardown while preserving
-the original plans, journals, byte comparisons and management-call bounds.
-The authenticated server remains PocketIC 16.1.0. The locked
-Testkit package also selects its exact managed CLI; after a Testkit update, run
-`make install-testkit-server` before the offline admission check.
-
-## Earlier Testkit qualification
-
-The following records retain their original dependency selections and scope;
-use the current dependency boundary above and the handoff for current evidence.
-
-Both simulator suites depend on published `ic-testkit` 0.25.1 and its complete
-`pocket_ic` re-export. Their exact management calls, byte comparisons and original
-reservation/lost-reply assertions remain local. Testkit owns explicit bounded
-server readiness and cleanup; raw 0600 stdout/stderr survive in caller-owned
-fixture roots. No Testkit snapshot retry, baseline reset or funding policy is used.
-
-The single [consumer-owned matrix](shared-tooling.md#consumer-owned-ic-pins)
-selects PocketIC 16.1, explicitly installed and admitted before tests. Ordinary
-checks do not download servers. The original ten Core and three Agent cases were
-qualified on the historical Host 0.8 / Metrics 0.2.14 graph. The
-[original source-bound review](https://github.com/dragginzgame/ic-backup/blob/f241568f3714c0fd9283fd505ff34007c6bcf3e8/docs/reports/audits/2026/10/08/testkit-adoption/01/report.md)
-keeps preliminary Testkit 0.24 / PocketIC 16.0 results separate. Current selections
-and execution evidence belong to [the handoff](status/current.md); see also
-[historical retention](reports/README.md). These historical results
-qualify the isolated fixture and transport; full workflow runners, generic
-application safety, Canic adoption and native macOS acceptance remain separate.
-
-## Earlier qualification
-
-Current direct Agent gateway qualification is documented in [agent-transport.md](agent-transport.md).
-The earlier 11-case results below retain their original source/graph; the maintained
-core target now has ten cases after retiring the ICP probe.
-
-A fresh Linux run on the maintainer-selected published Host 0.5.0 graph passes
-all 11 registered journeys, including the actual bounded ICP capture/refusal path.
-The pending 0.7.0 draft changes the exposed Host publication-error Rust identity;
-package/receipt remain 0.6.0. Exact current graph, source, logs and simulator
-results are under `target/host-050-review-3`. This run does not qualify Host's
-unused process-group API, escaped descendants, production retry/polling or fresh
-permissions. Original journals and pending spending retain their existing owners.
-No public IC calls or sibling edits occur; native macOS consumer evidence for
-this selected graph remains separate.
-
-The earlier Linux run after typed JSON publication adoption passes all 11 registered
-journeys on the unchanged host 0.4.6 / Metrics 0.2.8 lock. The 0.6.0 draft's exact
-source, simulator results and local archive proof are under `target/publication-060`.
-Earlier results below retain their actual source/dependency identities. This
-qualifies the isolated fixture and safe pending refusal, not an installed
-production transport, arbitrary application or downstream Canic integration.
-
-## Pinned CLI capability probe
-
-Historical qualification: the executable probe is retired by the Agent hard cut.
-Its source-bound logs and original journals remain retained; this section records
-the earlier result. Current transport evidence is in [the Agent scope](agent-transport.md).
-
-The same integration target also probes the installed ICP CLI 1.6.0 against a
-real HTTP gateway on a separate owned application + NNS instance. It verifies
-the installed executable checksum/version through published `ic-host-process`
-0.4.2, then passes direct argv, a trusted owned root key, anonymous controller
-identity and exact binary management arguments. The CLI's portable `ICP_HOME`
-override keeps settings/data/cache in one private retained fixture directory;
-the environment is cleared. Each stream is bounded to 64 KiB with a 60-second
-deadline. The process dependency is Unix test-only.
-
-A dedicated status command succeeds with the exact Running target and controller
-set. The generic `stop_canister` update then exits unsuccessfully with an actual
-HTTP 400 `canister_not_found`: the pinned generic path has no explicit effective
-target distinct from receiver `aaaaa-aa`. Independent post-call status stays
-Running. The original plan/arguments and reservation precede dispatch; pending
-spending, typed fresh-reservation denial and exact journal bytes survive reopen.
-Neither the error nor the status control becomes a NotApplied receipt or refund.
-The test asserts structured status, typed exit failure and retained accounting;
-it does not freeze diagnostic prose.
-
-Exact upstream 1.6.0 source and real probe evidence are retained under
-`target/icp-backend-054-review`; [ICP CLI #811](https://github.com/dfinity/icp-cli/issues/811)
-owns explicit online/offline effective routing. [Consumer #25](https://github.com/dragginzgame/ic-backup/issues/25)
-owns independent transport acceptance. A future production adapter must refuse
-unsupported modes before effects. This test deliberately probes the incapable
-mode in an isolated simulator. One subprocess is not one HTTP ingress: internal
-retries/polling, descriptor/descendant custody, authenticated production replies
-and interrupted calls remain unqualified. No provider or transport package is
-created, and no public IC call runs.
+Each fixture supplies the admitted server path, topology, retained state/output
+paths and explicit request/startup bounds to Testkit's managed `build_instance`.
+Both builders supply `Duration::from_secs(60)` at construction for the required
+finite request budget. One deadline covers dispatch, body reads and accepted-operation
+polling; the separate startup timeout remains 120 seconds. Testkit rejects invalid
+budgets before network activity. Its deadline never grants replay or fresh spending.
+The managed owner stays intact through setup, then transfers its client/server
+pair into client-before-server field order. Operations run on the caller's async
+runtime. Successful fixtures await instance deletion before releasing the server
+and retain teardown failures; panic cleanup still stops/reaps the owned server.
+No baseline reuse/reset, hidden snapshot retry or funding policy is adopted.
 
 ## Original snapshot and recovery journeys
 
-A fresh Linux run after the checked directory-framing change passes all 11
-registered cases on the unchanged host 0.4.6 / Metrics 0.2.8 lock. Its exact
-uncommitted source, logs and retained simulator results are under
-`target/continuation-055`; the machine review records this 0.5.5 draft separately
-from earlier runs. Package/receipt remain 0.5.4. This supplies neither native
-macOS execution nor production transport or Canic qualification.
+The [Core integration target](../crates/ic-backup/tests/pocketic_snapshot.rs)
+qualifies focused capture, transfer, restore and reconciliation through the public
+library on an isolated application subnet. Its inspected fixture stores observable
+values in heap, an exported mutable Wasm global and stable memory, with certified
+data and a nonempty chunk store. It has no outbound-call imports, timers,
+heartbeat, low-memory hook or external obligations. Its application safety applies
+only to that fixture. Arbitrary applications need their own admission and
+restore-safety qualification.
 
-The `pocketic_snapshot` integration target exercises real management ingress on
-an isolated PocketIC 16 application subnet through the public extracted library.
-It qualifies this small fixture's same-release, same-ID recovery path. The driver
-lives in `tests/`; it is not an installed transport, workflow runner or operator
-command. Canic remains a separate, unchanged consumer.
-
-The fixture stores an independently observable value in heap memory, an exported
-mutable Wasm global and stable memory, sets certified data, and retains a nonempty
-Wasm chunk store. It has no outbound-call imports, timers, heartbeat, low-memory
-hook or external obligations. Its stopped/drained and no-irreversible-effects
-admission applies only to that inspected fixture. Arbitrary applications need
-their own consistency and restore-safety qualification.
-
-The driver checks actual status and the complete controller projection before
-lifecycle effects. It stops the target, retains the complete original snapshot
-inventory, captures once, and reads actual metadata and every module/memory/chunk
-extent through production bounded request/reply codecs. The existing artifact
-writer enforces coverage and durably publishes checksummed original bytes. The
-existing journal and immutable local manifest are reopened under the original
-plan. The source-bound upload preparers freshly verify the retained tree before
-encoding allocation and each data write.
-
-A distinct allocated snapshot receives every original extent. Fresh destination
-metadata and complete readback must match region sizes, every byte, ordered
-global encodings, certified data, chunk identities and timer/hook metadata. The
-application changes all three observable values and certified data from 42 to 99,
-and clears its current chunk store before loading that uploaded snapshot into the
-same existing ID. Complete stopped-state verification then allocates a distinct
-fresh snapshot with its own retained plan/reservation and checks every region/chunk
-byte and global/certified/timer/hook metadata against the original source. This
-separately accounted verification retains the additional remote snapshot; it never
-replaces a source or repeats load. Only afterward does explicit start proceed, and
-all three application values must return 42. Active timer/hook execution, SIMD or floating globals, multiple
-canisters, external-effect fencing and other subnet configurations are unqualified.
+Actual status and complete controller projections precede lifecycle effects.
+Production codecs and artifact operations retain exact metadata, extent bytes,
+coverage, checksums and source references under the original plans. Focused load
+recovery uses the original native snapshot and complete independent stopped-state
+verification. The connected Agent workflow below owns the complete uploaded
+round trip; Core retains no second complete backup/upload/restore runner.
 
 ## Original snapshot transfer reads
 
-All ordinary metadata/data reads now use the public original-plan/reservation
-request and passive response association boundary. The test-only provider owns
-actual isolated instance/caller/target context and retains original ingress history.
-It submits one exact update, then the driver validates the current pending journal
-and bounded original codec reply before explicitly recording its qualified success.
-A private submitted-original set rejects repeated provider invocation; it is not a
-persisted production never-dispatched proof.
+Metadata/data reads use the public original-plan/reservation boundary. The
+test-only backend submits exact management updates; production response
+association checks the pending journal and bounded original reply before an
+explicit success receipt. Its private submitted-original set rejects repeated
+invocation and supplies no persisted production proof of non-dispatch.
 
-Two additional real-ingress cases discard a metadata-read or first data-read reply.
-Metadata loss stops before creating download staging. Data loss retains Created
-partial staging and its source reference without a manifest or canonical artifact.
-Both retain the original pending update and exhausted update allowance across
-reopen, refuse another mutation reservation, invoke no provider during replay and
-stop before upload/load/start. Oracle reply bytes never enter association or a
-success receipt. These cases qualify safe stopping, not a completed backup or
-permission to repeat a read. See [issue #22](https://github.com/dragginzgame/ic-backup/issues/22)
-and [the port contract](contracts/ic-snapshot-transfer-read-port.json).
+Lost or malformed metadata/data replies stop before successor work. Metadata loss
+creates no download staging. First-data loss retains Created partial staging and
+its source reference without a manifest or canonical artifact. Later-data loss
+retains the completed prefix. Reopen preserves pending attempts and exhausted
+allowances; oracle replies never enter association or settlement. These cases
+qualify safe stopping. The
+[transfer-read contract](contracts/ic-snapshot-transfer-read-port.json) owns the
+boundary.
 
 ## Original spending and deliberately lost replies
 
-Each primary management ingress has a retained immutable single-operation plan
-with a unique operation sequence and original one-mutation/one-observation budget.
-The fixture durably reserves before invoking the client. Read methods also have
-explicitly accounted ingress; a recovery read consumes the original pending
-mutation's separate observation budget. These per-call test plans do not implement
-a full executable product workflow or authorize replenishment of an existing plan.
-The driver admits at most 64 management ingresses; the production download
-planner selects original bounded data-stage requests. Independent verification
-reads use at most 32 KiB extents. Fixture creation, installation, cycle funding,
-chunk seeding/clearing/listing and application writes/queries are explicit simulator setup/assertions outside these
-backup/restore journals. Reported management counts cover accounted backup,
-restore, verification and recovery ingress; these fixture operations are separate.
+Exact immutable plans and bounded reservations precede each accounted management
+ingress. Recovery observations consume separate original authority; neither error
+text nor repeated declarations replenish it. Simulator creation, installation,
+funding, chunk setup and application writes/queries are explicit parent-owned
+setup/assertions outside workflow allowances.
 
-Focused recovery cases deliberately discard capture, metadata-allocation, first
-data-write, stop, load or start replies after real completed ingress. Each case
-ends at its own settlement/no-followup boundary. Successful upload-source setup
-uses the existing production capture/metadata/download workflow driver. Load
-recovery uses the original native snapshot and independently verifies complete
-stopped state; connected workflow cases separately qualify uploaded destinations,
-full round trips and terminal replay. The focused cases keep no second complete
-backup/upload/restore runner. Discarded mutation replies are retained
-separately as test oracles; reconciliation never reads them. Reopen must retain the pending mutation and
-exhausted mutation allowance; attempting another mutation returns the existing
-typed pending error. An exact observation is retained and reserved before dispatch.
-The existing passive settlement checks admit the integration's exclusive-instance
-original-request attribution, then the existing journal owner explicitly records
-its receipt. Complete isolated ingress history and absence of competing writers
-qualify attribution in this fixture; inventory cardinality or byte equality alone
-do not. Load attribution additionally binds the complete independently checked
-stopped restored state before its existing receipt is recorded. Exact intended
-stop/start/load ingress counts exclude compensating repeats. Recovery never repeats
-the original effect or replenishes spending.
+Focused cases discard capture, allocation, upload, stop, load or start replies
+after real ingress. They retain the pending mutation and original journals across
+reopen and refuse redispatch. Qualified reconciliation uses a separately reserved
+observation, exclusive-instance original-request attribution and an explicit
+receipt. Load also requires complete independent stopped-state verification.
+Inventory cardinality, byte equality and discarded oracle replies alone grant no
+settlement authority.
 
-A negative journey also discards the originally reserved load-status reply. No
-successful response or settlement claim is constructed, and no receipt, verification
-capture or restart follows. The test oracle alone decodes that discarded status to
-assert the actual isolated canister remains stopped; those bytes never enter
-settlement. Both original reservations and exhausted allowances survive exact local
-reopen. Another mutation or observation returns the existing typed pending denial
-without changing journal bytes or making a call. Other original journals and any
-prepared source artifacts/manifest and references are replayed unchanged as well.
-
-This is post-effect reply-discard qualification, not a network-fault injector or
-process-crash test. PocketIC's client submits ingress and awaits that original
-message; its simulator HTTP busy handling and result polling are distinct from
-another management ingress. The explicit client request limit is 60 seconds.
-The ordinary local journal/manifest replay invokes no management calls and checks
-unchanged originals, consumed allowances and retained restore-reference bytes.
-It is not full product terminal replay or reference-release admission.
-
-The independent stopped-state readback oracle requires expected bytes for every
-declared extent before issuing another management call. A missing chunk cannot
-silently truncate verification through paired iteration. A real-source regression
-checks rejection of incomplete expected-byte coverage with no further ingress.
-
-Each Core fixture retains the admitted server digest and the original
-`Cargo.lock`. Focused result records obtain the server version from Testkit and
-bind the copied lock's SHA-256 for the exact client/dependency selection. There
-is no separately maintained client version label or second server selection.
-Both suites use Testkit's published synchronous/asynchronous managed instance
-builders and maintained client. One startup deadline covers readiness and instance
-creation; subsequent operations keep their explicit request bounds. Startup,
-client construction and operations retain typed failures, raw output and owned
-server cleanup. Simulator packages remain development-only.
+A lost load-status reply preserves both exhausted reservations and unchanged
+journals, with no receipt, verification capture or restart. Ordinary local replay
+makes no management call. An independent readback oracle requires expected bytes
+for every extent before another call; incomplete chunk coverage rejects without
+further ingress. Post-effect reply discard qualifies these recovery boundaries;
+process death is exercised separately by the connected consumer. Client HTTP busy
+handling/result polling is distinct from repeating a management ingress.
 
 ## Connected original capture and restore workflows
 
-The [maintained standalone assembly](../crates/ic-backup-agent/examples/standalone/README.md)
-is the canonical complete journey. The normal consumer supplies its
-[fixture application adapter](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/authority/mod.rs). It runs from a separate temporary workspace and
-target directory with ordinary library dependencies. Testkit and the application's
-fresh checks stay in the parent. The Core suite retains focused capture, transfer,
-restore, malformed-reply and recovery cases without a second complete driver.
+The [standalone assembly](../crates/ic-backup-agent/examples/standalone/README.md)
+is the maintained complete journey. Its
+[fixture application adapter](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/consumer/authority/mod.rs)
+runs in a separate temporary workspace/target with normal library dependencies.
+Testkit and independent application checks stay in the parent.
 
-Capture and restore have separate original catalogues and layout ancestry, both
-frozen before capture. Restore's purpose commits the capture catalogue; learned
-child plans bind exact original metadata, source plan/manifest and allocated
-destination. The source layout is outside restore's ancestor chain so its custody
-can coexist with stage locks. Every dispatch consumes its original bounded
-attempt before authenticated Agent ingress. Parent-owned setup and verification
-calls use separately retained accounting, outside workflow allowances.
+Capture and restore catalogues/layout ancestry freeze before capture. Restore
+commits the capture catalogue; learned child plans bind original metadata, source
+plan/manifest and allocated destination. Source custody coexists with restore
+stage locks. Every dispatch consumes original bounded authority before signed
+Agent ingress. Parent setup/verification has separately retained accounting.
 
-The parent changes live state from 42 to 99 after capture. Before accepted start,
-independent stopped-state readback compares complete module, heap, stable,
-global/certified metadata and chunk bytes with the original capture. The inspected
-one-owner program has no timers, outbound work or irreversible obligations. These
-facts do not establish a production application's safety lane.
-The canonical Agent fixture has an empty chunk store. Core's focused restore
-cases additionally clear a nonempty live chunk store and verify restoration of
-the original stored chunk bytes.
+After capture the parent changes live state from 42 to 99. Before accepted start,
+stopped-state readback compares complete module, heap, stable, global/certified
+metadata and chunk bytes with the original. The Agent fixture has an empty chunk
+store; Core's focused restore cases also clear a nonempty live store and verify
+restoration of the original chunks. These inspected programs do not qualify
+another application's obligations, fencing or safety lane.
 
-Registered [journey cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/mod.rs)
-cover complete cold capture/restore/accepted start/terminal replay, process death
-after authenticated load and cold continuation after every restore stage. Each
-continuation reconstructs the consumer from original retained bytes, catalogues,
-manifest, allocation and post-load acceptance; settled prefixes remain unchanged.
-[Additional lost-reply cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/restore_failures/mod.rs)
-cover allocation, the second data upload and start. Each discards a real reply
-after its effect and before settlement. Its original attempt stays pending with
-no allowance left; retained reentry refuses without preparing a successor or
-changing original files. Oracle reply bytes grant no recovery authority.
+[Registered journeys](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/mod.rs)
+cover cold capture/restore/accepted start, effect-free terminal replay, process
+death after authenticated load and cold continuation after each restore stage.
+Continuations reconstruct original bytes and acceptance while preserving settled
+prefixes. [Lost-reply cases](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/restore_failures/mod.rs)
+cover allocation, the second upload and start; retained reentry refuses successor
+work without changing original files or recovering authority from oracle replies.
 
-The consumer's [terminal provider](../crates/ic-backup-agent/examples/standalone/workflow/restore/mod.rs)
-replays the complete workflow under its original journal lock, verifies source
-artifact/manifest provenance and requires fresh exact post-load acceptance. The
-[parent terminal checks](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/terminal/mod.rs)
-withhold and substitute acceptance before start, preserve an unrelated unfinished
-restore reference after release, and reject changed acceptance even on
-already-released replay. Successful replay changes no file bytes. No artifact or
-remote snapshot is deleted. The in-process Agent requests create no external
-backup commands; native process tests separately cover descendant custody and
-retained command identities. These facts do not install a production terminal
-provider or qualify another application's obligations or fencing.
+The [terminal provider](../crates/ic-backup-agent/examples/standalone/workflow/restore/mod.rs)
+holds the original workflow lock, verifies source provenance and requires fresh
+exact post-load acceptance. [Parent checks](../crates/ic-backup-agent/examples/standalone/tests/pocketic_transport/independent/terminal/mod.rs)
+withhold/substitute acceptance before start, reject changed acceptance even on
+released replay and preserve unrelated unfinished references. Successful replay
+changes no file bytes. No artifact or remote snapshot is deleted.
 
 ## Independent authenticated consumer processes
 
-The [independent normal consumer](agent-transport.md#independent-normal-consumer)
-retains original frozen catalogues, durable artifacts/manifest, signed ingress,
-raw replies, source references and separately named failed process logs. Complete
-journey cases above share that existing consumer. Operator cases add typed
-inspection, bounded pause before start and retention/partial-output failures;
-opaque-application cases preserve mutation/observation, process-death, bound and
-replay coverage. Test membership comes from registered cases rather than a
-maintained aggregate count.
+The [normal consumer](agent-transport.md#independent-normal-consumer) retains frozen
+catalogues, durable artifacts/manifest, signed ingress, raw replies, references and
+separately named failed-process logs. Operator cases add typed inspection, bounded
+pause before start and retention/partial-output failures. Opaque application cases
+cover mutation/observation, process death, bounds and replay. Registered cases own
+membership; prose does not maintain aggregate counts.
 
-The [current handoff](status/current.md) records exact source/graph execution and
-keeps candidate and registry-only evidence separate. This is candidate-path
-library qualification, not a published-product or Canic acceptance receipt.
-Installed Canic, native macOS and installed-IC qualification remain separate; the
-[adoption guide](canic-adoption.md) identifies application responsibilities.
+Current receipts distinguish candidate-path execution from registry-only
+qualification. Installed Canic, native macOS, installed-IC and production
+application acceptance remain separate. See [application responsibilities](canic-adoption.md).
+Native fakes qualify local persistence/process behavior; these simulator suites
+exercise actual management ingress and authenticated Agent transport.
 
 ## Reproduce and retain evidence
 
-Prepare the reviewed local tools and locked Cargo cache explicitly before running:
+Prepare tools and the locked Cargo cache explicitly, then select either suite:
 
 ```bash
 make install-tools
@@ -338,35 +156,44 @@ make deps
 make install-testkit-server
 make testkit-server-check
 cargo test --offline --locked -p ic-backup --test pocketic_snapshot -- --nocapture
+cargo test --offline --locked -p ic-backup-agent --example standalone pocketic_transport -- --nocapture
 ```
 
-The test requires the explicitly prepared locked Testkit CLI and its admitted
-server. Its offline check runs before startup and never downloads or silently
-substitutes a server. CI prepares that selection before native package tests.
-Missing/changed tools reject rather than skip cases.
-The server stays local; no public IC network is contacted.
+Missing/changed assets reject rather than skip cases. Library admission stays
+offline; the server is local and no public IC network is contacted.
 
-Fresh fixture directories remain retained beneath the selected temporary parent
-on success and failure. Each records the actual server checksum, Wasm bytes,
-original plans, reserved journals, arguments/replies, management trace, durable
-source artifacts/manifest/references, stopped post-load verification or retained
-pending-lifecycle evidence, and a successful qualification result with instance,
-target, raw source/destination IDs, elapsed time and accounted ingress count.
-Transfer-read loss retains its original pending journal and any partial Created
-artifact bytes. Successful tests with pending evidence qualify safe stopping,
-not a completed backup or restore.
-Simulator instance disposal does not remove those host-side records.
+Fixture directories remain beneath the selected temporary parent on success and
+failure. Preserve original server identity/output, copied lock and digest, Wasm,
+plans, reservations, signed ingress, arguments/replies, traces, artifact bytes,
+manifests, source references, stopped-state verification and result records.
+Pending cases retain partial staging and original spent authority. Instance
+disposal does not remove host evidence. Retain old and failed bundles; successful
+safe stopping is separate from completed backup/restore.
 
-[The historical machine review](pocketic-qualification.json) retains its named
-source/dependency identities, registered cases, backend and original scope.
-Current focused receipts belong to the [handoff](status/current.md) and its retained
-per-command/fixture evidence. Linux results do not
-supply native macOS qualification. The original journey was delivered under
-[issue #17](https://github.com/dragginzgame/ic-backup/issues/17); current transfer-read
-adoption is tracked in [issue #22](https://github.com/dragginzgame/ic-backup/issues/22).
-Application-qualified Agent integration, executable workflows/CLI, Canic adaptation, application-specific
-lifecycle recovery, fencing and production terminal/reference-release qualification remain
-separate. The inspected
-[management snapshot contract](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
-supplies platform shapes;
-its metadata or status alone never establishes original load attribution.
+## Historical fence-specific qualification
+
+Fence acquisition/reconciliation fixtures retired with the 0.58 API cut. Their
+[0.57.1 guide](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/pocketic-qualification.md)
+retains the original qualification/recovery behavior. Layouts containing
+`consistency-requirement.json` or `fence-obligation.json` refuse before spending.
+Preserve them and finish/reconcile with **0.57.1 and the original qualified
+integration**; never delete markers, rebuild plans or re-sign to bypass admission.
+Current opaque ingress covers signed/reply retention, pending attempts,
+cancellation and separately reserved recovery. Canic owns actual checkpoint/fence
+semantics; maintained fenced restore retains rejection and source-reference checks.
+
+## Pinned CLI capability probe
+
+The ICP probe is retired. Its
+[exact historical review](https://github.com/dragginzgame/ic-backup/blob/b1c1c33f1e9d80c2c22a605ed4b39383b281ede7/docs/pocketic-qualification.md#pinned-cli-capability-probe)
+retains the CLI routing refusal, original pending accounting, evidence locations
+and upstream/consumer references. It grants no current transport qualification.
+
+## Earlier qualification
+
+The [complete prior guide](https://github.com/dragginzgame/ic-backup/blob/b1c1c33f1e9d80c2c22a605ed4b39383b281ede7/docs/pocketic-qualification.md)
+retains Testkit migrations, earlier Host/Metrics graphs, original result counts
+and per-run evidence paths. The [historical machine review](pocketic-qualification.json)
+keeps its named sources, selections and scope. Neither is current qualification;
+[the handoff](status/current.md) owns current receipts. Original journals, recovery
+artifacts and [historical evidence](reports/README.md) remain preserved.

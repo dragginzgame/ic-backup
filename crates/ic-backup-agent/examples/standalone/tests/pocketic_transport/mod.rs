@@ -231,11 +231,10 @@ impl Fixture {
             digest.sha256.to_string().as_bytes(),
         )
         .expect("retain private original server identity");
-        let builder = PocketIcBuilder::new()
+        let builder = PocketIcBuilder::new(Duration::from_secs(60))
             .with_application_subnet()
             .with_nns_subnet()
-            .with_state_dir(root.join("simulator"))
-            .with_max_request_time_ms(Some(60_000));
+            .with_state_dir(root.join("simulator"));
         let startup = PocketIcStartupConfig::Spawn {
             server_binary: binary,
             timeout: Duration::from_secs(120),

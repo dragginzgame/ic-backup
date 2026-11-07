@@ -482,28 +482,18 @@ async fn context_and_stale_reservations_reject_before_network() {
         provider.submit_mutation(&request, &untouched).await,
         Err(IcMutationProviderError::Unsupported)
     ));
-    for endpoint in [
-        "http://example.com/",
-        " https://example.com/",
-        "https://example.com ",
-        "https://user:secret@example.com/",
-        "https://example.com/path",
-        "https://example.com/path/..",
-        "https://example.com\\path\\..",
-        "https://example.com/?query",
-        "https://example.com/#fragment",
-    ] {
-        assert!(matches!(
-            AgentTransport::new(
-                plan.context().clone(),
-                endpoint,
-                support::identity(),
-                vec![1],
-                Duration::from_secs(1)
-            ),
-            Err(TransportError::Configuration)
-        ));
-    }
+    // The endpoint unit tests own the full written-origin matrix. Keep one
+    // public-constructor regression for paths hidden by URL normalization.
+    assert!(matches!(
+        AgentTransport::new(
+            plan.context().clone(),
+            "https://example.com/path/..",
+            support::identity(),
+            vec![1],
+            Duration::from_secs(1)
+        ),
+        Err(TransportError::Configuration)
+    ));
     server.finish().unwrap();
     assert!(server.requests.lock().unwrap().is_empty());
 }

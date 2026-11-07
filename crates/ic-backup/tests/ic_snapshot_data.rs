@@ -16,13 +16,12 @@ use ic_backup::{
         ic_snapshot_metadata::{IcSnapshotMetadataReply, IcSnapshotMetadataRequest},
         operation_plan::OperationPlanRecord,
     },
-    ops::persistence::{
-        AttemptJournalGuard, BackupLayoutGuard, create_operation_plan, read_operation_plan,
-    },
+    ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, read_operation_plan},
 };
 use ic_platform::management_canister_types::SnapshotDataKind;
 use serde::Deserialize;
 use std::fs;
+use support::observation_replay::PendingObservation;
 
 #[derive(Deserialize)]
 struct Case {
@@ -52,10 +51,6 @@ fn every_registered_data_kind_reopens_exact_evidence_without_settlement_or_new_s
     }
 }
 
-#[expect(
-    clippy::too_many_lines,
-    reason = "one original evidence/reopen journey keeps all spending and retention assertions together"
-)]
 fn retained_case(case: Case, raw_metadata: &[u8]) {
     let root = support::temp_root(&format!("ic-backup-data-{}", case.name));
     let layout = BackupLayoutGuard::acquire(&root).unwrap();
@@ -71,20 +66,7 @@ fn retained_case(case: Case, raw_metadata: &[u8]) {
     let arguments = request.arguments().to_vec();
     let plan: OperationPlanRecord =
         support::single_operation_plan(capture.target(), 7, capture.digest().hash());
-    create_operation_plan(&layout, &plan).unwrap();
-    layout
-        .retain_restore(&root.join("restore-reference.json"), plan.digest().hash())
-        .unwrap();
-    let references = layout.restore_references().unwrap();
-    let authority = plan.attempt_authority(7).unwrap();
-    let mut journal = AttemptJournalGuard::create(&layout, authority).unwrap();
-    let mutation = journal.reserve_mutation().unwrap();
-    let observation = journal
-        .reserve_observation(mutation, request.digest().hash())
-        .unwrap();
-    let original_view = journal.record().unwrap().view();
-    let original_journal = fs::read(journal.path()).unwrap();
-    let original_plan = fs::read(root.join("operation-plan.json")).unwrap();
+    let (journal, original) = PendingObservation::reserve(&layout, &plan, request.digest().hash());
     let raw = bytes(&case.reply_hex);
     let reply = IcSnapshotDataReply::decode(&request, &raw).unwrap();
     assert_eq!(reply.digest().hash(), case.digest);
@@ -140,29 +122,7 @@ fn retained_case(case: Case, raw_metadata: &[u8]) {
     assert_eq!(admitted.chunk_checksum(), &checksum);
     assert_eq!(admitted.chunk(), [0, 255, 17]);
 
-    assert_eq!(journal.record().unwrap().view(), original_view);
-    assert_eq!(original_view.pending_mutation, Some(mutation));
-    assert_eq!(original_view.pending_observation, Some(observation));
-    assert!(!original_view.applied);
-    assert_eq!(
-        (
-            original_view.mutations_remaining,
-            original_view.observations_remaining
-        ),
-        (0, 0)
-    );
-    assert!(journal.reserve_mutation().is_err());
-    assert!(
-        journal
-            .reserve_observation(mutation, request.digest().hash())
-            .is_err()
-    );
-    assert_eq!(fs::read(journal.path()).unwrap(), original_journal);
-    assert_eq!(
-        fs::read(root.join("operation-plan.json")).unwrap(),
-        original_plan
-    );
-    assert_eq!(layout.restore_references().unwrap(), references);
+    original.assert_unchanged(&layout, &mut journal, request.digest().hash());
     assert_eq!(fs::read(root.join("data.candid")).unwrap(), raw);
     assert_eq!(
         fs::read(root.join("metadata.candid")).unwrap(),

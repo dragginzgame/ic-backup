@@ -2,6 +2,8 @@
 
 use std::path::PathBuf;
 
+pub(crate) mod observation_replay;
+
 /// Decode golden bytes strictly; this support module is compiled outside the library.
 pub(crate) fn hex_bytes(hex: &str) -> Vec<u8> {
     let (pairs, remainder) = hex.as_bytes().as_chunks::<2>();

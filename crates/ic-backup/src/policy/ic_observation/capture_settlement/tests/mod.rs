@@ -10,6 +10,7 @@ use crate::{
         ic_mutation,
         ic_observation::{self, Original},
         operation_plan::hash,
+        response_fault::ObservationFault,
     },
 };
 use ic_platform::candid::contract;
@@ -435,23 +436,15 @@ fn association_wire_and_current_reservations_cannot_be_bypassed() {
     let baseline = IcSnapshotReply::decode(request.payload(), &bytes).unwrap();
     let response = IcObservationResponse::new(input(&request, vec![])).unwrap();
     let claim = claims(&request, &baseline, &response);
-    for change in 0..6 {
+    for fault in [
+        ObservationFault::Authority,
+        ObservationFault::Request,
+        ObservationFault::Target,
+        ObservationFault::BothAttempts,
+        ObservationFault::Network,
+    ] {
         let mut fields = response.input().clone();
-        match change {
-            0 => fields.authority = hash("12"),
-            1 => fields.request = hash("12"),
-            2 => fields.target = "aaaaa-aa".into(),
-            3 => {
-                fields.mutation_attempt = 2;
-                fields.observation_attempt = 3;
-            }
-            4 => {
-                let mut value = serde_json::to_value(&fields.context).unwrap();
-                value["network"] = serde_json::json!(hash("12").hash());
-                fields.context = serde_json::from_value(value).unwrap();
-            }
-            _ => fields.reply = b"DIDL\0\0".to_vec(),
-        }
+        fault.apply(&mut fields, hash("12"), hash("12"));
         let changed = IcObservationResponse::new(fields).unwrap();
         let error = validate_capture_settlement(
             &request,
@@ -465,15 +458,24 @@ fn association_wire_and_current_reservations_cannot_be_bypassed() {
         let IcCaptureSettlementError::Observation(error) = error else {
             panic!("existing association denial");
         };
-        assert!(match change {
-            0 => matches!(error, IcObservationAssociationError::AuthorityMismatch),
-            1 => matches!(error, IcObservationAssociationError::RequestMismatch),
-            2 => matches!(error, IcObservationAssociationError::TargetMismatch),
-            3 => matches!(error, IcObservationAssociationError::AttemptMismatch),
-            4 => matches!(error, IcObservationAssociationError::ContextMismatch),
-            _ => matches!(error, IcObservationAssociationError::Inventory(_)),
-        });
+        fault.assert_error(&error);
     }
+    let mut fields = response.input().clone();
+    fields.reply = b"DIDL\0\0".to_vec();
+    let changed = IcObservationResponse::new(fields).unwrap();
+    assert!(matches!(
+        validate_capture_settlement(
+            &request,
+            &original.journal,
+            &baseline,
+            &changed,
+            &hash("56"),
+            &claim,
+        ),
+        Err(IcCaptureSettlementError::Observation(
+            IcObservationAssociationError::Inventory(_)
+        ))
+    ));
     let mut settled = original.journal.clone();
     settled
         .record_observation(ObservationReceiptRequest {

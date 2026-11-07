@@ -13,7 +13,7 @@ use ic_backup::{
     ops::persistence::{AttemptJournalGuard, BackupLayoutGuard, create_operation_plan},
 };
 use ic_platform::agent::{AnonymousIdentity, Identity};
-use std::{fs, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
 pub fn root(label: &str) -> PathBuf {
     let parent = std::env::var_os("TMPDIR").map_or_else(
@@ -50,24 +50,9 @@ pub fn retain_signed(
             prepared.request_id().to_string().into_bytes(),
         ),
     ] {
-        retain_file(&root.join(name), &bytes)?;
+        crate::workflow::retain(&root.join(name), &bytes)?;
     }
-    fs::File::open(root)?.sync_all()
-}
-
-/// Create and sync one private evidence file, preserving partial bytes on failure.
-fn retain_file(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
-    use std::io::Write;
-    let mut options = fs::OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    let mut file = options.open(path)?;
-    file.write_all(bytes)?;
-    file.sync_all()
+    Ok(())
 }
 
 pub fn identity() -> Arc<dyn Identity> {

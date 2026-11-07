@@ -131,10 +131,10 @@ the same advancement call using the complete original `RetainedStageEvidence` se
 stages or extract the settlement view from `ExecutionWorkflowAdvance::Complete`.
 Do not create again on cold resume or treat `Paused` as completion.
 
-Canic's checkpoint unit tests and Root application-checkpoint simulator retain their
-integration-specific regression coverage. Their old entry-point calls require this
-source migration before adopting the new API. Backup's local tests qualify the new
-interface; they do not qualify the unchanged Canic checkout.
+Integrations still using those retired entry points must migrate their checkpoint
+unit tests and application-checkpoint simulator calls with the runner. Canic retains
+its integration-specific regression coverage. Backup's local tests qualify its own
+interface; they do not establish the adoption state of Canic's current checkout.
 
 ## Application transport adapter
 
@@ -176,10 +176,13 @@ readers and closed artifact-tree contracts do not replace that consumer acceptan
 
 ## Reusable operator composition
 
-The #75 working-source composition adds `advance_execution_workflow` and
-`read_execution_workflow_progress`; those two APIs are not in published 0.49.0.
-It composes the existing owners below. There is no additional operator record,
-journal, scheduler, retry transition or default authority provider.
+The published workflow API provides `advance_execution_workflow` and
+`read_execution_workflow_progress`, composing the existing owners below without
+an additional operator record, journal, scheduler, retry transition or default
+authority provider. [The standalone example](../crates/ic-backup-agent/examples/standalone/README.md)
+shows the maintained composition. Earlier entry-point migrations remain in
+[the migration section](#workflow-api-migration); current qualification belongs to
+[the handoff](status/current.md).
 
 | Operator operation | Reusable owner and required inputs |
 | --- | --- |

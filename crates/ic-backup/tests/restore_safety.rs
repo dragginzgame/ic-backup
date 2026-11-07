@@ -39,9 +39,7 @@ fn wire(method: IcManagementMethodRecord) -> IcManagementRequestRecord {
     .unwrap()
 }
 fn plan(wire: &IcManagementRequestRecord) -> OperationPlanRecord {
-    serde_json::from_value(json!({
-    "version":1,"context":{"network":"ab".repeat(32),"caller":"2vxsx-fae","release":"cd".repeat(32)},"inventory":{"version":1,"targets":[{"canister_id":APP,"parent_canister_id":null,"role":null,"module_hash":null}]},"selected_targets":[APP],"graph":{"version":1,"nodes":[{"operation_sequence":7,"depends_on":[]}]},"operations":[{"operation_sequence":7,"target":APP,"request":wire.digest().hash(),"budget":{"mutations":1,"observations":1}}],"budget":{"mutations":1,"observations":1}
-})).unwrap()
+    support::single_operation_plan(APP, 7, wire.digest().hash())
 }
 fn fence_binding() -> RestoreFenceBindingRecord {
     RestoreFenceBindingRecord {

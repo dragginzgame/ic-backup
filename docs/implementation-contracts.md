@@ -209,25 +209,26 @@ bound and the existing public errors used by status decoding. Original lifecycle
 and snapshot codec bounds, fresh safety/consistency requirements, byte custody
 and no-redispatch obligations remain mandatory.
 
-Consistency requires exact full inventory/selection, every target stopped and the
-requested lane. Coordinated capture additionally needs the original Active fence
-and identity/membership/external-obligation revisions. Restore requirements bind
-same-network/release/ID source and restore plans plus retained artifact digest;
-subsets require application qualification. Load needs every target stopped. Start
-needs its target stopped, accepted restored state for the whole selection and
-qualified fenced execution. The no-irreversible-effects lane has no generic default;
-the fenced lane requires rewind-independent custody and replay safety. Preserve
-1,024 actual target rows and descriptive call bounds, distinct from spending.
+Applications own capture consistency and quiescence in their mandatory admission
+callbacks. Coordinated capture requires independently qualified whole-selection
+stopping, active fence custody and current identity/membership/external-obligation
+revisions. Backup supplies no consistency lane or fence acquisition protocol.
 
-Fence obligations bind original acquisition operations and purpose-specific
-capture/restore requirements under retained layouts, including outside-snapshot
-restore custody. Retain obligations for pending, Applied, NotApplied and Uncertain.
-Acquisition uses one previously accounted update with canonical receiver, replicated
-mode, 1..128 visible ASCII method bytes and at most 1 MiB opaque arguments. Original
-payload admission precedes spending. Hold the journal across fresh whole-unit
-application admission and submission; recheck stage/requirement/obligation around
-it. Passive replies produce no receipt or Active custody. No default application
-semantics or observation provider is installed.
+Restore requirements bind same-network/release/ID source and restore plans plus
+retained artifact digest; subsets require application qualification. Load needs
+every target stopped. Start needs its target stopped, accepted restored state for
+the whole selection and qualified fenced execution. The no-irreversible-effects
+lane has no generic default; the fenced lane requires rewind-independent custody
+and replay safety. Preserve 1,024 actual target rows and descriptive call bounds,
+distinct from spending.
+
+The former consistency/fence records and acquisition/reconciliation APIs are
+retired. [Retained-state recovery](#records-plans-and-spending) owns refusal and
+preservation of existing layouts; the
+[frozen 0.57.1 boundary](https://github.com/dragginzgame/ic-backup/blob/v0.57.1/docs/extraction-boundary.md#original-application-fence-obligation-retention)
+owns their original recovery protocol. New application protocols use
+[accounted opaque ingress](#agent-transport-and-qualification) and integration-owned
+fencing semantics. Current fenced restore safety remains required.
 
 ## Management wire and response admission
 
@@ -319,8 +320,8 @@ Historical contracts do not authorize another reader or cleanup.
 Every coordinator admits original payloads before spending, reserves through the
 complete-plan owner, holds selected journal exclusion across mandatory fresh
 admission and one provider await, then re-admits the journal, associates bounded
-returned evidence and rechecks stage/ancestors. Fence steps also recheck requirements
-and obligations. Missing, held, pending or Applied originals deny fresh dispatch.
+returned evidence and rechecks stage/ancestors. Restore steps also recheck original
+source and safety requirements. Missing, held, pending or Applied originals deny fresh dispatch.
 Return exact bounded replies in typed post-reply errors. Core supplies no executor
 or `Send` requirement. Retain exact replies before cancellable qualification work.
 Cancellation preserves pending/Applied spending, earlier receipts and partial bytes.
@@ -401,6 +402,21 @@ bounds. Reserve observations separately before calls; remote preflight and
 qualification also require independent prior accounting. No automatic observation,
 receipt, repeat call or allowance reset is installed.
 
+Settlement claims and their borrowed views are passive evidence: the library
+matches declarations but authenticates no attribution, freshness or byte custody.
+Views retain original observations and claims and project `ObservationOutcomeRecord`.
+Unresolved claims require an actually settled authenticated successful observation;
+lost, absent, unavailable or malformed replies stay outside this boundary.
+
+Only a qualified integration explicitly invokes the existing journal receipt
+transition. Settled uncertainty clears the observation while retaining its pending
+mutation, consumed allowances, original evidence, source references and obligations.
+Reopen reads local history without repeating a provider call. Extra remote evidence
+requires its own prior accounting. Pure settlement admission performs no IO,
+serialization, call, automatic receipt, retry or refund, and grants no full-transfer,
+load/start, application, terminal or fence/reference-release authority. It introduces
+no provider, transport, persisted schema, hash recipe or accounting owner.
+
 Settlement identity denials share the public `policy::SettlementIdentityMismatch`
 and `policy::InventorySettlementMismatch` causes, wrapped by each settlement
 policy's `Identity` error variant. Reservation and wire admission precede claim
@@ -424,16 +440,6 @@ Status/readback, attribution and destination denials remain domain-specific.
   status/evidence. A state-equivalent current lifecycle is insufficient. Load needs
   independent complete restored-state verification; negative evidence excludes
   transient application. Qualified settled ambiguity keeps the mutation unresolved.
-- Fence reconciliation binds original obligation/authority/mutation/challenge to one
-  separately reserved observation, at most one descriptive remote call and 1,024
-  actual target rows. Acquisition needs exclusive original-request attribution and
-  exact Active revisions; current presence/absence alone cannot settle it.
-  Explicit late-reply settlement reopens original evidence, admits complete progress
-  and holds the journal through qualification. Require exact attempt/request/outcome/
-  evidence before recording one receipt, with no reservation or provider dispatch.
-  Recheck stage/requirement/obligation before and after recording. Uncertain closes
-  the observation while retaining the mutation. Write or closing-admission failure
-  may leave a receipt; replay originals to resolve it without repeating a read.
 
 ## Terminal evidence and reference release
 

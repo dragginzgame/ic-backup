@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.58.11]
+
+### ⬆️ Dependencies
+
+- Adopt the incoming Platform 0.23.5 lock selection, retaining Platform-owned IC
+  identities, management wire bytes and explicit boundary conversions.
+- Adopt Testkit 0.90.0 and pass explicit 60-second request budgets to both managed
+  PocketIC fixtures, preserving separate startup bounds and original recovery custody.
+  [#79](https://github.com/dragginzgame/ic-backup/issues/79).
+
+### 🛠️ Tooling
+
+- Adopt Shared Tooling 0.31.3 with checksum portability and LOC scratch diagnostics;
+  create caller-selected scratch parents before local validation fixture allocation.
+
+### 🧹 Cleanup
+
+- Delegate the standalone example's private evidence writes to Host FS retained
+  writing, preserving partial files, native errors and create-only custody.
+- Keep restore-target, fence/context and controller-set admission with their
+  concrete owners, removing unused generalization while preserving typed errors,
+  validation order and public contracts.
+
+### 🧪 Testing
+
+- Share settlement fault cases, workflow declarations and native evidence-replay
+  setup while retaining independent decoding, coverage and recovery assertions.
+- Reuse completed upload-source fixtures and original-preserving filesystem
+  replacements across native artifact tests, keeping in-place byte corruption distinct.
+- Reuse the typed single-operation plan fixture in public journal and restore-safety
+  tests while retaining their independent persistence and recovery assertions.
+- Keep origin-rejection cases with endpoint admission and remove the copied Host
+  Process fragmented-capture regression; retain public transport and diagnostic checks.
+
+### 📚 Documentation
+
+- Retire obsolete fence acquisition/reconciliation instructions and centralize
+  common settlement semantics, preserving current fenced restore and original-state recovery.
+  Consolidate coordination documentation and clarify current dependency and
+  frozen-delivery ownership alongside historical evidence. Refresh active Agent
+  transport and workflow adoption guidance to match the released interfaces.
+- Separate current simulator scope and reproduction from revision-bound history;
+  clarify library/CLI admission while preserving original evidence and 0.57.1 recovery.
+
 ## [0.58.10] - 2026-11-06
 
 ### ⬆️ Dependencies
