@@ -45,12 +45,27 @@
       "server": "PocketIC 16.1.0",
       "consumer_graph": "Platform 0.23.5, Types 0.18.2, Host 0.74.4, Agent SDK 0.49.3, Rust 1.99.1",
       "issue": "https://github.com/dragginzgame/ic-backup/issues/79",
-      "disposition": "Migration and focused Linux acceptance pass locally; issue remains open until uncommitted consumer changes land. No issue-state mutation or delivery."
+      "disposition": "Delivered in 0.58.11; issue #79 closed after registry and independent published-consumer acceptance. Original focused adoption evidence remains separate from the full release gate."
     },
     "limits": [
       "Linux focused consumer qualification, not a new full release gate or registry-only qualification.",
       "Native macOS and current Canic application acceptance remain separate.",
       "All original delivery, recovery, failed fixture and tool-store evidence remains retained."
+    ]
+  },
+  "delivery": {
+    "version": "0.58.11",
+    "release_commit": "e6471464406e97d77b1c4b610dd2a5c22991f27c",
+    "qualified_source": "16527d4b5cd97f5f699b80f125ca5ecd1290b1c1",
+    "tag": "backup-v0.58.11",
+    "batch": "batch-_jjlBLUV",
+    "state": "complete and reconciled; not retired",
+    "evidence_directory": "target/evidence/deploy-05811/",
+    "results": "Full Linux gate: strict Clippy, 544 tests, documentation, tooling/release/hook regressions, independent consumers and archives. Registry checksums/VCS provenance and all 330 packaged Rust files match the release. Explicit registry setup and registry-only authenticated capture/restore/acceptance/terminal replay pass.",
+    "issue_79": "closed",
+    "limits": [
+      "Native macOS and current Canic/application acceptance remain separate.",
+      "Earlier failed batches, journals, receipts and recovery artifacts remain retained."
     ]
   }
 }

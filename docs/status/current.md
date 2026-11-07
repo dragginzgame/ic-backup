@@ -1,125 +1,82 @@
 # Current handoff — 2026-11-07
 
-## Pending Testkit and Shared Tooling adoption
+## Delivered 0.58.11
 
-Testkit **0.90.0** from `c03161b9f1395c343756fda6b8721e957798c3df` is selected
-through the root catalog/registry lock. Both managed builders pass explicit
-60-second request budgets; 120-second startup bounds, original custody and
-same-ID restore semantics remain. Other incoming package selections are preserved;
-three unused packages and obsolete dependency edges leave the graph.
+Both **ic-backup 0.58.11** and **ic-backup-agent 0.58.11** are published on
+crates.io. Release `e6471464406e97d77b1c4b610dd2a5c22991f27c` and annotated
+`backup-v0.58.11` were verified on `origin/main`; qualified source is
+`16527d4b5cd97f5f699b80f125ca5ecd1290b1c1`. Registry readback confirms non-yanked
+versions, matching archive checksums and Git provenance. All **330 packaged Rust
+files** match the release commit: 285 Core and 45 Agent files.
 
-Shared **0.31.3** at `d2a2f395bc06b22cb3f18afc7d2978a150726360` exports 160
-payloads: three updates, 157 unchanged. Provenance, actual Make checksum-NUL
-refusal, dependency admission, fresh-parent LOC, Testkit routing and CI-evidence
-callers pass. Four local override-aware scripts create their scratch parents.
-The exact Testkit CLI/server is prepared and admitted offline. Strict Clippy
-passes for Core's PocketIC target and Agent's standalone example on Rust 1.99.1.
-Five installed acceptance cases pass: three Core capture/load-recovery cases and
-two Agent cases covering pending authority and independent normal-consumer
-capture/restore/acceptance/terminal replay. Evidence is in
-`target/evidence/adopt-testkit090-shared0313/`, including exact registry archive
-checksum/VCS provenance. [#79](https://github.com/dragginzgame/ic-backup/issues/79)
-meets its migration and focused Linux acceptance; leave it open until these
-uncommitted changes land. Native macOS and full release qualification remain
-separate. No delivery or issue-state change has occurred.
+The full Linux gate passes strict all-target/all-feature Clippy, **544 tests**,
+documentation, tooling/release/hook regressions, independent normal consumers and
+archive checks. The one online cache-preparation case remains ignored in the normal
+gate. Explicit post-publication preparation and the registry-only normal consumer
+then pass authenticated capture/restore, application acceptance and effect-free
+terminal replay against the exact published pair. Native macOS, current Canic
+acceptance and hosted CI remain separate from this local qualification.
 
-## Pending cleanup
+Qualified selections are Platform **0.23.5**, Types **0.18.2**, Testkit **0.90.0**
+with its exact CLI, Host/Build **0.74.4**, Agent SDK **0.49.3**, PocketIC **16.1.0**
+and minimum/pinned Rust **1.99.1**. Shared **0.31.3** at
+`d2a2f395bc06b22cb3f18afc7d2978a150726360` supplies 160 canonical payloads.
+Testkit's archive/VCS provenance binds `c03161b9f1395c343756fda6b8721e957798c3df`.
+Both managed builders supply explicit 60-second request budgets, retaining separate
+120-second startup bounds and original ownership/recovery. [#79](https://github.com/dragginzgame/ic-backup/issues/79)
+is **closed as completed** after publication and independent registry acceptance.
+No live IC or provider operations occurred.
 
-Tests share settlement faults, workflow declarations, native replay setup,
-completed upload sources and positive single-operation plans. Original-preserving
-filesystem replacements remain distinct from in-place corruption; decoding,
-coverage, spent-attempt and recovery assertions remain independent.
+## Change scope and evidence
 
-The standalone example delegates private evidence writes to Host FS's retained
-writer, preserving partial entries and native I/O errors. Test support reuses it.
-Endpoint admission owns its rejection matrix with one public-constructor case;
-the copied Host Process fragmented-capture regression is retired while required
-Content-Length and retained HTTP diagnostics remain.
+Admission now lives with concrete restore/controller owners; public errors,
+validation order and v1 bytes/hashes remain unchanged. The standalone example uses
+Host FS's retained writer, preserving partial entries, create-only custody and
+native errors. Tests share positive plans, settlement faults, completed sources and
+replay setup while retaining distinct corruption, coverage and recovery checks.
+Guides separate current contracts from exact-revision history and preserve 0.57.1
+recovery. Local scratch owners create missing parents; tooling fixtures isolate
+enclosing release/publication settings. [The changelog](../../CHANGELOG.md) records
+the delivered outcomes; [the tooling review](../shared-tooling-review.json) retains
+focused adoption and later delivery as separate proofs.
 
-Restore-target, fence/context and controller-set admission lives with its concrete
-owner. Three private helper modules and their generic callbacks/intermediate
-errors are removed, preserving validation order and public errors. Shared principal
-parsing and distinct JSON/Candid visitors remain.
+Delivery, registry metadata/archives, source comparisons, refs, reconciliation and
+post-publication logs are under `target/evidence/deploy-05811/`. Registry-only
+graph/build and runtime roots beneath the managed checkout's `target/tmp/` are
+`ic-backup-agent-independent-build-2256280-0/` and
+`ic-backup-agent-pocketic-2256280-1/`; explicit setup is
+`ic-backup-agent-registry-prepare-2252982-0/`.
 
-Guides link canonical coordination/settlement contracts and separate current
-Platform, Agent and simulator behavior from exact-revision history. Simulator
-library admission is distinct from the CLI/tool check. Retired fence recovery and
-original evidence remain. The release fixture map separates frozen delivery from
-historical adapters and retains its original review/hash.
+Batch **`batch-_jjlBLUV`** is complete and reconciled, **not retired**. Preserve
+`target/release-frozen/batch-_jjlBLUV/`, its source pin and durable Git/plan/
+validation/publication records under `.git/release-state/frozen/batch-_jjlBLUV/`.
+Normal source was fast-forwarded through Shared's reconciliation command; release
+metadata and dependency selections agree with the delivered commit.
 
-Focused Linux checks use Rust **1.99.1**:
+Earlier failed batches remain intact: `batch-DWdrLMkj` caught four missing
+semicolons in artifact unit tests; `batch-7uUMU2LC` caught publication-context leakage
+into tooling fixtures. Both failed before version preparation or publication.
+Their logs and captured sources remain retained; the corrected source passed the
+complete gate. No real recovery state or failed bundle was cleaned up.
 
-| Batch | Passing checks | Evidence beneath `target/evidence/` |
-| --- | --- | --- |
-| Core tests/contracts | 29 selected tests; strict Clippy for Core library and metadata/data targets | `cleanup-20261107/` |
-| Artifact fixtures | 13 upload/source/restore-source tests | `artifact-cleanup-20261107/` |
-| Agent retention/admission | 18 endpoint, retention, HTTP and independent normal-consumer journey tests; strict Clippy for Agent library and standalone example | `agent-cleanup-20261107/` |
-| Restore/controller localization | 30 controller, restore, lifecycle codec and retained-evidence tests; strict all-feature Core library Clippy | `restore-localization-20261107/` |
-| Public plan fixtures/simulator guide | Both operation-plan and restore-safety integration tests; strict all-feature Clippy for those targets | `plan-fixture-cleanup-20261107/` |
-
-Formatting, edited Markdown links, JSON and diff checks pass. The initial Agent
-HTTP check's sandbox loopback denial is retained; its local-network retry passes.
-The independent consumer exercised actual managed PocketIC, normal dependencies,
-capture/restore, application acceptance and effect-free terminal replay.
-
-Cleanup preserved its incoming lockfile byte-for-byte and its focused receipts
-used Platform **0.23.5** and Testkit **0.89.4**. The adoption above has its own
-evidence. Core/Agent APIs
-and v1 bytes/hashes are unchanged; the example writer is the maintained behavior
-change. Native macOS, current Canic acceptance and full release qualification
-remain separate. Cleanup has caused no live IC or publication effect.
-
-## Delivered 0.58.10 through Shared release batches
-
-Both **ic-backup 0.58.10** and **ic-backup-agent 0.58.10** are published. Release
-`b1aa039c68621af7c89570c78c1f0e38f601bed2` and annotated `backup-v0.58.10` were
-verified on `origin/main`; qualified source is
-`8dd5949bb438e5f69bbb8afc14626b6553281916`. Registry readback verified checksums,
-VCS provenance and all **330 packaged Rust files** against the release commit.
-
-Shared **0.31.0** at `74313941af2fce4399bec0e6909ca6229673c3f8` supplies 160
-canonical payloads. Schema-2 batch **`batch-DM8XPVj6`** completed the full gate,
-commit/tag, atomic push, publication and normal-checkout reconciliation. Its first
-busy tool-store refusal and exact resume evidence remain retained. The batch is
-**complete and reconciled, not retired**.
-
-The delivered Linux gate passed strict Clippy, **544 tests**, docs/tooling/release/
-hook regressions, independent consumers and archive checks. Registry-only
-capture/restore, acceptance and terminal replay also passed. Qualified selections
-were Platform **0.23.4**, Types **0.18.2**, Testkit **0.89.3** with its exact CLI,
-Host/Build **0.74.4**, PocketIC **16.1.0** and Rust **1.99.1**. Native macOS,
-Canic acceptance and hosted CI were separate.
-
-Preserve `target/evidence/deploy-05810/`, the managed checkout
-`target/release-frozen/batch-DM8XPVj6/` and durable records beneath
-`.git/release-state/frozen/batch-DM8XPVj6/`, including its source pin, exact
-validation/plan/publication receipts and failed evidence. Registry consumer roots
-beneath the managed checkout's `target/tmp/` are
-`ic-backup-agent-independent-build-2023157-0/` and
-`ic-backup-agent-pocketic-2023157-1/`. Snapshot review evidence remains in
-`target/evidence/shared-031/` and [its reviewed manifest](../shared-tooling-review.json).
-
-The [complete prior handoff](https://github.com/dragginzgame/ic-backup/blob/b1c1c33f1e9d80c2c22a605ed4b39383b281ede7/docs/status/current.md)
-retains 0.58.9 and earlier release/source/compiler identities, evidence paths and
-release-adoption details. Exact v1 receipts and mandatory resumed-validation
-checks remain binding. Historical `v…` recovery uses the original qualified
-checkout and explicit empty group. No journals, artifacts or failed bundles were
-removed. Public planning-error consolidation remains deferred to an API break;
-[coverage ownership](../development.md#simulator-coverage-ownership) remains local.
+The [prior handoff](https://github.com/dragginzgame/ic-backup/blob/16527d4b5cd97f5f699b80f125ca5ecd1290b1c1/docs/status/current.md)
+retains the cleanup/adoption receipts and earlier delivery identities/locations,
+including the completed, unretired 0.58.10 batch. Public planning-error consolidation
+remains deferred to an intentional API break. [Coverage ownership](../development.md#simulator-coverage-ownership)
+stays local; producer passes do not qualify Canic or application safety.
 
 ## Recovery and retained contracts
 
 Preserve standalone host-driven same-release/same-ID backup/restore, mandatory
 application admission and fenced restore safety. Persist intent before effects,
-reconcile lost replies and preserve original bounded spending, unfinished
-journals, artifacts, references and external obligations. Terminal replay is
-effect-free.
+reconcile lost replies and preserve bounded spending, unfinished journals,
+artifacts, references and external obligations. Terminal replay is effect-free.
 
 Layouts containing `consistency-requirement.json` or `fence-obligation.json` refuse
 before record use/spending, including malformed bytes and symlinks. Distinct-edge
-learned continuations refuse without rewriting bindings. Recover those originals
-with **0.57.1 and the original qualified integration before upgrading**. Never
-remove markers, rebuild plans, reinterpret payloads, re-sign or reset accounting
-to bypass admission. No migration, evidence cleanup or refund is provided. See
+learned continuations refuse without rewriting bindings. Recover originals with
+**0.57.1 and the original qualified integration before upgrading**. Never remove
+markers, rebuild plans, reinterpret payloads, re-sign or reset accounting to bypass
+admission. No migration, evidence cleanup or refund is provided. See
 [the migration](../canic-adoption.md#058-api-migration) and
 [implementation contracts](../implementation-contracts.md).
