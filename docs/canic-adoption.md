@@ -336,7 +336,7 @@ read/open and explicit qualified receipt methods remain available, including
 Canic's observation settlement path. No schema, hash or allowance changes; recover
 missing originals with the original tool rather than synthesizing replacement plans.
 
-Host Artifacts/FS/Process select 0.75.0 and Platform selects 0.24.0. Consumers
+Host Artifacts/FS/Process select 0.75.0 and Platform selects 0.25.0. Consumers
 importing public Host error types must align with that family; the independent
 consumer checks exercise the checksum-error conversion and publication-error payload.
 Management DTOs remain exactly 0.11.0, Types 0.18.2 and Agent SDK 0.49.3. Backup

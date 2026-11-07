@@ -1,5 +1,29 @@
 # Current handoff — 2026-11-07
 
+## Pending 0.59.2
+
+Adopt published Platform 0.25.0, source
+`0a32e8a2f7977a71062d4edec542bea96d63c508`. Its removal of ordinary facade
+entrypoint macros and the `cdk` feature affects no Backup caller. Selected host
+codec, principal and Agent implementations are unchanged. Both independent
+production graphs select only Platform 0.25.0; development-only Testkit 0.92.0
+retains Platform 0.24.0. No unrelated lock versions changed. Host 0.75.0,
+Types 0.18.2, management DTO 0.11.0, Agent SDK 0.49.3, PocketIC 16.1.0 and Rust
+1.99.1 remain unchanged. No source migration or persisted byte/hash change.
+
+Compiler/snapshot/tool/dependency/Candid admission, independent goldens, strict
+all-target/all-feature Clippy, formatting and documentation checks pass. Both
+independent Rust 1.99.1 public consumers pass without simulator dependencies;
+Core's normal graph excludes Agent and Process. All 87 focused native tests,
+20 Core PocketIC and 22 selected Agent tests pass, including authenticated
+capture/restore/application acceptance, terminal replay and interrupted recovery.
+The online registry-preparation case remains ignored. Evidence is under
+`target/evidence/adopt-platform025/`; independent public consumers are under
+`target/msrv-consumers.VHaXXp/`, and the Agent log records the 1337746 candidate
+graph/runtime fixture family. The selected lock stayed stable through validation.
+Changes are uncommitted; package versions remain 0.59.1 with pending 0.59.2 notes.
+No full release gate, publication, native macOS or current Canic acceptance is claimed.
+
 ## Delivered 0.59.1
 
 Both crates are published as 0.59.1. Release

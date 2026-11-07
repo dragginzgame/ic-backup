@@ -1136,7 +1136,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform",
+ "ic-platform 0.25.0",
  "ic-testkit",
  "rustix",
  "serde",
@@ -1155,7 +1155,7 @@ dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-process",
- "ic-platform",
+ "ic-platform 0.25.0",
  "ic-testkit",
  "reqwest",
  "serde",
@@ -1246,7 +1246,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f2bafc5da7b457cb0efdb622151e74c3367740d26eb8892f72be2c9b4683c53"
 dependencies = [
  "candid",
- "ic-agent",
  "ic-certification",
  "ic-management-canister-types",
  "ic-platform-types",
@@ -1255,6 +1254,20 @@ dependencies = [
  "serde_bytes",
  "serde_cbor",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "ic-platform"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f446080bf2af9617bb49a18b6b1ec872b59867a51e82911029a2f9ad6780c3e1"
+dependencies = [
+ "candid",
+ "ic-agent",
+ "ic-management-canister-types",
+ "ic-platform-types",
+ "serde",
+ "serde_bytes",
 ]
 
 [[package]]
@@ -1284,7 +1297,7 @@ dependencies = [
  "ic-host-fs",
  "ic-host-process",
  "ic-management-canister-types",
- "ic-platform",
+ "ic-platform 0.24.0",
  "ic-platform-types",
  "libc",
  "reqwest",

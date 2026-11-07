@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.59.2]
+
+### ⬆️ Dependencies
+
+- Adopt Platform 0.25.0 for host-driven backup/restore. Retain the existing
+  principal identities, bounded codecs, management DTO 0.11.0 and Agent SDK 0.49.3.
+  Testkit 0.92.0 keeps its separate development-only Platform dependency.
+
 ## [0.59.1] - 2026-11-07
 
 ### ⬆️ Dependencies
