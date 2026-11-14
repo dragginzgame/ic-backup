@@ -1,9 +1,45 @@
 # Changelog
 
-## [0.100.1] — pending
+## [0.101.0] — pending
 
 Development continues from the GitHub-only 0.100.0 checkpoint. Publication
-remains disabled; this starts the next working version without a release tag.
+remains disabled. The Host adoption promotes the pending release to 0.101.0;
+the working package remains 0.100.1 until explicit version preparation.
+
+### ⚠️ Breaking
+
+- Adopt published `ic-host-artifacts` and `ic-host-fs` 0.78.0. Backup exposes
+  their `Sha256Digest`, `ArtifactError` and `CapabilityError` types, so consumers
+  exchanging these types must select the same Host 0.78 line. Rust type identity
+  changes even though the used APIs and artifact source remain unchanged.
+  Persisted formats, digest bytes and recovery authority are unchanged; no data
+  migration or reset is required. See the
+  [Host release notes](https://github.com/dragginzgame/ic-tooling/blob/f816478db478c1226d0a953658e1ea0fb7ce7338/releases/foundation/CHANGELOG.md).
+
+### ✨ Features
+
+- Add bounded snapshot list/take reply validation and direct-host take preflight.
+  Preserve exact IDs, wire order and full timestamp/size values; reject duplicate
+  IDs, excessive inputs and a take result already in the prior inventory. Take
+  arguments preserve existing snapshots and installed code. These pure helpers
+  do not authenticate replies, dispatch capture or recover an uncertain call.
+
+### 🛡️ Fixes
+
+- Check prepared status call content against the original plan before submission
+  and during recovery. Refuse mismatched callers, targets, methods, arguments,
+  expiry and request IDs without re-signing, resubmitting or rewriting evidence.
+  Keep the existing API and record formats; provider authentication remains required.
+
+### 📦 Dependencies
+
+- Qualify published Platform Types 0.20.4 through the existing Platform dependency.
+  Principal implementation and bytes are unchanged; retain original plan, request
+  and recovery fixtures. This tooling-only supplier patch does not supply historical
+  certificate verification or Wasm snapshot APIs.
+
+- Enable the existing Platform 0.33.2 protocol codecs for immutable ingress
+  inspection. No Agent or HTTP runtime is added.
 
 ## [0.100.0] — GitHub checkpoint (unpublished)
 

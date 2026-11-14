@@ -3,7 +3,11 @@ use super::{
     CaptureError, CaptureExecution, CaptureOperation, CapturePlan, CaptureStatusReplyError, ledger,
 };
 use ic_host_artifacts::artifact::Sha256Digest;
-use ic_platform::{candid_codec, management_canister_types::CanisterIdRecord};
+use ic_platform::{
+    candid_codec,
+    ic_protocol::{EnvelopeContent, decode_call_content_strict},
+    management_canister_types::CanisterIdRecord,
+};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 use thiserror::Error;
@@ -54,7 +58,8 @@ impl StatusAdmissionRecord {
 }
 
 /// Exact signed request and its original observation binding. Contains sensitive bytes.
-/// The provider must verify all fields against the plan, arguments and admission.
+/// Backup checks immutable call content; the provider must authenticate the envelope,
+/// routing, observation binding and original admission.
 pub struct PreparedStatus {
     /// Original ingress request identity.
     pub request_id: [u8; 32],
@@ -79,9 +84,10 @@ pub struct StatusEvidence {
 ///
 /// Admission and authentication are local, bounded, effect-free checks. Admission
 /// verifies the exact network, trust root, sender, target, application continuity,
-/// provider binding, deadlines and costs; with a prepared request it also verifies
-/// the exact `canister_status` arguments, envelope, request ID, expiry and observation
-/// binding. Authentication verifies the retained original request/result association
+/// provider binding, deadlines and costs. Backup checks the exact status call content,
+/// declared expiry and request ID through Platform, without re-encoding the envelope.
+/// The provider still verifies signature/delegation authority, effective routing,
+/// live expiry and the observation binding. Authentication verifies the retained original request/result association
 /// and proof, including historical admission time, without imposing current freshness.
 ///
 /// `prepare` invokes at most one signer and never submits management ingress.
@@ -167,6 +173,7 @@ impl CaptureOperation {
     /// Cold pending reservations return attention without provider calls. A prepared
     /// request may submit only its original bytes after current admission. Settled
     /// replay performs local historical authentication and policy validation only.
+    /// Prepared and settled calls must match the plan, exact arguments and request ID.
     /// Dropping the future never starts detached work or replenishes an allowance.
     /// No concrete provider, Canic executor, reconciliation or snapshot is implemented.
     ///
@@ -227,6 +234,7 @@ impl CaptureOperation {
                 .map_err(StatusAdvanceError::Provider)?;
             self.check()?;
             let bytes = prepared.encode(admission.request_bytes)?;
+            prepared.validate_call(&self.plan)?;
             provider
                 .admit(&self.plan, admission, &args, Some(&prepared))
                 .map_err(StatusAdvanceError::Provider)?;
@@ -243,6 +251,7 @@ impl CaptureOperation {
             "status-request.bin",
             state.request.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
+        prepared.validate_call(&self.plan)?;
         provider
             .admit(&self.plan, admission, &args, Some(&prepared))
             .map_err(StatusAdvanceError::Provider)?;
@@ -276,6 +285,7 @@ impl CaptureOperation {
             "status-request.bin",
             state.request.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
+        prepared.validate_call(&self.plan)?;
         let evidence = StatusEvidence::decode(&self.evidence(
             "status-result.bin",
             state.result.as_ref().ok_or(CaptureError::Incomplete)?,
@@ -295,6 +305,38 @@ impl CaptureOperation {
 // Private exact binary evidence formats. Bounds are checked before concatenation;
 // reopening reads at the committed length before parsing or allocating components.
 impl PreparedStatus {
+    // Inspect the original bytes; never normalize or re-encode a signed envelope.
+    // Authentication metadata, routing, observation and freshness stay provider-owned.
+    fn validate_call(&self, plan: &CapturePlan) -> Result<(), CaptureError> {
+        let CaptureExecution::Direct { sender: expected } = plan.request().execution else {
+            return Err(CaptureError::StatusAdmission);
+        };
+        let content = decode_call_content_strict(&self.envelope, 1024 * 1024)
+            .map_err(|_| CaptureError::StatusAdmission)?;
+        let EnvelopeContent::Call {
+            ingress_expiry,
+            sender,
+            canister_id,
+            method_name,
+            arg,
+            ..
+        } = &content
+        else {
+            return Err(CaptureError::StatusAdmission);
+        };
+        let matches_status = sender.as_slice() == expected.as_slice()
+            && canister_id.as_slice().is_empty()
+            && method_name == "canister_status"
+            && *arg == arguments(plan)?;
+        if !matches_status
+            || *ingress_expiry != self.expires_ns
+            || *content.to_request_id() != self.request_id
+        {
+            return Err(CaptureError::StatusAdmission);
+        }
+        Ok(())
+    }
+
     fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
         if self.expires_ns == 0 {
             return Err(CaptureError::StatusAdmission);
@@ -416,7 +458,7 @@ impl CaptureOperation {
     ///
     /// # Errors
     /// Refuses unusable sessions, partial/unknown history, missing or changed original
-    /// evidence, malformed request framing and changed closing custody. No partial
+    /// evidence, malformed or plan-mismatched request content and changed closing custody. No partial
     /// view is returned and absent history never becomes unused authority.
     pub fn inspect_status(&self) -> Result<CaptureStatusView, CaptureError> {
         use super::CaptureStatusPhase;
@@ -426,7 +468,9 @@ impl CaptureOperation {
             .as_ref()
             .map(|reference| {
                 let bytes = self.evidence("status-request.bin", reference)?;
-                Ok::<_, CaptureError>(PreparedStatus::decode(&bytes)?.request_id)
+                let prepared = PreparedStatus::decode(&bytes)?;
+                prepared.validate_call(&self.plan)?;
+                Ok::<_, CaptureError>(prepared.request_id)
             })
             .transpose()?;
         let signing_requests_reserved = u32::from(state.admission.is_some());

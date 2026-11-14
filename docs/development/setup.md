@@ -3,12 +3,22 @@
 The virtual workspace has one unpublished library under `crates/ic-backup`.
 Local inventory, payload checks and capture intent use Host filesystem/artifact
 primitives and published Platform identity and management DTOs, with Serde/JSON
-and typed errors. No IC transport is selected yet.
+and typed errors. Platform's native protocol codec checks prepared status call
+content; no IC transport is selected yet. This feature brings upstream protocol,
+CBOR and Candid dependencies through Platform, without Agent or an HTTP runtime.
 
-Host FS and Artifacts 0.77.3 now resolve from verified registry archives. The
+Host FS and Artifacts 0.78.0 resolve from verified registry archives. The
 temporary sibling overrides were removed after native consumer qualification;
 no sibling checkout is required. Registry admission and the affected persistence
-suite are recorded under `target/evidence/registry-host-0.77.3/`.
+suite for the earlier 0.77.3 adoption remain under
+`target/evidence/registry-host-0.77.3/`; current archive/graph evidence is under
+`target/evidence/host-0.78.0/`. Consumers exchanging Backup's public Host digest
+and error types must use the 0.78 line. This changes Rust identities, not stored
+formats or recovery authority; the pending Backup release is 0.101.0.
+Platform 0.33.2 resolves canonical Types 0.20.4 through the existing dependency.
+The Types patch leaves source and identity bytes unchanged; no direct Types
+dependency, new feature or sibling override is needed. Its verified archive and
+consumer graph evidence are under `target/evidence/types-0.20.4/`.
 
 ## Preparation
 
@@ -68,6 +78,8 @@ store::tests::capture`; select framed-ledger tests with the same command and
 intent and target-claim retention, not attempt spending or filesystem power loss.
 Use `store::capture::transfer` for planning and bounded raw reply tests;
 `store::capture::transfer::metadata` selects the metadata decoder alone.
+Use `store::capture::snapshot` for bounded list/take replies, frozen wire fixtures
+and non-destructive take preflight. These are pure decoding/policy tests.
 Use `store::capture::status` for decoded status preconditions and exact management
 caller membership; `store::capture::status::wire` selects bounded raw status
 projection and rejection tests. These exercise Platform DTOs/codecs but do not qualify IC effects. Native filesystem tests

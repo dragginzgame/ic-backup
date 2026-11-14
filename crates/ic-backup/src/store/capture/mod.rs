@@ -7,6 +7,8 @@ pub use advance::{
     StatusProgress, StatusProvider,
 };
 mod plan;
+mod snapshot;
+pub use snapshot::{SnapshotReplyError, decode_snapshot_list, decode_taken_snapshot};
 mod status;
 mod transfer;
 pub use ledger::{CaptureStatusPhase, LedgerError};

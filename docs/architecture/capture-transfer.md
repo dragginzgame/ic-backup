@@ -13,6 +13,39 @@ wire bytes. It neither commits a learned schedule to the ledger nor grants
 permission to dispatch. Application custody, provider admission, request evidence
 and durable accounting remain prerequisites to the effectful workflow.
 
+## Snapshot list and take preflight
+
+`decode_snapshot_list(raw_reply)` returns Platform `Snapshot` values in original
+wire order. IDs are opaque nonempty byte strings; duplicates refuse even when
+metadata differs. Timestamps and reported sizes retain their full u64 range.
+Reported remote size is not the local payload length and is not compared with the
+plan's payload allowance. Timestamps alone prove neither freshness nor attribution.
+
+`CapturePlan::take_snapshot_arguments(inventory, capacity)` admits a direct-host
+request for the exact plan target, with `replace_snapshot = None`,
+`uninstall_code = Some(false)` and `sender_canister_version = None`. The integration
+explicitly supplies capacity within 1..=1,024; this is not an IC quota discovered
+or guaranteed by Backup. The bounded inventory must have room below that capacity.
+The later workflow must bind capacity and authenticated inventory before spending;
+a preflight does not reserve remote capacity. Canic execution refuses pending its
+sender-version/receipt contract. This helper does not check status or application
+safety and grants no signing, submission, deletion, funding or retry authority.
+
+`decode_taken_snapshot(raw_reply, prior_inventory)` admits the exact single take
+result only if its ID was absent from the validated prior inventory. It never
+infers capture success from a later list difference. An uncertain take still needs
+original-request reconciliation; a changed list supplies no retry authority.
+Callers retain and authenticate both replies and their original network, target
+and request association. These helpers perform no IO, persistence or settlement.
+
+Both decoders use Platform's schema and owned codec: 1 MiB raw reply, 64 KiB header,
+16 type entries, 2 MiB work and 2 MiB allocation, with zero skipped-work allowance.
+The bounded vector reader admits at most 1,024 snapshots and 256 bytes per ID
+before allocation; empty IDs refuse. Unknown/missing fields, wrong types, extra
+arguments and trailing bytes refuse. These counters are local codec limits, not
+transport limits or upstream Candid quota units. Typed inventory inputs receive
+the same count, ID-length and duplicate checks.
+
 ## Admitted profile and schedule
 
 The snapshot ID has 1–256 bytes. Metadata must identify a snapshot taken from a
@@ -161,6 +194,27 @@ their original SHA-256 values remain checked. Legacy admitted incomplete metadat
 as evidence; the public capture helper now refuses it through the existing profile.
 Request/evidence digests and legacy reply objects were not copied: they belong to
 future authenticated capture and persistence. No IC effects are qualified here.
+
+The list/take slice reviewed frozen legacy's
+[snapshot reply admission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/mod.rs),
+[wire reader](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/wire/mod.rs),
+[regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/tests/mod.rs)
+and codec migration 1af7e219 above. The migration retained bounded ID/count admission
+and exact single-argument decoding while moving parsing and separate work/allocation
+limits to Platform. The new reader uses Platform's `Snapshot` schema instead of
+redeclaring management fields. It retains wire order rather than legacy's sorted
+reply representation; uniqueness still compares exact opaque bytes.
+
+Eight re-authored [snapshot tests](../../crates/ic-backup/src/store/capture/snapshot/tests.rs)
+exercise maximum counts/IDs and full u64 values, duplicate IDs with changed metadata,
+truncated/extra/wrong-shaped replies, hostile declared lengths, unknown/missing/wrong
+fields, exact take arguments, capacity refusal and prior-ID reuse. Three raw vectors
+in [golden.json](../../crates/ic-backup/src/store/capture/snapshot/golden.json) retain
+the original bytes, SHA-256 and decoded values from
+[legacy goldens](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/tests/golden.json).
+Legacy request/evidence digests and reply wrappers are omitted from these pure
+helpers; authenticated association and durable settlement belong to the workflow.
+No implementation was copied and no IC list/take effects were qualified.
 
 ## Platform 0.33 adoption — 2026-11-14
 

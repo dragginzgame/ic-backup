@@ -148,6 +148,24 @@ Preparation may use zero network requests for local signing. The combined networ
 ceiling must fit the original plan; exactly one signing invocation is reserved.
 Provider methods enforce actual time, traffic and response bounds while receiving.
 
+Before retaining prepared output, before reserving submission, and during settled
+replay or status inspection, Backup reads call content through Platform's
+`ic_protocol::decode_call_content_strict`. It requires replicated `canister_status`
+ingress addressed to the management canister, the original direct sender, exact
+Platform-encoded target arguments, matching declared expiry and the content's
+recomputed request ID. Unknown/duplicate content fields, malformed/trailing bytes,
+query/read-state envelopes and mismatches return `CaptureError::StatusAdmission`.
+Original envelopes are never re-encoded. Nonce and known sender-info metadata
+participate in the request ID; signature/delegation and sender-info authentication,
+effective HTTP routing, deadlines and observation binding remain provider-owned.
+
+The complete request-file cap is checked before content decoding. Platform's CBOR
+input cap is a byte bound, not the Candid codec's allocation/work counters. The
+check reads no clock and does not authenticate anything, so old settled evidence
+still requires historical proof verification by the provider. A mismatched new
+signer result leaves preparation spent without submission. Mismatched retained
+content refuses without rewriting records, refunds or another provider invocation.
+
 Request evidence is capped at 1 MiB; response/proof evidence at 2 MiB. Before any
 provider call that may sign, Backup reserves both entire file ceilings plus the
 initial ledger and four maximum frame sizes (`4 * (16384 + 36)`). This conservative
@@ -214,7 +232,7 @@ unqualified. This is not an independently usable backup product.
 original admission and a closing custody check. It exposes the retained stage,
 exact original `StatusAdmissionRecord`, conservative reserved signing/network
 counts and the original request ID when prepared evidence exists. The request
-framing is admitted before projecting its ID. Signed envelopes and proof bytes
+framing and original call binding are admitted before projecting its ID. Signed envelopes and proof bytes
 remain private; the returned admission is a detached value and cannot mutate
 retained authority.
 
@@ -361,3 +379,21 @@ futures, retained results and acknowledged owner death against the append writer
 These native tests prove filesystem/call ordering, not paid IC effects, provider
 authentication, power loss or Canic execution. Native Canic plan round-tripping
 proves declaration retention only; status continuation refuses that route.
+
+The request-binding continuation inspected frozen legacy's
+[single submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
+[reserved request owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/request/mod.rs)
+and [HTTP boundary cases](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs).
+Legacy constructs and signs the admitted call inside Agent. The new boundary accepts
+external prepared bytes, so immutable call inspection now also belongs at that
+boundary. It reuses Platform's published protocol decoder and request-ID owner;
+no Agent wrapper, CBOR parser, signing code or legacy implementation is copied.
+The existing a860d144 original-admission/projection separation remains intact.
+
+New native cases reject wrong caller/receiver/method/target/arguments, mismatched
+ID/expiry, query/read-state, unknown/duplicate fields and every truncated envelope
+prefix. Matching file hashes cannot authorize a mismatched prepared or settled call.
+Golden envelope/request hashes were independently recomputed with Node SHA-256.
+Retention and cold replay cases assert no extra provider calls or spending reset.
+The legacy HTTP retry/redirect/timeout cases still belong to the future concrete
+transport; these tests establish content admission and persistence ordering only.

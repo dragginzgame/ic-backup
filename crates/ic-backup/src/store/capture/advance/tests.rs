@@ -9,6 +9,7 @@ use crate::store::{
     tests::{root, write_file},
 };
 use std::{
+    borrow::Cow,
     cell::Cell,
     fs,
     future::{Future, pending},
@@ -41,10 +42,41 @@ fn ready<F: Future>(future: F) -> F::Output {
     }
 }
 fn prepared() -> PreparedStatus {
+    prepared_content(call_content())
+}
+fn call_content() -> EnvelopeContent {
+    let p = plan();
+    let CaptureExecution::Direct { sender } = p.request().execution else {
+        panic!("direct fixture")
+    };
+    EnvelopeContent::Call {
+        nonce: Some(vec![0, 255, 7]),
+        ingress_expiry: 21,
+        sender: sender.as_slice().try_into().unwrap(),
+        canister_id: [].as_slice().try_into().unwrap(),
+        method_name: "canister_status".into(),
+        arg: arguments(&p).unwrap(),
+        sender_info: None,
+    }
+}
+fn prepared_content(content: EnvelopeContent) -> PreparedStatus {
+    let request_id = *content.to_request_id();
+    let expires_ns = content.ingress_expiry();
+    // Correct wire shape, deliberately unauthenticated. No IC effect is simulated.
+    let envelope = ic_platform::ic_protocol::encode_envelope(
+        &ic_platform::ic_protocol::Envelope {
+            content: Cow::Owned(content),
+            sender_pubkey: Some(vec![1]),
+            sender_sig: Some(vec![2]),
+            sender_delegation: None,
+        },
+        4096,
+    )
+    .unwrap();
     PreparedStatus {
-        request_id: [3; 32],
-        expires_ns: 21,
-        envelope: b"original signed bytes".to_vec(),
+        request_id,
+        expires_ns,
+        envelope,
         observation: b"original observation binding".to_vec(),
     }
 }
@@ -90,6 +122,7 @@ enum Fault {
     WaitPrepare,
     WaitSubmit,
     RequestSize,
+    BadRequest,
     ResultSize,
     Reject,
     BadStatus,
@@ -161,6 +194,9 @@ impl StatusProvider for Provider {
         let mut value = prepared();
         if self.fault == Fault::RequestSize {
             value.envelope = vec![0; 4096];
+        }
+        if self.fault == Fault::BadRequest {
+            value.request_id[0] ^= 1;
         }
         Ok(value)
     }
@@ -290,6 +326,7 @@ fn provider_failure_and_cancelled_futures_never_recreate_live_permission() {
         Fault::Submit,
         Fault::Authenticate,
         Fault::RequestSize,
+        Fault::BadRequest,
         Fault::ResultSize,
         Fault::WaitPrepare,
         Fault::WaitSubmit,
@@ -306,11 +343,21 @@ fn provider_failure_and_cancelled_futures_never_recreate_live_permission() {
                     .is_pending()
             );
         } else {
-            assert!(ready(op.advance_status(&admission(), &mut p)).is_err());
+            let result = ready(op.advance_status(&admission(), &mut p));
+            if fault == Fault::BadRequest {
+                assert!(matches!(
+                    result,
+                    Err(StatusAdvanceError::Capture(CaptureError::StatusAdmission))
+                ));
+                assert_eq!(p.effects(), (1, 0));
+                assert_eq!(p.admissions.get(), 1);
+            } else {
+                assert!(result.is_err());
+            }
         }
         let pending = if matches!(
             fault,
-            Fault::Prepare | Fault::WaitPrepare | Fault::RequestSize
+            Fault::Prepare | Fault::WaitPrepare | Fault::RequestSize | Fault::BadRequest
         ) {
             StatusProgress::PreparationPending
         } else {
@@ -943,4 +990,225 @@ fn inspection_refuses_malformed_request_framing_even_with_matching_file_hash() {
         Err(CaptureError::Changed)
     ));
     assert_eq!(retained_files(&root), before);
+}
+
+#[test]
+fn call_binding_refuses_wrong_sender_receiver_method_arguments_and_identity() {
+    let original = plan();
+    for field in 0..7 {
+        let mut content = call_content();
+        let EnvelopeContent::Call {
+            sender,
+            canister_id,
+            method_name,
+            arg,
+            ..
+        } = &mut content
+        else {
+            unreachable!()
+        };
+        match field {
+            0 => *sender = original.request().initiator.as_slice().try_into().unwrap(),
+            1 => {
+                *canister_id = original
+                    .request()
+                    .target
+                    .canister
+                    .as_slice()
+                    .try_into()
+                    .unwrap()
+            }
+            2 => *method_name = "stop_canister".into(),
+            3 => {
+                *arg = candid_codec::encode_one(
+                    &CanisterIdRecord {
+                        canister_id: original.request().initiator,
+                    },
+                    256,
+                )
+                .unwrap()
+            }
+            4 => arg.push(0),
+            _ => {}
+        }
+        // Even a correctly recomputed request ID cannot authorize a different call.
+        let mut request = prepared_content(content);
+        if field == 5 {
+            request.request_id[0] ^= 1;
+        }
+        if field == 6 {
+            request.expires_ns += 1;
+        }
+        assert!(
+            matches!(
+                request.validate_call(&original),
+                Err(CaptureError::StatusAdmission)
+            ),
+            "field {field}"
+        );
+    }
+    let request = prepared();
+    let mut changed = original.request().clone();
+    changed.execution = CaptureExecution::Canic {
+        executor: original.request().target.canister,
+        protocol: Sha256Digest::compute(b"executor"),
+        generation: 1,
+    };
+    assert!(matches!(
+        request.validate_call(&CapturePlan::new(changed).unwrap()),
+        Err(CaptureError::StatusAdmission)
+    ));
+}
+
+#[test]
+fn call_binding_refuses_query_read_state_unknown_duplicate_and_trailing_content() {
+    let EnvelopeContent::Call {
+        sender,
+        canister_id,
+        method_name,
+        arg,
+        nonce,
+        sender_info,
+        ingress_expiry,
+    } = call_content()
+    else {
+        unreachable!()
+    };
+    let query = prepared_content(EnvelopeContent::Query {
+        sender,
+        canister_id,
+        method_name,
+        arg,
+        nonce,
+        sender_info,
+        ingress_expiry,
+    });
+    let read_state = prepared_content(EnvelopeContent::ReadState {
+        sender,
+        ingress_expiry,
+        paths: vec![],
+    });
+    let mut malformed = vec![query, read_state];
+    let mut trailing = prepared();
+    trailing.envelope.push(0);
+    malformed.push(trailing);
+    for field in [
+        b"\x65extra\x00".as_slice(),
+        b"\x6bmethod_name\x6fcanister_status",
+    ] {
+        let mut request = prepared();
+        // Insert one field into this test envelope's seven-field content map.
+        let marker = b"\x67content\xa7";
+        let offset = request
+            .envelope
+            .windows(marker.len())
+            .position(|part| part == marker)
+            .unwrap()
+            + marker.len();
+        request.envelope[offset - 1] = 0xa8;
+        request
+            .envelope
+            .splice(offset..offset, field.iter().copied());
+        malformed.push(request);
+    }
+    for request in malformed {
+        assert!(matches!(
+            request.validate_call(&plan()),
+            Err(CaptureError::StatusAdmission)
+        ));
+    }
+    let original = prepared();
+    for end in 0..original.envelope.len() {
+        let mut prefix = prepared();
+        prefix.envelope.truncate(end);
+        assert!(matches!(
+            prefix.validate_call(&plan()),
+            Err(CaptureError::StatusAdmission)
+        ));
+    }
+}
+
+#[test]
+fn call_binding_preserves_exact_bytes_and_does_not_claim_authentication_or_freshness() {
+    let request = prepared();
+    let original = request.encode(4096).unwrap();
+    // Independently recomputed using Node SHA-256 and the IC representation-independent
+    // map hash; this is an unsigned test vector, not authentication evidence.
+    assert_eq!(
+        Sha256Digest::from_bytes(request.request_id).to_string(),
+        "9c937904f6a13378c9d9c96339a2ef6b0c987aa4f92f95bbe98f0e1a044532a2"
+    );
+    assert_eq!(
+        Sha256Digest::compute(&request.envelope).to_string(),
+        "cfce1de81495739f6c13d0705b3b66e3e3601da870104b8f0c2cc6f37440482a"
+    );
+    // Expiry 21 is historical and the signature is intentionally invalid.
+    // These are provider checks, independent of immutable content binding.
+    request.validate_call(&plan()).unwrap();
+    assert_eq!(request.encode(4096).unwrap(), original);
+    let mut content = call_content();
+    let EnvelopeContent::Call { nonce, .. } = &mut content else {
+        unreachable!()
+    };
+    *nonce = None;
+    let no_nonce = prepared_content(content);
+    assert_ne!(no_nonce.request_id, request.request_id);
+    no_nonce.validate_call(&plan()).unwrap();
+}
+
+#[test]
+fn mismatched_retained_request_refuses_dispatch_and_settled_replay_without_repair() {
+    for settled in [false, true] {
+        let (root, store, mut op) = setup("status-request-binding");
+        reserve(&mut op);
+        let mut request = prepared();
+        request.request_id[0] ^= 1;
+        let bytes = request.encode(4096).unwrap();
+        // Correct file/ledger hashes do not establish a matching ingress identity.
+        op.commit(
+            &EventRecord::Prepared {
+                sequence: 2,
+                request: EvidenceRecord::new(&bytes),
+            },
+            Some(("status-request.bin", &bytes)),
+        )
+        .unwrap();
+        if settled {
+            op.commit(&EventRecord::SubmissionReserved { sequence: 3 }, None)
+                .unwrap();
+            let bytes = evidence().encode(4096).unwrap();
+            op.commit(
+                &EventRecord::Settled {
+                    sequence: 4,
+                    result: EvidenceRecord::new(&bytes),
+                },
+                Some(("status-result.bin", &bytes)),
+            )
+            .unwrap();
+        }
+        let before = retained_files(&root);
+        drop(op);
+        let mut op = reopen(&store);
+        let mut provider = Provider::new(&root, Fault::None);
+        assert!(matches!(
+            op.inspect_status(),
+            Err(CaptureError::StatusAdmission)
+        ));
+        assert!(matches!(
+            ready(op.advance_status(&admission(), &mut provider)),
+            Err(StatusAdvanceError::Capture(CaptureError::StatusAdmission))
+        ));
+        assert_eq!(provider.effects(), (0, 0));
+        assert_eq!(provider.admissions.get(), 0);
+        assert_eq!(provider.authentications.get(), 0);
+        assert_eq!(retained_files(&root), before);
+        assert_eq!(
+            op.check().unwrap().phase,
+            if settled {
+                CaptureStatusPhase::Settled
+            } else {
+                CaptureStatusPhase::Prepared
+            }
+        );
+    }
 }

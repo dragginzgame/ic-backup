@@ -64,12 +64,12 @@ legacy recovery material read-only and under its original authority.
   the mature implementation. Root workspace metadata sets `publish = false`;
   members inherit it with `publish.workspace = true`. Any future independent
   workspace or canister package must also disable publication.
-- `0.100.x` is the unpublished incompatible restart line. Preserve historical
+- `0.100.0` began the unpublished incompatible restart. Preserve historical
   release identities and review consumer migration before publication.
 
 ## Dependency selection
 
-Host FS/Artifacts 0.77.3 are selected from verified registry archives. The
+Host FS/Artifacts 0.78.0 are selected from verified registry archives. The
 maintainer-authorized temporary sibling overrides have been removed after
 consumer qualification. Keep dependencies registry-backed and builds in this
 repository's target directory; do not add sibling patches or shared targets.

@@ -6,8 +6,9 @@ This is the persistence design for the [operation design](operation-contract.md)
 Initialization, opening, bounded manifest inventory and payload byte checks are implemented;
 [the inventory contract](../architecture/local-inventory.md) owns their exact bounds.
 The [capture-intent contract](../architecture/capture-intent.md) implements immutable
-plans, initial ledger frames and durable target claims. Ledger advancement, terminal
-claim succession, completion publication and full bundle verification remain proposed. No legacy records or unfinished operations are imported.
+plans, durable target claims and initial status advancement/inspection. Snapshot
+advancement, terminal claim succession, completion publication and full bundle
+verification remain proposed. No legacy records or unfinished operations are imported.
 
 ## Small public surface
 
@@ -24,8 +25,8 @@ Canic calls capture/restore and supplies the execution/application providers.
 | `verify_bundle(bundle)` | Rehash and admit the complete original artifact under held custody before restore. |
 
 List/latest and payload checking exist on `BackupStore`. `CaptureOperation::inspect`
-currently reads only original intent; progress inspection and full `verify_bundle`
-remain proposals.
+reads original intent; `inspect_status` additionally reads initial status progress,
+original admission and reserved attempt counts. Full `verify_bundle` remains proposed.
 Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:
 a cheap inventory cannot establish that files remain intact today. A manifest
 declares completion; the reader does not authenticate capture verification or
@@ -125,10 +126,10 @@ monotonic sequence and closed event kind. No general event-bus framework is need
 The implemented framing reader enforces 16 KiB per frame, 65,536 frames and
 128 MiB total, with the original plan's evidence allowance as a further byte cap.
 All apply independently; plans and manifests remain separately byte-bounded.
-Only the initial created transition is admitted so far. These are format limits,
-not measured product capacity claims.
+Created and initial status reservation/preparation/submission/settlement transitions
+are admitted. These are format limits, not measured product capacity claims.
 
-The proposed advancing workflow validates the full bounded ledger on reopen. A held
+The initial status workflow validates the full bounded ledger on reopen. A held
 session admits its own append prefix; it does not repeatedly scan peer operations.
 Partial frames, bad hashes, sequence gaps and invalid transitions block effects.
 Keep the original bytes; no truncate-and-retry recovery or log compaction in v1.

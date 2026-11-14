@@ -18,6 +18,9 @@ file custody; see the [intent contract](docs/architecture/capture-intent.md).
 the approved module hash and the actual management caller as a controller.
 `CapturePlan::validate_status_reply` applies those checks to a bounded raw reply,
 with separate limits on skipped fields.
+Snapshot list/take decoders bound replies and reject duplicate or reused IDs;
+`CapturePlan::take_snapshot_arguments` checks explicit capacity and preserves
+existing snapshots and installed code without performing a call.
 `CapturePlan::plan_transfer` now produces bounded, deterministic data-read requests
 from Platform metadata. `CapturePlan::decode_metadata` bounds raw metadata and
 checks it against the original plan. `CaptureTransfer::decode_data` bounds raw replies and checks
@@ -27,7 +30,9 @@ retains exact request/result evidence and replays the initial direct-host status
 call without repeating pending effects. `inspect_status` recovers the retained
 stage, original admission, reserved counts and request identity without provider
 calls or writes. It requires an independently qualified
-provider; none is supplied yet. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+provider; none is supplied yet. Prepared call content is checked against the
+original plan and request ID through Platform; signature/certificate authentication
+remains provider-owned. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
 Snapshot capture, completion writing, full bundle verification, restore, CLI and
 simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope

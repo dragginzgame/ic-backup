@@ -10,9 +10,9 @@ repository = "https://github.com/dragginzgame/ic-backup"
 publish = false
 
 [workspace.dependencies]
-ic-host-artifacts = "0.77.3"
-ic-host-fs = { version = "0.77.3", features = ["capability"] }
-ic-platform = { version = "0.33.0", default-features = false, features = ["management-canister-types"] }
+ic-host-artifacts = "0.78.0"
+ic-host-fs = { version = "0.78.0", features = ["capability"] }
+ic-platform = { version = "0.33.0", default-features = false, features = ["ic-protocol", "management-canister-types"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
