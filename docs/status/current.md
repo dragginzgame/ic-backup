@@ -4,12 +4,14 @@ Work lives at `/home/adam/projects/ic-backup`, branch `main`; the former legacy
 local path was absent. Frozen legacy remains read-only at `dragginzgame/ic-backup-legacy`.
 No original journals, bundles or obligations were imported, migrated or cleaned up.
 
-The 0.101.0 checkpoint includes held payload sources, snapshot readback and
-historical certificate evidence for successful and rejected initial status calls.
-It is prepared for the requested GitHub-only delivery after
-[b952533](https://github.com/dragginzgame/ic-backup/commit/b95253375961f111df1eb648bd3479240846a13c).
-All packages remain `publish = false`. No release tag, registry publication or
-deployment is selected. A separate next-version commit follows this checkpoint.
+The completed 0.101.0 checkpoint was pushed and remotely verified at
+[5292a61](https://github.com/dragginzgame/ic-backup/commit/5292a61317dbbb619699724c4b2197e1ae6f799d).
+It includes held payload sources, snapshot readback and historical certificate
+evidence for successful and rejected initial status calls. Development now opens
+as 0.101.1, the next compatible patch. A future breaking change must advance the
+pending minor before delivery; no such change is part of this version opening.
+All packages remain `publish = false`. Delivery is GitHub-only, with no release
+tag, registry publication or deployment.
 
 ## Implemented scope and safeguards
 
@@ -82,11 +84,14 @@ Eighteen signed-certificate/persistence cases pass, covering exact bindings,
 tampering, delegation, historical policy, bounds, cold replay and spent refusal,
 plus strict rejection diagnostics and terminal replay. Rejection evidence/logs
 are under `target/evidence/status-rejections/`; prior certificate logs remain.
-The existing 21 continuation tests also passed during this batch. Strict package
+The existing 21 continuation tests passed in the 0.101.0 batch. Strict package
 Clippy, warning-denying Rustdoc and thirteen documentation examples pass. Synthetic
 certificates use real Platform BLS signatures but do not qualify IC effects,
 a live provider, application safety, physical power loss or hosted macOS.
 Failed initial fixture/lint logs and all native fixture directories are retained.
+The 0.101.1 opening changes version metadata/documentation only. Locked offline
+metadata verifies the product version and disabled publication; supplier versions
+remain unchanged. Its evidence is under `target/evidence/start-0.101.1/`.
 
 Prior archive checks, source identities and qualification remain in the
 [checkpoint handoff](https://github.com/dragginzgame/ic-backup/blob/b95253375961f111df1eb648bd3479240846a13c/docs/status/current.md)

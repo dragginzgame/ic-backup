@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.101.1] — pending
+
+### 📝 Summary
+
+- Open the next compatible development version after the 0.101.0 GitHub
+  checkpoint. Publication remains disabled; no further product behavior is
+  included in this version-opening commit.
+
 ## [0.101.0] — GitHub checkpoint (unpublished)
 
 This checkpoint adds certificate evidence, snapshot readback and held payload

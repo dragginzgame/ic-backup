@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.101.0"
+version = "0.101.1"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
