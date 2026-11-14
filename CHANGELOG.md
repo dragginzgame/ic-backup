@@ -1,12 +1,40 @@
 # Changelog
 
-## [0.101.1] — pending
+## [0.101.1] — GitHub checkpoint (unpublished)
 
-### 📝 Summary
+This checkpoint adds authenticated direct-host status HTTP, bounded shared body
+reading and direct-key request verification. Publication remains disabled.
 
-- Open the next compatible development version after the 0.101.0 GitHub
-  checkpoint. Publication remains disabled; no further product behavior is
-  included in this version-opening commit.
+### ✨ Features
+
+- Authenticate externally signed status requests for direct Ed25519 and secp256k1
+  identities through Platform. Bind the exact original sender, call and request
+  ID; refuse invalid signatures and unsupported identity forms before HTTP.
+  Historical verification changes no expiry, bytes or spending. Private keys and
+  external signing remain integration-owned.
+
+- Add direct-host HTTP submission of an already-retained status request, with
+  original target/trust bindings, deadline and response-byte limits. Disable
+  redirects, retries, proxies and polling; return only authenticated certificate
+  evidence. Failed or cancelled submissions keep their original spending.
+  Integrations still supply signing and application admission.
+
+### 📦 Dependencies
+
+- Enable Platform's existing Ed25519, secp256k1 and self-authenticating Principal
+  capabilities. Add their registry-backed dependencies while preserving existing
+  locked supplier versions; no local cryptographic implementation is added.
+
+- Adopt Toko Tooling 0.43.2 through the authenticated exporter. The selected
+  baseline and command payload remain unchanged; refresh the exact pin and
+  snapshot provenance without changing product dependencies.
+
+- Adopt restored `ic-host-http` 0.79.0 ([Tooling #360](https://github.com/dragginzgame/ic-tooling/issues/360))
+  and use its Reqwest 0.13.5 re-export
+  with opt-in Rustls. Replace the local response-reading loop with its bounded,
+  fallible reader. Rustls now uses platform certificate verification; original
+  IC trust and request/recovery policy stay Backup-owned. Preserve the incoming
+  Platform 0.33.5 lock selection. All packages remain unpublished.
 
 ## [0.101.0] — GitHub checkpoint (unpublished)
 

@@ -15,7 +15,7 @@ fn key(value: u8) -> PrivateKey {
     bytes[31] = value;
     PrivateKey::deserialize(&bytes).unwrap()
 }
-fn der(value: u8) -> Vec<u8> {
+pub(super) fn der(value: u8) -> Vec<u8> {
     [
         IC_ROOT_PK_DER_PREFIX.as_slice(),
         &key(value).public_key().serialize(),
@@ -36,7 +36,7 @@ fn times() -> TimePolicy {
         },
     }
 }
-fn signed(tree: HashTree, signer: u8, delegation: Option<Delegation>) -> Vec<u8> {
+pub(super) fn signed(tree: HashTree, signer: u8, delegation: Option<Delegation>) -> Vec<u8> {
     let message = [b"\x0dic-state-root".as_slice(), &tree.digest()].concat();
     cbor::encode_certificate(
         &Certificate {
@@ -48,7 +48,7 @@ fn signed(tree: HashTree, signer: u8, delegation: Option<Delegation>) -> Vec<u8>
     )
     .unwrap()
 }
-fn reply_tree(request: &[u8; 32], response: &[u8], outcome: &[u8]) -> HashTree {
+pub(super) fn reply_tree(request: &[u8; 32], response: &[u8], outcome: &[u8]) -> HashTree {
     fork(
         labeled(
             b"request_status",
@@ -63,7 +63,7 @@ fn reply_tree(request: &[u8; 32], response: &[u8], outcome: &[u8]) -> HashTree {
         labeled(b"time", leaf(vec![100])),
     )
 }
-fn fixture() -> (CapturePlan, PreparedStatus, StatusEvidence) {
+pub(super) fn fixture() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     let mut request = plan().request().clone();
     request.trust_root = Sha256Digest::compute(&der(1));
     let plan = CapturePlan::new(request).unwrap();

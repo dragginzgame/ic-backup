@@ -13,10 +13,14 @@ use std::future::Future;
 use thiserror::Error;
 
 mod certificate;
+mod http;
+mod request;
 pub use certificate::{
     StatusCertificateError, authenticate_status_evidence, status_certificate_evidence,
     status_certificate_observation,
 };
+pub use http::{StatusHttpError, StatusHttpTransport};
+pub use request::{StatusRequestError, authenticate_status_request};
 
 /// Original finite authority for the first status call, retained before preparation.
 /// Bindings identify the provider protocol and continuous application maintenance witness.

@@ -493,3 +493,152 @@ implementation was copied. These tests qualify the local
 cryptographic composition and persistence boundary, not IC effects, a live provider,
 application safety or hosted macOS. HTTP/redirect/retry/timeout qualification stays
 with the future concrete provider.
+
+## Direct status HTTP helper
+
+`StatusHttpTransport` composes with the trusted provider's live `submit_once`
+invocation. It authenticates the direct-key request profile described below before
+HTTP, but is not a full `StatusProvider`: the integration signs, chooses original
+observation windows, binds its provider protocol,
+admits application continuity and invokes transport only under the workflow's
+durable submission reservation. Possessing this helper or a reconstructed request
+is not replay authority. No journal writer, signer, background worker or retry
+framework is added; local historical authentication remains separately usable.
+
+Construction binds one provisioned network commitment, IC DER root and written
+root origin. Origins are bounded to 2048 bytes: HTTPS or literal-loopback HTTP,
+with no credentials (including empty user-info), non-root paths, query, fragment,
+whitespace or controls. Written dot segments and backslashes refuse before URL
+normalization; HTTP DNS names and alternate numeric IP spellings refuse. The
+network commitment is not derived from the endpoint. IC trust is supplied out of
+band. Rustls uses Reqwest 0.13's platform certificate verifier, including native
+trust configuration, with certificate and hostname verification enabled. This
+replaces the earlier Reqwest 0.12 bundled WebPKI root selection; TLS trust remains
+separate from the explicitly provisioned IC certificate root.
+
+The native client uses `ic-host-http` 0.79.0's Reqwest 0.13.5 re-export with
+explicitly selected Rustls, HTTP/1 only, no proxies,
+redirects, automatic retry, idle connection reuse or content decompression. It
+has no Agent, IC identity or runtime construction. Caller futures need a Tokio
+runtime with IO/timers; public docs state the upstream panic precondition. Tokio
+1.54.1 is selected through HTTP and used directly only by the test runtime.
+Timeout must be positive and at most 300 seconds; short explicit deadlines are
+supported rather than retaining legacy's arbitrary one-second minimum.
+
+Before dispatch, the helper admits the original plan, complete request framing,
+exact call content, direct-key signature, network/root binding and live deadline. It routes the unchanged
+envelope to `/api/v3/canister/<original-target>/call`. The per-request monotonic
+HTTP timeout is the minimum of configured timeout, remaining original submission
+deadline and remaining ingress expiry. Absolute Unix time is checked again after
+body reading and certificate authentication. Timeouts/errors/cancellation never
+reset spending; an accepted request can execute after the caller stops waiting.
+DNS/TLS/socket mechanics remain supplier-owned; one HTTP submission is not a claim
+about the number of underlying packets or connection-establishment operations.
+
+Only HTTP 200 with CBOR media type and no Content-Encoding enters decoding.
+Host HTTP's `read_body` caps declared and accumulated body bytes by the original
+result allowance, using fallible bounded allocation before copying chunks. Its
+size failures map to `ResponseLimit`; transport and allocation failures remain
+redacted `Uncertain` outcomes. It returns no partial body on failure and adds no
+request, timeout or retry. Backup admits status/headers before passing the response
+to that reader and retains deadline checks after reading/authentication.
+Header/parser/internal-buffer bounds remain supplier-owned;
+the product body cap is not a total allocation quota. Platform decodes the bounded
+v3 envelope; only its certificate-bearing response enters the existing evidence
+builder. HTTP acceptance, non-replicated rejection, redirects, throttling and
+server errors remain uncertain, with no fallback to v2/read-state or polling.
+A certified rejection inside HTTP 200 produces rejected evidence, never success.
+The exact original certificate survives; the complete response/proof frame must
+still fit original admission. Raw HTTP error bodies are not promoted to evidence.
+
+The focused legacy review reused the frozen
+[transport configuration](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/lib.rs),
+[written-origin admission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/endpoint/mod.rs),
+[origin regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/endpoint/tests.rs)
+and [HTTP-boundary regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs).
+The previously reviewed 94b94db8 consolidation keeps original stage/attempt
+admission independent of transport results; that separation remains in the
+workflow. Re-authored cases retain no-repeat behavior for 202, redirects, 429/503,
+disconnect, timeout and cancellation, and exact signed bytes before dispatch.
+Agent construction/signing and its reply-only return path are deliberately omitted:
+Platform's codecs and historical verifier now let this helper retain actual proof.
+No legacy implementation was copied.
+
+[Native HTTP cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests.rs)
+use real loopback TCP, retained exact request files and synthetic BLS-signed
+certificate bodies. They also cover unknown media/encoding, declared/chunked bounds,
+truncated and tampered bodies, original deadline/expiry, and cold settled/pending
+workflow replay without further HTTP. These checks qualify the selected local HTTP
+composition, not actual canister management behavior, a complete signer/application
+provider, physical power loss or hosted macOS. The Host HTTP adoption adds exact
+body-limit/empty-body cases and an actual TLS ClientHello/plaintext-peer refusal
+through Backup's configured client. That checks TLS negotiation and refusal, not
+a completed trusted-certificate handshake or native trust-store behavior on all hosts.
+
+The shared-reader adoption uses verified registry archive
+`d33de424aa5afc596c0dace915e50c7b03057ff52cad64bd3451f9ee2380c3cc`,
+source [cd85d922](https://github.com/dragginzgame/ic-tooling/commit/cd85d922bcaba4d09727eb16d00b2e5a4c4f287b), supplying
+[Tooling #360](https://github.com/dragginzgame/ic-tooling/issues/360).
+The frozen legacy path used Reqwest/Agent directly; its no-repeat and original
+request cases remain applicable and were rerun at Backup's current boundary.
+The supplier now owns generic body storage/failure mechanics. Backup retains its
+stricter endpoint admission and IC semantics; no legacy transport or retired
+Host HTTP endpoint/partial-body API is reintroduced.
+
+## Direct-key status request authentication
+
+`authenticate_status_request` verifies an external signer's original request
+without keys, a clock, storage or network effects. It admits the complete original
+request size before decoding, then applies the existing exact call/target/sender,
+expiry and request-ID checks. Platform owns both envelope decoders, request IDs,
+signable domain bytes, canonical self-authenticating Principals and cryptographic
+primitives. Its raw CBOR cap is a byte bound, not a separate allocation/work quota.
+
+The selected profile admits exact 44-byte Ed25519 or 88-byte uncompressed
+secp256k1 SPKI keys and 64-byte signatures. Fixed SPKI prefixes admit only these
+standard encodings; no general ASN.1 parser, key normalization or alternate
+encoding fallback is added. The public key must derive the original direct sender.
+Ed25519 uses Platform/Dalek strict verification, including weak-key and scalar
+refusal. Secp256k1 uses Platform/K256 over SHA-256 of the domain-separated request
+ID and requires low-S without rewriting a signature. These checks implement the
+[IC signing contract](https://docs.internetcomputer.org/references/ic-interface-spec/#signatures)
+and [request authentication](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/#authentication),
+with the deliberate narrower low-S/direct-key profile.
+
+Delegations, including an explicit empty chain, sender-info, anonymous, P-256,
+WebAuthn and canister-signature identities refuse. This is the initial directly
+controlled host profile, not general IC identity support or qualification of a
+particular ICP CLI/Canic signer. The operation's generic provider boundary is
+unchanged; a different independently qualified provider can own a different profile.
+New identity support requires its own implementation and qualification.
+
+`StatusHttpTransport` calls this verifier before opening a connection. Typed
+request-authentication errors preserve zero dispatch; no failure refunds an
+already-reserved signing/submission allowance. Providers should also call the
+helper before retaining signer output and during settled replay. Historical
+verification deliberately accepts valid original signatures after expiry; current
+expiry, original observation freshness, provider/application commitments, trust
+and routing are separate live admission responsibilities. The observation bytes
+are size-admitted here, not authenticated by an ingress signature.
+
+Focused legacy review revisited the frozen
+[reserved request owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/request/mod.rs),
+[single submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
+[context/stale-reservation regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs)
+and [94b94db8 consolidation](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2).
+Legacy signs admitted content inside Agent and checks its sender before retaining
+it; external signer output now requires independent signature/key admission.
+The new implementation reuses Platform's published primitives, not legacy Agent
+construction, signing, polling or reply-only retention. No crypto implementation
+or legacy source was copied. Canic's sign-only adapter remains outside Backup.
+
+[Request cases](../../crates/ic-backup/src/store/capture/advance/tests/request_tests.rs)
+use real signatures and test wrong keys/senders/domains, changed content with a
+recomputed request ID, unsupported identity metadata, malformed keys/signatures,
+exact frame limits, old expiry and immutable bytes. A refused signer result stays
+preparation-pending across cold reopen with no submission or renewed signing.
+[HTTP cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests.rs)
+now use real signed ingress, test both key profiles against synthetic BLS reply
+certificates, and prove invalid signatures/keys/delegations make zero HTTP requests.
+These are native crypto/transport/persistence checks, not actual IC acceptance,
+external signer process custody, live application admission or full Canic support.

@@ -1,122 +1,116 @@
 # Current handoff — 2026-11-14
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; the former legacy
-local path was absent. Frozen legacy remains read-only at `dragginzgame/ic-backup-legacy`.
+local path was absent. Frozen legacy is read-only at `dragginzgame/ic-backup-legacy`.
 No original journals, bundles or obligations were imported, migrated or cleaned up.
 
 The completed 0.101.0 checkpoint was pushed and remotely verified at
 [5292a61](https://github.com/dragginzgame/ic-backup/commit/5292a61317dbbb619699724c4b2197e1ae6f799d).
-It includes held payload sources, snapshot readback and historical certificate
-evidence for successful and rejected initial status calls. Development now opens
-as 0.101.1, the next compatible patch. A future breaking change must advance the
-pending minor before delivery; no such change is part of this version opening.
-All packages remain `publish = false`. Delivery is GitHub-only, with no release
-tag, registry publication or deployment.
+Development opened as 0.101.1 at
+[e3e9c67](https://github.com/dragginzgame/ic-backup/commit/e3e9c670ec066a952b5b56b1371c6e951b9bc197).
+The 0.101.1 checkpoint completes HTTP submission, direct-key authentication,
+Host HTTP adoption and the Tooling refresh. The user selected GitHub-only delivery
+to `origin/main`, followed by the next compatible development version. All
+packages remain `publish = false`; no registry publication, release tag or
+deployment is authorized. A future breaking change must advance the minor.
 
 ## Implemented scope and safeguards
 
-The [inventory contract](../architecture/local-inventory.md) owns private local
-stores, bounded completion listings and latest backup per target. Listings are
-passive completion declarations. `verify_payload` checks a trusted manifest's
-membership/lengths/hashes; `open_payload` holds original descriptors and an
-in-memory 1 MiB block hash index. Bounded reads bind the exact source request and
-recheck original file/tree custody. IO/integrity failures invalidate the handle.
-At most 1027 payload descriptors are retained; OS resource failures are explicit.
-Neither API establishes capture-evidence authenticity or restore authority.
+The [inventory contract](../architecture/local-inventory.md) owns private stores,
+bounded completion listings/latest backup per target, manifest-bound payload
+verification and held payload sources. Source reads recheck original custody and
+block hashes; failures invalidate the handle. Inventory declarations and payload
+integrity do not authenticate capture evidence or grant restore authority.
 
-The [capture contract](../architecture/capture-intent.md) owns approved immutable
-plans, durable target claims, held original custody and bounded chained ledgers.
-Writes invalidate the session before persistence. Uncertain writes require
-reopening; complete uncertain frames remain spent, while partial frames and orphans
-block continuation. Missing original owners/locks never become fresh authority.
-Root rename follows held directories; replacement custody refuses. Reads never
-repair, truncate or discard evidence. Terminal replay grants no new effects.
+The [capture contract](../architecture/capture-intent.md) owns immutable approved
+plans, durable target claims and bounded chained ledgers under held original
+custody. Writes invalidate before persistence; uncertain writes require reopening.
+Complete uncertain frames stay spent; partial frames and orphans block continuation.
+Missing owners/locks never grant fresh authority. Root rename follows held
+folders; replacement custody refuses. Reads never repair or discard evidence.
 
-`advance_status` reserves preparation/signing before invoking a provider, retains
-exact prepared bytes, reserves one submission and retains authenticated evidence
-before settlement. Pending replay never signs or submits; prepared replay uses
-original bytes after current admission. Settled replay authenticates locally and
-checks stopped state, approved module and original caller/controller membership.
-`inspect_status` recovers original admission, stage, reserved counts and request ID
-without writes or provider calls; `Settled` alone is no authentication claim.
-Platform checks original call content, arguments, sender, expiry and request ID.
+`advance_status` reserves signing before provider invocation, retains exact signed
+bytes, reserves one submission and retains authenticated evidence before settlement.
+Cold pending replay never signs/submits. Prepared replay uses original bytes after
+current admission. Settled replay authenticates locally and checks stopped state,
+approved module and original caller/controller membership. `inspect_status` reports
+original admission/stage/spending without effects; `Settled` alone proves nothing.
 
-The new [certificate helper](../architecture/capture-intent.md#historical-status-authentication)
-uses Platform to build and authenticate original replies and certified rejections.
-It binds the original root DER hash, effective target, request-status path and
-exact reply bytes.
-Explicit certificate/delegation time windows are retained before submission and
-reused without reading a clock. Strict frame, certificate and tree bounds apply.
-Pending/forgotten outcomes and unavailable paths refuse; no digest substitutes
-for a certificate. Rejections retain exact bounded diagnostics and settle without
-refunds; optional absence must be certified, never inferred from pruning.
-The helper provides no live envelope authentication,
-transport, current authority or application-continuity admission.
+The certificate helpers authenticate original replies/rejections against original
+root DER, effective target, request ID and exact bytes. Certificate/delegation time
+windows are retained before submission and reused without reading a clock. Strict
+bounds apply; pending/forgotten/pruned outcomes never become success or refunds.
 
-`StatusProvider` remains a trusted integration contract with no concrete qualified
-provider. Canic plans round-trip but execution refuses pending its receipt protocol.
-The [transfer contract](../architecture/capture-transfer.md) owns pure bounded
-metadata/data decoding, deterministic schedules and non-destructive snapshot
-list/take preflight. Uploaded metadata comparison preserves exact state/float bits
-and separates destination provenance. Ordered local readback requires every extent
-and named chunk, including empty chunks, against caller-held source bytes.
-These comparisons supply no authenticated remote readback or load authority.
+`authenticate_status_request` now checks direct Ed25519/secp256k1 signatures,
+original sender/content/request ID and complete request bounds through Platform.
+It reads no clock and changes no bytes. Delegations, sender-info and other identity
+forms refuse. [The direct-key contract](../architecture/capture-intent.md#direct-key-status-request-authentication)
+owns exact formats, stricter verification, legacy review and qualification limits.
+`StatusHttpTransport` calls it before HTTP and provides one bounded submission
+with original network/root/target, deadlines, body caps and authenticated results.
+It disables retries, redirects, proxies and polling; cancellation never refunds.
+Caller futures require Tokio IO/timers. The [HTTP contract](../architecture/capture-intent.md#direct-status-http-helper)
+owns transport/runtime details. Signing, original time policy, provider commitments
+and application continuity still require a complete qualified `StatusProvider`.
+Canic execution refuses pending its executor/receipt protocol.
 
+The [transfer contract](../architecture/capture-transfer.md) owns bounded snapshot
+list/take preflight, metadata/data decoding, deterministic schedules and ordered
+uploaded-state/readback comparison against held source bytes. Comparisons preserve
+exact state/float bits and require every extent/chunk, including empty chunks.
+They provide no authenticated remote readback or load authority.
 Snapshot capture/reconciliation, completion writing, complete bundle-evidence
 verification, upload/readback/load effects, CLI and simulator remain unimplemented.
 This is not yet an independently usable backup/restore product.
 
 ## Dependencies and current evidence
 
-Host FS/Artifacts 0.79.0, Platform 0.33.4/Types 0.20.4, Toko Tooling 0.43.1 and
-Rust 1.100.0 are selected. Everything resolves from the registry; no sibling patch
-or shared target is required. Host 0.79's public Rust identities require consumers
-to align; the unpublished 0.101.0 minor covers that change. Stored formats and
-recovery authority remain unchanged.
+Host FS/Artifacts/HTTP 0.79.0, Platform 0.33.5/Types 0.20.4, Toko Tooling 0.43.2
+and Rust/Cargo 1.100.0 are selected. The incoming Platform 0.33.5 lock selection
+was preserved; its manifest minimum remains 0.33.4. No sibling patch, shared
+target, Agent or Canic runtime dependency is present. Backup now imports Reqwest
+0.13.5 only through Host HTTP and uses its bounded complete-body reader; the local
+chunk loop and direct Reqwest dependency are removed. Rustls uses platform
+certificate verification and native trust configuration, replacing the earlier
+bundled WebPKI roots. IC trust remains separately provisioned. Tokio is 1.54.1.
 
-Platform's minimum is now 0.33.4 because its `certification-verify` feature supplies
-the required historical API. Six crypto packages were added; all existing locked
-versions are preserved. Disposable and root locked/offline metadata confirm no
-Agent, HTTP runtime, Canic runtime or simulator dependency. Graph inputs, metadata
-and validation logs remain under `target/evidence/status-certificates/`.
+`target/evidence/host-http-0.79.0/` retains the authenticated published archive,
+before/proposed/admitted graphs, compiler identities and consumer check logs.
+Archive SHA-256 is `d33de424aa5afc596c0dace915e50c7b03057ff52cad64bd3451f9ee2380c3cc`;
+source is `cd85d922bcaba4d09727eb16d00b2e5a4c4f287b`, supplying
+[Tooling #360](https://github.com/dragginzgame/ic-tooling/issues/360).
+All 62 focused status continuation tests, strict package Clippy, warning-denying
+Rustdoc and all 15 documentation examples pass after adoption. This includes
+14 HTTP/TLS cases, nine request-signature cases, certificate authentication and
+durable replay. Exact/empty body boundaries and a real TLS ClientHello with
+plaintext-peer refusal qualify the new reader/TLS selection at the consumer.
+Prior request-authentication evidence remains under `target/evidence/status-request/`.
+Original requests/failed fixtures remain under `target/local-store-tests/`.
+These are native crypto/HTTP/persistence checks, not actual IC acceptance, external
+signer custody, application continuity, completed trusted TLS handshakes, power-loss
+or hosted-macOS qualification. The full product suite was not selected.
 
-Eighteen signed-certificate/persistence cases pass, covering exact bindings,
-tampering, delegation, historical policy, bounds, cold replay and spent refusal,
-plus strict rejection diagnostics and terminal replay. Rejection evidence/logs
-are under `target/evidence/status-rejections/`; prior certificate logs remain.
-The existing 21 continuation tests passed in the 0.101.0 batch. Strict package
-Clippy, warning-denying Rustdoc and thirteen documentation examples pass. Synthetic
-certificates use real Platform BLS signatures but do not qualify IC effects,
-a live provider, application safety, physical power loss or hosted macOS.
-Failed initial fixture/lint logs and all native fixture directories are retained.
-The 0.101.1 opening changes version metadata/documentation only. Locked offline
-metadata verifies the product version and disabled publication; supplier versions
-remain unchanged. Its evidence is under `target/evidence/start-0.101.1/`.
-
-Prior archive checks, source identities and qualification remain in the
-[checkpoint handoff](https://github.com/dragginzgame/ic-backup/blob/b95253375961f111df1eb648bd3479240846a13c/docs/status/current.md)
-and their existing `target/evidence/` directories. Frozen wire/plan/request fixtures
-are unchanged. Legacy review, changed assumptions and re-authored test provenance
-are recorded in the owning capture and transfer contracts.
+The Tooling 0.43.2 exporter retained all 51 managed files and nine entrypoints
+byte-for-byte; only its exact pin, lock entry and snapshot identity changed.
+Snapshot/tools admission, locked metadata, dependency listing/update preview and
+LOC checks passed. `target/evidence/toko-tooling-refresh/` owns that evidence;
+`target/evidence/status-http/` retains the original transport graph/review checks.
+Historical supplier/qualification evidence remains in its existing directories and
+the [checkpoint handoff](https://github.com/dragginzgame/ic-backup/blob/b95253375961f111df1eb648bd3479240846a13c/docs/status/current.md).
+Stored formats, frozen fixtures and original recovery authority remain unchanged.
 
 ## Next work
 
-Continue the single-canister host library: capture an already-stopped canister and
-restore to the same network/release/existing ID, leaving it stopped. Canic owns
-membership, concurrency, routing, maintenance, external settlement and reopening.
-Local bundles are v1; Blob is v2. No scheduler, catalog database or storage framework.
-
-The [direct-provider review](../design/sibling-integration.md#direct-provider-continuation-review--2026-11-14)
-now has its local certificate evidence builder/verifier. Next provider work must retain
-actual response certificates and qualify bounded one-shot transport, signing,
-root/time admission. Lost replies require separately
-accounted original-request reconciliation, never hidden polling or retries.
-Complete bundle admission must separately bind the original plan, ledger, raw
-metadata and source request to the trusted manifest and payload schedule.
-
+Compose bounded external signing with live time/provider/application admission
+using the supplied request, certificate and HTTP helpers. Qualify actual IC/HTTPS
+acceptance separately. Lost replies require accounted original-request reconciliation,
+never hidden polling/retry. Complete bundle admission must bind original plan,
+ledger, metadata and source requests to the trusted manifest and payload schedule.
+Canic owns membership, concurrency, routing, maintenance, external settlement and
+reopening. V1 remains one already-stopped canister, local bundles and same-release
+restore to the same existing ID, left stopped; Blob storage is v2.
 [Platform #162](https://github.com/dragginzgame/ic-platform/issues/162) and
-[#163](https://github.com/dragginzgame/ic-platform/issues/163) are closed and supplied
-in 0.33.4. [Canic #1](https://github.com/dragginzgame/canic/issues/1) owns the executor
-receipt/fenced-recovery protocol. Scope remains Backup-only source edits; file
-concrete supplier issues rather than editing siblings. No supplier blocker is
-claimed for the now-published historical certificate or Wasm snapshot APIs.
+[#163](https://github.com/dragginzgame/ic-platform/issues/163) are supplied in 0.33.4;
+no supplier gap is claimed for the direct-key profile. [Canic #1](https://github.com/dragginzgame/canic/issues/1)
+owns executor receipts/fenced recovery. Source edits remain Backup-only; file
+concrete supplier issues when needed rather than editing siblings.

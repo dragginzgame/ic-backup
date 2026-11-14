@@ -39,8 +39,9 @@ pub use capture::{
     CaptureRequest, CaptureStatusError, CaptureStatusPhase, CaptureStatusReplyError,
     CaptureStatusView, CaptureTransfer, LedgerError, PreparedStatus, ReadbackDataError,
     ReadbackMetadataError, SnapshotReplyError, StatusAdmissionRecord, StatusAdvanceError,
-    StatusCertificateError, StatusEvidence, StatusProgress, StatusProvider, TransferDataError,
-    TransferError, TransferMetadataError, UploadedSnapshotReadback, authenticate_status_evidence,
+    StatusCertificateError, StatusEvidence, StatusHttpError, StatusHttpTransport, StatusProgress,
+    StatusProvider, StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
+    UploadedSnapshotReadback, authenticate_status_evidence, authenticate_status_request,
     decode_snapshot_list, decode_taken_snapshot, status_certificate_evidence,
     status_certificate_observation,
 };

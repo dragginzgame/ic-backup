@@ -47,7 +47,7 @@ baseline, not a Backup runtime dependency.
 | `ic-platform-types` | Canonical Principal/Account owner. | Platform reexports the same Principal. A future pure identity-only package may depend on Types directly; do not add a redundant dependency to a package already using Platform merely to duplicate that import. |
 | `ic-host-fs` | Private parents, no-follow reads, retained files, descriptor locks, durable publication and identity checks. | Direct Core storage dependency; use `capability` only if the selected implementation actually needs its held-directory API. |
 | `ic-host-artifacts` | `Sha256Digest`, streaming `HashingWriter`/`BoundedWriter`, bounded byte copying and directory checksum composition. | Direct dependency where Backup uses these APIs. No gzip/Wasm features for opaque snapshot transfer. |
-| `ic-host-http` | Optional strict endpoint admission or bounded custom HTTP body consumption. | Add only if the Agent adapter uses those helpers; not a second IC transport. It does not select retries, trust or deadlines. |
+| `ic-host-http` | Selected 0.79.0: bounded complete-body consumption and Reqwest re-export for direct status HTTP. | Enable `rustls`; import Reqwest only through Host HTTP. Backup owns endpoints, retries, trust, deadlines and IC evidence. |
 | `ic-host-process` | External signer execution/custody. | Canic's signer adapter already needs it. Core does not spawn signers or management commands. |
 | `ic-wire` | Canic-owned recovery/control RPC and any manager execution protocol. | In Canic's protocol/adapter, not a replacement for management Candid or a mandatory host artifact format. |
 | `ic-platform-runtime` | Canic's canister-side execution and lifecycle. | Canic dependency only; never pulled into host Backup for a manager route. |
@@ -263,3 +263,13 @@ recovered admission. This retains legacy's progress-view guarantee and the
 [a860d144 separation](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0)
 between mandatory original admission and optional reporting. Views do not verify
 certificates or grant dispatch authority.
+
+The direct-key continuation supplies `authenticate_status_request` and applies it
+before HTTP dispatch. Platform 0.33.4 already supplies the required Ed25519/K256
+primitives, request domains and self-authenticating Principal derivation; no
+supplier change or issue is needed for this initial profile. Exact standard
+Ed25519/secp256k1 keys are supported; delegated, canister and other identity forms
+refuse. This does not qualify the Canic sign-only process or application custody.
+External preparation and live observation/application admission remain the next
+composition work. The [owning contract](../architecture/capture-intent.md#direct-key-status-request-authentication)
+records the focused legacy review, changed assumptions and native regressions.

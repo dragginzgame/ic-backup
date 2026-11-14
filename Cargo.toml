@@ -12,11 +12,13 @@ publish = false
 [workspace.dependencies]
 ic-host-artifacts = "0.79.0"
 ic-host-fs = { version = "0.79.0", features = ["capability"] }
-ic-platform = { version = "0.33.4", default-features = false, features = ["certification-verify", "ic-protocol", "management-canister-types"] }
+ic-host-http = { version = "0.79.0", default-features = false, features = ["rustls"] }
+ic-platform = { version = "0.33.4", default-features = false, features = ["certification-verify", "ecdsa", "ed25519", "ic-protocol", "management-canister-types", "principal-self-authenticating"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
-toko-tooling = "=0.43.1"
+tokio = { version = "1.53.3", default-features = false, features = ["rt", "net", "time"] }
+toko-tooling = "=0.43.2"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

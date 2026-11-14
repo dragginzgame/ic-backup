@@ -5,8 +5,11 @@ Local inventory, payload checks and capture intent use Host filesystem/artifact
 primitives and published Platform identity and management DTOs, with Serde/JSON
 and typed errors. Platform's native protocol codec checks prepared status call
 content; its historical certificate verifier authenticates retained replies and
-certified rejections. No IC transport is selected yet. This feature brings upstream protocol,
-CBOR and Candid dependencies through Platform, without Agent or an HTTP runtime.
+certified rejections. Host HTTP 0.79.0 supplies the bounded body reader and
+Reqwest 0.13.5 re-export with opt-in Rustls, without a direct Reqwest dependency
+or Agent. Its futures require a caller-owned Tokio runtime with IO
+and timers; tests use the selected Tokio 1.54.1 runtime. External IC DTOs and
+certificate codecs remain Platform-owned. No Canic framework dependency is added.
 
 Host FS and Artifacts 0.79.0 resolve from verified registry archives. The
 temporary sibling overrides were removed after native consumer qualification;
@@ -35,9 +38,9 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.43.1 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.43.2 is adopted from its registry
 archive with SHA-256
-`467162f616caafe69c965fe4e96173a0df37256f4767bfefd28114781aad76b3`.
+`cb81a5f9c13f50614af8468b599c3a05327f09f643aa954dc8e6878aa649263f`.
 The canonical exporter installs nine selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
 No producer regression suites or release/publication entrypoints are selected.
@@ -115,3 +118,31 @@ Platform 0.33.4 certificate feature and six added crypto packages is retained un
 not simulator or live-IC qualification. Select the nested `rejection_tests` module
 for diagnostic projection and rejected replay; its evidence is under
 `target/evidence/status-rejections/`.
+
+Use `store::capture::advance::tests::http_tests` for real loopback HTTP, exact
+request capture, response bounds, no-retry behavior and workflow replay. Request
+bytes remain in the caller-owned `target/local-store-tests/status-http-*`
+fixtures. TLS negotiation/plaintext refusal is also exercised; completed trusted
+TLS handshakes, real IC effects and a complete signer/
+application provider or hosted macOS remain unqualified. Original transport
+evidence remains under `target/evidence/status-http/`. No separate transport crate
+or runtime wrapper was introduced for this native host capability.
+
+Use `store::capture::advance::tests::request_tests` for original direct-key
+signature authentication and refused-signer recovery. Platform's existing `ecdsa`,
+`ed25519` and `principal-self-authenticating` features supply the key/verification
+and Principal owners. The reviewed disposable graph adds 26 registry packages
+while preserving all previously locked suppliers. Graph, preparation and focused
+check evidence is under `target/evidence/status-request/`; no Agent or signing
+process dependency is introduced. The HTTP cases use real Ed25519/secp256k1 signed
+envelopes; application and external signer qualification remain separate.
+
+Host HTTP 0.79.0 adoption evidence is under `target/evidence/host-http-0.79.0/`:
+verified registry archive, before/proposed/admitted graphs, compiler identities
+and consumer checks. Reqwest is selected only through `ic-host-http::reqwest`;
+its Rustls backend uses platform certificate verification and native trust
+configuration instead of the earlier bundled WebPKI roots. No custom TLS roots,
+verification bypass or IC trust discovery is added. The incoming Platform 0.33.5
+lock selection is preserved; the manifest still permits 0.33.4. The graph adds
+Host HTTP and Reqwest's native-verifier/AWS-LC support, including target-specific
+packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.

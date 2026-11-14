@@ -41,8 +41,14 @@ calls or writes. It requires an independently qualified
 provider; none is supplied yet. Prepared call content is checked against the
 original plan and request ID through Platform. `status_certificate_evidence` builds bounded reply/rejection evidence, and
 `authenticate_status_evidence` verifies retained certificates against original trust, request ID
-and admitted time windows, using Platform. It is a local provider helper; live
-envelope authentication and transport remain unimplemented. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+and admitted time windows, using Platform. `authenticate_status_request` verifies
+original direct Ed25519/secp256k1 signatures and sender bindings without changing bytes.
+`StatusHttpTransport` authenticates those requests and sends retained
+status ingress once with bounded deadlines/body reads and no retries or polling.
+Host HTTP supplies the shared body reader and Reqwest re-export; Backup owns the
+request and recovery policy.
+The integration still supplies signing, original time policy and current
+application admission; the transport helper is not a full provider. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
 Snapshot capture, completion writing, full bundle verification, restore, CLI and
 simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
