@@ -165,18 +165,18 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.77.2"
+version = "0.77.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba9a43bf50ce4f4330a8731c0fa9c7e88bdae6cf3d6b4a4489e38ff7d22b22cf"
+checksum = "f38c7f2fd7f067671f1493b44fb11a1a12e058c09c1c0f4fb6c0ee3fdac98243"
 dependencies = [
  "sha2",
 ]
 
 [[package]]
 name = "ic-host-fs"
-version = "0.77.2"
+version = "0.77.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8fbc8faa9e616e863662dc5b061198e5238af46bf383c76438d4463d9e8bc13"
+checksum = "353754ebf6f6302d7fedb3515585c28d55de48b4091f3901c0f433f09b3cd42f"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -187,9 +187,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.33.0"
+version = "0.33.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ff16542d2cb6c8307afced4b0b1dc10b31640ea49f26304de6ff94e02eeb8bf"
+checksum = "480c322b9dd62ca6f4f3e9ba80284c6a0d187d9659e3b118af936b814c497431"
 dependencies = [
  "ic-platform-types",
  "num-bigint",
@@ -441,9 +441,9 @@ dependencies = [
 
 [[package]]
 name = "toko-tooling"
-version = "0.43.0"
+version = "0.43.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "060d3507b66eb290ce12bc2572098f7e7cb1e12e9d6697a9b1a5d1552fcb2588"
+checksum = "467162f616caafe69c965fe4e96173a0df37256f4767bfefd28114781aad76b3"
 
 [[package]]
 name = "typenum"

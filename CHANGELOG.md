@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.100.0] — pending
+## [0.100.0] — GitHub checkpoint (unpublished)
 
 ### ⚠️ Breaking
 
@@ -9,7 +9,29 @@
   operations retain their original implementation and recovery authority;
   no automatic migration is provided.
 
+### ▶️ Try it
+
+From the repository root, prepare the pinned developer tools once (downloads
+require network access), then list package versions and source line counts:
+
+```bash
+make install-tools
+make deps-list
+toko-cloc -d 0
+```
+
+These commands prepare local tools and print reports; they do not publish Backup.
+
 ### ✨ Features
+
+- Add read-only status inspection for cold recovery: recover original admission,
+  retained stage, reserved signing/network allowances and request identity.
+  Report settled evidence without claiming authentication, success or refunds.
+
+- Add initial direct-host status continuation with durable signing/submission
+  reservations, exact retained evidence and local settled replay. Pending attempts
+  never re-sign or resubmit after reopening. Preserve partial writes and orphans;
+  concrete provider qualification, Canic execution and snapshots remain pending.
 
 - Add bounded raw status validation through Platform, sharing the existing capture
   preconditions. Bound controllers and module hashes before allocation and meter
@@ -32,7 +54,7 @@
   request/signing minima. Reject unsupported round-trip metadata without defaults.
 - Add immutable approved capture plans, durable target claims and exclusive
   create/open/inspect operations. Retain partial creation and refuse missing
-  ownership instead of resetting it. No attempt dispatch or completion is enabled.
+  ownership instead of resetting it. Intent creation alone enables no dispatch or completion.
 - Add private local-store initialization/opening and bounded completion inventory,
   including latest captured backup per network/canister. Preserve interrupted
   initialization and refuse corrupt records or incomplete scans.
@@ -56,6 +78,10 @@
 
 ### 🔧 Tooling
 
+- Adopt verified registry Host FS/Artifacts 0.77.3, including the held-directory
+  update opener. Remove the temporary local overrides after consumer qualification
+  so a fresh checkout needs no sibling source tree; publication remains disabled.
+
 - Adopt published Platform 0.33.0 with the existing management-only feature
   selection and Types 0.20.3. Requalify public DTOs, exact wire fixtures and local
   recovery tests; keep unrelated dependencies and publication settings unchanged.
@@ -63,13 +89,18 @@
 - Establish a fresh virtual workspace with an `ic-backup` library,
   publication disabled, Rust 1.100.0 and shared strict lints. Keep all packages
   non-publishable while the implementation matures.
-- Adopt the same authenticated Toko Tooling 0.43.0 foundation as IC Query,
+- Adopt authenticated Toko Tooling 0.43.1,
   including standard setup, formatting, dependency commands and LOC reporting.
 - Configure Linux and macOS scaffold validation and a separate secret scan.
 - Complete the authenticated snapshot with the shared pre-commit formatter hook
   and activate it locally; verify dependency commands and PATH LOC reporting.
 
 ### 📚 Documentation
+
+- Specify the proposed first capture call, including separate signing/submission
+  reservations, aggregate evidence capacity and interruption recovery. Keep live
+  dispatch authority distinct from replayed pending state. The initial status transitions are implemented; concrete provider and IC
+  qualification remain pending.
 
 - Record standalone-library and future integration boundaries without importing
   legacy implementations, release state or recovery obligations into new schemas.

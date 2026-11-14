@@ -22,8 +22,14 @@ with separate limits on skipped fields.
 from Platform metadata. `CapturePlan::decode_metadata` bounds raw metadata and
 checks it against the original plan. `CaptureTransfer::decode_data` bounds raw replies and checks
 exact region lengths and chunk hashes; see the [transfer contract](docs/architecture/capture-transfer.md).
-Attempt reservation, capture, completion writing, full evidence verification, restore, CLI and simulator
-workflows are not implemented yet. See the
+`CaptureOperation::advance_status` now durably reserves signing and submission,
+retains exact request/result evidence and replays the initial direct-host status
+call without repeating pending effects. `inspect_status` recovers the retained
+stage, original admission, reserved counts and request identity without provider
+calls or writes. It requires an independently qualified
+provider; none is supplied yet. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+Snapshot capture, completion writing, full bundle verification, restore, CLI and
+simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
 and the public Rustdoc example. Publication remains disabled; `0.100.0` is an
 unpublished development version following the legacy `0.67.x` line.

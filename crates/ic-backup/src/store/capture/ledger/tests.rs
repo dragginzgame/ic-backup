@@ -312,3 +312,51 @@ fn sparse_oversized_ledger_refuses_under_original_plan_budget() {
     ));
     assert_eq!(fs::metadata(named).unwrap().len(), LEDGER_BYTES + 1);
 }
+
+#[test]
+fn initial_status_events_refuse_noncanonical_wrong_arguments_and_out_of_order_transitions() {
+    let p = plan();
+    let first = initial(&p).unwrap();
+    let head = Sha256Digest::from_bytes(first[first.len() - 32..].try_into().unwrap());
+    let admission = super::super::advance::StatusAdmissionRecord {
+        provider: [1; 32],
+        application: [2; 32],
+        prepare_deadline_ns: 10,
+        submit_deadline_ns: 20,
+        prepare_requests: 1,
+        submit_requests: 1,
+        request_bytes: 4096,
+        result_bytes: 4096,
+    };
+    let event = EventRecord::PreparationReserved {
+        sequence: 1,
+        admission: admission.clone(),
+        arguments_sha256: *Sha256Digest::compute(&arguments(&p).unwrap()).as_bytes(),
+    };
+    let payload = serde_json::to_vec(&event).unwrap();
+    let (second, _) = frame(head, &payload);
+    let accepted = [first.as_slice(), &second].concat();
+    assert_eq!(
+        replay(accepted.as_slice(), &p).unwrap().phase,
+        CaptureStatusPhase::PreparationReserved
+    );
+    for payload in [
+        serde_json::to_vec_pretty(&event).unwrap(),
+        serde_json::to_vec(&EventRecord::PreparationReserved {
+            sequence: 1,
+            admission,
+            arguments_sha256: [0; 32],
+        })
+        .unwrap(),
+        b"{\"kind\":\"submission_reserved\",\"sequence\":3}".to_vec(),
+        b"{\"kind\":\"submission_reserved\",\"sequence\":3,\"extra\":0}".to_vec(),
+        b"{\"kind\":\"submission_reserved\",\"sequence\":3,\"sequence\":3}".to_vec(),
+    ] {
+        let (second, _) = frame(head, &payload);
+        let bytes = [first.as_slice(), &second].concat();
+        assert!(matches!(
+            replay(bytes.as_slice(), &p),
+            Err(LedgerError::Transition)
+        ));
+    }
+}

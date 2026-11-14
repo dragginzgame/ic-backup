@@ -4,7 +4,10 @@ Proposed effectful contract, 2026-11-14. Capture/restore remains unimplemented;
 [local inventory](../architecture/local-inventory.md) and
 [capture intent](../architecture/capture-intent.md) and
 [pure transfer planning](../architecture/capture-transfer.md) are implemented subsets.
-Intent creation does not yet reserve attempts or authorize any provider calls.
+Intent creation alone reserves no attempt. The implemented
+[initial-status continuation](../architecture/capture-intent.md#durable-initial-status)
+adds bounded direct-host preparation, submission and settlement through a caller
+provider; no concrete provider or authenticated IC journey is qualified yet.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage
@@ -122,7 +125,96 @@ proofs. An ordinary uncertified query returning a plausible receipt is insuffici
 Either certify the exact lookup result under an admitted protocol or use an
 accounted authenticated update response. Lookup never causes management dispatch.
 
+## First durable call: initial status
+
+The initial status slice is implemented through `advance_status`:
+original admission, preparation, one submission and retained authenticated result.
+It must include cold replay and interruption cases. A public append or reservation
+API alone is not that unit. Keep one operation ledger, one sequential workflow and
+the existing Platform status policy; do not expose its internal events or add
+per-step journals. The following states now have a private writer/replayer. The implemented contract
+owns exact encodings and limits; concrete provider and IC qualification remain open.
+
+Before spending, admit the held original plan, target owner, locks, ledger and
+referenced evidence. The application provider must establish continuous maintenance
+custody, and the transport must admit the original sender/route/trust binding,
+exact Platform status arguments, deadlines, byte ceilings and route costs. An
+unqualified provider or unaffordable call refuses before preparation. Neither a
+successful status decoder nor matching controller bytes satisfies this admission.
+
+| Durable state | Bound content and spending | Next permitted action |
+| --- | --- | --- |
+| `Created` | Original immutable plan and target claim; no provider call reserved. | Admit the first call and append its preparation reservation. |
+| `PreparationReserved` | Original step/attempt, method/argument commitment, application/provider bindings, signing slot and finite preparation limits. | Only the live continuation that durably created this reservation may invoke preparation once. Cold replay cannot recreate that permission. |
+| `Prepared` | Complete inspected signed request retained create-only, with exact length/hash, sender, route, request identity, expiry and original observation binding. | Recheck custody and expiry, then durably reserve submission of these exact bytes. No re-signing. |
+| `SubmissionReserved` | Exact prepared request, finite network cost/deadline and result-evidence allowance; consumed counts never refund. | Only its live continuation may submit once. Cold replay permits reconciliation of the original request, never submission. |
+| `Settled` | Durable raw result/proof references and authenticated original-request outcome. | Apply the existing status policy. Advance only on an admitted stopped/module/controller result and continuing application custody. |
+
+Every event has the next ledger sequence and exact original step/attempt binding.
+The ledger hash already binds the plan; no second mutable spending record is
+introduced. Preparation and submission are distinct because a lost external
+signer result can be a paid unresolved invocation even before management ingress.
+Authentication requests and observation traffic must fit their declared original
+network allowance too; one transport method call is not proof of one network
+request. Canic admission includes both hops and its durable executor join.
+
+The evidence ceiling applies to the operation as a whole: ledger bytes, retained
+evidence and still-reserved evidence capacity must fit together. Before invoking a
+provider, reserve room for its bounded output/proof and the remaining transition
+frames needed to retain that result. Replacing reserved capacity with actual bytes
+must not double-count it or erase already retained bytes. Unknown or partial files
+block continuation; they are not zero-byte evidence or reclaimed headroom. Actual
+provider limits and exact frame encodings must be selected and tested with the
+writer, before any effectful API becomes usable.
+
+For each append, first validate and encode the complete bounded candidate. Recheck
+the original file identity, link count, permissions, prefix length/head and held
+operation exclusion, then mark the live session unusable before the first write.
+Seek the admitted original descriptor to its exact admitted end, write the frame,
+and sync it before installing the new in-memory state or returning control to a
+provider call. Any write/sync/closing-custody failure leaves that handle unusable.
+Do not truncate a partial frame, retry the append in place or infer success from
+cached counters. The Host opener supplies a descriptor, not this product protocol.
+
+Cold `open`/`inspect` remain read-only. Effectful continuation must separately
+re-admit the entire original prefix and referenced evidence, establish their
+required durability and current custody, then follow the state above. A complete
+frame visible after an uncertain sync still counts as retained spending; it is
+never ignored because the original invocation did not return. A partial frame
+blocks effects and remains preserved. Reconstructed state cannot manufacture the
+live-only permission to invoke a signer or submitter.
+
+| Interruption | Required continuation |
+| --- | --- |
+| Preparation reservation persisted, signer output missing | Retain uncertain preparation and consumed signing allowance; no automatic second signer invocation. |
+| Request/evidence file visible without its ledger reference | Preserve it and stop for original recovery; no implicit orphan adoption or new allowance. |
+| `Prepared` replayed with no submission reservation | Submission may be reserved only for the original retained bytes, within their original expiry and fresh custody. Expiry returns attention, not automatic re-signing. |
+| Submission reserved, packet not sent or response lost | Both replay as pending. Only an independently reserved original-request observation can resolve them. |
+| Authenticated result retained, settlement append incomplete | Preserve all bytes; a partial ledger blocks continuation. Visibility alone is not permission to settle or dispatch. |
+| Settlement durable, return lost | Replay the original evidence and result locally. A failed status predicate or remote rejection stays a consumed refusal; it never authorizes the dependent snapshot call. |
+
+The implementation must re-author legacy reservation failure and acknowledged
+owner-death tests against this append protocol, including failure before any byte,
+partial header/payload/digest, sync failure, full frame with lost return and death
+before/after provider invocation. Assert exact original bytes, spent counters,
+zero forbidden invocations, unchanged target ownership and independent-target
+progress. Local injected providers prove call ordering only. Authenticated status
+requires a selected production provider and actual IC qualification; capture
+acceptance still requires the complete snapshot-to-bundle journey below.
+
+This review revisited frozen legacy's
+[reservation owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs),
+[model](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/attempt_journal/mod.rs),
+[tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/attempt_journal/tests/mod.rs)
+and [cached-write invalidation](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/json/mod.rs).
+[History a860d144](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0)
+separates complete-original admission from optional reporting. Retain that
+admission and disable-before-write ordering. Replace whole-record replacement and
+peer-journal scans with the one held append ledger; legacy process-death passes
+do not qualify this different persistence mechanism.
+
 ## Ordered work and outcomes
+
 
 All status/list/metadata reads are original accounted requests too. The fixed
 management sequence is:

@@ -1,8 +1,10 @@
-//! Bounded chained frames and held original-ledger admission. No append authority.
+//! Bounded chained frames and held original-ledger admission. Private first-status transitions.
 
+use super::advance::{StatusAdmissionRecord, arguments};
 use super::{CaptureError, CapturePlan, open_optional};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_fs::{capability::Directory, identity::FileIdentity};
+use serde::{Deserialize, Serialize};
 use std::{
     fs::File,
     io::{self, Read},
@@ -51,17 +53,17 @@ pub(super) fn admit(
     directory: &Directory,
     held: &File,
     plan: &CapturePlan,
-) -> Result<(), CaptureError> {
+) -> Result<State, CaptureError> {
     admit_with(directory, held, plan, |file, plan| replay(file, plan))
 }
 
 // The injected reader is also used for deterministic native closing-custody tests.
-fn admit_with(
+fn admit_with<T>(
     directory: &Directory,
     held: &File,
     plan: &CapturePlan,
-    read: impl FnOnce(&mut File, &CapturePlan) -> Result<(), LedgerError>,
-) -> Result<(), CaptureError> {
+    read: impl FnOnce(&mut File, &CapturePlan) -> Result<T, LedgerError>,
+) -> Result<T, CaptureError> {
     let mut file = open_optional(directory, "ledger.bin")?.ok_or(CaptureError::Incomplete)?;
     let original = FileIdentity::from_file(held)?;
     let before = file.metadata()?;
@@ -71,7 +73,7 @@ fn admit_with(
     if before.len() > Bounds::for_plan(plan).bytes {
         return Err(LedgerError::ByteLimit.into());
     }
-    read(&mut file, plan)?;
+    let result = read(&mut file, plan)?;
     let after = file.metadata()?;
     let named = open_optional(directory, "ledger.bin")?.ok_or(CaptureError::Incomplete)?;
     if FileIdentity::from_metadata(&after) != original
@@ -81,22 +83,193 @@ fn admit_with(
     {
         return Err(CaptureError::Changed);
     }
-    Ok(())
+    Ok(result)
 }
 
-fn replay(reader: impl Read, plan: &CapturePlan) -> Result<(), LedgerError> {
+/// Retained initial-status stage; this projection grants no dispatch authority.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CaptureStatusPhase {
+    /// Original intent exists; no status preparation is reserved.
+    Created,
+    /// Signing allowance is consumed; the original signer outcome is unresolved.
+    PreparationReserved,
+    /// Original request bytes are retained; submission is not yet reserved.
+    Prepared,
+    /// Submission allowance is consumed; the original outcome is unresolved.
+    SubmissionReserved,
+    /// A result is retained; inspection alone does not authenticate or validate it.
+    Settled,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct EvidenceRecord {
+    pub bytes: u32,
+    pub sha256: [u8; 32],
+}
+impl EvidenceRecord {
+    pub fn new(bytes: &[u8]) -> Self {
+        Self {
+            bytes: bytes.len() as u32,
+            sha256: *Sha256Digest::compute(bytes).as_bytes(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub(super) enum EventRecord {
+    PreparationReserved {
+        sequence: u32,
+        admission: StatusAdmissionRecord,
+        arguments_sha256: [u8; 32],
+    },
+    Prepared {
+        sequence: u32,
+        request: EvidenceRecord,
+    },
+    SubmissionReserved {
+        sequence: u32,
+    },
+    Settled {
+        sequence: u32,
+        result: EvidenceRecord,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) struct State {
+    pub phase: CaptureStatusPhase,
+    pub admission: Option<StatusAdmissionRecord>,
+    pub request: Option<EvidenceRecord>,
+    pub result: Option<EvidenceRecord>,
+    pub head: Sha256Digest,
+    pub bytes: u64,
+    count: u32,
+}
+impl State {
+    fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
+        match (self.phase, event) {
+            (
+                CaptureStatusPhase::Created,
+                EventRecord::PreparationReserved {
+                    sequence: 1,
+                    admission,
+                    arguments_sha256,
+                },
+            ) => {
+                admission
+                    .validate(plan)
+                    .map_err(|_| LedgerError::Transition)?;
+                let args = arguments(plan).map_err(|_| LedgerError::Transition)?;
+                if Sha256Digest::compute(&args).as_bytes() != arguments_sha256 {
+                    return Err(LedgerError::Transition);
+                }
+                self.admission = Some(admission.clone());
+                self.phase = CaptureStatusPhase::PreparationReserved;
+            }
+            (
+                CaptureStatusPhase::PreparationReserved,
+                EventRecord::Prepared {
+                    sequence: 2,
+                    request,
+                },
+            ) => {
+                let cap = self
+                    .admission
+                    .as_ref()
+                    .ok_or(LedgerError::Transition)?
+                    .request_bytes;
+                if !(46..=cap).contains(&request.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.request = Some(request.clone());
+                self.phase = CaptureStatusPhase::Prepared;
+            }
+            (CaptureStatusPhase::Prepared, EventRecord::SubmissionReserved { sequence: 3 }) => {
+                self.phase = CaptureStatusPhase::SubmissionReserved
+            }
+            (
+                CaptureStatusPhase::SubmissionReserved,
+                EventRecord::Settled {
+                    sequence: 4,
+                    result,
+                },
+            ) => {
+                let cap = self
+                    .admission
+                    .as_ref()
+                    .ok_or(LedgerError::Transition)?
+                    .result_bytes;
+                if !(7..=cap).contains(&result.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.result = Some(result.clone());
+                self.phase = CaptureStatusPhase::Settled;
+            }
+            _ => return Err(LedgerError::Transition),
+        }
+        Ok(())
+    }
+    pub fn candidate(
+        &self,
+        event: &EventRecord,
+        plan: &CapturePlan,
+    ) -> Result<Vec<u8>, CaptureError> {
+        let mut next = self.clone();
+        next.apply(event, plan)?;
+        let payload = serde_json::to_vec(event)?;
+        if payload.len() > FRAME_BYTES {
+            return Err(LedgerError::FrameSize.into());
+        }
+        if self.count == FRAMES {
+            return Err(LedgerError::FrameCount.into());
+        }
+        if self.bytes + payload.len() as u64 + 36 > Bounds::for_plan(plan).bytes {
+            return Err(LedgerError::ByteLimit.into());
+        }
+        let length = (payload.len() as u32).to_le_bytes();
+        Ok([
+            length.as_slice(),
+            &payload,
+            chain(self.head, &length, &payload).as_bytes(),
+        ]
+        .concat())
+    }
+}
+
+fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
+    let mut state = State {
+        phase: CaptureStatusPhase::Created,
+        admission: None,
+        request: None,
+        result: None,
+        head: seed(plan),
+        bytes: 0,
+        count: 0,
+    };
     while let Some(payload) = frames.next()? {
-        // The only implemented transition is the exact original created record.
-        // A valid hash on an unknown/later record is not permission to ignore it.
-        if frames.count != 1 || payload != CREATED {
-            return Err(LedgerError::Transition);
+        if frames.count == 1 {
+            if payload != CREATED {
+                return Err(LedgerError::Transition);
+            }
+        } else {
+            let event: EventRecord =
+                serde_json::from_slice(&payload).map_err(|_| LedgerError::Transition)?;
+            if serde_json::to_vec(&event).map_err(|_| LedgerError::Transition)? != payload {
+                return Err(LedgerError::Transition);
+            }
+            state.apply(&event, plan)?;
         }
     }
     if frames.count == 0 {
         return Err(LedgerError::Empty);
     }
-    Ok(())
+    state.head = frames.head;
+    state.bytes = frames.bytes;
+    state.count = frames.count;
+    Ok(state)
 }
 
 struct Frames<R> {

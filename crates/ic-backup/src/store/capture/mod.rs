@@ -1,10 +1,15 @@
-//! Local capture intent and exclusive original custody. No dispatch or receipt API.
+//! Local capture intent and exclusive original custody. Initial direct-host status continuation.
 
+mod advance;
 mod ledger;
+pub use advance::{
+    CaptureStatusView, PreparedStatus, StatusAdmissionRecord, StatusAdvanceError, StatusEvidence,
+    StatusProgress, StatusProvider,
+};
 mod plan;
 mod status;
 mod transfer;
-pub use ledger::LedgerError;
+pub use ledger::{CaptureStatusPhase, LedgerError};
 pub use plan::{CaptureExecution, CaptureLimitsRecord, CapturePlan, CaptureRequest};
 pub use status::{CaptureStatusError, CaptureStatusReplyError};
 pub use transfer::{CaptureTransfer, TransferDataError, TransferError, TransferMetadataError};
@@ -21,15 +26,16 @@ use ic_host_fs::{
 use serde::Serialize;
 use std::{
     ffi::OsStr,
-    io::{self, Write},
-    os::fd::AsFd,
+    io::{self, Seek, SeekFrom, Write},
+    os::{fd::AsFd, unix::fs::MetadataExt},
+    path::Path,
 };
 use thiserror::Error;
 
 /// Held original capture intent. Dropping releases process exclusion, not target ownership.
 ///
-/// Only creation and read-only reopening are implemented. There is no reservation,
-/// submission, receipt, cancellation, completion or owner-release API yet.
+/// Initial direct-host status continuation uses durable attempt reservations.
+/// There is no snapshot, reconciliation, completion or owner-release API yet.
 #[derive(Debug)]
 pub struct CaptureOperation {
     store: Directory,
@@ -40,6 +46,7 @@ pub struct CaptureOperation {
     target_lock_file: std::fs::File,
     ledger_file: std::fs::File,
     plan: CapturePlan,
+    usable: bool,
 }
 
 impl CaptureOperation {
@@ -53,7 +60,10 @@ impl CaptureOperation {
         Ok(&self.plan)
     }
 
-    fn check(&self) -> Result<(), CaptureError> {
+    fn check(&self) -> Result<ledger::State, CaptureError> {
+        if !self.usable {
+            return Err(CaptureError::Unusable);
+        }
         let request = self.plan.request();
         exact(&self.store, "format", super::FORMAT, 128)?;
         same_directory(&self.store, "operations", &self.operations)?;
@@ -85,18 +95,27 @@ impl CaptureOperation {
             self.plan.encoded(),
             plan::PLAN_LIMIT,
         )?;
-        ledger::admit(&self.directory, &self.ledger_file, &self.plan)?;
+        let state = ledger::admit(&self.directory, &self.ledger_file, &self.plan)?;
+        if let Some(reference) = &state.request {
+            self.evidence("status-request.bin", reference)?;
+        }
+        if let Some(reference) = &state.result {
+            self.evidence("status-result.bin", reference)?;
+        }
         exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
-        for entry in self.directory.entries(3)? {
+        for entry in self.directory.entries(5)? {
             let entry = entry?;
-            if !matches!(
-                entry.name.to_str(),
-                Some("lock" | "plan.json" | "ledger.bin")
-            ) {
+            let admitted = match entry.name.to_str() {
+                Some("lock" | "plan.json" | "ledger.bin") => true,
+                Some("status-request.bin") => state.request.is_some(),
+                Some("status-result.bin") => state.result.is_some(),
+                _ => false,
+            };
+            if !admitted {
                 return Err(CaptureError::Changed);
             }
         }
-        Ok(())
+        Ok(state)
     }
 }
 
@@ -166,6 +185,7 @@ impl BackupStore {
             target_lock_file,
             ledger_file,
             plan,
+            usable: true,
         };
         operation.check()?;
         drop(target_lock);
@@ -174,8 +194,8 @@ impl BackupStore {
 
     /// Open only complete original capture intent under a nonblocking operation lock.
     ///
-    /// No files are created or synchronized. Only the initial created ledger is
-    /// supported; later/unknown events refuse rather than project zero spending.
+    /// No files are created or synchronized. Original status reservations remain
+    /// spent; unknown or partial events refuse rather than project zero spending.
     ///
     /// # Errors
     /// Refuses wrong original commitment, partial/changed records, unsafe custody
@@ -210,6 +230,7 @@ impl BackupStore {
             target_lock_file,
             ledger_file,
             plan,
+            usable: true,
         };
         operation.check()?;
         Ok(operation)
@@ -317,6 +338,12 @@ pub enum CaptureError {
     /// Original record bytes, ledger or namespace no longer agree.
     #[error("capture intent or custody changed")]
     Changed,
+    /// Original live handle encountered uncertain persistence; reopen for diagnosis.
+    #[error("capture session is unusable after uncertain persistence")]
+    Unusable,
+    /// Unsupported route, changed admission or unaffordable first status call.
+    #[error("status admission is invalid or exceeds original authority")]
+    StatusAdmission,
     /// Bounded framing, exact chain or supported-transition admission failed.
     #[error(transparent)]
     Ledger(#[from] LedgerError),
@@ -332,4 +359,91 @@ pub enum CaptureError {
     /// Original native IO failure; all partial files remain retained.
     #[error(transparent)]
     Io(#[from] io::Error),
+}
+
+impl CaptureOperation {
+    fn evidence(
+        &self,
+        name: &str,
+        reference: &ledger::EvidenceRecord,
+    ) -> Result<Vec<u8>, CaptureError> {
+        let bytes = read_optional(&self.directory, name, reference.bytes as usize)?
+            .ok_or(CaptureError::Incomplete)?;
+        if bytes.len() != reference.bytes as usize
+            || Sha256Digest::compute(&bytes).as_bytes() != &reference.sha256
+        {
+            return Err(CaptureError::Changed);
+        }
+        Ok(bytes)
+    }
+
+    fn commit(
+        &mut self,
+        event: &ledger::EventRecord,
+        evidence: Option<(&str, &[u8])>,
+    ) -> Result<(), CaptureError> {
+        self.commit_with(event, evidence, |file, bytes| {
+            file.write_all(bytes)?;
+            file.sync_all()
+        })
+    }
+
+    // Fault injection is confined to the filesystem write/sync boundary in native tests.
+    fn commit_with(
+        &mut self,
+        event: &ledger::EventRecord,
+        evidence: Option<(&str, &[u8])>,
+        write: impl FnOnce(&mut std::fs::File, &[u8]) -> io::Result<()>,
+    ) -> Result<(), CaptureError> {
+        let state = self.check()?;
+        let frame = state.candidate(event, &self.plan)?;
+        match (event, evidence) {
+            (
+                ledger::EventRecord::Prepared { request, .. },
+                Some(("status-request.bin", bytes)),
+            ) if *request == ledger::EvidenceRecord::new(bytes) => {}
+            (ledger::EventRecord::Settled { result, .. }, Some(("status-result.bin", bytes)))
+                if *result == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::PreparationReserved { .. }
+                | ledger::EventRecord::SubmissionReserved { .. },
+                None,
+            ) => {}
+            _ => return Err(CaptureError::Changed),
+        }
+        let mut file = self
+            .directory
+            .resolve_parent(Path::new("ledger.bin"), PRIVATE)?
+            .ok_or(CaptureError::Incomplete)?
+            .open_regular_file_for_update(0o177)?
+            .ok_or(CaptureError::Incomplete)?;
+        if file.metadata()?.nlink() != 1
+            || FileIdentity::from_file(&file)? != FileIdentity::from_file(&self.ledger_file)?
+        {
+            return Err(CaptureError::Changed);
+        }
+        if self.check()? != state {
+            return Err(CaptureError::Changed);
+        }
+        // No fallible persistence below can leave live dispatch authority behind.
+        self.usable = false;
+        file.sync_all()?;
+        if state.request.is_some() {
+            open_optional(&self.directory, "status-request.bin")?
+                .ok_or(CaptureError::Incomplete)?
+                .sync_all()?;
+        }
+        self.directory.sync()?;
+        if let Some((name, bytes)) = evidence {
+            retain(&self.directory, name, bytes)?;
+        }
+        file.seek(SeekFrom::Start(state.bytes))?;
+        write(&mut file, &frame)?;
+        // Closing admission checks the entire resulting prefix and evidence again.
+        self.usable = true;
+        let checked = self.check();
+        self.usable = checked.is_ok();
+        checked?;
+        Ok(())
+    }
 }

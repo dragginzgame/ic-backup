@@ -8,7 +8,7 @@ use ic_platform::{
     },
 };
 
-pub(super) fn plan() -> CapturePlan {
+pub(in crate::store::capture) fn plan() -> CapturePlan {
     CapturePlan::decode(include_bytes!("../../tests/fixtures/capture-plan.json").to_vec()).unwrap()
 }
 fn sender(plan: &CapturePlan) -> Principal {
@@ -17,7 +17,7 @@ fn sender(plan: &CapturePlan) -> Principal {
         CaptureExecution::Canic { executor, .. } => executor,
     }
 }
-pub(super) fn status(plan: &CapturePlan) -> CanisterStatusResult {
+pub(in crate::store::capture) fn status(plan: &CapturePlan) -> CanisterStatusResult {
     CanisterStatusResult {
         status: CanisterStatusType::Stopped,
         ready_for_migration: false,

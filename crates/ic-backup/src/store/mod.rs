@@ -36,8 +36,10 @@ mod tests;
 
 pub use capture::{
     CaptureError, CaptureExecution, CaptureLimitsRecord, CaptureOperation, CapturePlan,
-    CaptureRequest, CaptureStatusError, CaptureStatusReplyError, CaptureTransfer, LedgerError,
-    TransferDataError, TransferError, TransferMetadataError,
+    CaptureRequest, CaptureStatusError, CaptureStatusPhase, CaptureStatusReplyError,
+    CaptureStatusView, CaptureTransfer, LedgerError, PreparedStatus, StatusAdmissionRecord,
+    StatusAdvanceError, StatusEvidence, StatusProgress, StatusProvider, TransferDataError,
+    TransferError, TransferMetadataError,
 };
 pub use manifest::ManifestError;
 

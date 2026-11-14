@@ -3,7 +3,8 @@
 This Unix-only slice persists local intent, not a backup. `CapturePlan::new` is
 pure; `BackupStore::create_capture` writes intent; `open_capture` and
 `CaptureOperation::inspect` admit original intent without repair. There is no
-reservation, dispatch, reconciliation, completion or target-release API. The
+reservation API for arbitrary calls. Initial direct-host status continuation is
+implemented below; reconciliation, snapshots, completion and target release are not. The
 [operation design](../design/operation-contract.md) owns the proposed next steps.
 
 ## Exact declaration
@@ -119,16 +120,112 @@ allowance. Frame lengths and cumulative bytes are checked before allocating a
 payload. It retains one frame at a time, validates each chained digest and refuses
 any partial tail. Typed `LedgerError` variants distinguish these failures.
 
-Semantic admission still requires exactly the canonical initial created record.
-A correctly hashed unknown event, duplicate creation or changed sequence refuses;
-no suffix is ignored or interpreted as unused authority. General transition
-replay, reservation accounting and append are not implemented. The original golden
+Semantic admission requires the canonical initial record followed only by the
+ordered initial-status transitions below. A correctly hashed unknown event,
+duplicate creation or changed sequence refuses; no suffix is ignored or
+interpreted as unused authority. The original golden
 bytes are unchanged. This is an unpublished restart format, not a legacy import.
 
 Creation checks that the initial ledger fits the original evidence allowance
-before claiming the target. Reopen does not increase that allowance. This bounds
-the ledger now; accounting for other evidence files belongs with their writer,
-not an assumption that each future file gets the full allowance again.
+before claiming the target. Reopen does not increase that allowance. The first-status writer reserves aggregate evidence and remaining frame capacity
+before signing; individual files do not each receive the full allowance.
+
+## Durable initial status
+
+`CaptureOperation::advance_status` implements the initial direct-host status call
+through a caller-supplied `StatusProvider`. The library has no concrete provider;
+the trait is a trusted integration contract, not proof that its implementation is
+qualified. Canic execution refuses before spending until its executor/receipt
+protocol is implemented. No snapshot, observation/reconciliation, completion or
+owner-release flow is included.
+
+The workflow constructs Platform's `CanisterIdRecord` for `canister_status` and
+encodes its single argument within 256 bytes. A strict `StatusAdmissionRecord`
+binds provider and continuous-application commitments, absolute prepare/submit
+deadlines, separate preparation/submission network ceilings and evidence sizes.
+Deadlines must be nonzero and ordered; submission costs at least one request.
+Preparation may use zero network requests for local signing. The combined network
+ceiling must fit the original plan; exactly one signing invocation is reserved.
+Provider methods enforce actual time, traffic and response bounds while receiving.
+
+Request evidence is capped at 1 MiB; response/proof evidence at 2 MiB. Before any
+provider call that may sign, Backup reserves both entire file ceilings plus the
+initial ledger and four maximum frame sizes (`4 * (16384 + 36)`). This conservative
+headroom fits the original evidence ceiling; actual bytes replace reserved output
+without introducing another allowance. Structural admission alone does not prove
+provider cost or application safety. All admission/authentication predicates are
+local and effect-free; remote work belongs only to the reserved bounded methods.
+
+After the original created frame, the private writer supports exactly these
+compact JSON records. `kind` is first; fields follow the order shown. Unknown,
+duplicate or noncanonical fields and any other sequence refuse.
+
+| Kind / sequence | Following fields | Retained meaning |
+| --- | --- | --- |
+| `preparation_reserved` / 1 | `admission`, `arguments_sha256` | Original admission, exact argument hash, one spent signing slot and preparation network ceiling. |
+| `prepared` / 2 | `request` | Exact original signed request file length/hash. |
+| `submission_reserved` / 3 | None | Original submission network ceiling spent; only its live successful writer may submit once. |
+| `settled` / 4 | `result` | Exact authenticated response/proof file length/hash. |
+
+The plan-bound chain and closed sequence identify initial step zero, attempt one;
+there is no generic event or spending API. Digests are 32-byte JSON arrays.
+Evidence references contain `bytes`, then `sha256`. Admission fields follow the
+[public declaration](../../crates/ic-backup/src/store/capture/advance/mod.rs).
+All records remain under the original frame and cumulative ledger bounds.
+
+`status-request.bin` is request ID (32 bytes), expiry (u64 little endian), envelope
+length (u32 little endian), exact envelope, then observation-binding bytes.
+`status-result.bin` is outcome (one byte: 0 reply, 1 rejection), response length
+(u32 little endian), exact response, then authentication-proof bytes. Both variable
+components must be nonempty. Complete files are retained create-only and synced
+before their referencing event. Neither file is a standalone transferable receipt.
+Request bytes, proof and signed delegations are sensitive and have no derived Debug.
+
+Each commit re-admits the original operation, prepares its bounded candidate,
+opens the held original ledger for update and checks identity/link/permission
+custody. It invalidates the session before synchronization or writes, synchronizes
+the retained prefix and referenced request for cold continuation, then retains
+new evidence, seeks the original exact end, writes and syncs the frame. Closing
+admission must pass before the session can continue. Write, sync or closing failure
+leaves the handle unusable. Reopen stays read-only and never truncates or repairs.
+
+A replayed preparation/submission reservation returns pending without invoking
+any provider. A prepared request may proceed only through fresh local admission
+of its original bytes, authority and expiry; it cannot re-sign. Historical settled
+replay authenticates retained proof locally, checks bounded status policy and
+never invokes current admission, signing or submission. Rejections and failed
+status policy remain settled and spent. A visible complete frame after uncertain
+sync stays authoritative; any partial frame or unreferenced evidence file blocks
+continuation. No orphan adoption, retry, target release or cancellation is added.
+
+[Native workflow tests](../../crates/ic-backup/src/store/capture/advance/tests.rs)
+cover exact evidence, bounds, refusal, cancellation, uncertain writes, orphan and
+changed custody, held-root rename and cold replay. Acknowledged owner-death cases
+cover reserved/invoked preparation, prepared bytes, reserved/invoked submission
+and settlement, while another target retains independent progress. These tests
+adapt the focused legacy reservation lessons below; their injected provider is
+only a call-order fixture. Actual IC authentication, continuous application
+custody, provider deadlines/traffic, physical power loss and hosted macOS remain
+unqualified. This is not an independently usable backup product.
+
+## Read-only status inspection
+
+`CaptureOperation::inspect_status` returns a `CaptureStatusView` after complete
+original admission and a closing custody check. It exposes the retained stage,
+exact original `StatusAdmissionRecord`, conservative reserved signing/network
+counts and the original request ID when prepared evidence exists. The request
+framing is admitted before projecting its ID. Signed envelopes and proof bytes
+remain private; the returned admission is a detached value and cannot mutate
+retained authority.
+
+Created intent reports zero spending. Preparation reserves one signing invocation
+and the original preparation network ceiling. Submission additionally consumes
+its original network ceiling; settlement and rejection never refund either.
+These are reservations, not observed traffic or remaining whole-backup capacity.
+`Settled` reports retained evidence, not authenticated status success or completion.
+Inspection calls no provider and never writes, synchronizes, repairs or retries.
+A restarted consumer can pass the recovered exact admission to `advance_status`,
+which still independently checks original custody and eligible transitions.
 
 ## Recovery and custody
 
@@ -152,7 +249,7 @@ the handle is dropped. There is no cancellation or cleanup escape hatch yet.
 
 ## Append integration dependency
 
-The selected Host FS 0.77.2 [capability implementation](https://github.com/dragginzgame/ic-tooling/blob/9d938d2814b637ea40d4ddbae110e87ab402c881/crates/ic-host-fs/src/capability/mod.rs)
+The original Host FS 0.77.2 selection's [capability implementation](https://github.com/dragginzgame/ic-tooling/blob/9d938d2814b637ea40d4ddbae110e87ab402c881/crates/ic-host-fs/src/capability/mod.rs)
 opens existing regular files read-only and creates new files read/write. Safe
 ledger continuation needs an existing-file writable opener relative to the held
 directory, without create/truncate, with no-follow regular-file admission. Backup
@@ -170,16 +267,19 @@ qualification passed 18 capability and 40 shared reader tests, strict Clippy wit
 and without capability, and Rustdoc. No macOS or Backup append/recovery claim
 follows. The source was pushed to GitHub under the push-only scope recorded in
 [b9700c9d](https://github.com/dragginzgame/ic-tooling/commit/b9700c9d7c8a2375943181dbbc4dad22f23f5ad0).
-The user now coordinates Tooling delivery. Backup still selects Host FS 0.77.2;
-publication and actual consumer adoption remain separate from this fix.
+The user coordinates Tooling delivery. Backup first used the explicitly authorized
+local fix, then verified the published Host FS/Artifacts 0.77.3 archive checksums
+and qualified the registry selection. The temporary overrides are removed; the
+status writer now uses the published opener. [Tooling #358](https://github.com/dragginzgame/ic-tooling/issues/358)
+retains producer provenance. [Setup](../development/setup.md) describes the current
+registry-backed graph; previous local source evidence remains retained.
 
-Adopt the published supplier boundary before implementing append. Do not rewrite the
-whole ledger, recreate missing records, add a local sibling patch or invent
-platform-specific path tricks. The reviewed legacy cached-record helper disables
-its session before persistence and installs state only after success. Adapt that
-ordering with retained partial frames and acknowledged process-death tests once
-append is available. No reservation or lost-write recovery was implemented in the
-transfer-planning batch; its [pure schedule](capture-transfer.md) is independent.
+The status writer uses this admitted Host boundary without replacing the ledger
+or recreating missing records. It adapts the reviewed legacy disable-before-write
+ordering, preserves partial frames and qualifies acknowledged owner death locally.
+The [operation design](../design/operation-contract.md#first-durable-call-initial-status)
+retains broader provider/IC acceptance requirements; the
+[pure transfer schedule](capture-transfer.md) remains independent.
 
 ## Focused legacy review — 2026-11-14
 
@@ -256,7 +356,8 @@ cannot satisfy the new capture profile. No legacy implementation was copied.
 Acknowledgement, receipt-digest and mutation tests are excluded because this API
 performs only status validation, not stop/start/load or authenticated settlement.
 
-Reservation failure, paid effects, receipt
-settlement, effect-free terminal replay and power loss are not qualified by this
-intent-only slice and must accompany their owning implementation. Native Canic
-route round-tripping proves only declaration retention, not executor behavior.
+The status continuation re-authors reservation failures, lost returns, cancelled
+futures, retained results and acknowledged owner death against the append writer.
+These native tests prove filesystem/call ordering, not paid IC effects, provider
+authentication, power loss or Canic execution. Native Canic plan round-tripping
+proves declaration retention only; status continuation refuses that route.

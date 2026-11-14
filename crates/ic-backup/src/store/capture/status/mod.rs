@@ -104,4 +104,4 @@ pub enum CaptureStatusError {
 }
 
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;

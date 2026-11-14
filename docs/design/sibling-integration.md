@@ -221,3 +221,45 @@ and recovery protocol. These are concrete integration gaps, not already-supporte
 callbacks. No broad Canic, Blob or whole-Fleet recovery claim follows from a simple
 fixture round trip. Keep both consumer graphs in acceptance; do not wait until the
 library is finished to discover that its signer or authority model cannot fit Canic.
+
+## Direct-provider continuation review — 2026-11-14
+
+The focused frozen-legacy review revisited
+[Agent construction](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/lib.rs),
+[single submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
+[reply digests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/reply_evidence/mod.rs)
+and [HTTP boundary tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs).
+They retain exact signed bytes before one request, disable redirects/proxies and
+Agent/HTTP retries, bound responses and leave acceptance, disconnects, malformed
+responses and timeouts unresolved. Keep these guarantees and re-author their
+actual network-boundary tests with the eventual concrete provider. They are not
+qualified by the current injected provider's native call-count tests.
+
+Legacy returns raw reply bytes after `Agent::update_signed` verifies the live
+certificate, then records a domain-bound reply digest. That digest is not the
+certificate. Copying this path would lose the proof required by the new historical
+replay contract. Platform 0.33.2 supplies native `ic_protocol::decode_call_response`
+and strict certificate decoding, so a new adapter can retain original certificate
+bytes. Native identities and external wire declarations must remain Platform-owned.
+
+The inspected Agent 0.49.3 implementation's `update_signed` returns the reply or
+pending request identity and discards the certificate. Its public `verify` checks
+signature/delegation and then compares certificate time to the current clock;
+Platform's `certification::verify::authenticate_certificate` delegates to it.
+Calling that live verifier unchanged on an old receipt would reject valid retained
+evidence. The canister-signature API verifies a different witness protocol and is
+not a substitute for management ingress certificates. A concrete provider must
+select and qualify historical authentication under original trust and admitted
+time, separately from fresh-observation policy. Do not change signed ingress
+expiry or suppress a verification failure to manufacture historical acceptance.
+No cryptographic implementation, extra dependency or concrete transport was added
+in this review; no unsupported supplier API is assumed available.
+
+The adjacent local recovery gap is now closed by `inspect_status`: a restarted
+caller can recover original admission and conservative reserved counts from the
+complete original ledger. Re-authored native tests cover every cold stage, failed
+status/rejection without refunds, malformed evidence and continuation using the
+recovered admission. This retains legacy's progress-view guarantee and the
+[a860d144 separation](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0)
+between mandatory original admission and optional reporting. Views do not verify
+certificates or grant dispatch authority.

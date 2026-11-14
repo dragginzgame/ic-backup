@@ -6,8 +6,9 @@ never edit that receipt or files under `vendor/toko-tooling/` by hand.
 
 Read [README.md](README.md), [the handoff](docs/status/current.md) and
 [the restart direction](docs/design/restart.md) at session start.
-Local inventory, payload integrity, capture intent, transfer planning and bounded reply decoding are
-implemented. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+Local inventory, payload integrity, capture intent, transfer planning, bounded reply
+decoding and initial direct-host status persistence are implemented. Concrete
+providers and authenticated IC execution remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 
@@ -65,6 +66,13 @@ legacy recovery material read-only and under its original authority.
   workspace or canister package must also disable publication.
 - `0.100.0` is an unpublished incompatible restart draft. Preserve historical
   release identities and review consumer migration before publication.
+
+## Dependency selection
+
+Host FS/Artifacts 0.77.3 are selected from verified registry archives. The
+maintainer-authorized temporary sibling overrides have been removed after
+consumer qualification. Keep dependencies registry-backed and builds in this
+repository's target directory; do not add sibling patches or shared targets.
 
 ## Local development
 

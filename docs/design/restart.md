@@ -23,7 +23,9 @@ acceptance evidence. Do not recreate the legacy feature set or release machinery
 by default. A CLI, Agent wrapper, persisted schema and simulator workspace are
 not required merely to establish the library. The implemented inventory has a
 bounded manifest reader, initial operation records and a pure transfer planner.
-Reservation writes and effectful providers remain future work.
+Initial direct-host status now has durable reservation/settlement and a caller
+provider boundary. Concrete providers and authenticated IC qualification remain
+future work; local injected providers prove ordering only.
 
 The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates

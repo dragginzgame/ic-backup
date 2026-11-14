@@ -3,8 +3,9 @@
 The Unix-only `ic_backup::store` API implements initialization, opening,
 `list_backups`, `latest_completed_backup` and `verify_payload`. Its
 [public documentation and example](../../crates/ic-backup/src/store/mod.rs) are
-compiled with the library. Capture, restore, completion writing, operation ledgers,
-target claims and full operation-evidence verification are not implemented. The wider
+compiled with the library. [Capture intent and initial status](capture-intent.md)
+own operation ledgers and target claims. Snapshot capture, restore, completion
+writing and full bundle-evidence verification remain unimplemented. The wider
 [local-store design](../design/local-store.md) remains their implementation input.
 
 ## Custody and initialization
@@ -22,7 +23,7 @@ Opening performs no writes and requires the marker and exactly those three child
 directories. Missing, unsupported, occupied or unsafe structure refuses. Held
 handles remain attached after a root rename; the caller owns location continuity
 and private custody. Initialization contention permits one exclusive claimant;
-this is not an implemented per-canister operation lock.
+per-canister operation exclusion belongs to the capture-intent API.
 
 ## Inventory semantics
 

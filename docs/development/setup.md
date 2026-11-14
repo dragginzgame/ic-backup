@@ -1,8 +1,14 @@
 # Development setup
 
 The virtual workspace has one unpublished library under `crates/ic-backup`.
-Local inventory, payload checks and capture intent use published Host filesystem/artifact primitives and Platform
-identity and management DTOs, with Serde/JSON and typed errors. No IC transport is selected yet.
+Local inventory, payload checks and capture intent use Host filesystem/artifact
+primitives and published Platform identity and management DTOs, with Serde/JSON
+and typed errors. No IC transport is selected yet.
+
+Host FS and Artifacts 0.77.3 now resolve from verified registry archives. The
+temporary sibling overrides were removed after native consumer qualification;
+no sibling checkout is required. Registry admission and the affected persistence
+suite are recorded under `target/evidence/registry-host-0.77.3/`.
 
 ## Preparation
 
@@ -17,9 +23,9 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.43.0 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.43.1 is adopted from its registry
 archive with SHA-256
-`060d3507b66eb290ce12bc2572098f7e7cb1e12e9d6697a9b1a5d1552fcb2588`.
+`467162f616caafe69c965fe4e96173a0df37256f4767bfefd28114781aad76b3`.
 The canonical exporter installs nine selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
 No producer regression suites or release/publication entrypoints are selected.
@@ -75,3 +81,8 @@ Add ordinary tests beside implemented code. Introduce an independent
 Tooling can discover that location; fetch and validation must be extended then.
 Future dependency adoption uses the root exact tooling pin, member inheritance,
 lockfile and `make toko-tooling-update`; never edit managed payloads manually.
+
+Use `store::capture::advance` for first-status persistence and recovery tests.
+Their injected provider checks ordering, not IC effects. The acknowledged child
+fixtures retain evidence at reservation, invocation, prepared-request and settlement
+boundaries; they do not qualify physical power loss or a concrete provider.
