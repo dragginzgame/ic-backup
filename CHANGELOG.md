@@ -4,19 +4,33 @@
 
 Development continues as 0.101.0 after the GitHub checkpoint containing status
 request binding, snapshot preflight and Host/Types adoption. The minor version
-accounts for Host 0.78 public type identities. Publication remains disabled.
+accounts for Host 0.79 public type identities. Publication remains disabled.
 
 ### ⚠️ Breaking
 
-- Adopt published `ic-host-artifacts` and `ic-host-fs` 0.78.0. Backup exposes
+- Adopt published `ic-host-artifacts` and `ic-host-fs` 0.79.0. Backup exposes
   their `Sha256Digest`, `ArtifactError` and `CapabilityError` types, so consumers
-  exchanging these types must select the same Host 0.78 line. Rust type identity
-  changes even though the used APIs and artifact source remain unchanged.
+  exchanging these types must select the same Host 0.79 line. Rust type identity
+  changes even though both source trees are unchanged from 0.78.0.
   Persisted formats, digest bytes and recovery authority are unchanged; no data
   migration or reset is required. See the
-  [Host release notes](https://github.com/dragginzgame/ic-tooling/blob/f816478db478c1226d0a953658e1ea0fb7ce7338/releases/foundation/CHANGELOG.md).
+  [Host release notes](https://github.com/dragginzgame/ic-tooling/blob/1a7b1521c56531e25b7bf75e3b79e27fe6ee93a2/releases/foundation/CHANGELOG.md).
 
 ### ✨ Features
+
+- Add a held local payload source for bounded reads under original file custody.
+  Verify every member against the trusted manifest, then check requested bytes
+  against in-memory block hashes. Reject changed files, identities and ranges;
+  invalidate the reader after filesystem/integrity failures. Reuse payload
+  admission checks without changing bundle formats or restore authority.
+
+- Compare bounded uploaded-snapshot metadata with admitted capture metadata.
+  Preserve exact global variants/float bits, timer/hook states and chunk identities;
+  retain fresh destination provenance separately. Return typed mismatches without
+  changing operation state or granting load authority. Add bounded ordered payload
+  comparison against caller-held source slices; refuse missing/repeated extents,
+  same-length corruption and invalid chunk bytes. Completion requires every region
+  and named chunk, including empty chunks. No remote readback or load is performed.
 
 - Add bounded snapshot list/take reply validation and direct-host take preflight.
   Preserve exact IDs, wire order and full timestamp/size values; reject duplicate
@@ -32,6 +46,11 @@ accounts for Host 0.78 public type identities. Publication remains disabled.
   Keep the existing API and record formats; provider authentication remains required.
 
 ### 📦 Dependencies
+
+- Retain the incoming Platform 0.33.4 lock update and qualify the native
+  transfer/readback surface against it. Native management fields and codec bytes
+  remain unchanged. Platform now supplies historical verification and portable
+  snapshot DTOs; Backup's concrete provider and Canic integration remain pending.
 
 - Qualify published Platform Types 0.20.4 through the existing Platform dependency.
   Principal implementation and bytes are unchanged; retain original plan, request

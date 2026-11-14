@@ -1,4 +1,6 @@
 //! Read-only payload checking; no operation replay or restore admission.
+mod source;
+pub use source::{PayloadReadError, PayloadSource};
 
 use super::{
     BackupStore, BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError, manifest, open_optional,
@@ -88,10 +90,35 @@ impl BackupStore {
         maximum_payload_bytes: NonZeroU64,
         mut read: impl FnMut(&mut File, u64) -> Result<ArtifactIdentity, super::ArtifactError>,
     ) -> Result<BackupSummary, StoreError> {
+        let original =
+            PayloadDirectory::open(self, bundle_id, expected_manifest, maximum_payload_bytes)?;
+        original.verify_with(|file, length| read(file, length).map(|identity| (identity, ())))?;
+        Ok(original.decoded.summary)
+    }
+}
+
+// Both one-shot verification and held readers use this exact admission/closing owner.
+struct PayloadDirectory<'store> {
+    store: &'store BackupStore,
+    bundles: Directory,
+    bundle: Directory,
+    payload: Directory,
+    manifest_file: File,
+    original_manifest: Metadata,
+    decoded: manifest::DecodedManifest,
+}
+
+impl<'store> PayloadDirectory<'store> {
+    fn open(
+        store: &'store BackupStore,
+        bundle_id: &str,
+        expected_manifest: Sha256Digest,
+        maximum_payload_bytes: NonZeroU64,
+    ) -> Result<Self, StoreError> {
         if !manifest::lower_hex(bundle_id, 32) {
             return Err(StoreError::InvalidLayout);
         }
-        let bundles = self
+        let bundles = store
             .root
             .open_directory(OsStr::new("bundles"), PRIVATE)?
             .ok_or(StoreError::IncompleteStore)?;
@@ -122,30 +149,57 @@ impl BackupStore {
             .open_directory(OsStr::new("payload"), PRIVATE)?
             .ok_or(StoreError::InvalidLayout)?;
         check_members(&payload, &decoded.members)?;
-        for member in &decoded.members {
+        Ok(Self {
+            store,
+            bundles,
+            bundle,
+            payload,
+            manifest_file,
+            original_manifest,
+            decoded,
+        })
+    }
+
+    fn verify_with<T>(
+        &self,
+        mut read: impl FnMut(&mut File, u64) -> Result<(ArtifactIdentity, T), super::ArtifactError>,
+    ) -> Result<Vec<T>, StoreError> {
+        let mut retained = Vec::with_capacity(self.decoded.members.len());
+        for member in &self.decoded.members {
             let mut file =
-                open_optional(&payload, &member.name)?.ok_or(StoreError::InvalidLayout)?;
+                open_optional(&self.payload, &member.name)?.ok_or(StoreError::InvalidLayout)?;
             let original = file.metadata()?;
             let expected = member
                 .sha256
                 .parse()
                 .map_err(|_| StoreError::InvalidLayout)?;
-            read(&mut file, member.bytes)
-                .and_then(|identity| identity.verify(expected))
+            let value = read(&mut file, member.bytes)
+                .and_then(|(identity, value)| identity.verify(expected).map(|_| value))
                 .map_err(|source| StoreError::Payload {
                     member: member.name.clone(),
                     source,
                 })?;
-            unchanged_file(&payload, &member.name, &file, &original)?;
+            unchanged_file(&self.payload, &member.name, &file, &original)?;
+            retained.push(value);
         }
-        check_members(&payload, &decoded.members)?;
-        let current_manifest =
-            unchanged_file(&bundle, "manifest.json", &manifest_file, &original_manifest)?;
-        hash_exact_reader(current_manifest, bytes.len() as u64)?.verify(expected_manifest)?;
-        unchanged_directory(&bundle, "payload", &payload)?;
-        unchanged_directory(&bundles, bundle_id, &bundle)?;
-        unchanged_directory(&self.root, "bundles", &bundles)?;
-        Ok(decoded.summary)
+        self.check()?;
+        Ok(retained)
+    }
+
+    fn check(&self) -> Result<(), StoreError> {
+        check_members(&self.payload, &self.decoded.members)?;
+        let current_manifest = unchanged_file(
+            &self.bundle,
+            "manifest.json",
+            &self.manifest_file,
+            &self.original_manifest,
+        )?;
+        hash_exact_reader(current_manifest, self.original_manifest.len())?
+            .verify(self.decoded.summary.manifest_sha256)?;
+        unchanged_directory(&self.bundle, "payload", &self.payload)?;
+        unchanged_directory(&self.bundles, &self.decoded.summary.bundle_id, &self.bundle)?;
+        unchanged_directory(&self.store.root, "bundles", &self.bundles)?;
+        Ok(())
     }
 }
 

@@ -133,6 +133,73 @@ same-length region bytes do not establish authenticity; chunk hashes are only as
 trusted as their metadata. Decoding performs no IO, reservation, progress update,
 settlement or complete-coverage check. Effectful capture remains unimplemented.
 
+## Uploaded metadata readback
+
+`CaptureTransfer::decode_uploaded_metadata(raw_reply)` compares uploaded metadata
+with the immutable admitted capture source. It returns the decoded destination
+metadata only after exact region sizes, ordered global variants/values, certified
+data, timer/hook presence and state, and complete chunk-hash sets match. Floating
+globals compare IEEE bits: NaN payloads/signaling/sign and positive/negative zero
+remain distinct. Missing globals or lifecycle fields never become defaults.
+
+The destination must identify `MetadataUpload`; the source was already admitted
+as `TakenFromCanister`. Destination timestamp and canister version are returned
+unchanged as separate provenance, with no equality or freshness claim. This follows
+the [management metadata contract](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/#ic-method-read_canister_snapshot_metadata).
+Wire chunk order stays unchanged; comparison sorts a bounded temporary hash index
+against the source's unique index. Extra, missing, duplicate and malformed hashes
+refuse, including omission of a named empty chunk.
+
+The existing metadata decoder owns all raw/header/type/work/allocation and vector
+bounds; this entrypoint adds no parser or external DTO. Its comparison index holds
+at most 1,024 32-byte hashes. Source plan, source metadata, raw evidence and ledger
+remain untouched. `ReadbackMetadataError` identifies the mismatched state category
+without including values or payloads in diagnostics.
+
+This is metadata comparison only. The caller must retain/authenticate the exact
+network, target, destination snapshot and request association; the reply contains
+no canister or snapshot ID. Complete source-bundle verification, independent restore
+intent and budgets, full destination payload comparison, current stopped state
+and application admission remain prerequisites to load. The local payload comparison
+below implements equality checks; effectful readback remains unimplemented. No network,
+provider call, spending, settlement, load or capture completion occurs here.
+
+## Ordered payload comparison
+
+`CaptureTransfer::begin_readback(destination_id, metadata_reply)` first admits a
+distinct destination ID of 1..=256 bytes and the existing uploaded-metadata checks.
+The returned `UploadedSnapshotReadback` retains destination metadata, immutable
+source/destination bindings and a comparison counter. It performs no IO or durable
+transition. `next_request()` returns the next ordinal and Platform data request
+using the original canister and source schedule with the destination snapshot ID.
+Repeated inspection returns the same DTO and grants no dispatch authority.
+
+`compare_data(ordinal, source_slice, raw_reply)` requires the next scheduled ordinal.
+It validates source length/hash before decoding the destination under the existing
+data-reply bounds, then compares exact bytes. All three region kinds reject
+same-length corruption. Whole chunks require the original hash and extent cap on
+both sides. Failures leave the comparison count unchanged; repeated local checking
+does not authorize any new network attempt. One bounded decoded reply is temporary;
+neither source nor destination payloads accumulate in this object.
+
+`finish()` consumes the checker and returns destination metadata only after every
+scheduled position matches. Empty heap/stable regions emit no request; every named
+chunk, including an empty chunk, requires comparison. Skipped, repeated and excess
+ordinals refuse. This is complete equality to supplied slices, not an authenticated
+or durable receipt. No existing record schema or spending state changes.
+
+The caller must provide each source slice from the held verified bundle at its
+original schedule position and authenticate/retain each reply's exact network,
+canister, destination ID and request association. A data reply contains none of
+those identities. Comparison alone cannot prove that the caller supplied the
+right source, that the destination was freshly allocated, or that either snapshot
+remained under exclusive custody. [`open_payload`](local-inventory.md#held-payload-source)
+now supplies a held payload reader with verified bounded reads; it does not yet
+admit the capture evidence or complete metadata/schedule binding required of a
+verified bundle. Restore intent/accounting, actual remote reads,
+durable coverage and load admission remain future workflow work. The capture
+schedule's budget never becomes a restore allowance.
+
 ## Focused legacy review — 2026-11-14
 
 Reviewed frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`:
@@ -215,6 +282,31 @@ the original bytes, SHA-256 and decoded values from
 Legacy request/evidence digests and reply wrappers are omitted from these pure
 helpers; authenticated association and durable settlement belong to the workflow.
 No implementation was copied and no IC list/take effects were qualified.
+
+The readback slice reviewed the same frozen revision's
+[metadata admission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_metadata/mod.rs),
+[metadata tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs),
+[upload mapping](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_upload/mod.rs)
+and [upload tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_upload/tests/mod.rs),
+alongside codec migration 1af7e219. They preserve global order/bits, optional-state
+meaning and source association; upload refuses unavailable globals. Legacy allowed
+absent timer/hook values to remain absent. The restart instead requires those
+values at source admission and exact readback equality, as selected in the operation
+design. Eight re-authored [readback tests](../../crates/ic-backup/src/store/capture/transfer/readback/tests.rs)
+cover all state categories, NaN/signed-zero cases, chunk-set differences, unchanged
+source/provenance, exact collection maxima and malformed/excessive replies.
+No legacy stage graph, request wrapper, implementation or IC qualification was copied.
+
+The payload comparison slice reuses lessons from the frozen data and upload
+admission/tests and codec migration above: exact destination/source separation,
+bounded lengths, whole-chunk hashes and complete coverage are independent checks.
+Its eight re-authored [data readback tests](../../crates/ic-backup/src/store/capture/transfer/readback/data/tests.rs)
+exercise all regions and chunks, exact IDs, partial extents, empty chunks, missing
+coverage, skipped/repeated ordinals, same-length corruption, source/reply refusals
+and exact 1 MiB payloads. Source shape/hash validation now has one owner shared
+with the data decoder. Legacy request/evidence wrappers and durable upload stage
+machinery are not copied into this ephemeral comparison; those safeguards remain
+prerequisites for future effectful integration, not guarantees of this helper.
 
 ## Platform 0.33 adoption — 2026-11-14
 

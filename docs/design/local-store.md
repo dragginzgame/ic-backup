@@ -21,10 +21,11 @@ Canic calls capture/restore and supplies the execution/application providers.
 | `list_backups(filter, limits)` | Read completion metadata for matching local bundles. No payload hashing or network calls. |
 | `latest_completed_backup(network, canister, limits)` | Select the most recently captured completed bundle in this store. |
 | `verify_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Check exact local payload bytes against a trusted manifest; no evidence replay or restore authority. |
+| `open_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Verify and hold original payload files for bounded source reads; complete capture-evidence admission remains separate. |
 | `inspect(operation)` | Read retained progress, failure or uncertainty separately from completed backups. |
 | `verify_bundle(bundle)` | Rehash and admit the complete original artifact under held custody before restore. |
 
-List/latest and payload checking exist on `BackupStore`. `CaptureOperation::inspect`
+List/latest, payload checking and held payload reads exist on `BackupStore`. `CaptureOperation::inspect`
 reads original intent; `inspect_status` additionally reads initial status progress,
 original admission and reserved attempt counts. Full `verify_bundle` remains proposed.
 Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:

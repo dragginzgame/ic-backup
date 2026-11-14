@@ -69,7 +69,7 @@ legacy recovery material read-only and under its original authority.
 
 ## Dependency selection
 
-Host FS/Artifacts 0.78.0 are selected from verified registry archives. The
+Host FS/Artifacts 0.79.0 are selected from verified registry archives. The
 maintainer-authorized temporary sibling overrides have been removed after
 consumer qualification. Keep dependencies registry-backed and builds in this
 repository's target directory; do not add sibling patches or shared targets.

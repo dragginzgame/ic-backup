@@ -37,12 +37,13 @@ mod tests;
 pub use capture::{
     CaptureError, CaptureExecution, CaptureLimitsRecord, CaptureOperation, CapturePlan,
     CaptureRequest, CaptureStatusError, CaptureStatusPhase, CaptureStatusReplyError,
-    CaptureStatusView, CaptureTransfer, LedgerError, PreparedStatus, SnapshotReplyError,
-    StatusAdmissionRecord, StatusAdvanceError, StatusEvidence, StatusProgress, StatusProvider,
-    TransferDataError, TransferError, TransferMetadataError, decode_snapshot_list,
-    decode_taken_snapshot,
+    CaptureStatusView, CaptureTransfer, LedgerError, PreparedStatus, ReadbackDataError,
+    ReadbackMetadataError, SnapshotReplyError, StatusAdmissionRecord, StatusAdvanceError,
+    StatusEvidence, StatusProgress, StatusProvider, TransferDataError, TransferError,
+    TransferMetadataError, UploadedSnapshotReadback, decode_snapshot_list, decode_taken_snapshot,
 };
 pub use manifest::ManifestError;
+pub use payload::{PayloadReadError, PayloadSource};
 
 use ic_host_artifacts::artifact::{ArtifactError, Sha256Digest};
 use ic_host_fs::{

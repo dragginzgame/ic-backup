@@ -356,18 +356,18 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.78.0"
+version = "0.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97b20433ae31b443a2e8f270e07508b5fefb8cb9aa75c5461e5d0266dc3c13cd"
+checksum = "80c115b14974a670676e62940473886a1b2b289ee1ca1258aae89534f1fddb22"
 dependencies = [
  "sha2 0.11.1",
 ]
 
 [[package]]
 name = "ic-host-fs"
-version = "0.78.0"
+version = "0.79.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e55cb58f52c5e81a8c73043ffff1c6095feb59a97dbc40c76c5cd776e0e73eaf"
+checksum = "9ef7770c178efe33ca0d9fcb54e78ad45f0c9c3d499f2e1bac70fb1ba5bba182"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -378,9 +378,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.33.2"
+version = "0.33.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "480c322b9dd62ca6f4f3e9ba80284c6a0d187d9659e3b118af936b814c497431"
+checksum = "959cfca0933238dfb426f3deb356b7d5c27ee594f714cb61eca1a610b3e4ae44"
 dependencies = [
  "ic-certification",
  "ic-platform-types",

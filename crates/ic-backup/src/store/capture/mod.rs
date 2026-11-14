@@ -14,7 +14,10 @@ mod transfer;
 pub use ledger::{CaptureStatusPhase, LedgerError};
 pub use plan::{CaptureExecution, CaptureLimitsRecord, CapturePlan, CaptureRequest};
 pub use status::{CaptureStatusError, CaptureStatusReplyError};
-pub use transfer::{CaptureTransfer, TransferDataError, TransferError, TransferMetadataError};
+pub use transfer::{
+    CaptureTransfer, ReadbackDataError, ReadbackMetadataError, TransferDataError, TransferError,
+    TransferMetadataError, UploadedSnapshotReadback,
+};
 
 use super::{
     BackupStore, CREATE, PRIVATE, StoreError, manifest::lower_hex, open_optional, read_optional,

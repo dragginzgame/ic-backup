@@ -11,6 +11,8 @@ The `ic-backup` library implements private local-store initialization and bounde
 backup inventory: `list_backups` and `latest_completed_backup`. Inventory reads
 completion declarations. A separate `verify_payload` method stream-checks all
 payload files against a caller-trusted manifest hash and explicit byte limit.
+`open_payload` retains those original files and verifies bounded source reads
+against ephemeral block hashes; it does not yet verify capture evidence or admit restore.
 Capture intent creation/reopening now retains an immutable approved plan and durable
 target ownership. It validates bounded chained ledger frames under held original
 file custody; see the [intent contract](docs/architecture/capture-intent.md).
@@ -25,6 +27,12 @@ existing snapshots and installed code without performing a call.
 from Platform metadata. `CapturePlan::decode_metadata` bounds raw metadata and
 checks it against the original plan. `CaptureTransfer::decode_data` bounds raw replies and checks
 exact region lengths and chunk hashes; see the [transfer contract](docs/architecture/capture-transfer.md).
+`CaptureTransfer::decode_uploaded_metadata` checks bounded restore readback metadata
+against the captured state, including exact float bits and the complete chunk set.
+`CaptureTransfer::begin_readback` adds ordered byte comparison of every destination
+extent and chunk against caller-held source slices. Completion requires full local
+comparison coverage; authenticated evidence, source custody and load authority
+remain separate requirements.
 `CaptureOperation::advance_status` now durably reserves signing and submission,
 retains exact request/result evidence and replays the initial direct-host status
 call without repeating pending effects. `inspect_status` recovers the retained

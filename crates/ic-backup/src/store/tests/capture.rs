@@ -8,7 +8,7 @@ use std::{
 const PLAN: &[u8] = include_bytes!("fixtures/capture-plan.json");
 const DIGEST: &str = "f19893fe983ec0abb66d5aa33f05dbd69f07bb89f0ff4026fd03b7451cab9d0d";
 
-fn request(id: u64) -> CaptureRequest {
+pub(super) fn request(id: u64) -> CaptureRequest {
     CaptureRequest {
         operation_id: format!("{id:032x}"),
         target: target(),

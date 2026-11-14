@@ -53,7 +53,9 @@ impl CapturePlan {
     }
 }
 
-fn decode(reply: &[u8]) -> Result<ReadCanisterSnapshotMetadataResult, TransferMetadataError> {
+pub(super) fn decode(
+    reply: &[u8],
+) -> Result<ReadCanisterSnapshotMetadataResult, TransferMetadataError> {
     if reply.len() > MAX_REPLY_BYTES {
         return Err(TransferMetadataError::ReplyTooLarge);
     }

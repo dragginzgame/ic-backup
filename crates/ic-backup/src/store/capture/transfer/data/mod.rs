@@ -48,31 +48,45 @@ impl CaptureTransfer<'_> {
             0,
         )
         .map_err(TransferDataError::Decode)?;
+        self.validate_data_bytes(ordinal, &result.chunk)?;
+        Ok(result.chunk)
+    }
+
+    // Both captured source slices and decoded destination replies obey the same
+    // immutable schedule. This validates shape/integrity, not origin or custody.
+    pub(super) fn validate_data_bytes(
+        &self,
+        ordinal: u32,
+        bytes: &[u8],
+    ) -> Result<(), TransferDataError> {
+        if ordinal >= self.data_calls {
+            return Err(TransferDataError::Ordinal);
+        }
         match self.kind(u64::from(ordinal)) {
             SnapshotDataKind::WasmModule { size, .. }
             | SnapshotDataKind::WasmMemory { size, .. }
             | SnapshotDataKind::StableMemory { size, .. } => {
-                if result.chunk.len() as u64 != size {
+                if bytes.len() as u64 != size {
                     return Err(TransferDataError::Length {
                         expected: size,
-                        actual: result.chunk.len(),
+                        actual: bytes.len(),
                     });
                 }
             }
             SnapshotDataKind::WasmChunk { hash } => {
                 let limit = self.plan.request().limits.extent_bytes as usize;
-                if result.chunk.len() > limit {
+                if bytes.len() > limit {
                     return Err(TransferDataError::ChunkLimit {
                         limit,
-                        actual: result.chunk.len(),
+                        actual: bytes.len(),
                     });
                 }
-                if Sha256Digest::compute(&result.chunk).as_bytes().as_slice() != hash {
+                if Sha256Digest::compute(bytes).as_bytes().as_slice() != hash {
                     return Err(TransferDataError::ChunkHash);
                 }
             }
         }
-        Ok(result.chunk)
+        Ok(())
     }
 }
 

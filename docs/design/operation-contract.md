@@ -248,6 +248,14 @@ state, not a completed failure that frees the target claim.
 
 ## Metadata comparison and representability
 
+The pure uploaded-metadata comparison is now implemented by
+[`CaptureTransfer::decode_uploaded_metadata`](../architecture/capture-transfer.md#uploaded-metadata-readback).
+It reuses bounded metadata decoding and compares source state without effects.
+[`CaptureTransfer::begin_readback`](../architecture/capture-transfer.md#ordered-payload-comparison)
+now checks complete ordered payload equality against caller-held source slices.
+Remote readback, held verified-bundle integration, durable progress, authenticated
+association and load admission remain proposed.
+
 Use the selected published Platform snapshot DTOs and codec at the management
 boundary. The inspected [native DTO surface](https://github.com/dragginzgame/ic-platform/blob/c90ce9fce0948da0c05e6f5ac333c520fa46d801/crates/ic-platform/src/management_canister_types/native/mod.rs)
 contains optional read globals but mandatory upload globals. Persist raw evidence

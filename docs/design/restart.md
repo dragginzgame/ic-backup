@@ -31,7 +31,7 @@ The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
 the new implementation from legacy without implying maturity or compatibility.
 Development now continues as 0.101.0 after the GitHub-only status/snapshot
-checkpoint. The minor version accounts for Host 0.78 public Rust type identities;
+checkpoint. The minor version accounts for the selected Host 0.79 public Rust type identities;
 it does not claim a finished capture/restore product.
 Publication remains disabled; no registry name/version is reserved by a local
 manifest. Legacy backups and unfinished operations have no automatic migration.

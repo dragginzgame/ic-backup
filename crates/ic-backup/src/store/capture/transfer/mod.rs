@@ -2,8 +2,10 @@
 
 mod data;
 mod metadata;
+mod readback;
 pub use data::TransferDataError;
 pub use metadata::TransferMetadataError;
+pub use readback::{ReadbackDataError, ReadbackMetadataError, UploadedSnapshotReadback};
 
 use super::{CaptureExecution, CapturePlan};
 use ic_platform::management_canister_types::{

@@ -7,15 +7,15 @@ and typed errors. Platform's native protocol codec checks prepared status call
 content; no IC transport is selected yet. This feature brings upstream protocol,
 CBOR and Candid dependencies through Platform, without Agent or an HTTP runtime.
 
-Host FS and Artifacts 0.78.0 resolve from verified registry archives. The
+Host FS and Artifacts 0.79.0 resolve from verified registry archives. The
 temporary sibling overrides were removed after native consumer qualification;
 no sibling checkout is required. Registry admission and the affected persistence
 suite for the earlier 0.77.3 adoption remain under
 `target/evidence/registry-host-0.77.3/`; current archive/graph evidence is under
-`target/evidence/host-0.78.0/`. Consumers exchanging Backup's public Host digest
-and error types must use the 0.78 line. This changes Rust identities, not stored
+`target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
+and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the pending Backup release is 0.101.0.
-Platform 0.33.2 resolves canonical Types 0.20.4 through the existing dependency.
+Platform 0.33.4 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
 consumer graph evidence are under `target/evidence/types-0.20.4/`.
@@ -72,12 +72,18 @@ cargo test --locked --offline -p ic-backup --doc
 Check for active commands using this workspace's target before compilation or
 source/lock edits. Test fixtures remain under `target/local-store-tests/`, including
 failed cases. The FIFO replacement regression uses the native Unix `mkfifo` utility (Linux/macOS).
+Use `store::tests::payload` for native payload verification and held-source reads;
+its `source_tests` selection covers block boundaries, retained custody and local
+source-to-readback composition. These synthetic bundles do not qualify capture evidence.
 Select capture intent tests with `cargo test --locked --offline -p ic-backup
 store::tests::capture`; select framed-ledger tests with the same command and
 `store::capture::ledger::tests` as its filter. Its acknowledged child-process death case verifies original
 intent and target-claim retention, not attempt spending or filesystem power loss.
 Use `store::capture::transfer` for planning and bounded raw reply tests;
 `store::capture::transfer::metadata` selects the metadata decoder alone.
+Use `store::capture::transfer::readback` for uploaded-state comparison, including
+exact float bits, lifecycle state, destination provenance, complete chunk sets and
+ordered byte coverage. Its `data` submodule selects payload comparison cases alone.
 Use `store::capture::snapshot` for bounded list/take replies, frozen wire fixtures
 and non-destructive take preflight. These are pure decoding/policy tests.
 Use `store::capture::status` for decoded status preconditions and exact management

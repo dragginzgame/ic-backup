@@ -1,7 +1,7 @@
 # Implemented local inventory and payload integrity
 
 The Unix-only `ic_backup::store` API implements initialization, opening,
-`list_backups`, `latest_completed_backup` and `verify_payload`. Its
+`list_backups`, `latest_completed_backup`, `verify_payload` and `open_payload`. Its
 [public documentation and example](../../crates/ic-backup/src/store/mod.rs) are
 compiled with the library. [Capture intent and initial status](capture-intent.md)
 own operation ledgers and target claims. Snapshot capture, restore, completion
@@ -100,6 +100,48 @@ replay authority, sync files or publish completion. Those remain prerequisites
 for full bundle admission and restore. Payload integrity is a useful diagnostic,
 not a `BackupVerified` capture receipt or a restore handle.
 
+## Held payload source
+
+`open_payload(bundle_id, expected_manifest, maximum_payload_bytes)` uses the same
+manifest, payload and closing admission as `verify_payload`. It returns a
+`PayloadSource` retaining the original directories, manifest and every member's
+descriptor and metadata. Original names and directory identities are rechecked
+before returning. There is one retained descriptor per member (at most 1,027),
+plus the manifest/directory chain and temporary validation handles. Descriptor
+exhaustion is an IO refusal, never permission to drop custody and reopen by path.
+The existing one-shot verifier retains its sequential, constant-descriptor behavior.
+
+Opening also builds ephemeral SHA-256 values for 1 MiB blocks from the exact same
+stream admitted by each whole-member hash. A failed whole-member check discards
+the derived index. The existing 1 GiB total and 1,027-member limits bound hash
+storage below 65 KiB; initial scratch is one 1 MiB block plus Host's hashing buffer.
+No index is serialized, no file is changed and no new bundle format is introduced.
+
+`PayloadSource::read_data(source_request)` accepts Platform's data-request DTO.
+It requires the original canister and opaque source snapshot ID. Region ranges
+must be nonempty, within the declared file and at most 1 MiB; chunks require an
+exact known 32-byte hash and are read whole, including named empty chunks. There
+is no caller-supplied path. Invalid request input performs no IO and leaves the
+handle usable. The manifest summary is available through a read-only projection.
+
+A read hashes at most two intersecting blocks through the held descriptor and
+returns at most 1 MiB copied from those same checked buffers. Payload buffers
+total at most 2 MiB. It does not rehash the whole region for each small extent.
+Before and after IO, it checks all held file identities/lengths, exact membership,
+the bounded original manifest and directory chain. Identical-byte replacement
+refuses; same-inode/same-length changes in a read block fail the block hash. Empty
+chunks still undergo file/length/custody checks. Any filesystem, integrity or
+custody refusal invalidates the handle; later reads refuse until explicit new
+admission. Returned buffers do not grant new remote attempt authority.
+
+Callers continue excluding namespace/content writers for the handle's lifetime.
+Sequential checks cannot fence writers or prove a point-in-time immutable tree.
+Unread blocks are not freshly rehashed on each read; each returned slice is
+checked against the bytes originally admitted under the trusted manifest.
+Network/release, full source-metadata/schedule association and retained capture
+evidence still belong to full bundle admission, which remains unimplemented.
+This is a held payload reader, not `verify_bundle` or restore permission.
+
 ## Focused legacy review — 2026-11-14
 
 Reviewed the pinned legacy revision `4ae087fad8c23de712aa60bf569bde4b2b932651`:
@@ -142,12 +184,24 @@ these diagnostics. No generic journal framework or legacy compatibility reader
 was introduced. Sequential closing checks still do not fence concurrent writers
 or establish a point-in-time immutable tree.
 
+The held-source slice reviewed those same frozen verification/member implementations,
+their replacement regressions and history 9f7b886. That history deliberately binds
+derived upload checksums to the bytes from the original verification pass and keeps
+closing custody checks while avoiding repeated full payload scans. The new reader
+adapts those guarantees with a bounded ephemeral block index and original held
+descriptors. It does not copy legacy's stage graph, source-record replay or upload
+authority. Eight re-authored [source tests](../../crates/ic-backup/src/store/tests/payload/source_tests.rs)
+exercise exact reads across block boundaries, empty/full-sized chunks, ordered
+local readback, identity/range refusal, same-inode corruption, identical-byte
+replacement, changed trees/manifests/permissions and held-root rename. They use
+native files and synthetic snapshot DTOs; they qualify no IC effects.
+
 ## Evidence
 
 [Native tests](../../crates/ic-backup/src/store/tests/mod.rs) cover initialization
 contention/interruption, held-root replacement, link/permission refusal, budgets,
 ordering/filtering, malformed records and refresh after visible publication.
-[Payload tests](../../crates/ic-backup/src/store/tests/payload.rs) additionally
+[Payload tests](../../crates/ic-backup/src/store/tests/payload/mod.rs) additionally
 exercise exact-budget success with empty and nonempty chunks, corruption,
 truncation/growth, missing/extra/unsafe files, root replacement and refusal of a
 self-consistent replacement under the original trusted manifest commitment.

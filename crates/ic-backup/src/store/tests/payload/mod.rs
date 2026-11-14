@@ -1,5 +1,6 @@
 use super::*;
 use std::num::NonZeroU64;
+mod source_tests;
 
 struct Fixture {
     store: BackupStore,
@@ -14,13 +15,29 @@ impl Fixture {
     }
 
     fn with_chunks(label: &str, chunks: Vec<Vec<u8>>) -> Self {
+        Self::with_regions(
+            label,
+            chunks,
+            b"\0asm\x01\0\0\0".to_vec(),
+            Vec::new(),
+            vec![0xab; 32_769],
+        )
+    }
+
+    fn with_regions(
+        label: &str,
+        chunks: Vec<Vec<u8>>,
+        module: Vec<u8>,
+        heap: Vec<u8>,
+        stable: Vec<u8>,
+    ) -> Self {
         let path = root(label);
         let store = BackupStore::initialize(&path).unwrap();
         let mut record = record(1, 100, 200);
         let mut contents = vec![
-            ("module.wasm".to_owned(), b"\0asm\x01\0\0\0".to_vec()),
-            ("heap.bin".to_owned(), Vec::new()),
-            ("stable.bin".to_owned(), vec![0xab; 32_769]),
+            ("module.wasm".to_owned(), module),
+            ("heap.bin".to_owned(), heap),
+            ("stable.bin".to_owned(), stable),
         ];
         // An empty chunk is a real named file, distinct from an empty region.
         for bytes in chunks {
