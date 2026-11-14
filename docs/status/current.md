@@ -4,15 +4,15 @@ Work lives at `/home/adam/projects/ic-backup`, branch `main`; the former legacy
 local path was absent. Frozen legacy is read-only at `dragginzgame/ic-backup-legacy`.
 No original journals, bundles or obligations were imported, migrated or cleaned up.
 
-The completed 0.101.0 checkpoint was pushed and remotely verified at
-[5292a61](https://github.com/dragginzgame/ic-backup/commit/5292a61317dbbb619699724c4b2197e1ae6f799d).
-Development opened as 0.101.1 at
-[e3e9c67](https://github.com/dragginzgame/ic-backup/commit/e3e9c670ec066a952b5b56b1371c6e951b9bc197).
-The 0.101.1 checkpoint completes HTTP submission, direct-key authentication,
-Host HTTP adoption and the Tooling refresh. The user selected GitHub-only delivery
-to `origin/main`, followed by the next compatible development version. All
-packages remain `publish = false`; no registry publication, release tag or
-deployment is authorized. A future breaking change must advance the minor.
+The completed 0.101.1 checkpoint was pushed and remotely verified at
+[938e5fc](https://github.com/dragginzgame/ic-backup/commit/938e5fc711878ce8776df7c69fbf30d1cf596f10).
+It includes authenticated HTTP submission, direct-key request verification,
+Host HTTP adoption and the Tooling refresh. Development now opens as 0.101.2,
+the next compatible patch, with metadata/documentation changes only. Product
+code and supplier selections remain unchanged; prior focused validation applies.
+The selected delivery is GitHub-only to `origin/main`. All packages remain
+`publish = false`; no registry publication, release tag or deployment is
+authorized. A future breaking change must advance the minor.
 
 ## Implemented scope and safeguards
 

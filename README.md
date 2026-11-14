@@ -52,7 +52,7 @@ application admission; the transport helper is not a full provider. See the [fir
 Snapshot capture, completion writing, full bundle verification, restore, CLI and
 simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Publication remains disabled; `0.101.1` is an
+and the public Rustdoc example. Publication remains disabled; `0.101.2` is an
 unpublished development version following the legacy `0.67.x` line.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains

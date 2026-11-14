@@ -30,8 +30,9 @@ future work; local injected providers prove ordering only.
 The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
 the new implementation from legacy without implying maturity or compatibility.
-Development now continues as 0.101.1 after the GitHub-only 0.101.0 checkpoint,
-including certificate evidence, snapshot readback and held payload sources.
+Development now continues as 0.101.2 after the GitHub-only 0.101.1 checkpoint,
+including authenticated status HTTP, direct-key request verification and shared
+Host HTTP body reading.
 The 0.101 minor accounts for Host 0.79 public Rust type identities. The pending
 patch opens compatible development; it does not claim a finished capture/restore
 product or pre-authorize a breaking API change.

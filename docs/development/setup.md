@@ -19,7 +19,8 @@ suite for the earlier 0.77.3 adoption remain under
 `target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
-Compatible development now continues as unpublished 0.101.1.
+Compatible development now continues as unpublished 0.101.2 after the 0.101.1
+GitHub checkpoint. This version opening changes no product behavior.
 Platform 0.33.4 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.101.2] — pending
+
+### 📝 Summary
+
+- Open the next compatible development version after the 0.101.1 GitHub
+  checkpoint. Publication remains disabled; no further product behavior is
+  included in this version-opening commit.
+
 ## [0.101.1] — GitHub checkpoint (unpublished)
 
 This checkpoint adds authenticated direct-host status HTTP, bounded shared body
