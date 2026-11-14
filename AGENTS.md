@@ -64,7 +64,7 @@ legacy recovery material read-only and under its original authority.
   the mature implementation. Root workspace metadata sets `publish = false`;
   members inherit it with `publish.workspace = true`. Any future independent
   workspace or canister package must also disable publication.
-- `0.100.0` is an unpublished incompatible restart draft. Preserve historical
+- `0.100.x` is the unpublished incompatible restart line. Preserve historical
   release identities and review consumer migration before publication.
 
 ## Dependency selection

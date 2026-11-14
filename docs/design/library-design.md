@@ -441,5 +441,6 @@ choices need exact specifications and qualification in the first implementation:
 
 This design imports no legacy schemas, source or release machinery. Existing
 0.67.x users keep their original qualified integration and recovery material.
-The unpublished 0.100.0 library currently exposes local inventory and payload integrity checks;
+The unpublished 0.100.x library currently exposes local inventory, payload checks,
+capture intent and initial status persistence/inspection;
 publication requires a separate compatibility and consumer migration assessment.

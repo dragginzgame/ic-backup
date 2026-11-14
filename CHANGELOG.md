@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.100.1] — pending
+
+Development continues from the GitHub-only 0.100.0 checkpoint. Publication
+remains disabled; this starts the next working version without a release tag.
+
 ## [0.100.0] — GitHub checkpoint (unpublished)
 
 ### ⚠️ Breaking

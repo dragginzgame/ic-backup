@@ -6,11 +6,13 @@ No original journals, bundles or obligations were imported, migrated or cleaned 
 
 The original rewrite was pushed at
 [cd3118d](https://github.com/dragginzgame/ic-backup/commit/cd3118d22cee569a3dfa3a5b36b4d2a6cf56380e).
-The maintainer now requested GitHub delivery of the status workflow/inspection,
-dependency adoption and Toko refresh, followed by a new development version.
-This batch checkpoints 0.100.0 before starting 0.100.1 on the existing `main`
-branch for `dragginzgame/ic-backup`. All packages remain `publish = false`;
-no registry publication or release tag is selected.
+The status workflow/inspection, registry Host adoption and Toko refresh are
+checkpointed at [cc592cf](https://github.com/dragginzgame/ic-backup/commit/cc592cfb445fd94d9e93f951c721c965b20e0eb4)
+as unpublished 0.100.0. At the maintainer's request, 0.100.1 starts the next
+development iteration. This patch increment introduces no new compatibility
+break; future incompatible changes must promote the pending version. Delivery
+targets the existing `main` branch of `dragginzgame/ic-backup`. All packages remain
+`publish = false`; no registry publication or release tag is selected.
 
 ## Implemented behavior
 
