@@ -4,7 +4,8 @@ Assessment: 2026-11-14, against `dragginzgame/ic-backup-legacy` commit
 `4ae087fad8c23de712aa60bf569bde4b2b932651`. Its handoff identifies 0.67.2 as the
 last delivered library release. This is a source/contract review, not a fresh run
 of legacy tests or a claim that its published consumers have been exhaustively
-inventoried. The new workspace still contains no product implementation.
+inventoried. No product implementation existed at this assessment; the
+[current handoff](../status/current.md) records subsequent implementation.
 
 Recommendation: preserve the safety contract and protocol knowledge, replace the
 workflow/storage composition for the selected single-canister scope, and expose

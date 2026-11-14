@@ -2,9 +2,12 @@
 
 Selected v1 scope: local-host bundles, single-canister operations, independent
 concurrent targets and read-only backup history. Blob Storage integration is v2.
-This is the proposed persistence contract for the [operation design](operation-contract.md),
-not an implemented format. It replaces the earlier conceptual storage layout;
-no legacy records or unfinished operations are imported.
+This is the persistence design for the [operation design](operation-contract.md).
+Initialization, opening, bounded manifest inventory and payload byte checks are implemented;
+[the inventory contract](../architecture/local-inventory.md) owns their exact bounds.
+The [capture-intent contract](../architecture/capture-intent.md) implements immutable
+plans, initial ledger frames and durable target claims. Ledger advancement, terminal
+claim succession, completion publication and full bundle verification remain proposed. No legacy records or unfinished operations are imported.
 
 ## Small public surface
 
@@ -16,14 +19,18 @@ Canic calls capture/restore and supplies the execution/application providers.
 | --- | --- |
 | `list_backups(filter, limits)` | Read completion metadata for matching local bundles. No payload hashing or network calls. |
 | `latest_completed_backup(network, canister, limits)` | Select the most recently captured completed bundle in this store. |
+| `verify_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Check exact local payload bytes against a trusted manifest; no evidence replay or restore authority. |
 | `inspect(operation)` | Read retained progress, failure or uncertainty separately from completed backups. |
 | `verify_bundle(bundle)` | Rehash and admit the complete original artifact under held custody before restore. |
 
-These names are API proposals. Prefer `latest_completed_backup` over the earlier
-sketch `latest_verified_backup`: a cheap inventory cannot establish that files
-remain intact today. A listed completion means verification succeeded at capture;
-restore still requires fresh complete verification and trusted source provenance.
-A successful local read never establishes application rewind safety.
+List/latest and payload checking exist on `BackupStore`. `CaptureOperation::inspect`
+currently reads only original intent; progress inspection and full `verify_bundle`
+remain proposals.
+Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:
+a cheap inventory cannot establish that files remain intact today. A manifest
+declares completion; the reader does not authenticate capture verification or
+inspect its ledger. Restore will require fresh complete verification and trusted
+source provenance. A local read never establishes application rewind safety.
 
 ## Bundle summary and last-backup meaning
 
@@ -59,8 +66,9 @@ membership. Results cover this store only, not other hosts or remote snapshots.
 Callers supply positive entry, cumulative-byte and returned-row limits. The scanner
 bounds work while traversing, before allocating a complete file or collecting the
 entire store. A limit refusal returns no authoritative latest/absence answer.
-The implementation must select measured default limits; no paging protocol or
-persistent index is introduced for an unmeasured scale requirement.
+The current API requires explicit limits and has no defaults. Latest-only scans
+retain one candidate; list scans also enforce the requested row count. No paging
+protocol or persistent index is introduced for an unmeasured scale requirement.
 
 ## One layout, one spending authority
 
@@ -71,6 +79,7 @@ store/
     lock
     owner.json
   operations/<operation-id>/
+    lock
     plan.json
     ledger.bin
     evidence/
@@ -88,9 +97,11 @@ refuse; this is a private product store, not a directory import feature.
 
 Use Host's held directories, no-follow regular files, nonblocking locks and durable
 create-only publication. Private directories/files use 0700/0600. Host primitives
-own OS mechanics; Backup owns record meaning, ordering and recovery. Store creation
-is explicit local IO. Interrupted initialization remains occupied evidence and
-must not be silently treated as a new empty store. Reading never initializes it.
+own OS mechanics; Backup owns record meaning, ordering and recovery. Initialization
+is explicit local IO into an existing empty private directory. The implemented
+initializer retains `format.pending` before publishing `format`. Interrupted
+initialization remains occupied evidence and must not be silently treated as a
+new empty store. Reading never initializes it.
 
 The plan is immutable. Only the ledger consumes attempts and settles their results.
 Large arguments, envelopes, certificates and replies are create-only evidence
@@ -111,11 +122,13 @@ a bounded JSON transition, and a 32-byte SHA-256 chain digest. The initial diges
 binds the original plan bytes under the restart domain; subsequent digests bind
 the previous digest, encoded length and exact payload. Each transition has a
 monotonic sequence and closed event kind. No general event-bus framework is needed.
-Proposed admission bounds are 16 KiB per frame, 65,536 frames and 128 MiB total;
-all apply independently. Plans and manifests remain separately byte-bounded.
-These are format-design limits, not measured product capacity claims.
+The implemented framing reader enforces 16 KiB per frame, 65,536 frames and
+128 MiB total, with the original plan's evidence allowance as a further byte cap.
+All apply independently; plans and manifests remain separately byte-bounded.
+Only the initial created transition is admitted so far. These are format limits,
+not measured product capacity claims.
 
-Reopen validates the full bounded ledger once under exclusive custody. A held
+The proposed advancing workflow validates the full bounded ledger on reopen. A held
 session admits its own append prefix; it does not repeatedly scan peer operations.
 Partial frames, bad hashes, sequence gaps and invalid transitions block effects.
 Keep the original bytes; no truncate-and-retry recovery or log compaction in v1.
@@ -174,7 +187,7 @@ by application maintenance custody, not these local locks.
 
 ## Implementation checks
 
-The first local-store slice must exercise interrupted manifest publication,
+Further local-store implementation must exercise interrupted manifest publication,
 corrupt/truncated records, changed paths, target contention and stale owner records.
 Inventory cases cover multiple networks/targets, clock ties, unfinished work,
 unsupported records, bounded scans and completions appearing during enumeration.

@@ -1,6 +1,9 @@
 # Backup restart
 
-Status: workspace scaffold with a [library design proposal](library-design.md).
+Status: local inventory, payload integrity, capture intent, transfer planning
+and bounded reply decoding are implemented. Capture and restore effects remain proposed in the
+[library design](library-design.md); the [current handoff](../status/current.md)
+links each implemented contract.
 The user selected a single-canister library first: capture one already-stopped
 canister and restore to the same existing ID, leaving application coordination
 and restart to integrations. The [operation contract](operation-contract.md) refines API, transfer and
@@ -18,11 +21,15 @@ Before implementation, turn the selected scope into exact input/output contracts
 management and application authority, bounds, custody, crash reconciliation and
 acceptance evidence. Do not recreate the legacy feature set or release machinery
 by default. A CLI, Agent wrapper, persisted schema and simulator workspace are
-not required to establish this scaffold.
+not required merely to establish the library. The implemented inventory has a
+bounded manifest reader, initial operation records and a pure transfer planner.
+Reservation writes and effectful providers remain future work.
 
-The previous library release is 0.67.2. The new unpublished package starts at
-0.68.0 because an incompatible replacement requires a minor increment before
-1.0. No registry name/version is reserved by a local manifest.
+The previous library release is 0.67.2. The user selected 0.100.0 for the
+incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
+the new implementation from legacy without implying maturity or compatibility.
+Publication remains disabled; no registry name/version is reserved by a local
+manifest. Legacy backups and unfinished operations have no automatic migration.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 history. Preserve any original local journals and recovery evidence; the former
@@ -30,6 +37,6 @@ history. Preserve any original local journals and recovery evidence; the former
 integration until an explicit migration is designed. Do not delete artifacts,
 rewind external obligations or infer compatibility from matching package names.
 
-The new scaffold has no product behavior to qualify. Compilation and documentation
-checks prove the foundation only; native IC effects, public consumer usability
-and release/publication acceptance remain future contract-specific work.
+The current native tests cover local filesystem and completion-record behavior.
+They do not qualify IC effects, end-to-end backup/restore, Canic integration or
+release/publication acceptance; those remain contract-specific work.

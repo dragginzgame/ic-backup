@@ -1,7 +1,8 @@
 # Development setup
 
-The virtual workspace has one API-free library under `crates/ic-backup`.
-It has no runtime dependencies and publication is disabled.
+The virtual workspace has one unpublished library under `crates/ic-backup`.
+Local inventory, payload checks and capture intent use published Host filesystem/artifact primitives and Platform
+identity and management DTOs, with Serde/JSON and typed errors. No IC transport is selected yet.
 
 ## Preparation
 
@@ -41,9 +42,30 @@ use `bash vendor/toko-tooling/scripts/dev/toko-cloc -d 0` after host-tool setup.
 
 Focused checks are `make toko-tooling-check`, `make doc-links-check`,
 `make fmt-check`, `make clippy`, `make rustdoc` and `make test`.
-`make check` / `make ci` aggregate those scaffold checks. `PACKAGE=ic-backup`
-selects Rust checks; formatting and link checks remain repository-wide.
-There are no product tests yet; a successful empty test run proves no IC behavior.
+`make check` / `make ci` aggregate those checks. `PACKAGE=ic-backup` selects Rust
+checks; formatting and link checks remain repository-wide. For ordinary inventory
+changes, select the owning tests and lint/docs checks:
+
+```bash
+cargo test --locked --offline -p ic-backup --lib store::
+cargo clippy --locked --offline -p ic-backup --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -p ic-backup --no-deps
+cargo test --locked --offline -p ic-backup --doc
+```
+
+Check for active commands using this workspace's target before compilation or
+source/lock edits. Test fixtures remain under `target/local-store-tests/`, including
+failed cases. The FIFO replacement regression uses the native Unix `mkfifo` utility (Linux/macOS).
+Select capture intent tests with `cargo test --locked --offline -p ic-backup
+store::tests::capture`; select framed-ledger tests with the same command and
+`store::capture::ledger::tests` as its filter. Its acknowledged child-process death case verifies original
+intent and target-claim retention, not attempt spending or filesystem power loss.
+Use `store::capture::transfer` for planning and bounded raw reply tests;
+`store::capture::transfer::metadata` selects the metadata decoder alone.
+Use `store::capture::status` for decoded status preconditions and exact management
+caller membership; `store::capture::status::wire` selects bounded raw status
+projection and rejection tests. These exercise Platform DTOs/codecs but do not qualify IC effects. Native filesystem tests
+establish no IC capture/load behavior.
 
 CI configures Linux x86-64 and macOS ARM64/x86-64, plus formatting and a separate
 pinned history secret scan. Local Linux validation does not qualify macOS.

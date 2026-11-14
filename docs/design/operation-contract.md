@@ -1,6 +1,10 @@
 # Single-canister operation contract
 
-Proposed contract, 2026-11-14; no public API or product behavior is implemented.
+Proposed effectful contract, 2026-11-14. Capture/restore remains unimplemented;
+[local inventory](../architecture/local-inventory.md) and
+[capture intent](../architecture/capture-intent.md) and
+[pure transfer planning](../architecture/capture-transfer.md) are implemented subsets.
+Intent creation does not yet reserve attempts or authorize any provider calls.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage

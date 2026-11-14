@@ -2,7 +2,8 @@
 
 Status: design proposal, 2026-11-14. The user selected **single-canister library
 first**: back up one already-stopped canister and restore to the same existing
-ID. API names, records and limits below are proposed, not implemented or qualified.
+ID. Capture/restore APIs, records and limits below remain proposed. The narrow
+[local inventory contract](../architecture/local-inventory.md) records implemented behavior.
 The [operation contract](operation-contract.md) refines consumer, transport,
 metadata comparison and transfer-budget semantics; it takes precedence over the
 broad sketches below for those details. The [restart direction](restart.md) owns
@@ -440,5 +441,5 @@ choices need exact specifications and qualification in the first implementation:
 
 This design imports no legacy schemas, source or release machinery. Existing
 0.67.x users keep their original qualified integration and recovery material.
-The unpublished 0.68.0 scaffold remains API-free until implementation is selected;
+The unpublished 0.100.0 library currently exposes local inventory and payload integrity checks;
 publication requires a separate compatibility and consumer migration assessment.

@@ -11,7 +11,7 @@ export RUSTUP_AUTO_INSTALL := 0
 .PHONY: help check doc-links-check fetch-dependencies clippy rustdoc test
 help:
 	@printf '%s\n' \
-	  'check               Aggregate offline scaffold checks (all packages by default)' \
+	  'check               Aggregate offline checks (all packages by default)' \
 	  'check PACKAGE=name  Select one package for Rust checks' \
 	  'deps-list           List local workspace package versions' \
 	  'deps-update         Explicit Cargo dependency update (network)' \
