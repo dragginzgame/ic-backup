@@ -2,9 +2,9 @@
 
 ## [0.101.0] — pending
 
-Development continues from the GitHub-only 0.100.0 checkpoint. Publication
-remains disabled. The Host adoption promotes the pending release to 0.101.0;
-the working package remains 0.100.1 until explicit version preparation.
+Development continues as 0.101.0 after the GitHub checkpoint containing status
+request binding, snapshot preflight and Host/Types adoption. The minor version
+accounts for Host 0.78 public type identities. Publication remains disabled.
 
 ### ⚠️ Breaking
 

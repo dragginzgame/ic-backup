@@ -36,7 +36,7 @@ remains provider-owned. See the [first-call contract](docs/architecture/capture-
 Snapshot capture, completion writing, full bundle verification, restore, CLI and
 simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Publication remains disabled; `0.100.1` is an
+and the public Rustdoc example. Publication remains disabled; `0.101.0` is an
 unpublished development version following the legacy `0.67.x` line.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains

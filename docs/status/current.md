@@ -10,11 +10,11 @@ The status workflow/inspection, registry Host adoption and Toko refresh are
 checkpointed at [cc592cf](https://github.com/dragginzgame/ic-backup/commit/cc592cfb445fd94d9e93f951c721c965b20e0eb4)
 as unpublished 0.100.0. Development version 0.100.1 was pushed at
 [d38bb01](https://github.com/dragginzgame/ic-backup/commit/d38bb01b91fdc509d87c13b84101f3a4e27bc90b).
-The request-binding, Host adoption and snapshot preflight batches are local and uncommitted. Host
-0.78 changes the Rust identities of public digest/error types, so the combined
-pending release is now 0.101.0. Consumers must align their Host dependencies;
-stored records and recovery authority are unchanged. The working manifest stays
-0.100.1 until explicit version preparation. All packages remain `publish = false`;
+Request binding, Host/Types adoption and snapshot preflight were pushed at
+[d7bde46](https://github.com/dragginzgame/ic-backup/commit/d7bde46dc5c27d2a9ff231c631ffe17db1b8fcf7).
+Development now starts at 0.101.0 because Host 0.78 changes public digest/error
+type identities. Consumers must align Host dependencies; stored records and
+recovery authority are unchanged. All packages remain `publish = false`;
 no registry publication or release tag is selected.
 
 ## Implemented behavior
@@ -92,7 +92,7 @@ No Agent, HTTP runtime, Canic control-plane or harness dependency was added.
 Feature metadata, the prior lock and independent Node request-hash evidence remain
 under `target/evidence/status-call-binding/`. Native supplier identities stay private.
 
-Types 0.20.4 was already locked on this turn's admission and is now qualified.
+Types 0.20.4 is qualified through the existing Platform dependency.
 Its registry archive matches checksum `a8df2753db752bd0c29fa87353b98613465a5f0c5269b6fb8dd0e45ea5c12a22`
 and source `343e3ae5a42fd8274330fa2171f5a9d53beab1dc`; source files equal 0.20.3.
 Only Types changed against the retained Host-adoption graph. Archive/graph evidence
