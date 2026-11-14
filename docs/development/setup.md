@@ -4,7 +4,8 @@ The virtual workspace has one unpublished library under `crates/ic-backup`.
 Local inventory, payload checks and capture intent use Host filesystem/artifact
 primitives and published Platform identity and management DTOs, with Serde/JSON
 and typed errors. Platform's native protocol codec checks prepared status call
-content; no IC transport is selected yet. This feature brings upstream protocol,
+content; its historical certificate verifier authenticates retained replies and
+certified rejections. No IC transport is selected yet. This feature brings upstream protocol,
 CBOR and Candid dependencies through Platform, without Agent or an HTTP runtime.
 
 Host FS and Artifacts 0.79.0 resolve from verified registry archives. The
@@ -104,3 +105,12 @@ Use `store::capture::advance` for first-status persistence and recovery tests.
 Their injected provider checks ordering, not IC effects. The acknowledged child
 fixtures retain evidence at reservation, invocation, prepared-request and settlement
 boundaries; they do not qualify physical power loss or a concrete provider.
+
+Use `store::capture::advance::tests::certificate_tests` for signed synthetic
+certificate and durable replay tests. The full `store::capture::advance` filter
+also covers the existing reservation/recovery cases. Evidence for the minimum
+Platform 0.33.4 certificate feature and six added crypto packages is retained under
+`target/evidence/status-certificates/`. These are offline cryptographic checks,
+not simulator or live-IC qualification. Select the nested `rejection_tests` module
+for diagnostic projection and rejected replay; its evidence is under
+`target/evidence/status-rejections/`.

@@ -3,8 +3,9 @@
 mod advance;
 mod ledger;
 pub use advance::{
-    CaptureStatusView, PreparedStatus, StatusAdmissionRecord, StatusAdvanceError, StatusEvidence,
-    StatusProgress, StatusProvider,
+    CaptureStatusView, PreparedStatus, StatusAdmissionRecord, StatusAdvanceError,
+    StatusCertificateError, StatusEvidence, StatusProgress, StatusProvider,
+    authenticate_status_evidence, status_certificate_evidence, status_certificate_observation,
 };
 mod plan;
 mod snapshot;

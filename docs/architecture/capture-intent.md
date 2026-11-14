@@ -397,3 +397,99 @@ Golden envelope/request hashes were independently recomputed with Node SHA-256.
 Retention and cold replay cases assert no extra provider calls or spending reset.
 The legacy HTTP retry/redirect/timeout cases still belong to the future concrete
 transport; these tests establish content admission and persistence ordering only.
+
+## Historical status authentication
+
+`authenticate_status_evidence` is a local helper for a direct provider's
+`authenticate` method. It supplies no signer or transport. It reuses original
+admission and complete request/result framing checks, then validates the exact
+prepared call. For this certificate protocol, `trust_root` is SHA-256 of the
+complete 133-byte IC DER public key, never a URL or a hash of raw key bytes.
+The integration provisions that root/network binding before approving the plan.
+
+`status_certificate_observation` encodes the provider's explicitly admitted time
+policy as `ic-backup/status-certificate/1\n`, followed by six little-endian u64s:
+certificate reference/maximum age/maximum future skew, then delegation
+reference/maximum age/maximum future skew. Exactly 79 bytes are accepted; both
+inclusive windows must have non-overflowing endpoints. Retain these bytes in the
+original prepared observation before submission. Never derive the policy from
+incoming certificates or replace it with current configuration during replay.
+Provider protocol/application admission and original file custody remain required;
+this helper cannot establish those facts from freely constructed arguments.
+
+`StatusEvidence.proof` contains the exact original certificate CBOR, and
+`response` the exact Candid reply or the rejection diagnostic frame defined below. Platform 0.33.4's `certification-verify` feature
+owns strict certificate decoding, BLS verification, delegated canister ranges and
+historical time authentication. Backup passes the original target as the effective
+canister. Product limits are 1 MiB each for outer/delegation certificates, 8192
+combined tree nodes, depth 64 and 1024 selected canister ranges. Original complete
+request/result limits apply first. Existing frame encoders bound temporary copies;
+byte and tree limits are not an allocation-quota claim.
+
+After authentication, Backup requires the exact original request ID under
+`/request_status/<id>/status`. For `replied`, the certified `reply` leaf must
+exactly match the retained response. For `rejected`, all retained diagnostics
+must match their certified leaves, including the distinction between an absent
+and present-empty optional error code. Pending, forgotten, missing and unknown
+outcomes refuse. These paths follow the
+[IC state-tree specification](https://docs.internetcomputer.org/references/ic-interface-spec/).
+No clock, transport, implicit retry or alternative digest proof participates.
+The workflow separately applies stopped/module/controller policy to successful
+replies. Certified rejection settles the original attempt without refunding it;
+even a transient code grants no retry or claim that an effect was rolled back.
+
+`status_certificate_evidence` authenticates an original certificate and builds
+bounded evidence for either outcome. The complete response/proof allowance is
+checked before copying projected bytes. Replay uses the same private projection
+through `authenticate_status_evidence`, comparing the outcome flag and every
+response byte; no second parser for the diagnostic record is needed. Both helpers
+retain original certificate bytes. The initial request, observation and outer
+result/ledger formats remain unchanged. The earlier uncommitted reply-only helper
+was renamed; no compatibility alias or old-record migration is added.
+
+A rejected response is `ic-backup/status-rejection/1\n`, one reject-code byte,
+message length (u32 little endian), exact UTF-8 message bytes, then one optional
+error-code tag. Tag 0 means certified absence, with no following bytes. Tag 1 is
+followed by error-code length (u32 little endian) and exact UTF-8 bytes. Empty
+messages and present-empty error codes are valid and distinct from absence.
+This is a Backup evidence projection, not an external IC response DTO. The
+original certificate retains its complete wire representation.
+
+The direct-ingress profile accepts only the single-byte canonical encodings of
+codes 1–5. Unknown/overlong encodings and code 6 refuse; the
+[HTTPS reject-code contract](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/)
+reserves code 6 for best-effort inter-canister calls. No general natural-number
+codec or duplicate external enum is introduced. Optional lookup must return a
+leaf or guaranteed absence; pruned/unknown or structurally invalid paths refuse.
+Diagnostics are never normalized or included in error messages. Uncertified HTTP
+rejections, disconnects and timeouts cannot become terminal evidence.
+
+Focused review used frozen legacy
+[submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
+[reply evidence](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/reply_evidence/mod.rs)
+and its [domain/attempt regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/reply_evidence/tests/mod.rs).
+The [94b94db8 history](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2)
+centralized application reply qualification around original stage, authority,
+attempt and exact reply. Preserve that binding lesson and one-shot submission;
+do not treat legacy's domain-separated reply digest as a retained certificate.
+The current initial-status ledger already fixes the step/attempt, so no parallel
+attempt envelope or copied legacy architecture is added. Original legacy records
+are not accepted under this protocol. The older digest golden bytes are excluded
+because the new authentication proof is the actual certificate, not a digest.
+
+[Consumer regressions](../../crates/ic-backup/src/store/capture/advance/tests/certificate_tests.rs)
+use newly authored synthetic trees with real Platform BLS signatures. They cover
+exact request/root/reply association, tampering, unavailable outcomes, strict
+retained policy, separate delegation time and effective canister, frame/certificate/
+tree bounds, unchanged cold replay and spent submission after authentication failure.
+The [rejection cases](../../crates/ic-backup/src/store/capture/advance/tests/certificate_tests/rejection_tests.rs)
+also cover fixed projection bytes, absent versus pruned/empty diagnostics, strict
+text/codes, complete result limits, tampering and effect-free rejected replay.
+The same frozen submission and HTTP-boundary review applies: legacy mapped Agent
+rejection errors to uncertainty because it did not retain their certificate.
+Only a fully authenticated original rejection changes that behavior here; all
+unproven outcomes keep the original pending reservation. No legacy or supplier
+implementation was copied. These tests qualify the local
+cryptographic composition and persistence boundary, not IC effects, a live provider,
+application safety or hosted macOS. HTTP/redirect/retry/timeout qualification stays
+with the future concrete provider.

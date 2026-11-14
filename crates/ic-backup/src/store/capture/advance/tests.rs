@@ -1212,3 +1212,5 @@ fn mismatched_retained_request_refuses_dispatch_and_settled_replay_without_repai
         );
     }
 }
+
+mod certificate_tests;

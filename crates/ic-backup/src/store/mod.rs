@@ -39,8 +39,10 @@ pub use capture::{
     CaptureRequest, CaptureStatusError, CaptureStatusPhase, CaptureStatusReplyError,
     CaptureStatusView, CaptureTransfer, LedgerError, PreparedStatus, ReadbackDataError,
     ReadbackMetadataError, SnapshotReplyError, StatusAdmissionRecord, StatusAdvanceError,
-    StatusEvidence, StatusProgress, StatusProvider, TransferDataError, TransferError,
-    TransferMetadataError, UploadedSnapshotReadback, decode_snapshot_list, decode_taken_snapshot,
+    StatusCertificateError, StatusEvidence, StatusProgress, StatusProvider, TransferDataError,
+    TransferError, TransferMetadataError, UploadedSnapshotReadback, authenticate_status_evidence,
+    decode_snapshot_list, decode_taken_snapshot, status_certificate_evidence,
+    status_certificate_observation,
 };
 pub use manifest::ManifestError;
 pub use payload::{PayloadReadError, PayloadSource};

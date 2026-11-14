@@ -12,6 +12,12 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use thiserror::Error;
 
+mod certificate;
+pub use certificate::{
+    StatusCertificateError, authenticate_status_evidence, status_certificate_evidence,
+    status_certificate_observation,
+};
+
 /// Original finite authority for the first status call, retained before preparation.
 /// Bindings identify the provider protocol and continuous application maintenance witness.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

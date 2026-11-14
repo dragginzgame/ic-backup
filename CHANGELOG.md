@@ -1,10 +1,10 @@
 # Changelog
 
-## [0.101.0] — pending
+## [0.101.0] — GitHub checkpoint (unpublished)
 
-Development continues as 0.101.0 after the GitHub checkpoint containing status
-request binding, snapshot preflight and Host/Types adoption. The minor version
-accounts for Host 0.79 public type identities. Publication remains disabled.
+This checkpoint adds certificate evidence, snapshot readback and held payload
+sources. The minor version accounts for Host 0.79 public type identities.
+Publication remains disabled.
 
 ### ⚠️ Breaking
 
@@ -17,6 +17,13 @@ accounts for Host 0.79 public type identities. Publication remains disabled.
   [Host release notes](https://github.com/dragginzgame/ic-tooling/blob/1a7b1521c56531e25b7bf75e3b79e27fe6ee93a2/releases/foundation/CHANGELOG.md).
 
 ### ✨ Features
+
+- Build and authenticate retained status replies and certified rejections through
+  Platform 0.33.4. Bind original request IDs, exact replies, root commitments, delegated canister authority
+  and time windows retained before submission. Refuse changed or unavailable proof
+  without retry or renewed spending. Preserve exact rejection diagnostics and
+  distinguish certified absence from pruned fields. Transient rejection settles
+  without refunds. These local helpers supply no live transport.
 
 - Add a held local payload source for bounded reads under original file custody.
   Verify every member against the trusted manifest, then check requested bytes
@@ -46,6 +53,10 @@ accounts for Host 0.79 public type identities. Publication remains disabled.
   Keep the existing API and record formats; provider authentication remains required.
 
 ### 📦 Dependencies
+
+- Require Platform 0.33.4 for bounded historical certificate verification and enable
+  its `certification-verify` feature. Add six transitive cryptography packages;
+  preserve all previously selected versions and keep Agent/HTTP runtimes absent.
 
 - Retain the incoming Platform 0.33.4 lock update and qualify the native
   transfer/readback surface against it. Native management fields and codec bytes

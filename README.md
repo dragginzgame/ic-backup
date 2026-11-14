@@ -39,8 +39,10 @@ call without repeating pending effects. `inspect_status` recovers the retained
 stage, original admission, reserved counts and request identity without provider
 calls or writes. It requires an independently qualified
 provider; none is supplied yet. Prepared call content is checked against the
-original plan and request ID through Platform; signature/certificate authentication
-remains provider-owned. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+original plan and request ID through Platform. `status_certificate_evidence` builds bounded reply/rejection evidence, and
+`authenticate_status_evidence` verifies retained certificates against original trust, request ID
+and admitted time windows, using Platform. It is a local provider helper; live
+envelope authentication and transport remain unimplemented. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
 Snapshot capture, completion writing, full bundle verification, restore, CLI and
 simulator workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
