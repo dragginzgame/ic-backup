@@ -1,6 +1,7 @@
 //! Local capture intent and exclusive original custody. Direct-host status and snapshot continuation.
 
 mod advance;
+pub(in crate::store) use advance::authenticate_direct_request;
 mod assembly;
 mod completion;
 mod source;
@@ -724,3 +725,6 @@ impl CaptureOperation {
         Ok(())
     }
 }
+
+#[cfg(test)]
+pub(in crate::store) use advance::tests::fixtures as test_fixtures;

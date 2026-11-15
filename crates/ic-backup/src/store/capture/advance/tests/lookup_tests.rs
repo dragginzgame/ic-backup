@@ -1,5 +1,5 @@
 //! Signed read-state policy checks; no signing service, remote lookup or IC effects.
-use super::request_tests::{Scheme, change, fixture};
+use super::fixtures::signatures::{Scheme, change, fixture};
 use super::*;
 use ic_platform::ic_protocol::{Envelope, decode_envelope, encode_envelope};
 

@@ -1,26 +1,16 @@
 //! Composition tests retain original capture authority and reuse the held payload reader.
 use super::*;
-use crate::store::{CaptureSourceError, PayloadReadError, StoreError};
-use ic_platform::management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
-use std::num::NonZeroU64;
-
-fn extent(receipt: &BackupSummary) -> ReadCanisterSnapshotDataArgs {
-    ReadCanisterSnapshotDataArgs {
-        canister_id: receipt.target.canister,
-        snapshot_id: receipt
-            .snapshot_id_hex
-            .as_bytes()
-            .as_chunks::<2>()
-            .0
-            .iter()
-            .map(|hex| u8::from_str_radix(std::str::from_utf8(hex).unwrap(), 16).unwrap())
-            .collect(),
-        kind: SnapshotDataKind::WasmModule { offset: 0, size: 5 },
-    }
-}
-fn maximum() -> NonZeroU64 {
-    NonZeroU64::new(10).unwrap()
-}
+use crate::store::{
+    BackupStore, CaptureSourceError, PayloadReadError, StoreError,
+    capture::advance::tests::fixtures::{
+        completion::{complete, manifest, replace_owner, settled},
+        http::runtime,
+        source::{extent, maximum},
+    },
+    tests::root,
+};
+use ic_host_artifacts::artifact::Sha256Digest;
+use std::{fs, num::NonZeroU64};
 
 #[test]
 fn authenticated_source_retains_original_lock_receipt_and_bounded_bytes() {
@@ -142,7 +132,3 @@ fn changed_held_bytes_refuse_and_invalidate_without_repair() {
     assert_eq!(fs::read(ledger_path).unwrap(), ledger);
     assert_eq!(server.count(), 1);
 }
-
-mod transfer_tests;
-
-mod plan_tests;

@@ -1,8 +1,8 @@
 //! Real signatures over synthetic metadata certificates; no remote read is simulated.
-use super::*;
 use super::{
     certificate_tests::{der, reply_tree, signed},
-    request_tests::{Scheme, change},
+    fixtures::signatures::{Scheme, change},
+    *,
 };
 use ic_platform::{
     candid_codec::Reserved,
@@ -32,7 +32,7 @@ fn metadata() -> ReadCanisterSnapshotMetadataResult {
     }
 }
 pub(super) fn fixture(scheme: Scheme) -> (CapturePlan, Snapshot, PreparedStatus, StatusEvidence) {
-    let (p, mut r) = request_tests::fixture(scheme);
+    let (p, mut r) = fixtures::signatures::fixture(scheme);
     let mut fields = p.request().clone();
     fields.trust_root = Sha256Digest::compute(&der(1));
     let p = CapturePlan::new(fields).unwrap();

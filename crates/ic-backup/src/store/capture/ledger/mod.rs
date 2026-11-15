@@ -23,7 +23,7 @@ use metadata::MetadataState;
 mod lookup;
 use lookup::LookupState;
 
-const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
+pub(in crate::store) const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
 const FRAME_BYTES: usize = 16 * 1024;
 const FRAMES: u32 = 65_536;
 const LEDGER_BYTES: u64 = 128 * 1024 * 1024;
@@ -122,7 +122,7 @@ pub enum CaptureStatusPhase {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct EvidenceRecord {
+pub(in crate::store) struct EvidenceRecord {
     pub bytes: u32,
     pub sha256: [u8; 32],
 }
@@ -459,14 +459,24 @@ impl State {
         if self.bytes + payload.len() as u64 + 36 > Bounds::for_plan(plan).bytes {
             return Err(LedgerError::ByteLimit.into());
         }
-        let length = (payload.len() as u32).to_le_bytes();
-        Ok([
-            length.as_slice(),
-            &payload,
-            chain(self.head, &length, &payload).as_bytes(),
-        ]
-        .concat())
+        Ok(encode_frame(self.head, &payload)?)
     }
+}
+
+pub(in crate::store) fn encode_frame(
+    head: Sha256Digest,
+    payload: &[u8],
+) -> Result<Vec<u8>, LedgerError> {
+    if payload.is_empty() || payload.len() > FRAME_BYTES {
+        return Err(LedgerError::FrameSize);
+    }
+    let length = (payload.len() as u32).to_le_bytes();
+    Ok([
+        length.as_slice(),
+        payload,
+        chain(head, &length, payload).as_bytes(),
+    ]
+    .concat())
 }
 
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
@@ -512,14 +522,25 @@ fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     Ok(state)
 }
 
-struct Frames<R> {
+pub(in crate::store) struct Frames<R> {
     reader: R,
-    head: Sha256Digest,
+    pub(in crate::store) head: Sha256Digest,
     count: u32,
-    bytes: u64,
+    pub(in crate::store) bytes: u64,
     bounds: Bounds,
 }
 impl<R: Read> Frames<R> {
+    pub(in crate::store) fn for_original(reader: R, plan: &[u8], evidence: u64) -> Self {
+        Self::new(
+            reader,
+            seed(plan),
+            Bounds {
+                frame_bytes: FRAME_BYTES,
+                frames: FRAMES,
+                bytes: LEDGER_BYTES.min(evidence),
+            },
+        )
+    }
     fn new(reader: R, head: Sha256Digest, bounds: Bounds) -> Self {
         Self {
             reader,
@@ -530,7 +551,7 @@ impl<R: Read> Frames<R> {
         }
     }
 
-    fn next(&mut self) -> Result<Option<Vec<u8>>, LedgerError> {
+    pub(in crate::store) fn next(&mut self) -> Result<Option<Vec<u8>>, LedgerError> {
         let mut length = [0; 4];
         // One-byte EOF probe distinguishes a complete prefix from any partial tail.
         loop {

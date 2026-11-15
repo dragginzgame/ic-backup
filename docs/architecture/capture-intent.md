@@ -710,11 +710,11 @@ Here signing is external, retained certificates support historical replay, and t
 existing workflow owns spending; legacy Agent identity ownership and live-only
 reply verification are not copied. No legacy source was imported.
 
-[Native provider regressions](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/direct_tests.rs)
+[Native provider regressions](../../crates/ic-backup/src/store/capture/advance/tests/http_direct_tests.rs)
 exercise changed commitments/arguments/costs, live time bounds, modified windows,
 invalid/oversized/over-expiry signed output, revoked authority, timeout/cancellation,
 spent cold replay and old-certificate authentication without live authority.
-The [private IC caller](../../qualification/crates/ic-backup-qualification/tests/direct_status.rs)
+The [private IC caller](../../qualification/ic-backup-qualification/tests/direct_status.rs)
 creates an isolated empty-module canister with the fixture signer as controller,
 stops it, and submits real signed ingress through PocketIC's literal-loopback
 HTTP gateway. It authenticates status, lists an existing fixture snapshot and takes
@@ -960,7 +960,7 @@ and authenticates read-state proof directly. Legacy Agent signing and implicit
 polling are not imported; no legacy code was copied. Earlier original-association
 and reservation regressions/history remain the relevant recovery rationale.
 
-[Loopback cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/lookup_tests.rs)
+[Loopback cases](../../crates/ic-backup/src/store/capture/advance/tests/http_lookup_tests.rs)
 qualify exact route/body for both keys and all three calls, original expired
 requests, pre-connection refusals, single attempts after disconnect/redirect,
 response caps, compressed/malformed proof refusal, stalled bodies and processing
@@ -1029,12 +1029,12 @@ It preserves finite spending, original evidence association and unresolved lost
 replies. The new library uses four events in its existing chain, without importing
 legacy observation graphs, retry machinery or Agent-owned signing. No code was copied.
 
-[Native durable lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/durable_lookup_tests.rs)
+[Native durable lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/durable_lookup_tests.rs)
 cover eight groups: offline replay, failed/cancelled/invalid signing, exact prepared
 continuation and lost HTTP, exhausted budgets, damaged evidence, complete/partial
 uncertain writes at all four boundaries, later admission respecting spent allowance,
 and pre-reservation binding/permission/time refusal. The third
-[actual IC fixture](../../qualification/crates/ic-backup-qualification/tests/direct_status.rs)
+[actual IC fixture](../../qualification/ic-backup-qualification/tests/direct_status.rs)
 observes a real pending take through this workflow, checks its complete snapshot
 DTO and unchanged original call state, then settles from the retained lookup certificate after server shutdown and
 signer revocation, reopens again and replays without new effects. These checks do not establish physical

@@ -1,11 +1,15 @@
 # Current handoff — 2026-11-15
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy is read-only.
-GitHub `main` was verified at `f86f274` (0.101.9), adding source-bound restore
-planning. Product manifests and both locks select 0.101.10; qualification stays
-0.1.0. All packages remain unpublished. No tag, registry publication or deployment
-occurred. Post-push review covered plan encoding/replay, shared transfer ordering
-and affected native/IC callers; no actionable drift was found in that scope.
+GitHub `main` was verified at `eb99058` (0.101.10), delivering local restore intent
+persistence and status policy. Local product manifests and both locks now select
+0.101.11; qualification stays 0.1.0. All packages remain unpublished. No tag, registry publication or deployment
+occurred. Post-push review covered restore creation/reopen, source/owner custody, shared
+framing/status policy and affected native/IC callers. It found duplicate completion
+authentication/sync when source and predecessor are the same capture. Local 0.101.11
+removes that repeat, retaining exact source admission and closing custody checks.
+Distinct older sources still synchronize separately; no other actionable drift
+was found in the delivered scope.
 The separate local `rand` 0.10.4 updates in both locks were preserved and excluded
 from delivery. The delivered graph retains 0.10.3; do not silently stage that refresh.
 
@@ -60,8 +64,11 @@ chunks count. `RestorePlan` binds source/ordered requests, direct sender, initia
 trust and finite limits. Strict decoding re-admits source and derived fields while
 retaining original bytes. Local create/reopen now retain original intent, target
 ownership and source custody.
-They expose inspection only. Pure restore status validation now shares the capture
+They now support signing-only status preparation and read-only inspection. Pure restore status validation now shares the capture
 wire reader and policy, selecting the restore sender and original source module.
+`RestorePlan::authenticate_status_request` now reuses bounded call-content,
+per-call ceiling and direct-key signature checks for that plan's sender/target.
+It preserves original bytes; signature validity grants no spending or dispatch.
 Upload/load effects, CLI and Canic adapters are unfinished.
 
 ## Continuation selected after delivery
@@ -75,43 +82,64 @@ reference files were removed from the proposal: no pruning or reference release
 exists, and every source/operation stays retained. Completed bundle admission is
 unchanged. Creation uses existing Host mechanics and one initial journal; reopening
 requires the caller's original approved plan and does not write or synchronize.
-Only complete initial journals are admitted; no later restore event exists yet.
+Initial, signing-reserved and prepared journals are admitted with exact original
+request evidence; partial/unknown suffixes and orphan evidence refuse intact.
 Bind allocation-dependent exact requests and consume bounded authority before
 later effects. Restore targets the same existing ID and leaves it stopped.
-Next add bounded initial restore status admission and spending before signing.
-Keep historical request/certificate authentication separate from the new pure
-status predicates; do not manufacture a capture plan to reuse provider APIs.
-The 0.101.10 GitHub checkpoint contains additive local intent and status-policy APIs.
-Its delivery and post-push review precede continuation; no registry release is selected.
+One signing reservation is now synchronized before signer entry. Cancellation,
+failure and invalid output stay spent; prepared and pending replay never resign.
+Next integrate bounded status submission and certificate/route/timing admission,
+retaining original spending and exact requests. Upload/load remain unfinished.
+The 0.101.11 batch is prepared for the requested GitHub-only checkpoint.
+The exact delivery graph (rand 0.10.3) passes all 341 unit tests, 24 examples,
+five IC journeys and strict product/private lint under
+`target/evidence/delivery-0.101.11/`. The separate local rand update stays excluded.
+Next development version: 0.101.12, after delivery and its post-push review.
+
+Four new native preparation groups, ten shared journal regressions, strict
+product/private Clippy, warning-denying Rustdoc, formatting and documentation links
+pass under `target/evidence/restore-preparation/`. The IC fixture signs locally and
+reopens the exact prepared request without another signature; it submits no restore
+request. Physical power loss and external signer processes remain unqualified.
+
+Test layout is now flat: capture workflow cases stay in `capture/advance/tests/`,
+restore cases in `restore/tests/`, with named shared fixtures. All 341 unit tests
+and 24 documentation tests pass; the registered unit-test inventory is unchanged.
+Strict product/private lint passes. `target/evidence/test-layout/` retains results.
+No runtime behavior or release metadata changed in this layout cleanup.
 
 ## Dependencies and evidence
 
-Platform 0.33.7/Types 0.20.4, Host FS/Artifacts/HTTP 0.79.0, Tooling 0.44.3,
+Platform 0.33.7/Types 0.20.4, Host FS/Artifacts/HTTP 0.79.0, Tooling 0.44.4,
 Tokio 1.54.1 and Rust/Cargo 1.100.0 remain selected. Private qualification retains
 Testkit 0.106.0/PocketIC 16.1 and `thiserror` 2.0.18; product uses 2.0.21.
 The preserved local rand 0.10.4 graph was fetched and used for this batch's checks.
 No sibling patches or shared targets. [Setup](../development/setup.md) owns commands.
 
-`target/evidence/restore-status-policy/` records two new restore policy groups
-within 40 completion/source regressions, 15 shared status cases and lint/docs checks.
-No signing/network reservation or new restore journal event was added.
+`target/evidence/0.101.11/` retains same-owner and distinct older-source regressions,
+the offline actual-IC intent fixture and lint/documentation checks for the local fix.
+The exact 0.101.10 checkpoint was checked with rand 0.10.3 in the isolated delivery
+checkout under `target/evidence/0.101.10/`: 27 native cases and the offline IC
+fixture passed, with strict product/private lint and formatting/documentation checks.
 
-`target/evidence/restore-intent/` retains six native groups (five in the aggregate
-run plus the corrected older-source rerun), shared capture regressions and an
-actual-IC offline creation/reopen fixture, plus lint/docs checks. Earlier failed
-fixture/compiler logs remain. The distinct completed-owner native fixture needed
-its own transfer commitment and canonical event bytes; no production check was relaxed.
+Earlier request, status-policy, intent, transfer and plan qualification remains
+under `target/evidence/restore-status-request/`, `restore-status-policy/`,
+`restore-intent/`, `restore-transfer/` and `restore-plan/`. These older batches
+qualify their named local boundaries, not signing or remote restore effects.
+Historical completion/succession/source evidence and failed bundles remain under
+root and qualification `target/`; Git `f86f274` and the owning contracts retain
+historical detail. Isolated delivery evidence remains under
+`/tmp/ic-backup-release-0.101.9/target/evidence/`. Nothing was removed.
 
-`target/evidence/restore-transfer/` retains four source-schedule groups, 48 shared
-capture/readback regressions and the actual-IC offline source journey.
-`target/evidence/restore-plan/` retains four authenticated plan groups, one independent
-encoding vector, product/private lint and the actual-IC offline plan consumer.
-Version-only build/format/docs checks are retained in the isolated delivery checkout
-`/tmp/ic-backup-release-0.101.9/target/evidence/0.101.9/`.
-Earlier completion, succession, completion-verification and capture-source evidence,
-including failed bundles/logs, stays under root `target/evidence/` and qualification
-`target/`. Detailed historical qualification remains in Git at `f86f274` and the
-owning contracts; no evidence or recovery files were removed.
+Toko Tooling 0.44.4 was checksum-verified and adopted through exporter preview and
+update; both workspace pins/locks and the receipt agree. Only the installed
+baseline document changed. The private package now lives directly at
+`qualification/ic-backup-qualification/`, matching its package name; the redundant
+`crates/` level is gone. Original evidence still uses `qualification/target/fixtures/`.
+All five IC journeys, strict product/private Clippy, tool/snapshot admission,
+formatting, links, dependency listing and LOC reporting pass. Evidence is under
+`target/evidence/tooling-0.44.4/`. Package versions, publication flags and unrelated
+dependency selections were unchanged by adoption. GitHub delivery is now requested.
 
 Small fixtures do not qualify physical power loss, external signer processes,
 Canic fences, trusted HTTPS, hosted macOS, maximum-size throughput or restore.

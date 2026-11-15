@@ -1,27 +1,15 @@
 //! Original-byte restore plan admission against authenticated held sources.
-use super::*;
 use crate::store::{
-    RestoreLimitsRecord, RestorePlan, RestorePlanError, RestoreRequest, RestoreTransferError,
+    RestorePlan, RestorePlanError, RestoreTransferError,
+    capture::test_fixtures::{
+        completion::{complete, settled},
+        http::runtime,
+        source::maximum,
+    },
+    restore::tests::fixtures::declaration,
 };
-
-fn declaration(source: &crate::store::CaptureSource<'_, '_>) -> RestoreRequest {
-    RestoreRequest {
-        operation_id: "cd".repeat(16),
-        target: source.summary().target,
-        trust_root: source.original_plan().request().trust_root,
-        initiator: ic_platform::Principal::from_text("2vxsx-fae").unwrap(),
-        release: source.summary().release,
-        sender: ic_platform::Principal::from_text("aaaaa-aa").unwrap(),
-        limits: RestoreLimitsRecord {
-            payload_bytes: 10,
-            extent_bytes: 3,
-            network_requests: 15,
-            observations: 0,
-            signing_requests: 15,
-            evidence_bytes: 1024 * 1024,
-        },
-    }
-}
+use ic_host_artifacts::artifact::Sha256Digest;
+use std::fs;
 
 #[test]
 fn restore_plan_binds_original_source_and_retains_exact_replayed_bytes() {
@@ -261,7 +249,3 @@ fn restore_selection_and_finite_budget_refusals_precede_any_intent() {
         }))
     ));
 }
-
-mod persistence_tests;
-
-mod status_tests;

@@ -38,10 +38,10 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.44.3 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.44.4 is adopted from its registry
 archive with SHA-256
-`8a9bc7b6827044baac8134cada7ee6bc31f86c70beec9608d1d39d911eba15e1`,
-source `69ea17e551f33254d87de9824c30f2e74536eb10`. Both workspaces declare
+`b52bb793b386309b8c4a9e88f32711bb5d1fd11a47bf337c11c63ca2aa22fc97`,
+source `8bcece573511a6ce6ee8879443a8d19b6e43e7ad`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs nine selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -153,9 +153,9 @@ packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.
 
 ## Direct-provider and IC qualification
 
-`store::capture::advance::tests::http_tests::direct_tests` selects concrete-provider
+`store::capture::advance::tests::http_direct_tests` selects concrete-provider
 native tests; the full advance selection also covers retained historical checks.
-The independent private package under `qualification/crates/ic-backup-qualification`
+The independent private package under `qualification/ic-backup-qualification`
 uses Testkit's native client boundary for real stopped-canister status, snapshot list/take and
 cold replay after gateway shutdown. A second case retains a real take reply,
 returns uncertainty before journal settlement, and settles after server shutdown
@@ -248,7 +248,7 @@ update and focused checks are retained under `target/evidence/tooling-refresh-ne
 Existing product/IC qualification remains applicable; this documentation-only
 supplier change does not justify rerunning those suites.
 
-`store::capture::advance::tests::http_tests::lookup_tests` selects one-shot lookup
+`store::capture::advance::tests::http_lookup_tests` selects one-shot lookup
 transport checks. Evidence is under `target/evidence/lookup-http/`; the full advance
 suite also checks the shared HTTP reader's original call behavior. Both maintained
 IC fixtures now perform one additional externally reserved read-state request and
@@ -266,7 +266,7 @@ reads by lookup expiry and deadline. No runtime dependency or production code
 changed in this follow-up; earlier actual IC qualification is reused.
 
 The durable single-lookup continuation supersedes the earlier pending-accounting
-notes above. `store::capture::advance::tests::http_tests::durable_lookup_tests`
+notes above. `store::capture::advance::tests::durable_lookup_tests`
 selects eight native groups covering conserved spending, exact replay, live
 admission and uncertain writes at all four new transitions. Evidence under
 `target/evidence/durable-lookup/` records 112 advance tests, 10 ledger tests,
@@ -292,7 +292,7 @@ strict lints and Rustdoc. The existing actual-IC suite covers unchanged callers 
 the shared verifier. The subsequent metadata acquisition fixture is described below.
 
 For durable metadata acquisition, select
-`store::capture::advance::tests::http_tests::metadata_tests`. Eight native groups
+`store::capture::advance::tests::metadata_acquisition_tests`. Eight native groups
 cover the original journal's four metadata boundaries and retained authority.
 `target/evidence/metadata-acquisition/` contains 132 advance, 10 ledger and 16
 custody tests, 21 documentation examples, strict product/private Clippy and
@@ -301,7 +301,7 @@ warning-denying Rustdoc. `make test-qualification` passes all four IC fixtures;
 server shutdown and signer revocation. Payload download remains unqualified.
 
 For durable schedule binding, the native selections are
-`store::capture::advance::tests::http_tests::metadata_tests::schedule_tests` and
+`store::capture::advance::tests::schedule_tests` and
 `store::capture::transfer::binding`. Evidence under
 `target/evidence/transfer-binding/` contains 135 advance, 48 transfer and 10 ledger
 tests, strict product/private Clippy and all four PocketIC fixtures. The real
@@ -323,7 +323,7 @@ All four existing PocketIC fixtures pass after sharing certificate comparison;
 these regress status/snapshot/metadata callers, not remote payload acquisition.
 
 Durable data acquisition uses the focused native selection
-`store::capture::advance::tests::http_tests::metadata_tests::data_tests`.
+`store::capture::advance::tests::data_acquisition_tests`.
 Evidence under `target/evidence/data-acquisition/` records 149 advance, 10 ledger
 and 16 custody tests, 24 documentation examples, strict product/private Clippy
 and warning-denying Rustdoc. All four IC fixtures pass; the fourth is now
@@ -332,16 +332,17 @@ before exact offline replay. Its larger fixture evidence allowance admits the
 retained data proof without changing product ceilings. Artifact assembly and
 complete backup/restore remain unqualified.
 
-Complete payload verification reuses that native selection: `cargo test -p
-ic-backup --lib data_tests --locked --offline` selects 33 metadata/data tests.
+Complete payload verification uses `cargo test -p ic-backup --lib
+data_acquisition_tests --locked --offline`. Historical evidence below records the
+then-selected metadata/data cases.
 `target/evidence/data-verification/` records those checks, 24 documentation
 examples, strict product/private Clippy, warning-denying Rustdoc and four IC
 fixtures. Coverage and combined module-hash refusal preserve accepted evidence;
 the actual IC fixture also verifies complete bytes after shutdown. No assembled
 files or completed backup are qualified by these checks.
 
-Local assembly extends the same caller fixture and adds the native child
-`data_tests::assembly_tests`. Latest `target/evidence/assembly/` records 159 advance,
+Local assembly uses the shared capture fixture and the flat native module
+`store::capture::advance::tests::assembly_tests`. Latest `target/evidence/assembly/` records 159 advance,
 10 ledger, 16 custody and 23 shared payload tests; 24 examples; strict product/private
 Clippy; warning-denying Rustdoc; and all four IC fixtures. Eight assembly groups
 cover exact files, empty members, incomplete coverage/hash refusal, interrupted
@@ -371,3 +372,11 @@ handoff cases with `cargo test -p ic-backup --lib succession_tests --locked --of
 regressions. The private `complete_capture_and_offline_replay` fixture now creates
 a successor after shutdown and replays the old completed receipt with no additional
 signatures. It does not perform another capture or qualify power loss.
+
+
+Capture workflow cases are flat modules under `store/capture/advance/tests/`;
+restore cases live under `store/restore/tests/`. Select the restore suite with
+`cargo test -p ic-backup --lib store::restore::tests --locked --offline`.
+Shared native helpers belong in named fixture modules, with explicit imports.
+Keep single-consumer helpers beside their tests; do not nest test groups to inherit
+another group's fixtures. Synthetic native evidence does not qualify IC effects.

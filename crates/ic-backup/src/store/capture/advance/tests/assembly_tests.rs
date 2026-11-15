@@ -1,8 +1,16 @@
 //! Original filesystem regressions informed by frozen legacy artifact custody tests.
 use super::*;
+use crate::store::{
+    CaptureDataAdvanceError,
+    capture::{
+        advance::tests::fixtures::{data::Fixture, http::runtime},
+        ledger::EventRecord,
+    },
+};
 use std::{
-    io::Write,
+    fs,
     os::unix::fs::{MetadataExt, PermissionsExt, symlink},
+    path::PathBuf,
 };
 
 fn acquired() -> Fixture {

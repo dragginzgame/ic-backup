@@ -1,7 +1,31 @@
 //! Native integration checks; synthetic certificates do not qualify IC effects.
 use super::*;
+use crate::store::{
+    BackupStore,
+    capture::{
+        advance::tests::{
+            certificate_tests::{der, signed},
+            fixtures::{
+                http::{Response, Server, http, input, now, runtime, set_expiry},
+                signatures::{Scheme, change, fixture as request_fixture},
+            },
+        },
+        ledger::CaptureStatusPhase,
+        status::tests::status,
+    },
+    tests::root,
+};
 use ic_platform::certification::{fork, labeled, leaf};
-use std::sync::atomic::AtomicUsize;
+use std::{
+    fs,
+    future::pending,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
+    task::Poll,
+    time::Duration,
+};
 
 struct Signer {
     envelope: Vec<u8>,

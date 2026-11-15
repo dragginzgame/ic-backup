@@ -1,73 +1,22 @@
 //! Real loopback read-state with signed synthetic certificates; no IC effect simulation.
 use super::*;
-use ic_platform::{
-    certification::historical::{TimePolicy, TimeWindow},
-    ic_protocol::{Envelope, encode_envelope},
+use crate::store::capture::advance::tests::{
+    certificate_tests::{der, reply_tree, signed},
+    fixtures::{
+        http::{Response, Server, http, input, input_for, now, runtime},
+        lookup::{body, lookup, policy},
+        signatures::{Scheme, change},
+    },
 };
-
-pub(super) fn policy() -> CaptureLookupHttpPolicy {
-    CaptureLookupHttpPolicy {
-        request: CaptureLookupPolicy {
-            expires_ns: now() + 30_000_000_000,
-            envelope_bytes: 4096,
-        },
-        observation: CaptureObservationPolicy {
-            evidence_bytes: 4096,
-            time: TimePolicy {
-                certificate: TimeWindow {
-                    reference_ns: 100,
-                    max_age_ns: 0,
-                    max_future_skew_ns: 0,
-                },
-                delegation: TimeWindow {
-                    reference_ns: 10,
-                    max_age_ns: 0,
-                    max_future_skew_ns: 0,
-                },
-            },
-        },
-        deadline_ns: now() + 20_000_000_000,
-    }
-}
-pub(super) fn lookup(p: &CapturePlan, r: &PreparedStatus, scheme: Scheme, expiry: u64) -> Vec<u8> {
-    let CaptureExecution::Direct { sender } = p.request().execution else {
-        panic!("direct")
-    };
-    let content = EnvelopeContent::ReadState {
-        sender: sender.as_slice().try_into().unwrap(),
-        ingress_expiry: expiry,
-        paths: vec![vec![
-            b"request_status".to_vec().into(),
-            r.request_id.to_vec().into(),
-        ]],
-    };
-    let signature = scheme.sign(&content.to_request_id().signable());
-    encode_envelope(
-        &Envelope {
-            content: Cow::Owned(content),
-            sender_pubkey: Some(scheme.key()),
-            sender_sig: Some(signature),
-            sender_delegation: None,
-        },
-        4096,
-    )
-    .unwrap()
-}
-pub(super) fn body(cert: &[u8]) -> Vec<u8> {
-    let mut bytes = b"\xa1\x6bcertificate\x59".to_vec();
-    bytes.extend_from_slice(&u16::try_from(cert.len()).unwrap().to_be_bytes());
-    bytes.extend_from_slice(cert);
-    bytes
-}
-fn transport(s: &Server, p: &CapturePlan) -> StatusHttpTransport {
-    StatusHttpTransport::new(
-        &s.endpoint,
-        p.request().target.network,
-        der(1),
-        Duration::from_secs(1),
-    )
-    .unwrap()
-}
+use ic_host_artifacts::artifact::Sha256Digest;
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    task::Poll,
+    time::Duration,
+};
 
 #[test]
 fn read_state_uses_exact_original_route_and_bytes_for_all_calls_and_direct_keys() {
@@ -317,4 +266,14 @@ fn lookup_deadline_and_lookup_expiry_each_bound_body_waiting() {
         ));
         assert_eq!(s.finish().len(), 1);
     }
+}
+
+fn transport(s: &Server, p: &CapturePlan) -> StatusHttpTransport {
+    StatusHttpTransport::new(
+        &s.endpoint,
+        p.request().target.network,
+        der(1),
+        Duration::from_secs(1),
+    )
+    .unwrap()
 }

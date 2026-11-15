@@ -1,40 +1,19 @@
 //! Local completion, retained crash images and inventory consumers.
 use super::*;
-use crate::store::{BackupSummary, CaptureCompletionError, ScanLimits};
+use crate::store::{
+    CaptureCompletionError,
+    capture::{
+        advance::tests::fixtures::{
+            completion::{complete, limits, manifest, replace_owner, settled},
+            data::Fixture,
+            final_status::{advance, assembled, provider, request, result},
+            http::runtime,
+        },
+        ledger::EventRecord,
+    },
+};
 use ic_host_artifacts::artifact::Sha256Digest;
-
-fn settled() -> (Fixture, Server, HttpProvider) {
-    let mut f = assembled(20);
-    let r = request(&f, false);
-    let e = result(&f, &r, false);
-    let (server, mut p) = provider(&f, r, &e);
-    let a = f.a.call.clone();
-    assert_eq!(
-        advance(&mut f, &a, &mut p).unwrap(),
-        StatusProgress::Verified
-    );
-    p.replay = true;
-    (f, server, p)
-}
-fn complete(
-    f: &mut Fixture,
-    p: &mut HttpProvider,
-) -> Result<BackupSummary, CaptureCompletionError<StatusHttpError>> {
-    runtime().block_on(f.op.complete_capture(&f.t, p))
-}
-fn manifest(f: &Fixture) -> PathBuf {
-    f.root
-        .join("bundles")
-        .join(&f.p.request().operation_id)
-        .join("manifest.json")
-}
-fn limits() -> ScanLimits {
-    ScanLimits {
-        entries: 10.try_into().unwrap(),
-        bytes: (1024 * 1024).try_into().unwrap(),
-        results: 10.try_into().unwrap(),
-    }
-}
+use std::fs;
 
 #[test]
 fn completion_binds_original_bytes_and_existing_inventory_and_payload_consumers() {
@@ -267,22 +246,6 @@ fn publication_capacity_is_reserved_before_freezing_the_ledger_or_creating_manif
     assert_eq!(server.count(), 1);
 }
 
-fn replace_owner(f: &Fixture) -> (PathBuf, Vec<u8>) {
-    let path = f
-        .root
-        .join("targets")
-        .join(f.p.request().target.network.to_string())
-        .join(f.p.request().target.canister.to_text())
-        .join("owner.json");
-    let mut request = f.p.request().clone();
-    request.operation_id = "ef".repeat(16);
-    let plan = CapturePlan::new(request).unwrap();
-    let bytes = crate::store::capture::owner(&plan).unwrap();
-    // Synthetic successor image: creation/atomic claim replacement is separate work.
-    fs::write(&path, &bytes).unwrap();
-    (path, bytes)
-}
-
 #[test]
 fn published_receipt_replays_after_owner_change_without_touching_successor() {
     let (mut f, server, mut p) = settled();
@@ -336,8 +299,6 @@ fn changed_owner_never_authorizes_unfinished_or_missing_receipt_publication() {
         assert_eq!(server.count(), 1);
     }
 }
-
-mod succession_tests;
 
 #[test]
 fn readonly_completion_admits_exact_receipt_and_refuses_wrong_selection() {
@@ -408,5 +369,3 @@ fn readonly_completion_refuses_changed_source_bytes_without_repair() {
         assert_eq!(server.count(), 1);
     }
 }
-
-mod source_tests;

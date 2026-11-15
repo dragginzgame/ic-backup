@@ -1,8 +1,8 @@
 //! Real signatures over synthetic certificates; no remote observation is performed.
-use super::*;
 use super::{
     certificate_tests::{delegated, der, signed},
-    request_tests::{Scheme, change, fixture as signed_request},
+    fixtures::signatures::{Scheme, change, fixture as signed_request},
+    *,
 };
 use ic_platform::certification::{
     HashTree, empty, fork,

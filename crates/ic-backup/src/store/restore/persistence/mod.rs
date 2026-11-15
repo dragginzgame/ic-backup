@@ -1,4 +1,9 @@
-//! Local original restore intent; no management-effect methods.
+//! Local restore intent and bounded signing preparation; no management dispatch.
+mod preparation;
+pub use preparation::{
+    RestoreStatusPreparation, RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
+};
+
 use super::{PLAN_LIMIT, RestorePlan, RestorePlanError, RestorePlanRecord, hash};
 use crate::store::{
     BackupStore, CaptureCompletionError, CaptureError, CaptureOperation, CapturePlan,
@@ -41,7 +46,8 @@ pub enum RestorePersistenceError<E> {
     Publication(Box<NamedWriteError<CaptureError>>),
 }
 
-/// Held original restore intent and source. No remote effects are implemented.
+/// Held original restore intent and source, with bounded external signing preparation.
+/// No management request is submitted.
 /// Dropping releases process locks, never the durable target claim or source binding.
 #[derive(Debug)]
 pub struct RestoreOperation<'store> {
@@ -55,6 +61,7 @@ pub struct RestoreOperation<'store> {
     source: CaptureOperation,
     payload: PayloadSource<'store>,
     plan: RestorePlan,
+    usable: bool,
 }
 impl RestoreOperation<'_> {
     /// Recheck exact local intent, owner, source and held file identities.
@@ -62,6 +69,14 @@ impl RestoreOperation<'_> {
     /// # Errors
     /// Refuses incomplete, changed or unsafe custody and every unknown ledger suffix.
     pub fn inspect(&self) -> Result<&RestorePlan, CaptureError> {
+        self.check()?;
+        Ok(&self.plan)
+    }
+
+    fn check(&self) -> Result<preparation::State, CaptureError> {
+        if !self.usable {
+            return Err(CaptureError::Unusable);
+        }
         exact(&self.store.root, "format", crate::store::FORMAT, 128)?;
         let operations = child(&self.store.root, "operations", false)?;
         same_directory(
@@ -98,24 +113,28 @@ impl RestoreOperation<'_> {
             self.plan.encoded(),
             PLAN_LIMIT,
         )?;
-        let initial = initial(&self.plan)?;
-        exact(&self.directory, "ledger.bin", &initial, initial.len())?;
+        let state = preparation::read(self)?;
         for entry in self.target.entries(2)? {
             if !matches!(entry?.name.to_str(), Some("lock" | "owner.json")) {
                 return Err(CaptureError::Changed);
             }
         }
-        for entry in self.directory.entries(3)? {
+        for entry in self
+            .directory
+            .entries(if state.request.is_some() { 4 } else { 3 })?
+        {
+            let entry = entry?;
             if !matches!(
-                entry?.name.to_str(),
+                entry.name.to_str(),
                 Some("lock" | "plan.json" | "ledger.bin")
-            ) {
+            ) && !(state.request.is_some() && entry.name == OsStr::new("status-request.bin"))
+            {
                 return Err(CaptureError::Changed);
             }
         }
         self.source.inspect()?;
         self.payload.check_files()?;
-        Ok(&self.plan)
+        Ok(state)
     }
 }
 
@@ -168,7 +187,8 @@ impl BackupStore {
             .complete_capture(transport, provider)
             .await
             .map_err(|e| RestorePersistenceError::Completion(Box::new(e)))?;
-        let mut source = if plan.source().bundle_id == predecessor.request().operation_id {
+        let source_is_predecessor = plan.source().bundle_id == predecessor.request().operation_id;
+        let mut source = if source_is_predecessor {
             previous
         } else {
             self.open_capture(&plan.source().bundle_id, source_digest(plan)?)?
@@ -189,10 +209,14 @@ impl BackupStore {
             .map_err(|e| RestorePersistenceError::Source(Box::new(e)))?;
         let plan = RestorePlan::decode(&admitted, plan.encoded().to_vec())?;
         let payload = admitted.into_payload();
-        source
-            .complete_capture(transport, provider)
-            .await
-            .map_err(|e| RestorePersistenceError::Completion(Box::new(e)))?;
+        // The predecessor was synchronized above under its retained lock. Only
+        // an older, distinct source needs a separate completion reconciliation.
+        if !source_is_predecessor {
+            source
+                .complete_capture(transport, provider)
+                .await
+                .map_err(|e| RestorePersistenceError::Completion(Box::new(e)))?;
+        }
         payload.check_files().map_err(CaptureError::from)?;
         let owner_bytes = restore_owner(&plan)?;
         let parent = target.open_syncable().map_err(CaptureError::from)?;
@@ -350,5 +374,6 @@ fn held<'s>(
         source,
         payload,
         plan,
+        usable: true,
     })
 }

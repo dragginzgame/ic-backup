@@ -1,7 +1,21 @@
 //! Native original-custody regressions; IC effects are not simulated here.
-use super::*;
-use crate::store::RestorePersistenceError;
-use std::os::unix::fs::{MetadataExt, PermissionsExt};
+use crate::store::{
+    RestorePersistenceError, RestorePlan,
+    capture::test_fixtures::{
+        completion::{complete, manifest, settled},
+        data::Fixture,
+        http::{HttpProvider, runtime},
+        source::maximum,
+    },
+    restore::tests::fixtures::declaration,
+    *,
+};
+use ic_host_artifacts::artifact::Sha256Digest;
+use std::{
+    fs,
+    os::unix::fs::PermissionsExt,
+    path::{Path, PathBuf},
+};
 
 fn plans(f: &mut Fixture, p: &mut HttpProvider, evidence: u64, count: usize) -> Vec<RestorePlan> {
     let receipt = complete(f, p).unwrap();
@@ -289,28 +303,9 @@ fn older_source_and_distinct_completed_owner_are_admitted_without_replacing_sour
     request.operation_id = "ab".repeat(16);
     let next = CapturePlan::new(request.clone()).unwrap();
     let next_digest = next.digest();
-    let state = f.op.check().unwrap();
-    let metadata_state = state.metadata.as_ref().unwrap();
-    let snapshot = runtime()
-        .block_on(f.op.metadata_snapshot::<_, std::convert::Infallible>(
-            &metadata_state.admission,
-            &f.t,
-            &mut p,
-            &state,
-        ))
-        .unwrap();
-    let metadata =
-        f.op.retained_metadata::<std::convert::Infallible, std::convert::Infallible>(
-            &state, &snapshot, &f.t,
-        )
-        .unwrap();
-    let binding = next
-        .plan_transfer(&snapshot.id, &metadata)
-        .unwrap()
-        .binding(
-            metadata_state.request.as_ref().unwrap(),
-            metadata_state.result.as_ref().unwrap(),
-        );
+    let binding = crate::store::capture::test_fixtures::completion::rebound_transfer_event(
+        &mut f, &mut p, &next,
+    );
     drop(f.op);
     let next_op = runtime()
         .block_on(
@@ -338,10 +333,7 @@ fn older_source_and_distinct_completed_owner_are_admitted_without_replacing_sour
         let event: serde_json::Value = serde_json::from_slice(body).unwrap();
         if event["kind"] != "created" && event["kind"] != "publish_ready" {
             let body = if event["kind"] == "transfer_bound" {
-                serde_json::to_vec(&crate::store::capture::ledger::EventRecord::TransferBound {
-                    binding: binding.clone(),
-                })
-                .unwrap()
+                binding.clone()
             } else {
                 body.to_vec()
             };

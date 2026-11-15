@@ -32,6 +32,7 @@ use std::{
 mod lookup;
 mod lost_reply;
 mod metadata;
+mod restore_preparation;
 
 fn now() -> u64 {
     SystemTime::now()
@@ -131,7 +132,7 @@ enum Completion {
 
 fn run_fixture(interrupt: bool, durable: bool, completion: Completion) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
+        .join("..")
         .canonicalize()
         .unwrap();
     let assets = std::env::var_os("IC_BACKUP_TESTKIT_DIRECTORY")
@@ -489,7 +490,16 @@ async fn status_fixture(
                 .await
                 .unwrap();
             assert_eq!(op.inspect().unwrap().digest(), restore_plan.digest());
-            assert_eq!(fs::read(path).unwrap(), original);
+            assert_eq!(fs::read(&path).unwrap(), original);
+            restore_preparation::check(
+                &store,
+                &restore_plan,
+                op,
+                &lookup_transport,
+                &mut provider,
+                &path,
+            )
+            .await;
         } else {
             let successor = store
                 .create_capture_after(

@@ -99,14 +99,27 @@ pub(in crate::store::capture) fn authenticate_expected_request(
     admission
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
+    let super::CaptureExecution::Direct { sender } = plan.request().execution else {
+        return Err(StatusRequestError::Admission(CaptureError::StatusAdmission));
+    };
+    authenticate_direct_request(sender, admission.request_bytes, prepared, method, arguments)
+}
+
+pub(in crate::store) fn authenticate_direct_request(
+    sender: Principal,
+    request_bytes: u32,
+    prepared: &PreparedStatus,
+    method: &str,
+    arguments: &[u8],
+) -> Result<(), StatusRequestError> {
     // Bound the complete caller-owned record before either protocol decoder allocates.
     prepared
-        .encode(admission.request_bytes)
+        .encode(request_bytes)
         .map_err(StatusRequestError::Admission)?;
     prepared
-        .validate_expected_call(plan, method, arguments)
+        .validate_direct_call(sender, method, arguments)
         .map_err(StatusRequestError::Admission)?;
-    let envelope = decode_envelope(&prepared.envelope, admission.request_bytes as usize)
+    let envelope = decode_envelope(&prepared.envelope, request_bytes as usize)
         .map_err(|_| StatusRequestError::Envelope)?;
     let EnvelopeContent::Call {
         sender,

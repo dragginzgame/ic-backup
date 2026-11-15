@@ -31,6 +31,7 @@ pub use StatusEvidence as CaptureCallEvidence;
 mod direct;
 mod http;
 mod request;
+pub(in crate::store) use request::authenticate_direct_request;
 mod settlement;
 pub use settlement::CaptureSettlementError;
 pub(super) mod snapshots;
@@ -81,20 +82,36 @@ pub struct StatusAdmissionRecord {
 }
 impl StatusAdmissionRecord {
     pub(super) fn validate(&self, plan: &CapturePlan) -> Result<(), CaptureError> {
+        let initial_bytes = ledger::initial(plan)?.len();
+        if !matches!(plan.request().execution, CaptureExecution::Direct { .. }) {
+            return Err(CaptureError::StatusAdmission);
+        }
+        self.validate_limits(
+            plan.request().limits.network_requests,
+            plan.request().limits.evidence_bytes,
+            initial_bytes,
+        )
+    }
+
+    pub(in crate::store) fn validate_limits(
+        &self,
+        network_requests: u32,
+        evidence_bytes: u64,
+        initial_bytes: usize,
+    ) -> Result<(), CaptureError> {
         // Reserve all four maximum-size transition frames before any provider output.
         let evidence = u64::from(self.request_bytes)
             + u64::from(self.result_bytes)
-            + ledger::initial(plan)?.len() as u64
+            + initial_bytes as u64
             + 4 * (16 * 1024 + 36);
         let requests = self.prepare_requests.checked_add(self.submit_requests);
-        if !matches!(plan.request().execution, CaptureExecution::Direct { .. })
-            || self.prepare_deadline_ns == 0
+        if self.prepare_deadline_ns == 0
             || self.submit_deadline_ns < self.prepare_deadline_ns
             || !(46..=1024 * 1024).contains(&self.request_bytes)
             || !(7..=2 * 1024 * 1024).contains(&self.result_bytes)
             || self.submit_requests == 0
-            || requests.is_none_or(|n| n > plan.request().limits.network_requests)
-            || evidence > plan.request().limits.evidence_bytes
+            || requests.is_none_or(|n| n > network_requests)
+            || evidence > evidence_bytes
         {
             return Err(CaptureError::StatusAdmission);
         }
@@ -390,6 +407,15 @@ impl PreparedStatus {
         let CaptureExecution::Direct { sender: expected } = plan.request().execution else {
             return Err(CaptureError::StatusAdmission);
         };
+        self.validate_direct_call(expected, method, arguments)
+    }
+
+    fn validate_direct_call(
+        &self,
+        expected: ic_platform::Principal,
+        method: &str,
+        arguments: &[u8],
+    ) -> Result<(), CaptureError> {
         let content = decode_call_content_strict(&self.envelope, 1024 * 1024)
             .map_err(|_| CaptureError::StatusAdmission)?;
         let EnvelopeContent::Call {
@@ -416,7 +442,7 @@ impl PreparedStatus {
         Ok(())
     }
 
-    pub(super) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
+    pub(in crate::store) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
         if self.expires_ns == 0 {
             return Err(CaptureError::StatusAdmission);
         }
@@ -428,7 +454,7 @@ impl PreparedStatus {
         ]
         .concat())
     }
-    pub(super) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
+    pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
         if bytes.len() < 46 {
             return Err(CaptureError::Changed);
         }
@@ -450,11 +476,11 @@ impl PreparedStatus {
     }
 }
 impl StatusEvidence {
-    pub(super) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
+    pub(in crate::store) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
         let tail = pair(&self.response, &self.proof, limit.saturating_sub(1))?;
         Ok([&[u8::from(self.rejected)], tail.as_slice()].concat())
     }
-    pub(super) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
+    pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
         let Some((&kind, tail)) = bytes.split_first() else {
             return Err(CaptureError::Changed);
         };
@@ -492,7 +518,7 @@ fn split(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CaptureError> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;
 
 /// Read-only projection of original status evidence and reserved allowances.
 ///

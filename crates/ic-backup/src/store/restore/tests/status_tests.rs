@@ -1,7 +1,15 @@
 //! Restore consumes the shared policy with its own approved management sender.
-use super::*;
-use crate::store::{CaptureStatusError, CaptureStatusReplyError};
+use crate::store::{
+    CaptureStatusError, CaptureStatusReplyError, RestorePlan,
+    capture::test_fixtures::{
+        completion::{complete, settled},
+        http::runtime,
+        source::maximum,
+    },
+    restore::tests::fixtures::declaration,
+};
 use ic_platform::{Principal, candid_codec, management_canister_types::CanisterStatusType};
+use std::fs;
 
 #[test]
 fn restore_status_requires_its_sender_and_source_module_without_writing_intent() {
@@ -16,7 +24,7 @@ fn restore_status_requires_its_sender_and_source_module_without_writing_intent()
         )
         .unwrap();
     let plan = RestorePlan::new(&source, declaration(&source)).unwrap();
-    let mut observed = crate::store::capture::status::tests::status(&f.p);
+    let mut observed = crate::store::capture::test_fixtures::source::status(&f.p);
     assert!(
         !observed
             .settings
@@ -86,7 +94,7 @@ fn restore_status_shares_controller_and_exact_wire_bounds() {
         )
         .unwrap();
     let plan = RestorePlan::new(&source, declaration(&source)).unwrap();
-    let mut observed = crate::store::capture::status::tests::status(&f.p);
+    let mut observed = crate::store::capture::test_fixtures::source::status(&f.p);
     observed.settings.controllers = vec![plan.request().sender; 2];
     assert_eq!(
         plan.validate_status(&observed),

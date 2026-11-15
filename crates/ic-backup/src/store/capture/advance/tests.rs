@@ -1227,3 +1227,16 @@ mod lookup_tests;
 mod metadata_tests;
 
 mod data_tests;
+
+mod assembly_tests;
+mod completion_tests;
+mod data_acquisition_tests;
+mod durable_lookup_tests;
+mod final_status_tests;
+pub(in crate::store) mod fixtures;
+mod http_direct_tests;
+mod http_lookup_tests;
+mod metadata_acquisition_tests;
+mod schedule_tests;
+mod source_tests;
+mod succession_tests;

@@ -503,7 +503,9 @@ Before replacing the claim, check exact approval, unused operation ID, source
 identity/bytes, current-owner completion and capacity for the initial journal.
 Re-admit the plan against that held source; an earlier in-memory calculation is
 not fresh file custody. Synchronize admitted completed source/predecessor evidence
-through the existing completion path. Historical authentication must not sign,
+through the existing completion path, once per distinct capture. When source and
+predecessor are the same held operation, reuse its completed synchronization;
+exact source admission and closing payload checks still run. Historical authentication must not sign,
 read a current clock or dispatch network requests. Do not weaken original
 provider/root/route bindings to make a predecessor fit a new restore selection.
 
@@ -528,8 +530,8 @@ Callers may retain that plan, or decode its bounded original bytes against an
 authenticated source and release the temporary source handle before reopening.
 No API bootstraps a plan from an arbitrary operation ID yet. `inspect` checks
 original owner, plan/journal bytes, held file identities and source custody.
-Every journal suffix is currently unsupported and refuses. The reopened handle
-is for local intent inspection, not management effects.
+Only the signing-preparation events below are admitted after the initial frame;
+unknown suffixes refuse. Reopening itself performs no signing or management call.
 Before later effect APIs exist, qualify synchronization after uncertain returns,
 original source custody, bounded reservations and exact allocation-dependent
 requests. No create/reopen path may create an upload snapshot, sign or load state.
@@ -582,3 +584,78 @@ success flag. No legacy code was copied. Two new authenticated-source native gro
 exercise the restore sender, source module, controller and raw-wire bounds with
 unchanged journals; all shared capture status regressions pass. This qualifies
 pure policy, not restore signing, submission, recovery or IC effects.
+
+### Restore signed status request admission
+
+`RestorePlan::authenticate_status_request` locally checks one exact direct-host
+`canister_status` request using the existing `StatusAdmissionRecord` and
+`PreparedStatus` representations. It admits the original per-call request/result
+caps, network ceiling and evidence allowance including the initial journal and
+four maximum-size frames. It bounds the complete retained request before protocol
+decoding, then checks the management destination, restore sender, exact Platform
+canister arguments, original expiry/request ID and strict Ed25519 or low-S
+secp256k1 signature. Delegation and sender-info remain unsupported. Capture and
+restore share content/signature and limit checks; no capture plan is manufactured.
+
+The check preserves original bytes and reads no clock. It grants no reservation,
+remaining cumulative allowance, dispatch or retry permission. Provider/application
+bindings, live timing, original network/root/route, observation contents and certified
+results need their separate admission. Historical signature validity is not fresh
+send authority. This pure method performs no signer, transport or journal effect.
+
+Focused review revisited the frozen `4ae087fa` attempt-journal implementation and
+changed-authority/pending-attempt regressions, plus `a860d144`'s original-plan
+ownership consolidation. Preserve original authority and spending independently of
+signature validity; do not import the legacy workflow graph or refund pending work.
+Two new native groups use real signatures for both keys, signed wrong content,
+identity/framing changes and finite limits against authenticated capture sources.
+Shared request and initial-admission regressions cover unchanged capture callers.
+No legacy code was copied; these checks do not qualify restore dispatch or recovery.
+
+
+### Durable restore status signing preparation
+
+`RestoreOperation::prepare_status` admits one original `StatusAdmissionRecord`,
+checks the exact signer protocol and live application/sender custody, then retains
+`status_signing_reserved` before invoking `RestoreStatusSigner` once. Preparation
+must have a positive remaining deadline of at most 300 seconds. Tokio bounds the
+signer future; integrations must enforce output and preparation-traffic ceilings,
+stop on cancellation and never retry or detach work. External signer traffic is
+part of `prepare_requests`; no management ingress is submitted by this API.
+
+The existing original-plan-seeded ledger contains Created followed by at most one
+canonical JSON `status_signing_reserved` event with `admission`, then one
+`status_prepared` event with `request` (the shared byte-length/SHA-256 reference).
+The same bounded frame reader and hash chain serve capture and restore. No second
+journal, persisted phase projection or generic workflow graph is introduced.
+Initial journals remain readable; older readers refuse extended journals intact.
+
+Reservation synchronizes original intent and directory custody before append/sync.
+Preparation authenticates exact call/signature bytes and requires expiry to cover
+the original submission deadline. It creates `status-request.bin` exclusively,
+synchronizes that evidence before its journal reference, then appends/syncs the
+prepared frame. Uncertain persistence invalidates the handle. Reopening validates
+original custody, canonical transitions, request hash, length and signature.
+Partial frames, orphan evidence and unknown suffixes refuse without repair.
+
+`inspect_status` projects original admission, zero/one signer reservation,
+reserved preparation network traffic and the retained request ID. These are
+reservations, not measured usage. Prepared replay reads no clock or live signer;
+pending signing returns `SigningPending` without refund or another invocation.
+Changed admission refuses. Signer failure, invalid output, timeout or cancellation
+after reservation stays spent. No pending-signature import/recovery API exists yet.
+Provider-owned observation bytes are retained and bounded but remain opaque here;
+HTTP route, proof policy and certified-result admission are still unimplemented.
+
+Focused review used frozen legacy `4ae087fa`'s `ops/persistence/attempt_journal`,
+including `failed_reservation_never_returns_a_slot_and_forces_exact_recovery`
+and changed-authority/pending cases, plus ownership history `a860d144`. Retain
+spend-before-entry, original authority and unresolved-attempt refusal; omit the
+legacy command sidecars and workflow graph. No legacy code was copied.
+Four native groups qualify ordering, exact replay, refusal before spending,
+failed/cancelled/invalid signer outcomes and retained partial/orphan images.
+The actual-IC completed-source fixture adds local fixture signing and cold replay
+with revoked signing permission, unchanged request/journal bytes and no additional
+capture signatures. Its opaque observation placeholder grants no HTTP authority.
+These checks do not qualify physical power loss, every filesystem failure boundary,
+external signer processes, status dispatch or restore upload/load.

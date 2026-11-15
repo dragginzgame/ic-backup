@@ -1,114 +1,24 @@
 //! Native journal/real HTTP qualification. Synthetic certificates do not simulate IC effects.
 use super::*;
 use crate::store::{
-    CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupPhase,
+    BackupStore, CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupPhase,
     CaptureLookupProgress, CaptureLookupSigner,
+    capture::{
+        advance::tests::{
+            certificate_tests::{der, reply_tree, signed},
+            fixtures::{
+                durable_lookup::{reopen, reserve_original},
+                http::{HttpProvider, Response, Server, http, input, now, runtime},
+                signatures::{Scheme, change},
+            },
+        },
+        ledger::{CaptureStatusPhase, EventRecord, EvidenceRecord},
+        status::tests::status,
+    },
+    tests::{root, write_file},
 };
-use std::cell::Cell;
-
-struct Signer {
-    bytes: Vec<u8>,
-    calls: usize,
-    admits: Cell<usize>,
-    fail: bool,
-    hang: bool,
-    allow: bool,
-    stop_prepared: bool,
-}
-impl CaptureLookupSigner for Signer {
-    type Error = ();
-    fn protocol(&self) -> [u8; 32] {
-        [73; 32]
-    }
-    fn admit_read(&self, _: &CapturePlan, _: &CaptureLookupAdmissionRecord) -> Result<(), ()> {
-        let n = self.admits.get();
-        self.admits.set(n + 1);
-        if !self.allow || (self.stop_prepared && n == 1) {
-            Err(())
-        } else {
-            Ok(())
-        }
-    }
-    async fn sign_lookup(
-        &mut self,
-        _: &CapturePlan,
-        a: &CaptureLookupAdmissionRecord,
-        _: &PreparedStatus,
-    ) -> Result<Vec<u8>, ()> {
-        self.calls += 1;
-        assert_eq!(a.prepare_requests, 1);
-        if self.hang {
-            pending::<()>().await;
-        }
-        if self.fail {
-            Err(())
-        } else {
-            Ok(self.bytes.clone())
-        }
-    }
-}
-fn signer(bytes: Vec<u8>) -> Signer {
-    Signer {
-        bytes,
-        calls: 0,
-        admits: Cell::new(0),
-        fail: false,
-        hang: false,
-        allow: true,
-        stop_prepared: false,
-    }
-}
-pub(super) fn reserve_original(
-    store: &BackupStore,
-    p: CapturePlan,
-    r: &PreparedStatus,
-    a: &StatusAdmissionRecord,
-) -> CaptureOperation {
-    let digest = p.digest();
-    let mut op = store.create_capture(p, digest).unwrap();
-    op.commit(
-        &EventRecord::PreparationReserved {
-            sequence: 1,
-            admission: a.clone(),
-            arguments_sha256: *Sha256Digest::compute(&arguments(&op.plan).unwrap()).as_bytes(),
-        },
-        None,
-    )
-    .unwrap();
-    let bytes = r.encode(a.request_bytes).unwrap();
-    op.commit(
-        &EventRecord::Prepared {
-            sequence: 2,
-            request: EvidenceRecord::new(&bytes),
-        },
-        Some(("status-request.bin", &bytes)),
-    )
-    .unwrap();
-    op.commit(&EventRecord::SubmissionReserved { sequence: 3 }, None)
-        .unwrap();
-    op
-}
-fn authority(t: &StatusHttpTransport) -> CaptureLookupAdmissionRecord {
-    let policy = lookup_tests::policy();
-    CaptureLookupAdmissionRecord {
-        call: CaptureCall::Status,
-        transport: t.lookup_commitment(),
-        signer: [73; 32],
-        read_authority: [74; 32],
-        prepare_deadline_ns: now() + 10_000_000_000,
-        lookup_deadline_ns: policy.deadline_ns,
-        expires_ns: policy.request.expires_ns,
-        prepare_requests: 1,
-        request_bytes: 4096,
-        result_bytes: 4096,
-        observation: status_certificate_observation(policy.observation.time).unwrap(),
-    }
-}
-pub(super) fn reopen(store: &BackupStore, p: &CapturePlan) -> CaptureOperation {
-    store
-        .open_capture(&p.request().operation_id, p.digest())
-        .unwrap()
-}
+use ic_host_artifacts::artifact::Sha256Digest;
+use std::{cell::Cell, fs, time::Duration};
 
 #[test]
 fn durable_lookup_retains_originals_and_replays_without_signer_or_server() {
@@ -120,15 +30,21 @@ fn durable_lookup_retains_originals_and_replays_without_signer_or_server() {
         1,
         None,
     );
-    let server = Server::new(Response::Bytes(http(200, "", &lookup_tests::body(&cert))));
+    let server = Server::new(Response::Bytes(http(
+        200,
+        "",
+        &crate::store::capture::advance::tests::fixtures::lookup::body(&cert),
+    )));
     let t = server.client(&p, Duration::from_secs(1));
     let admission = authority(&t);
-    let mut signer = signer(lookup_tests::lookup(
-        &p,
-        &r,
-        Scheme::Ed25519,
-        admission.expires_ns,
-    ));
+    let mut signer = signer(
+        crate::store::capture::advance::tests::fixtures::lookup::lookup(
+            &p,
+            &r,
+            Scheme::Ed25519,
+            admission.expires_ns,
+        ),
+    );
     let mut op = reserve_original(
         &store,
         CapturePlan::new(p.request().clone()).unwrap(),
@@ -191,12 +107,14 @@ fn signing_failure_cancellation_and_invalid_output_remain_spent_across_reopen() 
         let server = Server::new(Response::Disconnect);
         let t = server.client(&p, Duration::from_secs(1));
         let admission = authority(&t);
-        let mut signer = signer(lookup_tests::lookup(
-            &p,
-            &r,
-            Scheme::Ed25519,
-            admission.expires_ns,
-        ));
+        let mut signer = signer(
+            crate::store::capture::advance::tests::fixtures::lookup::lookup(
+                &p,
+                &r,
+                Scheme::Ed25519,
+                admission.expires_ns,
+            ),
+        );
         signer.fail = fault == 0;
         signer.hang = fault == 1;
         if fault == 2 {
@@ -243,7 +161,12 @@ fn prepared_lookup_resumes_exact_bytes_but_unknown_http_never_repeats() {
     let server = Server::new(Response::Disconnect);
     let t = server.client(&p, Duration::from_secs(1));
     let admission = authority(&t);
-    let bytes = lookup_tests::lookup(&p, &r, Scheme::Ed25519, admission.expires_ns);
+    let bytes = crate::store::capture::advance::tests::fixtures::lookup::lookup(
+        &p,
+        &r,
+        Scheme::Ed25519,
+        admission.expires_ns,
+    );
     let mut signer = signer(bytes.clone());
     signer.stop_prepared = true;
     let mut op = reserve_original(
@@ -308,12 +231,14 @@ fn exhausted_original_budgets_refuse_before_any_signing_or_new_frame() {
         let server = Server::new(Response::Disconnect);
         let t = server.client(&p, Duration::from_secs(1));
         let admission = authority(&t);
-        let mut signer = signer(lookup_tests::lookup(
-            &p,
-            &r,
-            Scheme::Ed25519,
-            admission.expires_ns,
-        ));
+        let mut signer = signer(
+            crate::store::capture::advance::tests::fixtures::lookup::lookup(
+                &p,
+                &r,
+                Scheme::Ed25519,
+                admission.expires_ns,
+            ),
+        );
         let mut op = reserve_original(&store, p, &r, &a);
         let before = op.check().unwrap();
         assert!(
@@ -337,12 +262,14 @@ fn lookup_evidence_damage_and_partial_journals_are_retained_and_refused() {
         let server = Server::new(Response::Disconnect);
         let t = server.client(&p, Duration::from_secs(1));
         let admission = authority(&t);
-        let mut signer = signer(lookup_tests::lookup(
-            &p,
-            &r,
-            Scheme::Ed25519,
-            admission.expires_ns,
-        ));
+        let mut signer = signer(
+            crate::store::capture::advance::tests::fixtures::lookup::lookup(
+                &p,
+                &r,
+                Scheme::Ed25519,
+                admission.expires_ns,
+            ),
+        );
         signer.stop_prepared = true;
         let mut op = reserve_original(
             &store,
@@ -397,7 +324,12 @@ fn uncertain_lookup_frame_writes_preserve_complete_spending_and_refuse_partial_t
             let server = Server::new(Response::Disconnect);
             let t = server.client(&p, Duration::from_secs(1));
             let admission = authority(&t);
-            let request = lookup_tests::lookup(&p, &r, Scheme::Ed25519, admission.expires_ns);
+            let request = crate::store::capture::advance::tests::fixtures::lookup::lookup(
+                &p,
+                &r,
+                Scheme::Ed25519,
+                admission.expires_ns,
+            );
             let cert = signed(
                 reply_tree(&r.request_id, b"retained reply", b"replied"),
                 1,
@@ -551,12 +483,14 @@ fn lookup_live_binding_permission_and_clock_refuse_before_reservation() {
             }
             _ => unreachable!(),
         }
-        let mut signer = signer(lookup_tests::lookup(
-            &p,
-            &r,
-            Scheme::Ed25519,
-            admission.expires_ns,
-        ));
+        let mut signer = signer(
+            crate::store::capture::advance::tests::fixtures::lookup::lookup(
+                &p,
+                &r,
+                Scheme::Ed25519,
+                admission.expires_ns,
+            ),
+        );
         signer.allow = fault != 2;
         let mut op = reserve_original(&store, p, &r, &a);
         let before = op.check().unwrap();
@@ -579,38 +513,13 @@ fn lookup_live_binding_permission_and_clock_refuse_before_reservation() {
     }
 }
 
-fn retain_observation(
-    op: &mut CaptureOperation,
-    a: CaptureLookupAdmissionRecord,
-    r: &PreparedStatus,
-    cert: &[u8],
-) {
-    let bytes = lookup_tests::lookup(&op.plan, r, Scheme::Ed25519, a.expires_ns);
-    op.commit(&EventRecord::LookupStarted { admission: a }, None)
-        .unwrap();
-    op.commit(
-        &EventRecord::LookupPrepared {
-            request: EvidenceRecord::new(&bytes),
-        },
-        Some(("lookup-request.bin", &bytes)),
-    )
-    .unwrap();
-    op.commit(&EventRecord::LookupSubmissionReserved, None)
-        .unwrap();
-    op.commit(
-        &EventRecord::LookupObserved {
-            certificate: EvidenceRecord::new(cert),
-        },
-        Some(("lookup-certificate.bin", cert)),
-    )
-    .unwrap();
-}
-
 #[test]
 fn observed_status_settlement_preserves_policy_spending_and_cold_replay() {
     for valid in [false, true] {
         let (p, mut r, a, _) = input();
-        let mut original_time = lookup_tests::policy().observation.time;
+        let mut original_time = crate::store::capture::advance::tests::fixtures::lookup::policy()
+            .observation
+            .time;
         original_time.certificate.reference_ns = 99;
         r.observation = status_certificate_observation(original_time).unwrap();
         let root = root("observed-status-settlement");
@@ -818,46 +727,6 @@ fn lookup_settlement_refuses_conflicting_original_result_and_wrong_root_without_
     }
 }
 
-impl CaptureProvider for HttpProvider {
-    fn admit_call(
-        &self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: CaptureCall,
-        _: Option<&PreparedStatus>,
-    ) -> Result<(), Self::Error> {
-        Err(StatusHttpError::Binding) // Explicitly revoked live authority in this fixture.
-    }
-    async fn prepare_call(
-        &mut self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: CaptureCall,
-    ) -> Result<PreparedStatus, Self::Error> {
-        panic!("no fresh signing")
-    }
-    async fn submit_call(
-        &mut self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: CaptureCall,
-        _: &PreparedStatus,
-    ) -> Result<StatusEvidence, Self::Error> {
-        panic!("no fresh submission")
-    }
-    fn authenticate_call(
-        &self,
-        p: &CapturePlan,
-        a: &StatusAdmissionRecord,
-        call: CaptureCall,
-        r: &PreparedStatus,
-        e: &StatusEvidence,
-    ) -> Result<(), Self::Error> {
-        super::super::super::certificate::authenticate_call_evidence(p, a, r, e, &der(1), call)
-            .map_err(StatusHttpError::Authentication)
-    }
-}
-
 #[test]
 fn observed_list_settlement_still_requires_live_authority_before_take() {
     let (p, r, a, _) = input();
@@ -1010,4 +879,108 @@ fn certified_lookup_rejection_settles_but_never_becomes_status_success() {
     );
     assert_eq!(op.check().unwrap(), before);
     assert_eq!(server.finish().len(), 0);
+}
+
+struct Signer {
+    pub(in crate::store) bytes: Vec<u8>,
+    pub(in crate::store) calls: usize,
+    pub(in crate::store) admits: Cell<usize>,
+    pub(in crate::store) fail: bool,
+    pub(in crate::store) hang: bool,
+    pub(in crate::store) allow: bool,
+    pub(in crate::store) stop_prepared: bool,
+}
+
+impl CaptureLookupSigner for Signer {
+    type Error = ();
+    fn protocol(&self) -> [u8; 32] {
+        [73; 32]
+    }
+    fn admit_read(&self, _: &CapturePlan, _: &CaptureLookupAdmissionRecord) -> Result<(), ()> {
+        let n = self.admits.get();
+        self.admits.set(n + 1);
+        if !self.allow || (self.stop_prepared && n == 1) {
+            Err(())
+        } else {
+            Ok(())
+        }
+    }
+    async fn sign_lookup(
+        &mut self,
+        _: &CapturePlan,
+        a: &CaptureLookupAdmissionRecord,
+        _: &PreparedStatus,
+    ) -> Result<Vec<u8>, ()> {
+        self.calls += 1;
+        assert_eq!(a.prepare_requests, 1);
+        if self.hang {
+            pending::<()>().await;
+        }
+        if self.fail {
+            Err(())
+        } else {
+            Ok(self.bytes.clone())
+        }
+    }
+}
+
+fn signer(bytes: Vec<u8>) -> Signer {
+    Signer {
+        bytes,
+        calls: 0,
+        admits: Cell::new(0),
+        fail: false,
+        hang: false,
+        allow: true,
+        stop_prepared: false,
+    }
+}
+
+fn authority(t: &StatusHttpTransport) -> CaptureLookupAdmissionRecord {
+    let policy = crate::store::capture::advance::tests::fixtures::lookup::policy();
+    CaptureLookupAdmissionRecord {
+        call: CaptureCall::Status,
+        transport: t.lookup_commitment(),
+        signer: [73; 32],
+        read_authority: [74; 32],
+        prepare_deadline_ns: now() + 10_000_000_000,
+        lookup_deadline_ns: policy.deadline_ns,
+        expires_ns: policy.request.expires_ns,
+        prepare_requests: 1,
+        request_bytes: 4096,
+        result_bytes: 4096,
+        observation: status_certificate_observation(policy.observation.time).unwrap(),
+    }
+}
+
+fn retain_observation(
+    op: &mut CaptureOperation,
+    a: CaptureLookupAdmissionRecord,
+    r: &PreparedStatus,
+    cert: &[u8],
+) {
+    let bytes = crate::store::capture::advance::tests::fixtures::lookup::lookup(
+        &op.plan,
+        r,
+        Scheme::Ed25519,
+        a.expires_ns,
+    );
+    op.commit(&EventRecord::LookupStarted { admission: a }, None)
+        .unwrap();
+    op.commit(
+        &EventRecord::LookupPrepared {
+            request: EvidenceRecord::new(&bytes),
+        },
+        Some(("lookup-request.bin", &bytes)),
+    )
+    .unwrap();
+    op.commit(&EventRecord::LookupSubmissionReserved, None)
+        .unwrap();
+    op.commit(
+        &EventRecord::LookupObserved {
+            certificate: EvidenceRecord::new(cert),
+        },
+        Some(("lookup-certificate.bin", cert)),
+    )
+    .unwrap();
 }

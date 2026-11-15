@@ -1,6 +1,14 @@
 //! Native handoff/retained-crash-image tests; original certificates are synthetic.
 use super::*;
-use crate::store::CaptureSuccessionError;
+use crate::store::{
+    CaptureStatusPhase, CaptureSuccessionError,
+    capture::advance::tests::fixtures::{
+        completion::{complete, manifest, settled},
+        data::Fixture,
+        http::runtime,
+    },
+};
+use std::{fs, path::PathBuf};
 
 fn next(f: &Fixture) -> CapturePlan {
     let mut request = f.p.request().clone();

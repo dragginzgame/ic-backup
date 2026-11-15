@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/ic-backup-qualification"]
+members = ["ic-backup-qualification"]
 
 [workspace.package]
 edition = "2024"
@@ -9,13 +9,13 @@ license-file = "../LICENSE.md"
 publish = false
 
 [workspace.dependencies]
-ic-backup = { path = "../crates/ic-backup", version = "0.101.10" }
+ic-backup = { path = "../crates/ic-backup", version = "0.101.11" }
 ic-host-artifacts = "0.79.0"
 ic-platform = { version = "0.33.7", default-features = false, features = ["ed25519", "ic-protocol", "principal-self-authenticating"] }
 ic-testkit = { version = "0.106.0", default-features = false }
 tokio = { version = "1.53.3", default-features = false, features = ["rt", "net", "time"] }
 
-toko-tooling = "=0.44.3"
+toko-tooling = "=0.44.4"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

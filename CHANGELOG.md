@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.101.11] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Reserve one restore status signing attempt durably and retain its exact signed
+  request. Reopening prepared or uncertain attempts never signs again; damaged
+  evidence refuses intact. This step performs no management submission.
+
+- Authenticate exact signed restore status requests against their approved sender
+  and target with bounded original records and shared direct-key verification.
+  This local check preserves bytes and grants no reservation or dispatch authority.
+
+### 🔧 Changed
+
+- Adopt Toko Tooling 0.44.4 and place the private qualification package directly
+  under `qualification/`, preserving its identity, lockfile and evidence paths.
+
+- Flatten capture workflow tests and move restore tests beside restore code. Share
+  named fixtures without nesting test groups or changing recovery assertions.
+
+- Avoid repeating completion authentication and synchronization during restore
+  creation when the source is the current completed capture owner. Preserve exact
+  source admission and held custody; distinct older sources still reconcile separately.
+
 ## [0.101.10] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

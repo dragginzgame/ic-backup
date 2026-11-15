@@ -1,6 +1,17 @@
 //! Exact restore transfer bounds over authenticated sources; no restore effects.
-use super::*;
-use crate::store::{RestoreTransferError, RestoreTransferRequest};
+use crate::store::{
+    BackupSummary, RestoreTransferError, RestoreTransferRequest, StatusProgress,
+    capture::test_fixtures::{
+        completion::{complete, manifest, settled},
+        data::Fixture,
+        final_status::{advance, provider, request, result},
+        http::runtime,
+        source::{extent, maximum},
+    },
+};
+use ic_host_artifacts::artifact::Sha256Digest;
+use ic_platform::management_canister_types::SnapshotDataKind;
+use std::fs;
 
 fn selection(receipt: &BackupSummary) -> RestoreTransferRequest {
     RestoreTransferRequest {

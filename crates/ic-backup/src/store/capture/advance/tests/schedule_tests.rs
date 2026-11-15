@@ -1,43 +1,19 @@
 //! Schedule persistence is local; the enclosing fixture owns authenticated evidence.
 use super::*;
-use crate::store::CaptureTransferBindError;
-
-pub(super) fn settle(
-    op: &mut CaptureOperation,
-    s: &Snapshot,
-    r: &PreparedStatus,
-    e: &StatusEvidence,
-    ma: &CaptureMetadataAdmissionRecord,
-) {
-    let request = r.encode(ma.call.request_bytes).unwrap();
-    let result = e.encode(ma.call.result_bytes).unwrap();
-    op.commit(
-        &EventRecord::MetadataStarted {
-            admission: ma.clone(),
-            snapshot_id: s.id.clone(),
-            timestamp: s.taken_at_timestamp,
-            total_size: s.total_size,
+use crate::store::{
+    BackupStore, CaptureTransferBindError,
+    capture::{
+        advance::tests::fixtures::{
+            durable_lookup::reopen,
+            http::{HttpProvider, Response, Server, runtime},
+            metadata::{authority, captured, input},
+            schedule::settle,
         },
-        None,
-    )
-    .unwrap();
-    op.commit(
-        &EventRecord::MetadataPrepared {
-            request: EvidenceRecord::new(&request),
-        },
-        Some(("metadata-request.bin", &request)),
-    )
-    .unwrap();
-    op.commit(&EventRecord::MetadataSubmissionReserved, None)
-        .unwrap();
-    op.commit(
-        &EventRecord::MetadataSettled {
-            result: EvidenceRecord::new(&result),
-        },
-        Some(("metadata-result.bin", &result)),
-    )
-    .unwrap();
-}
+        ledger::EventRecord,
+    },
+    tests::root,
+};
+use std::{fs, time::Duration};
 
 #[test]
 fn binding_authenticates_once_and_cold_replay_preserves_bytes_and_spending() {

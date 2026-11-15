@@ -1,8 +1,8 @@
 //! Real signatures and synthetic certified replies; no remote payload effects.
-use super::*;
 use super::{
     certificate_tests::{der, reply_tree, signed},
-    request_tests::{Scheme, change},
+    fixtures::signatures::{Scheme, change},
+    *,
 };
 use crate::store::{CaptureTransfer, DataReadError, TransferDataError};
 use ic_platform::{

@@ -11,7 +11,10 @@ use thiserror::Error;
 
 mod persistence;
 mod status;
-pub use persistence::{RestoreOperation, RestorePersistenceError};
+pub use persistence::{
+    RestoreOperation, RestorePersistenceError, RestoreStatusPreparation,
+    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
+};
 
 const PLAN_LIMIT: usize = 1024 * 1024;
 const FORMAT: &str = "ic-backup/local-restore-plan/1";
