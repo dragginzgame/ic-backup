@@ -1218,3 +1218,5 @@ mod http_tests;
 mod request_tests;
 
 mod snapshot_tests;
+
+mod observation_tests;

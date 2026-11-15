@@ -1,7 +1,8 @@
 # Backup restart
 
 Status: local inventory, payload integrity, capture intent, transfer planning
-and bounded reply decoding are implemented. Capture and restore effects remain proposed in the
+and bounded reply decoding are implemented, together with direct-host status/list/take
+and settlement from surviving certified replies. Full capture/restore remains proposed in the
 [library design](library-design.md); the [current handoff](../status/current.md)
 links each implemented contract.
 The user selected a single-canister library first: capture one already-stopped
@@ -23,16 +24,16 @@ acceptance evidence. Do not recreate the legacy feature set or release machinery
 by default. A CLI, Agent wrapper, persisted schema and simulator workspace are
 not required merely to establish the library. The implemented inventory has a
 bounded manifest reader, initial operation records and a pure transfer planner.
-Initial direct-host status now has durable reservation/settlement and a caller
-provider boundary. Concrete providers and authenticated IC qualification remain
-future work; local injected providers prove ordering only.
+The direct provider and private PocketIC qualification cover status, snapshot
+list/take, surviving reply settlement and offline replay. Native injected providers
+prove persistence ordering only; remote observation, download and restore remain unfinished.
 
 The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
 the new implementation from legacy without implying maturity or compatibility.
-Development now continues as 0.101.2 after the GitHub-only 0.101.1 checkpoint,
-including authenticated status HTTP, direct-key request verification and shared
-Host HTTP body reading.
+The GitHub-only 0.101.2 checkpoint includes the direct provider and durable snapshot
+capture. Compatible local work is recorded under pending 0.101.3; manifests remain
+0.101.2 until separately authorized version preparation.
 The 0.101 minor accounts for Host 0.79 public Rust type identities. The pending
 patch opens compatible development; it does not claim a finished capture/restore
 product or pre-authorize a breaking API change.
@@ -46,5 +47,6 @@ integration until an explicit migration is designed. Do not delete artifacts,
 rewind external obligations or infer compatibility from matching package names.
 
 The current native tests cover local filesystem and completion-record behavior.
-They do not qualify IC effects, end-to-end backup/restore, Canic integration or
-release/publication acceptance; those remain contract-specific work.
+They do not qualify IC effects; the private PocketIC cases qualify only their
+named management and recovery boundaries. End-to-end backup/restore, Canic
+integration and release/publication acceptance remain contract-specific work.

@@ -286,3 +286,14 @@ management effects with a direct controller key; it does not qualify Canic's
 manager-controlled executor, signer processes or fenced application recovery.
 [Canic #1](https://github.com/dragginzgame/canic/issues/1) remains the owning
 integration issue; no new supplier API gap was required for list/take.
+
+For live original-request recovery,
+[Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167)
+is resolved by adopted Platform 0.33.7, source
+`663cf913997490f448553119a6caf66b3cdecc81`. Its strict read-state content reader
+preserves the existing envelope identities and nested path bytes, refusing unknown
+or duplicate content fields and malformed/oversized input. The bound is raw input,
+not a total work/allocation quota. Backup still owns exact request-status paths,
+signature/binding checks, finite observation accounting, timing, retention and
+settlement; that live workflow remains unimplemented. No supplier edits or local
+wire schema were added.

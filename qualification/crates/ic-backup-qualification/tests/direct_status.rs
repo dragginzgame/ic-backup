@@ -1,10 +1,11 @@
 //! Actual management ingress through PocketIC's async HTTP gateway.
 //! The fixture key and maintenance guard are test-only, not a Canic/process adapter.
 use ic_backup::store::{
-    BackupStore, BackupTarget, CaptureApplicationGuard, CaptureExecution, CaptureLimitsRecord,
-    CapturePlan, CaptureRequest, CaptureSigner, CaptureSigningRequest, CaptureTiming,
-    DirectCaptureProvider, SnapshotAdmissionRecord, SnapshotProgress, StatusAdmissionRecord,
-    StatusHttpTransport, StatusProgress,
+    BackupStore, BackupTarget, CaptureApplicationGuard, CaptureCall, CaptureExecution,
+    CaptureLimitsRecord, CapturePlan, CaptureRequest, CaptureSigner, CaptureSigningRequest,
+    CaptureSnapshotPhase, CaptureTiming, DirectCaptureProvider, SnapshotAdmissionRecord,
+    SnapshotProgress, StatusAdmissionRecord, StatusHttpTransport, StatusProgress,
+    decode_taken_snapshot,
 };
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
@@ -27,6 +28,8 @@ use std::{
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
+
+mod lost_reply;
 
 fn now() -> u64 {
     SystemTime::now()
@@ -95,6 +98,15 @@ impl CaptureApplicationGuard for FixtureGuard {
 
 #[test]
 fn stopped_canister_snapshot_and_offline_cold_replay() {
+    run_fixture(false);
+}
+
+#[test]
+fn surviving_take_reply_settles_after_interruption_and_server_shutdown() {
+    run_fixture(true);
+}
+
+fn run_fixture(interrupt: bool) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -114,10 +126,10 @@ fn stopped_canister_snapshot_and_offline_cold_replay() {
         .enable_all()
         .build()
         .unwrap();
-    rt.block_on(status_fixture(&evidence, binary));
+    rt.block_on(status_fixture(&evidence, binary, interrupt));
 }
 
-async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
+async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: bool) {
     let mut owned = PocketIcStartupConfig::Spawn {
         server_binary: binary,
         timeout: Duration::from_secs(30),
@@ -200,7 +212,7 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
     fs::write(evidence.join("root.der"), &root).unwrap();
     let allowed = Arc::new(AtomicBool::new(true));
     let calls = Arc::new(AtomicUsize::new(0));
-    let mut provider = direct_provider(endpoint.as_str(), network, &root, &calls, &allowed);
+    let provider = direct_provider(endpoint.as_str(), network, &root, &calls, &allowed);
     let reference = now();
     let admission = StatusAdmissionRecord {
         provider: provider.commitment(),
@@ -212,6 +224,8 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
         request_bytes: 4096,
         result_bytes: 256 * 1024,
     };
+    let mut provider =
+        lost_reply::LostReply::new(provider, evidence.join("surviving-reply"), interrupt);
     let digest = plan.digest();
     fs::DirBuilder::new()
         .mode(0o700)
@@ -236,14 +250,28 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
         list: admission.clone(),
         take: admission.clone(),
     };
-    let SnapshotProgress::Captured(taken) = operation
+    let result = operation
         .advance_snapshot(&snapshot_admission, &mut provider)
-        .await
-        .unwrap()
-    else {
-        panic!("capture must settle");
+        .await;
+    let taken = if interrupt {
+        assert!(result.is_err());
+        let saved = lost_reply::load(&evidence.join("surviving-reply"), admission.result_bytes);
+        decode_taken_snapshot(&saved.response, &[]).unwrap()
+    } else {
+        let SnapshotProgress::Captured(taken) = result.unwrap() else {
+            panic!("capture must settle");
+        };
+        taken
     };
-    let snapshot_view = operation.inspect_snapshot().unwrap();
+    let mut snapshot_view = operation.inspect_snapshot().unwrap();
+    assert_eq!(
+        snapshot_view.phase,
+        if interrupt {
+            CaptureSnapshotPhase::TakeSubmissionReserved
+        } else {
+            CaptureSnapshotPhase::Settled
+        }
+    );
     assert_eq!(snapshot_view.signing_requests_reserved, 3);
     assert_eq!(snapshot_view.network_requests_reserved, 3);
     assert_eq!(calls.load(Ordering::SeqCst), 3);
@@ -283,6 +311,26 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
         StatusProgress::Verified
     );
     assert_eq!(reopened.inspect_status().unwrap(), view);
+    if interrupt {
+        assert_eq!(
+            reopened
+                .advance_snapshot(&snapshot_admission, &mut provider)
+                .await
+                .unwrap(),
+            SnapshotProgress::SubmissionPending(CaptureCall::TakeSnapshot)
+        );
+        let original = lost_reply::load(&evidence.join("surviving-reply"), admission.result_bytes);
+        reopened
+            .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
+            .unwrap();
+        let ledger = evidence.join("store/operations/00000000000000000000000000000001/ledger.bin");
+        let settled = fs::read(&ledger).unwrap();
+        reopened
+            .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
+            .unwrap();
+        assert_eq!(fs::read(&ledger).unwrap(), settled);
+        snapshot_view.phase = CaptureSnapshotPhase::Settled;
+    }
     assert_eq!(
         reopened
             .advance_snapshot(&snapshot_admission, &mut provider)
@@ -292,6 +340,10 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf) {
     );
     assert_eq!(reopened.inspect_snapshot().unwrap(), snapshot_view);
     assert_eq!(calls.load(Ordering::SeqCst), 3);
+    if interrupt {
+        fs::write(evidence.join("settlement-verified.txt"), b"real take reply survived provider interruption; settled with server absent and guard revoked; no extra signatures or submissions
+").unwrap();
+    }
     fs::write(evidence.join("verified.txt"), b"certified status, list and take; original snapshot and stopped module preserved; three signatures and reserved HTTP requests; cold replay with server absent\n").unwrap();
     eprintln!("retained qualification evidence: {}", evidence.display());
 }

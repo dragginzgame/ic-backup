@@ -280,7 +280,7 @@ fn original_observation_is_strict_and_time_arithmetic_never_wraps() {
     ));
 }
 
-fn delegated(canister: &[u8], r: &PreparedStatus, e: &StatusEvidence) -> Vec<u8> {
+pub(super) fn delegated(canister: &[u8], r: &PreparedStatus, e: &StatusEvidence) -> Vec<u8> {
     assert!(canister.len() < 24);
     // CBOR [[h'canister', h'canister']]: an exact, single-canister certified range.
     let mut range = vec![0x81, 0x82, 0x40 + canister.len() as u8];

@@ -4,13 +4,14 @@ mod advance;
 mod ledger;
 pub use advance::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
-    CaptureProvider, CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase,
+    CaptureObservation, CaptureObservationError, CaptureObservationPolicy, CaptureProvider,
+    CaptureSettlementError, CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase,
     CaptureSnapshotView, CaptureStatusView, CaptureTiming, DirectCaptureError,
     DirectCaptureProvider, PreparedCaptureCall, PreparedStatus, SnapshotAdmissionRecord,
     SnapshotAdvanceError, SnapshotProgress, StatusAdmissionRecord, StatusAdvanceError,
     StatusCertificateError, StatusEvidence, StatusHttpError, StatusHttpTransport, StatusProgress,
     StatusProvider, StatusRequestError, authenticate_status_evidence, authenticate_status_request,
-    status_certificate_evidence, status_certificate_observation,
+    observe_capture_certificate, status_certificate_evidence, status_certificate_observation,
 };
 mod plan;
 mod snapshot;

@@ -254,15 +254,22 @@ fn authenticated_response(
         LIMITS,
     )
     .map_err(StatusCertificateError::Certificate)?;
-    let tree = &authenticated.certificate.tree;
-    let path = [
-        b"request_status".as_slice(),
+    terminal_response(
+        &authenticated.certificate.tree,
         &prepared.request_id,
-        b"status",
-    ];
+        maximum,
+    )
+}
+
+fn terminal_response(
+    tree: &HashTree,
+    request_id: &[u8; 32],
+    maximum: usize,
+) -> Result<(bool, Vec<u8>), StatusCertificateError> {
+    let path = [b"request_status".as_slice(), request_id, b"status"];
     match tree.lookup_path(path) {
         LookupResult::Found(b"replied") => {
-            let reply = required_leaf(tree, &prepared.request_id, b"reply")
+            let reply = required_leaf(tree, request_id, b"reply")
                 .ok_or(StatusCertificateError::Response)?;
             if reply.is_empty() || reply.len() > maximum {
                 return Err(StatusCertificateError::Admission(
@@ -272,7 +279,7 @@ fn authenticated_response(
             Ok((false, reply.to_vec()))
         }
         LookupResult::Found(b"rejected") => {
-            rejection(tree, &prepared.request_id, maximum).map(|bytes| (true, bytes))
+            rejection(tree, request_id, maximum).map(|bytes| (true, bytes))
         }
         _ => Err(StatusCertificateError::Outcome),
     }
@@ -370,3 +377,9 @@ fn validate_window(window: TimeWindow) -> Result<(), StatusCertificateError> {
     }
     Ok(())
 }
+
+mod observation;
+pub use observation::{
+    CaptureObservation, CaptureObservationError, CaptureObservationPolicy,
+    observe_capture_certificate,
+};

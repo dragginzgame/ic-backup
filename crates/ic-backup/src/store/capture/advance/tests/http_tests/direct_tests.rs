@@ -493,3 +493,75 @@ fn finite_snapshot_calls_authenticate_exact_arguments_without_widening_status_ap
         assert!(server.finish().is_empty());
     }
 }
+
+#[test]
+fn offline_result_settlement_requires_exact_original_certificate_and_does_not_send() {
+    use ic_platform::ic_protocol::{TransportCallResponse, decode_call_response};
+    let rt = runtime();
+    let (p, a, server, mut provider, allowed, calls) = setup_direct(Some(Response::Disconnect));
+    let root = root("direct-result-settlement");
+    let store = BackupStore::initialize(&root).unwrap();
+    let mut op = store
+        .create_capture(CapturePlan::new(p.request().clone()).unwrap(), p.digest())
+        .unwrap();
+    assert!(rt.block_on(op.advance_status(&a, &mut provider)).is_err());
+    let directory = root.join("operations").join(&p.request().operation_id);
+    let prepared =
+        PreparedStatus::decode(&fs::read(directory.join("status-request.bin")).unwrap()).unwrap();
+    let TransportCallResponse::Replied { certificate } =
+        decode_call_response(&body(&p, &prepared, now()), 4096).unwrap()
+    else {
+        panic!("certificate");
+    };
+    let original = status_certificate_evidence(&p, &a, &prepared, &certificate, &der(1)).unwrap();
+    let before = fs::read(directory.join("ledger.bin")).unwrap();
+    allowed.store(false, Ordering::SeqCst);
+    drop(op);
+    let mut op = store
+        .open_capture(&p.request().operation_id, p.digest())
+        .unwrap();
+    for case in 0..5 {
+        let mut changed = StatusEvidence {
+            rejected: original.rejected,
+            response: original.response.clone(),
+            proof: original.proof.clone(),
+        };
+        match case {
+            0 => changed.response[0] ^= 1,
+            1 => changed.proof[0] ^= 1,
+            2 => changed.rejected = true,
+            _ => {
+                let mut other = PreparedStatus::decode(&prepared.encode(4096).unwrap()).unwrap();
+                let time = if case == 3 {
+                    other.request_id[0] ^= 1;
+                    now()
+                } else {
+                    a.submit_deadline_ns + 2_000_000_000
+                };
+                let TransportCallResponse::Replied { certificate } =
+                    decode_call_response(&body(&p, &other, time), 4096).unwrap()
+                else {
+                    panic!("certificate");
+                };
+                changed.proof = certificate;
+            }
+        }
+        assert!(matches!(
+            op.settle_capture_result(CaptureCall::Status, &changed, &provider),
+            Err(CaptureSettlementError::Provider(_))
+        ));
+        assert_eq!(fs::read(directory.join("ledger.bin")).unwrap(), before);
+    }
+    op.settle_capture_result(CaptureCall::Status, &original, &provider)
+        .unwrap();
+    assert_eq!(
+        rt.block_on(op.advance_status(&a, &mut provider)).unwrap(),
+        StatusProgress::Verified
+    );
+    let settled = fs::read(directory.join("ledger.bin")).unwrap();
+    op.settle_capture_result(CaptureCall::Status, &original, &provider)
+        .unwrap();
+    assert_eq!(fs::read(directory.join("ledger.bin")).unwrap(), settled);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(server.finish().len(), 1);
+}

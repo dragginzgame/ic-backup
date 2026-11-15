@@ -492,3 +492,5 @@ fn prepared_list_and_take_reopen_with_original_request_without_resigning() {
         assert_eq!(view.network_requests_reserved, 6);
     }
 }
+
+mod settlement_tests;

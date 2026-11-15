@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.101.3] — pending
+
+### 📝 Summary
+
+- Recover a pending status, list or take from its surviving original certified
+  reply without signing or submitting again. Preserve original request identity,
+  trust, timing, spending and evidence; settled replay cannot replace the result.
+  Missing replies still require a separately budgeted remote observation flow.
+
+- Qualify interrupted snapshot reply recovery with PocketIC after server shutdown
+  and application-guard revocation. Recording a reply grants no live application
+  authority and does not complete a local backup.
+
+- Authenticate original-request certificates under separately supplied observation
+  windows without widening original submission authority. Preserve distinct
+  pending, done, absent and pruned outcomes. Live lookup still requires Backup's
+  durable observation workflow.
+
+### 📦 Dependencies
+
+- Adopt Platform 0.33.7 in both workspaces, making the strict read-state content
+  decoder available for recovery work. This supplies
+  [Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167).
+  Existing capture/recovery and actual IC fixtures pass with the updated graph.
+- Adopt Toko Tooling 0.44.1 through the authenticated exporter. `toko-cloc` now
+  defaults to the same crate-level report as `-d 0`; both workspaces select the
+  exact tooling version.
+
 ## [0.101.2] — GitHub checkpoint (unpublished)
 
 ### 📝 Summary

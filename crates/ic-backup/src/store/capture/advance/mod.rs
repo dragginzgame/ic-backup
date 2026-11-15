@@ -22,9 +22,12 @@ pub use StatusEvidence as CaptureCallEvidence;
 mod direct;
 mod http;
 mod request;
+mod settlement;
+pub use settlement::CaptureSettlementError;
 pub(super) mod snapshots;
 pub use certificate::{
-    StatusCertificateError, authenticate_status_evidence, status_certificate_evidence,
+    CaptureObservation, CaptureObservationError, CaptureObservationPolicy, StatusCertificateError,
+    authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,
     status_certificate_observation,
 };
 pub use direct::{

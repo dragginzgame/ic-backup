@@ -21,7 +21,7 @@ and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
 Compatible development now continues as unpublished 0.101.2 after the 0.101.1
 GitHub checkpoint. The direct capture provider composes status, list and take through the existing helpers.
-Locked Platform 0.33.6 resolves canonical Types 0.20.4 through the existing dependency.
+Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
 consumer graph evidence are under `target/evidence/types-0.20.4/`.
@@ -39,9 +39,11 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.43.2 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.44.1 is adopted from its registry
 archive with SHA-256
-`cb81a5f9c13f50614af8468b599c3a05327f09f643aa954dc8e6878aa649263f`.
+`5b0da6eee9b9d4b95fc4e92fe86c54b90372a6babee661aa2e70f2b084082cc7`,
+source `d9072adb355612043dbaac06960e60a6aea8a55e`. Both workspaces declare
+its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs nine selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
 No producer regression suites or release/publication entrypoints are selected.
@@ -59,7 +61,8 @@ make check
 status. `deps-update` explicitly updates Cargo dependencies and can use the
 network. To update one dependency, use `DEPENDENCY_PACKAGE=name`; add
 `DEPENDENCY_PRECISE=version` for a specific compatible version. The exact tooling
-pin still controls its selection. `toko-cloc -d 0` runs the installed PATH reporter; without the launcher,
+pin still controls its selection. `toko-cloc` and `toko-cloc -d 0` produce the same
+crate-level report; `-d 1` expands modules. Both run the installed PATH reporter; without the launcher,
 use `bash vendor/toko-tooling/scripts/dev/toko-cloc -d 0` after host-tool setup.
 
 Focused checks are `make toko-tooling-check`, `make doc-links-check`,
@@ -144,8 +147,8 @@ verified registry archive, before/proposed/admitted graphs, compiler identities
 and consumer checks. Reqwest is selected only through `ic-host-http::reqwest`;
 its Rustls backend uses platform certificate verification and native trust
 configuration instead of the earlier bundled WebPKI roots. No custom TLS roots,
-verification bypass or IC trust discovery is added. The incoming Platform 0.33.5
-lock selection is preserved; the manifest still permits 0.33.4. The graph adds
+verification bypass or IC trust discovery is added. That adoption preserved the incoming Platform 0.33.5
+lock selection under the then-current 0.33.4 minimum. The graph adds
 Host HTTP and Reqwest's native-verifier/AWS-LC support, including target-specific
 packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.
 
@@ -155,7 +158,9 @@ packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.
 native tests; the full advance selection also covers retained historical checks.
 The independent private package under `qualification/crates/ic-backup-qualification`
 uses Testkit's native client boundary for real stopped-canister status, snapshot list/take and
-cold replay after gateway shutdown. It uses fixture signing/maintenance authority;
+cold replay after gateway shutdown. A second case retains a real take reply,
+returns uncertainty before journal settlement, and settles after server shutdown
+and guard revocation. It uses fixture signing/maintenance authority;
 Canic process/fence qualification remains with its integration owner.
 
 ```bash
@@ -178,7 +183,7 @@ Testkit 0.106.0 archive SHA-256 is
 `d12b0174cd04c556f065c39bc12dd366628cc6df`. Its native PocketIC 16.1 client pins
 `thiserror = 2.0.18`; the separate qualification lock satisfies that requirement.
 The product's compatible requirement admits it while its original lock retains
-2.0.21. Both graphs select Platform 0.33.6/Types 0.20.4 and Host 0.79.0. Revisit
+2.0.21. Both graphs select Platform 0.33.7/Types 0.20.4 and Host 0.79.0. Revisit
 this concrete constraint when the client pin changes. No direct PocketIC, registry
 management, Candid or CBOR dependency is added; native DTOs stay fixture-private.
 
@@ -188,9 +193,44 @@ validation logs; failed and successful IC fixture bundles remain retained. For f
 qualification/Cargo.toml --locked --offline --all-targets -- -D warnings`.
 Local Linux acceptance does not establish hosted macOS or production HTTPS acceptance.
 
-The incoming Platform 0.33.6 product selection is also locked in qualification.
+The preceding Platform 0.33.6 adoption aligned the qualification lock.
 Its cached registry archive matches SHA-256
 `24586654cc055365afd1c4bfb8dcd8f26f389bedba5cbee3dc722d99fce4a00a`, source
 `95b61fb4bcdeb9f8e70ddcb65e83929213ff99a5`. Comparison with 0.33.5 found the new
 Cloud Engine module and feature exports outside Backup's selected features;
-canonical Types remain 0.20.4. The capture and actual-IC checks use this selection.
+canonical Types remain 0.20.4. The earlier snapshot checkpoint was qualified with that selection.
+
+`store::capture::advance::tests::observation_tests` selects the local observation
+certificate checks; `store::capture::advance::tests::certificate_tests` also covers
+the shared existing terminal projection. Evidence is retained under
+`target/evidence/capture-observation/`. These use real signatures over synthetic
+certificates and do not qualify remote read-state requests or journal settlement
+of newly fetched evidence. The original retained-result recovery checks remain
+under `target/evidence/capture-settlement/`.
+
+## Platform 0.33.7 and Tooling 0.44.1 adoption
+
+Platform's verified archive SHA-256 is
+`3e07e0565c70df9222016e93d6f488312176ef5e7036ded60db8b4bc3f61c05f`, source
+`663cf913997490f448553119a6caf66b3cdecc81`. Both manifest minimums now select
+0.33.7; the incoming lock updates are retained. Types 0.20.4 and all other
+supplier selections remain unchanged. The new strict read-state decoder and its
+supplier regressions were inspected; Backup's live lookup remains unimplemented.
+The existing certificate byte reader only gains internal visibility for that
+shared decoder; Cloud Engine changes remain outside selected features.
+
+Tooling's preview retained all nine entrypoints and 51 managed files, changing
+only the baseline and two LOC reporter files. Exporter receipt updates are
+canonical. The 0.44 migration removes a Python evidence-verifier API that Backup
+does not call or select. Tool pins, compiler, hooks, CI and Testkit wiring remain
+unchanged; the existing tools pass offline admission without reinstallation.
+The updated snapshot adds no release entrypoint or product API change.
+
+`target/evidence/platform-tooling-refresh/` retains registry indexes, archive
+verification, exporter preview/update, compiler identities and consumer checks:
+93 capture/recovery tests, 17 documentation examples, strict product/private
+Clippy, warning-denying Rustdoc, both actual IC fixtures, tools/snapshot admission,
+formatting, documentation links, dependency listing and equal default/`-d 0`
+LOC output. Native qualification covers existing status/list/take and interrupted
+reply settlement, not new remote observation. The broader product suite and
+hosted macOS were not selected. Original fixture bundles remain retained.

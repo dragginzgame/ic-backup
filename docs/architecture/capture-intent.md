@@ -4,7 +4,8 @@ This Unix-only slice persists local intent, not a backup. `CapturePlan::new` is
 pure; `BackupStore::create_capture` writes intent; `open_capture` and
 `CaptureOperation::inspect` admit original intent without repair. There is no
 reservation API for arbitrary calls. Initial direct-host status continuation is
-followed by durable snapshot list/take below; reconciliation, download, completion
+followed by durable snapshot list/take and local retained-result settlement below;
+remote observation, download, completion
 and target release remain unfinished. The
 [operation design](../design/operation-contract.md) owns the proposed next steps.
 
@@ -777,3 +778,108 @@ cover interrupted signing/submission, prepared reopen, changed authority/budgets
 capacity, rejection/reused IDs, evidence corruption and illegal transitions.
 The actual IC fixture above qualifies the three management calls and offline replay;
 native fakes establish persistence behavior only.
+
+## Local settlement from surviving replies
+
+`CaptureOperation::settle_capture_result` records a surviving original result for
+status, list or take. It requires that call's existing submission reservation or
+an already-settled identical result. It loads admission and exact signed request
+from the held journal, checks the supplied evidence against the original result
+cap, and invokes only the provider's local historical authentication. No caller
+supplies a replacement admission, request ID, expiry or certificate window.
+
+A pending result uses the same create-only evidence file and settlement frame as
+the live return path; no new schema, event, observation budget or state machine is
+introduced. Exact settled replay authenticates without writes. Different settled
+bytes refuse even if they describe the same outcome. Authentication and closing
+custody checks precede persistence; existing uncertain-write, partial-tail and
+orphan refusal behavior remains mandatory. The caller must bound loading its
+surviving evidence by the original result-byte allowance before allocation.
+
+This method performs no remote work and grants no authority to acquire new proof.
+It accepts only evidence that authenticates under the original request and timing
+policy. It can record a rejection or an authenticated malformed application reply:
+success means durable authenticated evidence, not policy acceptance or backup
+completion. Subsequent `advance_status` or `advance_snapshot` evaluates the retained
+outcome and checks live authority before any dependent effect. Loss of the guard
+need not prevent recording an original result; it still prevents further live work.
+
+If no original proof survived, the call remains pending. Fetching a missing result
+needs a separately reserved finite observation with its own request, time policy
+and retained evidence. This local method implements none of that flow and never
+infers a take result from snapshot-list differences.
+
+The focused review inspected frozen legacy
+[observation binding](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_observation/mod.rs),
+[capture settlement](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/policy/ic_observation/capture_settlement/mod.rs),
+[its regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/policy/ic_observation/capture_settlement/tests/mod.rs)
+and [a860d144's shared settlement and original-journal admission changes](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0).
+Those prevent changed authority/evidence and inventory cardinality from becoming
+an attributed result. The new direct path reuses original journal admission and
+cryptographic request-result binding. Legacy external attribution claims, separate
+inventory-observation machinery and progress wrappers are unnecessary for a
+surviving certified reply and are not imported. No legacy source was copied.
+
+[Native recovery cases](../../crates/ic-backup/src/store/capture/advance/tests/snapshot_tests/settlement_tests.rs)
+cover all three calls, missing submission, wrong call, bounds, authentication,
+rejection, policy refusal, unchanged spending, exact replay and retained damage.
+Direct-provider tests reject altered response/proof/outcome, a different request
+and certificates outside the original window. The private IC interruption fixture
+retains the actual take reply, withholds it from the workflow, then reopens and
+settles after gateway shutdown and guard revocation. Native preservation tests and
+this provider-boundary interruption do not prove physical power-loss durability,
+recovery of a never-received reply or cancellation of an accepted IC effect.
+
+## Local original-request observation authentication
+
+`observe_capture_certificate` is a local certificate helper for a future separately
+reserved lookup. It authenticates the original signed status/list/take request,
+using the existing direct-key profile, then verifies the supplied certificate under
+the original root and effective target. It reads only the exact original request's
+status path. Reply/rejection projection shares the existing terminal decoder,
+including rejection framing and absence-versus-pruning rules for optional diagnostics.
+The [IC request-status specification](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/)
+provides the external request-state vocabulary; it supplies no Backup retry authority.
+
+`CaptureObservationPolicy` supplies explicit certificate/delegation windows and a
+combined certificate/projected-response/five-byte-framing cap no larger than the
+original result cap. Byte checks precede signature and certificate decoding. Existing
+1 MiB certificate/delegation, 8,192-node, depth-64 and 1,024-range caps still apply.
+The caller must admit and retain this separate observation policy before a remote
+lookup. The helper reads no clock or journal, performs no effects, and proves no
+reservation, current freshness or read-state request authority.
+
+`CaptureObservation` distinguishes replied, rejected, received, processing, done,
+certified status-path absence and an unknown/pruned path. Unsupported status bytes
+or malformed terminal fields refuse. Done is not a retained outcome; absence is not
+proof of non-execution. None grants a retry, refund, completion or fresh application
+authority. The return value is an ephemeral projection, not a persisted receipt;
+callers retain original certificate and policy bytes separately. Raw response and
+rejection bytes have no derived Debug output.
+
+Observation windows can authenticate a later certificate without changing the
+original envelope, request ID, expiry or submission-time policy. That does not
+make it acceptable to the original `settle_capture_result` path: its unchanged
+provider still requires the original timing. Persisting a newly observed result
+needs the pending observation workflow and a distinct retained authority/evidence
+association. No observation record, mutable policy replacement or automatic
+conversion to an original receipt is introduced here.
+
+The focused observation/settlement legacy review above remains applicable: exact
+original association and explicit unresolved outcomes are retained; inventory-delta
+attribution and legacy observation graphs are not copied. New
+[observation regressions](../../crates/ic-backup/src/store/capture/advance/tests/observation_tests.rs)
+exercise actual Ed25519/secp256k1 and BLS verification over synthetic certificates,
+all three original calls, separate timing without original-policy widening,
+wrong signatures/roots/targets/request IDs, exact byte bounds, delegated ranges,
+rejection diagnostics, absent/pruned/pending/done outcomes and malformed paths.
+These are cryptographic/native checks, not live read-state qualification.
+
+Adopted Platform 0.33.7 supplies the strict read-state content reader requested in
+[Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167).
+Its raw-input cap does not establish a work/allocation quota or authenticate
+signatures, exact request-status paths, sender, deadlines or trust roots.
+Backup still needs bounded signing, exact-path admission, independently spent
+network/observation allowances and retained observation settlement, followed by
+actual read-state ingress qualification with PocketIC. Supplier adoption alone
+implements none of those flows.

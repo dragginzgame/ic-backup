@@ -14,14 +14,14 @@ publish = false
 ic-host-artifacts = "0.79.0"
 ic-host-fs = { version = "0.79.0", features = ["capability"] }
 ic-host-http = { version = "0.79.0", default-features = false, features = ["rustls"] }
-ic-platform = { version = "0.33.4", default-features = false, features = ["certification-verify", "ecdsa", "ed25519", "ic-protocol", "management-canister-types", "principal-self-authenticating"] }
+ic-platform = { version = "0.33.7", default-features = false, features = ["certification-verify", "ecdsa", "ed25519", "ic-protocol", "management-canister-types", "principal-self-authenticating"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 # PocketIC 16.1 requires 2.0.18 in the independent qualification graph.
 # Product Cargo.lock continues to select 2.0.21.
 thiserror = "2.0.18"
 tokio = { version = "1.53.3", default-features = false, features = ["time"] }
-toko-tooling = "=0.43.2"
+toko-tooling = "=0.44.1"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

@@ -7,8 +7,10 @@ never edit that receipt or files under `vendor/toko-tooling/` by hand.
 Read [README.md](README.md), [the handoff](docs/status/current.md) and
 [the restart direction](docs/design/restart.md) at session start.
 Local inventory, payload integrity, capture intent, transfer planning, bounded reply
-decoding and direct-host status/list/take continuation are implemented. PocketIC
-qualifies these calls and offline replay with fixture signing and application authority.
+decoding, direct-host status/list/take continuation and local settlement from
+surviving original reply evidence are implemented. Separate observation-certificate
+authentication is local only; live lookup and its durable spending remain pending. PocketIC
+qualifies these calls, interrupted reply settlement and offline replay with fixture signing and application authority.
 Canic process/maintenance adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.

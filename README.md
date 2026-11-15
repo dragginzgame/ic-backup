@@ -53,8 +53,14 @@ window and verifies settled replay without live authority or a current clock.
 `advance_snapshot` follows authenticated status with a durable list and one
 non-replacing snapshot take. It preserves original requests, per-call budgets
 and unresolved outcomes; `inspect_snapshot` reports cumulative reservations.
-A private PocketIC fixture qualifies status, snapshot creation and offline replay; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
-Download, original-request reconciliation, completion writing, full bundle verification, restore and CLI
+`settle_capture_result` can recover an unsettled call from a surviving original
+certified reply, with no new signature, submission or observation. It retains
+original authority and leaves application-policy evaluation to continuation.
+`observe_capture_certificate` separately verifies original-request certificates
+under explicit observation windows. It is a local helper; live lookup and durable
+observation settlement remain unfinished.
+Private PocketIC fixtures qualify status, snapshot creation and offline reply recovery; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+Download, remote original-request observation, completion writing, full bundle verification, restore and CLI
 workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
 and the public Rustdoc example. Publication remains disabled; `0.101.2` is an
