@@ -81,6 +81,33 @@ pub struct CaptureTiming {
     pub max_clock_skew_ns: u64,
 }
 
+impl CaptureTiming {
+    // Shared exact time-window arithmetic for direct capture and restore preparation.
+    pub(in crate::store) fn policy(
+        &self,
+        admission: &StatusAdmissionRecord,
+        reference: u64,
+    ) -> Option<TimePolicy> {
+        let future = admission
+            .submit_deadline_ns
+            .checked_sub(reference)
+            .filter(|span| *span <= MAX_LIVE_WINDOW_NS)?
+            .checked_add(self.max_clock_skew_ns)?;
+        if reference >= admission.prepare_deadline_ns {
+            return None;
+        }
+        let window = |max_age_ns| TimeWindow {
+            reference_ns: reference,
+            max_age_ns,
+            max_future_skew_ns: future,
+        };
+        Some(TimePolicy {
+            certificate: window(self.certificate_max_age_ns),
+            delegation: window(self.delegation_max_age_ns),
+        })
+    }
+}
+
 /// Direct provider using one external signer invocation and one authenticated HTTP call.
 ///
 /// Use through [`super::CaptureOperation::advance_status`] and
@@ -179,24 +206,11 @@ impl<S: CaptureSigner, A: CaptureApplicationGuard> DirectCaptureProvider<S, A> {
         admission: &StatusAdmissionRecord,
         reference: u64,
     ) -> Result<Vec<u8>, DirectCaptureError<S::Error, A::Error>> {
-        let future = admission
-            .submit_deadline_ns
-            .checked_sub(reference)
-            .filter(|span| *span <= MAX_LIVE_WINDOW_NS)
-            .and_then(|span| span.checked_add(self.timing.max_clock_skew_ns))
+        let policy = self
+            .timing
+            .policy(admission, reference)
             .ok_or(DirectCaptureError::Deadline)?;
-        if reference >= admission.prepare_deadline_ns {
-            return Err(DirectCaptureError::Deadline);
-        }
-        let window = |max_age_ns| TimeWindow {
-            reference_ns: reference,
-            max_age_ns,
-            max_future_skew_ns: future,
-        };
-        Ok(status_certificate_observation(TimePolicy {
-            certificate: window(self.timing.certificate_max_age_ns),
-            delegation: window(self.timing.delegation_max_age_ns),
-        })?)
+        Ok(status_certificate_observation(policy)?)
     }
 
     fn original_request(
@@ -242,7 +256,8 @@ impl<S: CaptureSigner + Send, A: CaptureApplicationGuard + Send> CaptureProvider
         } else {
             // Validate the finite observation before spending any signing authority.
             let observation = self.observation(admission, now)?;
-            envelope_limit(admission, &observation).ok_or(DirectCaptureError::Binding)?;
+            PreparedStatus::envelope_limit(admission.request_bytes, &observation)
+                .ok_or(DirectCaptureError::Binding)?;
         }
         self.application
             .admit(plan, &admission.application)
@@ -261,8 +276,8 @@ impl<S: CaptureSigner + Send, A: CaptureApplicationGuard + Send> CaptureProvider
             .map_err(DirectCaptureError::Admission)?;
         let reference = now().ok_or(DirectCaptureError::Deadline)?;
         let observation = self.observation(admission, reference)?;
-        let envelope_bytes =
-            envelope_limit(admission, &observation).ok_or(DirectCaptureError::Binding)?;
+        let envelope_bytes = PreparedStatus::envelope_limit(admission.request_bytes, &observation)
+            .ok_or(DirectCaptureError::Binding)?;
         let remaining = admission
             .prepare_deadline_ns
             .checked_sub(reference)
@@ -354,14 +369,6 @@ fn now() -> Option<u64> {
         .as_nanos()
         .try_into()
         .ok()
-}
-
-fn envelope_limit(admission: &StatusAdmissionRecord, observation: &[u8]) -> Option<u32> {
-    let framing = 44_u32.checked_add(observation.len().try_into().ok()?)?;
-    admission
-        .request_bytes
-        .checked_sub(framing)
-        .filter(|limit| *limit > 0)
 }
 
 impl<S: CaptureSigner + Send, A: CaptureApplicationGuard + Send> StatusProvider

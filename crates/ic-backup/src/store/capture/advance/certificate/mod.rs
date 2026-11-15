@@ -312,7 +312,7 @@ impl CertificateRequirements {
         }
         Ok(())
     }
-    fn response(
+    pub(in crate::store) fn response(
         &self,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
@@ -422,7 +422,7 @@ fn rejection(
     Ok(bytes)
 }
 
-pub(super) fn observation(bytes: &[u8]) -> Result<TimePolicy, StatusCertificateError> {
+pub(in crate::store) fn observation(bytes: &[u8]) -> Result<TimePolicy, StatusCertificateError> {
     let values = bytes
         .strip_prefix(OBSERVATION)
         .filter(|bytes| bytes.len() == 48)

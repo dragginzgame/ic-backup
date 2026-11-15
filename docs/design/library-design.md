@@ -1,5 +1,9 @@
 # IC Backup library design
 
+The [minimal replacement proposal](restart.md) now owns the proposed composition
+and deletion boundary. This document retains semantic requirements and historical
+API sketches; those sketches do not mandate preserving the current phase APIs.
+
 Status: design proposal, 2026-11-14. The user selected **single-canister library
 first**: back up one already-stopped canister and restore to the same existing
 ID. Capture/restore APIs, records and limits below remain proposed. The narrow

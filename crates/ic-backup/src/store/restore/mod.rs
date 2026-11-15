@@ -1,4 +1,4 @@
-//! Immutable direct-host restore plans and local intent persistence; no dispatch.
+//! Immutable direct-host restore plans, original custody and bounded status submission.
 use super::{
     BackupSummary, BackupTarget, CaptureSource, RestoreTransfer, RestoreTransferError,
     RestoreTransferRequest, manifest::lower_hex,
@@ -9,11 +9,14 @@ use serde::{Deserialize, Serialize};
 use std::io::{Write, sink};
 use thiserror::Error;
 
+mod direct;
+pub use direct::{DirectRestoreStatus, DirectRestoreStatusError};
 mod persistence;
 mod status;
 pub use persistence::{
     RestoreOperation, RestorePersistenceError, RestoreStatusPreparation,
-    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
+    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusSubmissionError,
+    RestoreStatusView,
 };
 pub use status::RestoreStatusEvidenceError;
 

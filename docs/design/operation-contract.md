@@ -1,5 +1,9 @@
 # Single-canister operation contract
 
+The [minimal replacement proposal](restart.md) now owns the proposed composition
+and deletion boundary. This document retains semantic requirements and historical
+API sketches; those sketches do not mandate preserving the current phase APIs.
+
 This design describes the selected capture/restore direction. The implemented
 [local inventory](../architecture/local-inventory.md),
 [capture contract](../architecture/capture-intent.md) and
@@ -8,8 +12,9 @@ behavior. Small direct-host captures reach authenticated local completion and
 target succession with actual-IC qualification. Read-only completion verification
 and authenticated held capture sources are implemented. Exact restore transfer
 scheduling and source-bound restore plan encoding/decoding are implemented local
-calculations; local restore creation/reopen are implemented. Restore effects remain proposed. The immutable restore plan
-will retain the source binding; no separate reference catalog is selected.
+calculations; local restore creation/reopen and status preparation/submission are
+implemented. Upload/readback/load remain proposed. The immutable restore plan
+retains the source binding; no separate reference catalog is selected.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage
@@ -17,6 +22,10 @@ rationale and custody requirements. The [local-store contract](local-store.md)
 selects framing, completion and inventory behavior. Exact record encodings,
 codec/evidence limits and concrete provider qualification remain prerequisites
 to effectful implementation.
+
+The [cleanup direction](restart.md#cleanup-before-feature-expansion) takes precedence
+for implementation composition and sequencing: simplify current owners before
+adding phases. The semantic obligations below remain required.
 
 ## Consumer boundary
 

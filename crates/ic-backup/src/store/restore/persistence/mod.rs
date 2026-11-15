@@ -1,7 +1,8 @@
-//! Local restore intent and bounded signing preparation; no management dispatch.
-mod preparation;
-pub use preparation::{
-    RestoreStatusPreparation, RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
+//! Local restore intent and original bounded status journal.
+mod status;
+pub use status::{
+    RestoreStatusPreparation, RestoreStatusPreparationError, RestoreStatusSigner,
+    RestoreStatusSubmissionError, RestoreStatusView,
 };
 
 use super::{PLAN_LIMIT, RestorePlan, RestorePlanError, RestorePlanRecord, hash};
@@ -46,8 +47,7 @@ pub enum RestorePersistenceError<E> {
     Publication(Box<NamedWriteError<CaptureError>>),
 }
 
-/// Held original restore intent and source, with bounded external signing preparation.
-/// No management request is submitted.
+/// Held original restore intent and source with bounded status preparation/submission.
 /// Dropping releases process locks, never the durable target claim or source binding.
 #[derive(Debug)]
 pub struct RestoreOperation<'store> {
@@ -73,7 +73,7 @@ impl RestoreOperation<'_> {
         Ok(&self.plan)
     }
 
-    fn check(&self) -> Result<preparation::State, CaptureError> {
+    fn check(&self) -> Result<status::State, CaptureError> {
         if !self.usable {
             return Err(CaptureError::Unusable);
         }
@@ -113,21 +113,21 @@ impl RestoreOperation<'_> {
             self.plan.encoded(),
             PLAN_LIMIT,
         )?;
-        let state = preparation::read(self)?;
+        let state = status::read(self)?;
         for entry in self.target.entries(2)? {
             if !matches!(entry?.name.to_str(), Some("lock" | "owner.json")) {
                 return Err(CaptureError::Changed);
             }
         }
-        for entry in self
-            .directory
-            .entries(if state.request.is_some() { 4 } else { 3 })?
-        {
+        for entry in self.directory.entries(
+            3 + usize::from(state.request.is_some()) + usize::from(state.result.is_some()),
+        )? {
             let entry = entry?;
             if !matches!(
                 entry.name.to_str(),
                 Some("lock" | "plan.json" | "ledger.bin")
             ) && !(state.request.is_some() && entry.name == OsStr::new("status-request.bin"))
+                && !(state.result.is_some() && entry.name == OsStr::new("status-result.bin"))
             {
                 return Err(CaptureError::Changed);
             }

@@ -367,3 +367,59 @@ fn initial_status_events_refuse_noncanonical_wrong_arguments_and_out_of_order_tr
         ));
     }
 }
+
+#[test]
+fn replay_reservations_match_retained_authority_at_every_completed_capture_prefix() {
+    use crate::store::capture::advance::tests::fixtures::completion::{complete, settled};
+
+    let (mut fixture, _server, mut provider) = settled();
+    complete(&mut fixture, &mut provider).unwrap();
+    let bytes = fs::read(fixture.ledger()).unwrap();
+    let plan = &fixture.p;
+    let mut frames = Frames::new(
+        bytes.as_slice(),
+        seed(plan.encoded()),
+        Bounds::for_plan(plan),
+    );
+    while frames.next().unwrap().is_some() {
+        let state = replay(&bytes[..frames.bytes as usize], plan).unwrap();
+        // Independent state-based oracle from the original aggregate accounting.
+        // This checks incremental replay against retained authority, not event deltas.
+        let mut calls = Vec::new();
+        calls.extend(state.admission.iter());
+        if let Some(snapshot) = &state.snapshot.admission {
+            calls.extend([&snapshot.list, &snapshot.take]);
+        }
+        calls.extend(state.metadata.iter().map(|m| &m.admission.call));
+        calls.extend(state.data.iter().map(|d| &d.admission.call));
+        calls.extend(
+            state
+                .final_status
+                .iter()
+                .filter_map(|s| s.admission.as_ref()),
+        );
+        let frame = 16 * 1024 + 36;
+        let expected_network = calls
+            .iter()
+            .map(|a| u64::from(a.prepare_requests) + u64::from(a.submit_requests))
+            .sum::<u64>();
+        let expected_bytes = CREATED.len() as u64
+            + 36
+            + calls
+                .iter()
+                .map(|a| u64::from(a.request_bytes) + u64::from(a.result_bytes))
+                .sum::<u64>()
+            + (4 * calls.len() as u64
+                + state.data.len() as u64
+                + u64::from(state.transfer.is_some())
+                + 2 * u64::from(state.assembly_started))
+                * frame
+            + u64::from(state.completed_at_ns.is_some())
+                * (frame + crate::store::MANIFEST_LIMIT as u64);
+        assert!(state.lookup.is_none());
+        assert_eq!(state.reserved_calls, calls.len() as u64);
+        assert_eq!(state.reserved_network, expected_network);
+        assert_eq!(state.reserved_evidence, expected_bytes);
+    }
+    assert_eq!(fs::read(fixture.ledger()).unwrap(), bytes);
+}

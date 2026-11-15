@@ -9,6 +9,7 @@ use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_fs::{capability::Directory, identity::FileIdentity};
 use serde::{Deserialize, Serialize};
 use std::{
+    borrow::Cow,
     fs::File,
     io::{self, Read},
 };
@@ -263,8 +264,44 @@ pub(super) struct State {
     pub head: Sha256Digest,
     pub bytes: u64,
     count: u32,
+    reserved_calls: u64,
+    reserved_network: u64,
+    reserved_evidence: u64,
 }
 impl State {
+    // One projection of retained file references for hashing, namespace admission
+    // and synchronization. Fixed names are borrowed; data names are ordinal-derived.
+    fn fixed_evidence(&self) -> impl Iterator<Item = (&'static str, &EvidenceRecord)> {
+        [
+            ("status-request.bin", self.request.as_ref()),
+            ("status-result.bin", self.result.as_ref()),
+        ]
+        .into_iter()
+        .chain(self.snapshot.evidence())
+        .chain(self.lookup.iter().flat_map(LookupState::evidence))
+        .chain(self.metadata.iter().flat_map(MetadataState::evidence))
+        .chain(self.final_status.iter().flat_map(StatusState::evidence))
+        .filter_map(|(name, reference)| reference.map(|reference| (name, reference)))
+    }
+
+    pub(super) fn evidence(&self) -> impl Iterator<Item = (Cow<'static, str>, &EvidenceRecord)> {
+        self.fixed_evidence()
+            .map(|(name, reference)| (Cow::Borrowed(name), reference))
+            .chain(self.data.iter().enumerate().flat_map(|(ordinal, data)| {
+                data.evidence(ordinal as u32)
+                    .into_iter()
+                    .filter_map(|(name, reference)| {
+                        reference.map(|reference| (Cow::Owned(name), reference))
+                    })
+            }))
+    }
+
+    pub(super) fn evidence_name_admitted(&self, name: &str) -> bool {
+        // Look up a data ordinal directly rather than scanning all prior extents
+        // for every directory entry. Exact spelling is checked by the same projection.
+        self.fixed_evidence().any(|(expected, _)| name == expected) || self.data_name_admitted(name)
+    }
+
     fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
         if self.completed_at_ns.is_some() {
             return Err(LedgerError::Transition);
@@ -284,7 +321,7 @@ impl State {
                 return Err(LedgerError::Transition);
             }
             self.completed_at_ns = Some(*completed_at_ns);
-            return self.additional_budget(plan);
+            return self.additional_budget(event, plan);
         }
         if matches!(
             event,
@@ -356,7 +393,7 @@ impl State {
         } else {
             self.apply_original(event, plan)?;
         }
-        self.additional_budget(plan)
+        self.additional_budget(event, plan)
     }
     fn apply_original(
         &mut self,
@@ -498,6 +535,9 @@ fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
         head: seed(plan.encoded()),
         bytes: 0,
         count: 0,
+        reserved_calls: 0,
+        reserved_network: 0,
+        reserved_evidence: initial(plan)?.len() as u64,
     };
     while let Some(payload) = frames.next()? {
         if frames.count == 1 {
@@ -770,53 +810,59 @@ impl SnapshotState {
 }
 
 impl State {
-    fn additional_budget(&self, plan: &CapturePlan) -> Result<(), LedgerError> {
+    fn reserve_call(&mut self, admission: &StatusAdmissionRecord) {
+        self.reserved_calls += 1;
+        self.reserved_network +=
+            u64::from(admission.prepare_requests) + u64::from(admission.submit_requests);
+        self.reserved_evidence += 4 * (FRAME_BYTES as u64 + 36)
+            + u64::from(admission.request_bytes)
+            + u64::from(admission.result_bytes);
+    }
+
+    fn additional_budget(
+        &mut self,
+        event: &EventRecord,
+        plan: &CapturePlan,
+    ) -> Result<(), LedgerError> {
+        // Derived only from validated original events, including during cold replay.
+        // Charge complete allowances once; later preparation/results never refund them.
+        // Frame count and admitted u32 call limits keep these u64 sums bounded.
+        let frame = FRAME_BYTES as u64 + 36;
+        match event {
+            EventRecord::PreparationReserved { admission, .. }
+            | EventRecord::FinalStatusStarted { admission } => self.reserve_call(admission),
+            EventRecord::SnapshotStarted { admission, .. } => {
+                self.reserve_call(&admission.list);
+                self.reserve_call(&admission.take);
+            }
+            EventRecord::MetadataStarted { admission, .. } => self.reserve_call(&admission.call),
+            EventRecord::DataStarted { admission, .. } => {
+                self.reserve_call(&admission.call);
+                self.reserved_evidence += frame;
+            }
+            EventRecord::LookupStarted { admission } => {
+                self.reserved_calls += 1;
+                self.reserved_network += u64::from(admission.prepare_requests) + 1;
+                self.reserved_evidence += 4 * frame
+                    + u64::from(admission.request_bytes)
+                    + u64::from(admission.result_bytes);
+            }
+            EventRecord::TransferBound { .. } => self.reserved_evidence += frame,
+            EventRecord::AssemblyStarted => self.reserved_evidence += 2 * frame,
+            EventRecord::PublishReady { .. } => {
+                self.reserved_evidence += frame + crate::store::MANIFEST_LIMIT as u64
+            }
+            _ => {}
+        }
+        // Initial status/snapshot admission retains its existing phase-local bounds.
         if self.lookup.is_none() && self.metadata.is_none() {
             return Ok(());
         }
-        let original = self.admission.as_ref().ok_or(LedgerError::Transition)?;
-        let mut calls = vec![original];
-        if let Some(snapshot) = &self.snapshot.admission {
-            calls.extend([&snapshot.list, &snapshot.take]);
-        }
-        if let Some(metadata) = &self.metadata {
-            calls.push(&metadata.admission.call);
-        }
-        calls.extend(self.data.iter().map(|d| &d.admission.call));
-        if let Some(final_status) = &self.final_status {
-            calls.push(
-                final_status
-                    .admission
-                    .as_ref()
-                    .ok_or(LedgerError::Transition)?,
-            );
-        }
-        let lookup = self.lookup.as_ref().map(|l| &l.admission);
-        // Conservatively admit complete call allowances, including any admitted future take.
-        let network = calls
-            .iter()
-            .map(|a| u64::from(a.prepare_requests) + u64::from(a.submit_requests))
-            .sum::<u64>()
-            + lookup.map_or(0, |a| u64::from(a.prepare_requests) + 1);
-        let bytes = initial(plan)?.len() as u64
-            + u64::from(self.completed_at_ns.is_some())
-                * (FRAME_BYTES as u64 + 36 + crate::store::MANIFEST_LIMIT as u64)
-            + u64::from(self.assembly_started) * 2 * (FRAME_BYTES as u64 + 36)
-            + self.data.len() as u64 * (FRAME_BYTES as u64 + 36)
-            + u64::from(self.transfer.is_some()) * (FRAME_BYTES as u64 + 36)
-            + (calls.len() as u64 + u64::from(lookup.is_some())) * 4 * (FRAME_BYTES as u64 + 36)
-            + calls
-                .iter()
-                .map(|a| u64::from(a.request_bytes) + u64::from(a.result_bytes))
-                .sum::<u64>()
-            + lookup.map_or(0, |a| {
-                u64::from(a.request_bytes) + u64::from(a.result_bytes)
-            });
         let limits = &plan.request().limits;
-        if limits.observations < u32::from(lookup.is_some())
-            || calls.len() as u32 + u32::from(lookup.is_some()) > limits.signing_requests
-            || network > u64::from(limits.network_requests)
-            || bytes > limits.evidence_bytes
+        if limits.observations < u32::from(self.lookup.is_some())
+            || self.reserved_calls > u64::from(limits.signing_requests)
+            || self.reserved_network > u64::from(limits.network_requests)
+            || self.reserved_evidence > limits.evidence_bytes
         {
             return Err(LedgerError::Transition);
         }

@@ -1,10 +1,13 @@
-//! One durable signing attempt; no submission or automatic signing retry.
+//! One original status journal: signing, one-shot submission and retained terminal evidence.
 use super::{
     CaptureError, Error, FileIdentity, PRIVATE, RestoreOperation, RestorePlan, Sha256Digest, Write,
     child, initial, open_optional, retain,
 };
 use crate::store::capture::ledger::{CREATED, EvidenceRecord, Frames, encode_frame};
-use crate::store::{PreparedStatus, StatusAdmissionRecord, StatusRequestError, read_optional};
+use crate::store::{
+    CaptureStatusReplyError, DirectRestoreStatus, DirectRestoreStatusError, PreparedStatus,
+    StatusAdmissionRecord, StatusEvidence, StatusProgress, StatusRequestError, read_optional,
+};
 use ic_platform::{candid_codec, management_canister_types::CanisterIdRecord};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -21,7 +24,9 @@ use std::{
 pub trait RestoreStatusSigner {
     /// Redacted integration-owned error.
     type Error;
-    /// Exact signer protocol bound in the admission.
+    /// Stable signer/admission protocol, including the application-guard configuration.
+    /// A direct adapter includes this value in its composite provider commitment;
+    /// callbacks receive the original composite admission unchanged.
     fn protocol(&self) -> [u8; 32];
     /// Check current original sender/application custody; never perform network IO.
     fn admit(
@@ -43,7 +48,7 @@ pub trait RestoreStatusSigner {
 /// Preparation progress, never submission or fresh retry permission.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RestoreStatusPreparation {
-    /// One original authenticated request is retained. No management ingress was submitted.
+    /// One original authenticated request is retained; inspect submission state separately.
     Prepared,
     /// Signing was spent and its outcome is unresolved; never automatically sign again.
     SigningPending,
@@ -55,10 +60,14 @@ pub struct RestoreStatusView {
     pub admission: Option<StatusAdmissionRecord>,
     /// Reserved signer invocations, zero or one.
     pub signing_requests_reserved: u32,
-    /// Reserved preparation traffic; not measured usage and never refunded.
+    /// Reserved preparation and submission traffic; not measured usage or refunded.
     pub network_requests_reserved: u32,
     /// Retained authenticated request ID, absent while unprepared/pending.
     pub request_id: Option<[u8; 32]>,
+    /// One original HTTP invocation was reserved, not measured execution.
+    pub submission_reserved: bool,
+    /// Exact result bytes are retained; inspection alone does not authenticate them.
+    pub result_retained: bool,
 }
 /// Preparation failure never grants another signing invocation.
 #[derive(Debug, Error)]
@@ -81,14 +90,22 @@ pub enum RestoreStatusPreparationError<E> {
 pub(super) struct State {
     admission: Option<StatusAdmissionRecord>,
     pub(super) request: Option<EvidenceRecord>,
+    submitted: bool,
+    pub(super) result: Option<EvidenceRecord>,
     head: Sha256Digest,
     bytes: u64,
 }
 #[derive(Serialize, Deserialize)]
+#[expect(
+    clippy::enum_variant_names,
+    reason = "closed journal keeps original persisted status event names explicit"
+)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Event {
     StatusSigningReserved { admission: StatusAdmissionRecord },
     StatusPrepared { request: EvidenceRecord },
+    StatusSubmissionReserved,
+    StatusSettled { result: EvidenceRecord },
 }
 fn validate(plan: &RestorePlan, a: &StatusAdmissionRecord) -> Result<(), CaptureError> {
     a.validate_limits(
@@ -112,18 +129,35 @@ fn apply(state: &mut State, event: &Event, plan: &RestorePlan) -> Result<(), Cap
             }
             state.request = Some(request.clone());
         }
+        Event::StatusSubmissionReserved if state.request.is_some() && !state.submitted => {
+            if state
+                .admission
+                .as_ref()
+                .is_none_or(|a| a.submit_requests != 1)
+            {
+                return Err(CaptureError::Changed);
+            }
+            state.submitted = true;
+        }
+        Event::StatusSettled { result } if state.submitted && state.result.is_none() => {
+            let a = state.admission.as_ref().ok_or(CaptureError::Incomplete)?;
+            if !(7..=a.result_bytes).contains(&result.bytes) {
+                return Err(CaptureError::Changed);
+            }
+            state.result = Some(result.clone());
+        }
         _ => return Err(CaptureError::Changed),
     }
     Ok(())
 }
 pub(super) fn read(op: &RestoreOperation<'_>) -> Result<State, CaptureError> {
-    // Only Created, signing reservation and preparation exist in this reader.
+    // Created plus the four closed original status transitions.
     let limit = op
         .plan
         .request()
         .limits
         .evidence_bytes
-        .min(3 * (16 * 1024 + 36));
+        .min(5 * (16 * 1024 + 36));
     let bytes = read_optional(&op.directory, "ledger.bin", limit as usize)?
         .ok_or(CaptureError::Incomplete)?;
     let mut frames = Frames::for_original(bytes.as_slice(), op.plan.encoded(), limit);
@@ -133,6 +167,8 @@ pub(super) fn read(op: &RestoreOperation<'_>) -> Result<State, CaptureError> {
     let mut state = State {
         admission: None,
         request: None,
+        submitted: false,
+        result: None,
         head: frames.head,
         bytes: frames.bytes,
     };
@@ -163,6 +199,9 @@ pub(super) fn read(op: &RestoreOperation<'_>) -> Result<State, CaptureError> {
             )
             .map_err(|_| CaptureError::Changed)?;
     }
+    if let Some(reference) = &state.result {
+        result(op, reference)?;
+    }
     let current = open_optional(&op.directory, "ledger.bin")?.ok_or(CaptureError::Incomplete)?;
     if FileIdentity::from_file(&current)? != FileIdentity::from_file(&op.ledger_file)?
         || current.metadata()?.len() != state.bytes
@@ -186,6 +225,32 @@ fn request(
     }
     PreparedStatus::decode(&bytes)
 }
+fn result(
+    op: &RestoreOperation<'_>,
+    reference: &EvidenceRecord,
+) -> Result<StatusEvidence, CaptureError> {
+    let bytes = read_optional(&op.directory, "status-result.bin", reference.bytes as usize)?
+        .ok_or(CaptureError::Incomplete)?;
+    if EvidenceRecord::new(&bytes) != *reference {
+        return Err(CaptureError::Changed);
+    }
+    StatusEvidence::decode(&bytes)
+}
+
+/// Original-custody, direct-provider or retained status-policy failure; never retry authority.
+#[derive(Debug, Error)]
+pub enum RestoreStatusSubmissionError<E> {
+    /// Original custody, bounded state or uncertain persistence refused.
+    #[error(transparent)]
+    Capture(#[from] CaptureError),
+    /// Original direct profile, live admission, HTTP or certificate refused.
+    #[error(transparent)]
+    Direct(#[from] DirectRestoreStatusError<E>),
+    /// Retained authenticated reply fails stopped/module/controller policy.
+    #[error(transparent)]
+    Status(#[from] CaptureStatusReplyError),
+}
+
 fn remaining(deadline: u64) -> Option<Duration> {
     let now: u64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -197,7 +262,7 @@ fn remaining(deadline: u64) -> Option<Duration> {
     (ns > 0 && ns <= 300_000_000_000).then(|| Duration::from_nanos(ns))
 }
 impl RestoreOperation<'_> {
-    /// Inspect original signing reservation and retained request without provider calls or writes.
+    /// Inspect original reservations and retained evidence without provider calls or writes.
     /// # Errors
     /// Refuses damaged/partial history, orphan evidence and changed original custody.
     pub fn inspect_status(&self) -> Result<RestoreStatusView, CaptureError> {
@@ -209,9 +274,18 @@ impl RestoreOperation<'_> {
             .transpose()?;
         Ok(RestoreStatusView {
             signing_requests_reserved: u32::from(state.admission.is_some()),
-            network_requests_reserved: state.admission.as_ref().map_or(0, |a| a.prepare_requests),
+            network_requests_reserved: state.admission.as_ref().map_or(0, |a| {
+                a.prepare_requests
+                    + if state.submitted {
+                        a.submit_requests
+                    } else {
+                        0
+                    }
+            }),
             admission: state.admission,
             request_id,
+            submission_reserved: state.submitted,
+            result_retained: state.result.is_some(),
         })
     }
     /// Reserve one signer invocation and retain its exact authenticated status request.
@@ -280,14 +354,65 @@ impl RestoreOperation<'_> {
             &Event::StatusPrepared {
                 request: EvidenceRecord::new(&bytes),
             },
-            Some(&bytes),
+            Some(("status-request.bin", &bytes)),
         )?;
         Ok(RestoreStatusPreparation::Prepared)
     }
+
+    /// Submit the original prepared status once under a durable reservation.
+    ///
+    /// Fresh submission re-admits the original direct profile and live application
+    /// authority before reservation and transport entry. Cancellation, lost replies,
+    /// failed authentication and uncertain persistence leave spending intact. Cold
+    /// pending replay sends nothing. Terminal replay authenticates original evidence
+    /// without a clock or live guard, then applies status policy without writes.
+    /// A policy-invalid reply remains settled and cannot trigger another submission.
+    /// Requires a Tokio runtime with IO and timers for live HTTP only.
+    /// # Errors
+    /// Refuses unprepared intent, changed custody/profile, expired authority, uncertain
+    /// HTTP, invalid proof or status policy. Preserve partial files; never repair/retry.
+    pub async fn submit_status<S: RestoreStatusSigner>(
+        &mut self,
+        provider: &DirectRestoreStatus<S>,
+    ) -> Result<StatusProgress, RestoreStatusSubmissionError<S::Error>> {
+        let state = self.check()?;
+        let a = state.admission.as_ref().ok_or(CaptureError::Incomplete)?;
+        let Some(reference) = state.request.as_ref() else {
+            return Ok(StatusProgress::PreparationPending);
+        };
+        if state.submitted && state.result.is_none() {
+            return Ok(StatusProgress::SubmissionPending);
+        }
+        let prepared = request(self, reference)?;
+        let evidence = if let Some(reference) = state.result.as_ref() {
+            let evidence = result(self, reference)?;
+            provider.authenticate(&self.plan, a, &prepared, &evidence)?;
+            evidence
+        } else {
+            provider.admit_submission(&self.plan, a, &prepared)?;
+            self.commit_status(&Event::StatusSubmissionReserved, None)?;
+            let evidence = provider.submit_reserved(&self.plan, a, &prepared).await?;
+            provider.authenticate(&self.plan, a, &prepared, &evidence)?;
+            let bytes = evidence.encode(a.result_bytes)?;
+            self.commit_status(
+                &Event::StatusSettled {
+                    result: EvidenceRecord::new(&bytes),
+                },
+                Some(("status-result.bin", &bytes)),
+            )?;
+            evidence
+        };
+        if evidence.rejected {
+            return Ok(StatusProgress::Rejected);
+        }
+        self.plan.validate_status_reply(&evidence.response)?;
+        Ok(StatusProgress::Verified)
+    }
+
     fn commit_status(
         &mut self,
         event: &Event,
-        evidence: Option<&[u8]>,
+        evidence: Option<(&str, &[u8])>,
     ) -> Result<(), CaptureError> {
         let state = self.check()?;
         let mut next = state.clone();
@@ -316,8 +441,8 @@ impl RestoreOperation<'_> {
         child(&self.store.root, "operations", false)?.sync()?;
         self.target.sync()?;
         self.store.root.sync()?;
-        if let Some(bytes) = evidence {
-            retain(&self.directory, "status-request.bin", bytes)?;
+        if let Some((name, bytes)) = evidence {
+            retain(&self.directory, name, bytes)?;
             self.directory.sync()?;
         }
         file.seek(SeekFrom::Start(state.bytes))?;

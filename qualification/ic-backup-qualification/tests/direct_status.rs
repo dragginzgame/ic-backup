@@ -33,6 +33,7 @@ mod lookup;
 mod lost_reply;
 mod metadata;
 mod restore_preparation;
+mod restore_submission;
 
 fn now() -> u64 {
     SystemTime::now()
@@ -123,11 +124,16 @@ fn complete_capture_and_offline_replay() {
 fn completed_capture_admits_restore_intent_offline() {
     run_fixture(false, false, Completion::Restore);
 }
+#[test]
+fn restore_status_submission_and_offline_terminal_replay() {
+    run_fixture(false, false, Completion::RestoreStatus);
+}
 #[derive(Clone, Copy)]
 enum Completion {
     None,
     Capture,
     Restore,
+    RestoreStatus,
 }
 
 fn run_fixture(interrupt: bool, durable: bool, completion: Completion) {
@@ -379,10 +385,14 @@ async fn status_fixture(
         Some(Sha256Digest::compute(wasm).as_bytes().to_vec())
     );
     drop(operation);
-    // Remove all live authority and the gateway; replay must use only retained proof.
+    // Revoke capture authority. Existing cases also close the gateway; the separate
+    // restore-status case keeps it live until its new, independently admitted call.
     allowed.store(false, Ordering::SeqCst);
     drop(provider);
-    owned.close().await;
+    let mut owned = Some(owned);
+    if !matches!(completion, Completion::RestoreStatus) {
+        owned.take().unwrap().close().await;
+    }
     let mut provider = direct_provider(endpoint.as_str(), network, &root, &calls, &allowed);
     let mut reopened = store
         .open_capture("00000000000000000000000000000001", digest)
@@ -462,7 +472,7 @@ async fn status_fixture(
         let next = CapturePlan::new(next).unwrap();
         let approval = next.digest();
         drop(reopened);
-        if matches!(completion, Completion::Restore) {
+        if matches!(completion, Completion::Restore | Completion::RestoreStatus) {
             let op = store
                 .create_restore(
                     &restore_plan,
@@ -491,15 +501,56 @@ async fn status_fixture(
                 .unwrap();
             assert_eq!(op.inspect().unwrap().digest(), restore_plan.digest());
             assert_eq!(fs::read(&path).unwrap(), original);
-            restore_preparation::check(
-                &store,
-                &restore_plan,
-                op,
-                &lookup_transport,
-                &mut provider,
-                &path,
-            )
-            .await;
+            if matches!(completion, Completion::RestoreStatus) {
+                let mut op = op;
+                let replay =
+                    restore_submission::check(&mut op, endpoint.as_str(), &root, &path).await;
+                let observed = owned
+                    .as_ref()
+                    .unwrap()
+                    .instance()
+                    .canister_status(canister, Some(native_sender))
+                    .await
+                    .unwrap();
+                assert_eq!(observed.status, stopped);
+                assert_eq!(
+                    observed.module_hash,
+                    Some(Sha256Digest::compute(wasm).as_bytes().to_vec())
+                );
+                assert_eq!(
+                    owned
+                        .as_ref()
+                        .unwrap()
+                        .instance()
+                        .list_canister_snapshots(canister, Some(native_sender))
+                        .await
+                        .unwrap()
+                        .len(),
+                    2
+                );
+                owned.take().unwrap().close().await;
+                drop(op);
+                let mut op = store
+                    .open_restore(
+                        &restore_plan,
+                        restore_plan.digest(),
+                        &lookup_transport,
+                        &mut provider,
+                    )
+                    .await
+                    .unwrap();
+                replay.check(&mut op).await;
+            } else {
+                restore_preparation::check(
+                    &store,
+                    &restore_plan,
+                    op,
+                    &lookup_transport,
+                    &mut provider,
+                    &path,
+                )
+                .await;
+            }
         } else {
             let successor = store
                 .create_capture_after(
@@ -540,7 +591,7 @@ async fn status_fixture(
         fs::write(evidence.join("settlement-verified.txt"), b"original take settled from retained original or separately reserved lookup proof; server absent and guard revoked; no extra signatures or submissions
 ").unwrap();
     }
-    fs::write(evidence.join("verified.txt"), b"certified capture calls; original snapshot and stopped module preserved; exact reserved signature count checked; cold replay with server absent\n").unwrap();
+    fs::write(evidence.join("verified.txt"), if matches!(completion, Completion::RestoreStatus) { b"certified capture and restore status; stopped module and snapshot count preserved; restore terminal replay with server absent\n".as_slice() } else { b"certified capture calls; original snapshot and stopped module preserved; exact reserved signature count checked; cold replay with server absent\n".as_slice() }).unwrap();
     eprintln!("retained qualification evidence: {}", evidence.display());
 }
 

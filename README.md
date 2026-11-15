@@ -104,7 +104,11 @@ Local `create_restore`/`open_restore` now retain approved intent and source cust
 one bounded external signing attempt and retains the exact authenticated request;
 prepared and uncertain replay never signs again. Local certificate authentication
 binds original signed requests, trust, target and historical time windows without
-spending or settlement. Management submission and upload/load remain unimplemented.
+spending or settlement. `DirectRestoreStatus` binds transport, integration and timing
+before durable preparation and checks exact signer output. `submit_status` reserves
+one original call, retains certified evidence before policy, and never repeats an
+uncertain submission. Terminal replay is effect-free; a dedicated IC fixture covers
+status ingress and offline replay. Upload/load remain unimplemented.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

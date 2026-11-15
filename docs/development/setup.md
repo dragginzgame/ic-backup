@@ -380,3 +380,21 @@ restore cases live under `store/restore/tests/`. Select the restore suite with
 Shared native helpers belong in named fixture modules, with explicit imports.
 Keep single-consumer helpers beside their tests; do not nest test groups to inherit
 another group's fixtures. Synthetic native evidence does not qualify IC effects.
+
+## Pre-replacement reference
+
+The local Git reference `preserve/backup-0.101.13-before-replacement` preserves
+the full pre-replacement source and both dependency locks, including the tested
+rand 0.10.4 selection. It is a preservation checkpoint, not a published release.
+Build outputs and successful validation logs are retained separately under
+`.git/recovery/backup-0.101.13-before-replacement/`; `manifest.json` records
+compiler identities, original paths and byte digests. Keep the original journals,
+fixtures, failed evidence and store artifacts in their existing locations.
+
+This version is a library: the preserved executables are unit/IC test runners,
+not a general operator recovery CLI. An existing consumer must use the preserved
+library API and original application authority. Rebuild from that source with
+its root and private qualification locks and pinned compiler; do not use current
+replacement readers on old stores. Inspect or restore the reference in the normal
+checkout only after preserving current work. This does not authorize a second
+checkout, evidence cleanup, automatic migration or external effects.

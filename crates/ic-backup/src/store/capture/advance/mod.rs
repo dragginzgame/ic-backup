@@ -22,8 +22,10 @@ pub use data::{
 mod call;
 mod certificate;
 pub use call::{CaptureCall, CaptureProvider};
-pub(in crate::store) use certificate::CertificateRequirements;
 pub(super) use certificate::authenticate_expected_evidence;
+pub(in crate::store) use certificate::{
+    CertificateRequirements, observation as certificate_observation,
+};
 pub(super) use request::authenticate_expected_request;
 // Shared representations retain the original public status names and wire bytes.
 pub use PreparedStatus as PreparedCaptureCall;
@@ -385,6 +387,11 @@ impl CaptureOperation {
 // Private exact binary evidence formats. Bounds are checked before concatenation;
 // reopening reads at the committed length before parsing or allocating components.
 impl PreparedStatus {
+    pub(in crate::store) fn envelope_limit(limit: u32, observation: &[u8]) -> Option<u32> {
+        let framing = 44_u32.checked_add(observation.len().try_into().ok()?)?;
+        limit.checked_sub(framing).filter(|limit| *limit > 0)
+    }
+
     // Inspect the original bytes; never normalize or re-encode a signed envelope.
     // Authentication metadata, routing, observation and freshness stay provider-owned.
     pub(super) fn validate_call(&self, plan: &CapturePlan) -> Result<(), CaptureError> {

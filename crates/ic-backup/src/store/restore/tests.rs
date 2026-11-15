@@ -14,10 +14,12 @@ fn canonical_plan_record_and_domain_commitment_are_frozen() {
 }
 
 mod certificate_tests;
+mod direct_tests;
 mod fixtures;
 mod persistence_tests;
 mod plan_tests;
 mod preparation_tests;
 mod request_tests;
 mod status_tests;
+mod submission_tests;
 mod transfer_tests;

@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.101.13] - Unreleased
+
+### ➕ Added
+
+- Bind restore preparation to the original direct transport/integration/timing
+  profile, then durably reserve one status submission and retain certified results.
+  Uncertain outcomes stay spent; terminal replay authenticates original evidence
+  without signing, HTTP or writes. Status-policy failures remain settled.
+
+- Qualify restore status ingress against a real IC fixture and replay it after
+  server shutdown. Upload/load and pending-result reconciliation remain unfinished.
+
+### 🔧 Changed
+
+- Derive cumulative capture reservations once per journal event instead of
+  resumming earlier admissions, preserving original allowances and wire bytes.
+
+- Derive capture evidence membership from retained state for integrity checks,
+  orphan detection and synchronization, removing repeated phase inventories.
+  Exact filenames, hashes, journal bytes and no-retry behavior remain unchanged.
+
 ## [0.101.12] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

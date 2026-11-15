@@ -85,6 +85,7 @@ pub(in crate::store) enum Response {
     Sequence(Vec<Vec<u8>>),
     Bytes(Vec<u8>),
     Disconnect,
+    OrphanBeforeReply { file: PathBuf, response: Vec<u8> },
     HoldBody,
     ObserveCancellation(Arc<AtomicBool>),
 }
@@ -143,6 +144,10 @@ impl Server {
                         }
                         Response::Bytes(bytes) => {
                             let _ = stream.write_all(bytes);
+                        }
+                        Response::OrphanBeforeReply { file, response } => {
+                            fs::write(file, b"orphan-result").unwrap();
+                            let _ = stream.write_all(response);
                         }
                         Response::Disconnect => {}
                         Response::ObserveCancellation(closed) => {

@@ -15,6 +15,15 @@ pub(in crate::store::capture) fn data_names(ordinal: u32) -> (String, String) {
         format!("data-{ordinal:04}-result.bin"),
     )
 }
+impl DataState {
+    pub(super) fn evidence(&self, ordinal: u32) -> [(String, Option<&EvidenceRecord>); 2] {
+        let (request, result) = data_names(ordinal);
+        [
+            (request, self.request.as_ref()),
+            (result, self.result.as_ref()),
+        ]
+    }
+}
 impl State {
     pub(super) fn apply_data(
         &mut self,
@@ -84,7 +93,7 @@ impl State {
         }
         Ok(())
     }
-    pub(in crate::store::capture) fn data_name_admitted(&self, name: &str) -> bool {
+    pub(super) fn data_name_admitted(&self, name: &str) -> bool {
         let Some(rest) = name.strip_prefix("data-") else {
             return false;
         };
@@ -97,7 +106,8 @@ impl State {
         let Some(d) = self.data.get(ordinal as usize) else {
             return false;
         };
-        let names = data_names(ordinal);
-        (name == names.0 && d.request.is_some()) || (name == names.1 && d.result.is_some())
+        d.evidence(ordinal)
+            .into_iter()
+            .any(|(expected, reference)| name == expected && reference.is_some())
     }
 }

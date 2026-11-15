@@ -289,22 +289,37 @@ fn later_data_reads_cannot_reuse_network_or_evidence_allowance() {
         assert_eq!(f.op.check().unwrap(), before);
         assert_eq!(f.signer.calls, 1);
         assert_eq!(f.server.count(), 1);
+        let bytes = fs::read(f.ledger()).unwrap();
+        let mut reopened = f.reopen();
+        assert_eq!(reopened.op.check().unwrap(), before);
+        assert!(matches!(
+            reopened.advance(1),
+            Err(CaptureDataAdvanceError::Capture(CaptureError::Ledger(_)))
+        ));
+        assert_eq!(fs::read(reopened.ledger()).unwrap(), bytes);
+        assert_eq!(reopened.signer.calls, 1);
+        assert_eq!(reopened.server.count(), 1);
     }
 }
 
 #[test]
 fn changed_or_orphan_data_evidence_refuses_without_cleanup() {
-    for orphan in [false, true] {
+    for (orphan, name) in [
+        (false, "data-0000-result.bin"),
+        (true, "data-0001-result.bin"),
+        (true, "data-0-result.bin"),
+        (true, "data-00000-result.bin"),
+        (true, "data-+0000-result.bin"),
+        (true, "data-4294967296-result.bin"),
+        (true, "final-status-result.bin"),
+        (true, "lookup-certificate.bin"),
+    ] {
         let mut f = Fixture::new(false, false);
         assert!(matches!(
             f.advance(0).unwrap(),
             CaptureDataProgress::Ready(_)
         ));
-        let path = f.ledger().parent().unwrap().join(if orphan {
-            "data-0001-result.bin"
-        } else {
-            "data-0000-result.bin"
-        });
+        let path = f.ledger().parent().unwrap().join(name);
         if orphan {
             fs::write(&path, b"orphan").unwrap();
         } else {

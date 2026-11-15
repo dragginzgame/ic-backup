@@ -1,0 +1,9 @@
+{
+  "head": "dc4bba68bbaeb0966ecefb8335c4ede85d95e125",
+  "source_sha256": "169f7f264b183e6be34a47128bf67b21007a64cb173312f795ab5dec3968dc08",
+  "source_files": 130,
+  "source_selection": "git ls-files --cached --others --exclude-standard crates qualification Cargo.toml Cargo.lock rust-toolchain.toml AGENTS.md; sorted extant regular files, path NUL bytes NUL",
+  "status": "M CHANGELOG.md\n M Cargo.lock\n M README.md\n M crates/ic-backup/Cargo.toml\n M crates/ic-backup/src/store/capture/advance/certificate/mod.rs\n M crates/ic-backup/src/store/capture/advance/direct/mod.rs\n M crates/ic-backup/src/store/capture/advance/http/mod.rs\n M crates/ic-backup/src/store/capture/advance/mod.rs\n M crates/ic-backup/src/store/capture/advance/tests/fixtures/http.rs\n M crates/ic-backup/src/store/capture/mod.rs\n M crates/ic-backup/src/store/mod.rs\n M crates/ic-backup/src/store/restore/mod.rs\n M crates/ic-backup/src/store/restore/persistence/mod.rs\n D crates/ic-backup/src/store/restore/persistence/preparation/mod.rs\n M crates/ic-backup/src/store/restore/tests.rs\n M docs/design/local-store.md\n M docs/status/current.md\n M qualification/Cargo.lock\n M qualification/Cargo.toml\n M qualification/ic-backup-qualification/tests/direct_status.rs\n M qualification/ic-backup-qualification/tests/restore_preparation/mod.rs\n?? crates/ic-backup/src/store/restore/direct/\n?? crates/ic-backup/src/store/restore/persistence/status/\n?? crates/ic-backup/src/store/restore/tests/direct_tests.rs\n?? crates/ic-backup/src/store/restore/tests/submission_tests.rs\n?? docs/reports/\n?? qualification/ic-backup-qualification/tests/restore_submission/",
+  "platform": "linux",
+  "architecture": "x64"
+}

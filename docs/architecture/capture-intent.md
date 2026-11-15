@@ -80,6 +80,32 @@ network/target/request association, record progress or grant effect authority.
 
 ## Files and ordering
 
+Journal replay derives cumulative signing/network/evidence reservations as each
+validated event is applied. Snapshot admission reserves both list and future take;
+lookup, transfer, data acceptance, assembly and publication retain their original
+complete allowances. Results never refund spending. These totals are private
+in-memory projections rebuilt from original frames, not new persisted authority.
+Budget accounting visits each event once instead of resumming prior admissions.
+Other custody/evidence scans remain unchanged; throughput remains unqualified.
+
+This adapts the frozen legacy attempt journal replay projection in
+`model/attempt_journal/{mod.rs,history/mod.rs}` at
+`4ae087fad8c23de712aa60bf569bde4b2b932651`. Its counters preserve spent attempts
+across observation and recovery. Backup retains its own phase/byte allowances
+and exact chained records; no legacy code was copied. An independent state-based
+accounting oracle checks every prefix of a completed native fixture; exhausted
+data allowances remain refused after reopening without changing original bytes.
+
+
+Retained state owns the evidence inventory consumed by integrity checks, directory
+membership admission and synchronization. Ordinal names must match their exact
+canonical spelling; an unreferenced file remains an orphan even if its phase or
+ordinal is otherwise recognizable. Event/file pairing is independently checked
+before persistence. This consolidation follows the frozen legacy submission and
+HTTP-boundary regression lesson: preserve original request/result custody and
+indeterminate spending while sharing mechanics. No record or effect policy changes.
+
+
 
 Creation requires the caller's exact plan commitment before any write. It uses
 Host private held directories, exclusive create-only files, bounded no-follow

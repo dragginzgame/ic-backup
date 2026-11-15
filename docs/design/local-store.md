@@ -623,7 +623,7 @@ signer future; integrations must enforce output and preparation-traffic ceilings
 stop on cancellation and never retry or detach work. External signer traffic is
 part of `prepare_requests`; no management ingress is submitted by this API.
 
-The existing original-plan-seeded ledger contains Created followed by at most one
+The preparation prefix of the original-plan-seeded ledger contains Created followed by at most one
 canonical JSON `status_signing_reserved` event with `admission`, then one
 `status_prepared` event with `request` (the shared byte-length/SHA-256 reference).
 The same bounded frame reader and hash chain serve capture and restore. No second
@@ -639,8 +639,9 @@ original custody, canonical transitions, request hash, length and signature.
 Partial frames, orphan evidence and unknown suffixes refuse without repair.
 
 `inspect_status` projects original admission, zero/one signer reservation,
-reserved preparation network traffic and the retained request ID. These are
-reservations, not measured usage. Prepared replay reads no clock or live signer;
+reserved preparation/submission network totals and the retained request ID, with
+submission-reserved and result-retained flags. These are reservations and custody
+projections, not measured usage or authenticated success. Prepared replay reads no clock or live signer;
 pending signing returns `SigningPending` without refund or another invocation.
 Changed admission refuses. Signer failure, invalid output, timeout or cancellation
 after reservation stays spent. No pending-signature import/recovery API exists yet.
@@ -694,12 +695,101 @@ exact frame limits and delegation target binding. Existing capture rejection and
 certificate cases cover the shared decoder. These are local crypto checks, not
 qualification of restore IC effects.
 
-### Next restore status boundary (proposed)
+### Direct restore preparation profile
 
-Next admit the prepared request's original network/route/transport commitment and
-live application/timing authority, then reserve submission in the existing restore
-journal before a one-shot HTTP call. Retain exact certified evidence before applying
-status policy. Unsupported original observations refuse intact, without replacement,
-resigning or reset spending. Uncertain submission remains pending without automatic
-retries; historical replay remains effect-free. Add changed-route and actual-IC
-restore status qualification with dispatch. Upload/load remain unfinished.
+`DirectRestoreStatus<S>` implements the existing `RestoreStatusSigner` interface
+for `RestoreOperation::prepare_status`. Its domain-separated commitment binds the
+fixed HTTP origin, network, root and timeout; the integration signer/admission
+protocol; and the explicit certificate/delegation ages and clock skew. The wrapped
+integration owns continuous application admission and commits its guard configuration
+in its protocol. It receives the original composite admission unchanged. There is
+no second guard trait, provider framework, journal or prepared-record format.
+
+Before reservation, the operation admits original budgets and the composite
+protocol. The direct adapter checks plan/network/root, one-call allowance, live
+bounded timing, observation arithmetic and minimum complete request capacity,
+then calls the integration's effect-free admission. The operation synchronizes its
+existing signing reservation before adapter entry. The adapter signs once through
+the integration and verifies the returned signature, original profile and expiry;
+it checks application authority again before returning. The operation retains the
+exact output bytes under the existing create-only rules. It never rewrites an
+opaque observation into an admitted one.
+
+The signer samples one reference during its reserved invocation for both windows.
+Ages match the committed timing. Future allowance equals original submit deadline
+minus reference plus skew; expiry equals that deadline. The reference must fall
+between invocation and completion, and both original deadlines must remain live.
+Capture and restore share the bounded window arithmetic and transport-binding check.
+`CaptureTiming` remains the existing shared timing configuration; no alias is added.
+
+Failure or cancellation after reservation stays spent. Cold prepared/pending replay
+uses the original operation semantics and never reacquires live authority, signs or
+writes replacement evidence. Preparation itself neither reserves submission nor
+calls HTTP; the operation’s separate submission method below owns that step.
+Old generic preparations gain no new effect authority. Native groups exercise both direct keys, changed configuration before
+spending, unchanged retained bytes and failed/cancelled outputs across reopen.
+They adapt the legacy context-before-network and retained-spending cases cited below;
+no legacy code was copied. These native preparation checks do not prove management
+effects; the separate restore submission fixture below supplies that qualification.
+
+### Restore status submission and replay
+
+`RestoreOperation::submit_status(&direct)` consumes the original prepared request
+and admission from the existing journal. Callers cannot supply another request,
+reservation or result. A never-prepared intent refuses; unresolved signing returns
+`PreparationPending`. For fresh submission, the direct profile rechecks exact
+request/signature, network/root/route/timing commitment and live original application
+authority before one synchronized `StatusSubmissionReserved` frame. It rechecks
+live admission again before entering the shared Host HTTP call path. The original
+submit deadline and ingress expiry bound transport; preparation need not still be live.
+
+Capture and restore use one private v3 call/certificate transport implementation,
+with the existing no-retry client, strict origin rules, bounded body reader and
+certificate decoder. Only an authenticated terminal result can be retained. HTTP
+acceptance, redirects, throttling, server errors, disconnects, timeouts, cancellation
+and unauthenticated proofs leave the original submission pending. Even a reservation
+whose process might have stopped before sending is spent. No automatic resend,
+re-signing, polling, fallback endpoint or restoration of allowance exists.
+
+The original closed journal now permits Created, signing reservation, prepared
+request, submission reservation and settled result in that order. Preparation wire
+names and evidence bytes are unchanged. Its module is named `persistence/status`
+to reflect the complete owner; no second journal or generic workflow engine is added.
+The original admission already reserves the request/result caps and four maximum
+transition frames. Directory admission permits only the evidence actually referenced
+by that history. Partial frames, orphan files, changed bytes/identities and unknown
+suffixes remain intact and refuse; uncertain writes invalidate the held handle.
+
+A valid result is retained create-only as `status-result.bin` and synchronized
+before `StatusSettled` references its exact length/hash. Stopped/module/controller
+policy runs afterwards. A certified rejection returns `Rejected`; a policy-invalid
+reply returns a typed error but remains settled. Cold pending replay returns
+`SubmissionPending` without calling the provider. Cold settled replay reauthenticates
+the original profile and proof, applies policy and performs no clock, guard, signer,
+network or persistence effects. Inspection exposes submission/result presence and
+reserved network totals, not authenticated success or measured requests.
+
+Native HTTP cases cover original envelope/path, refusal before spending, success,
+rejection and invalid status policy; acceptance/redirect/throttle/server failure,
+lost connection, timeout, cancellation and invalid proof; changed results, partial
+reservation frames and an orphan result created after request capture. They preserve
+original records and check zero/one requests without claiming IC management effects.
+The separate `restore_status_submission_and_offline_terminal_replay` IC fixture
+uses a completed real capture source, performs the signed status call, independently
+checks stopped module and snapshot count, then closes the server and revokes the
+guard before exact terminal replay. The previous offline signing fixture remains.
+
+Pending reply import/lookup reconciliation and physical power-loss qualification
+remain unfinished. Upload allocation, data/readback and load are the next restore
+work; this status step does not restore canister state or settle external obligations.
+
+Focused review revisited frozen legacy `4ae087fa`'s Agent `submission/mod.rs`,
+transport constructor and `tests/http_boundary/mod.rs`, especially
+`retention_and_http_failures_preserve_spending_with_zero_or_one_request` and
+`context_and_stale_reservations_reject_before_network`. The `94b94db8`
+consolidation of `standalone/restore` keeps reply authority on the actual original
+request. Carry forward exact association, retain-before-send and uncertain
+post-dispatch retention; omit Agent-owned keys, v4 routing and the legacy stage
+engine. Current capture already owns the replacement v3/Host HTTP behavior.
+No legacy code was copied. The native and actual-IC cases above rerun the applicable
+original-association, finite-spending and effect-free replay guarantees.

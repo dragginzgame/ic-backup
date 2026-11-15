@@ -1,7 +1,9 @@
 //! Local capture intent and exclusive original custody. Direct-host status and snapshot continuation.
 
 mod advance;
-pub(in crate::store) use advance::{CertificateRequirements, authenticate_direct_request};
+pub(in crate::store) use advance::{
+    CertificateRequirements, authenticate_direct_request, certificate_observation,
+};
 mod assembly;
 mod completion;
 mod source;
@@ -138,45 +140,8 @@ impl CaptureOperation {
             plan::PLAN_LIMIT,
         )?;
         let state = ledger::admit(&self.directory, &self.ledger_file, &self.plan)?;
-        if let Some(reference) = &state.request {
-            self.evidence("status-request.bin", reference)?;
-        }
-        if let Some(reference) = &state.result {
-            self.evidence("status-result.bin", reference)?;
-        }
-        for (name, reference) in state.snapshot.evidence() {
-            if let Some(reference) = reference {
-                self.evidence(name, reference)?;
-            }
-        }
-        if let Some(lookup) = &state.lookup {
-            for (name, reference) in lookup.evidence() {
-                if let Some(reference) = reference {
-                    self.evidence(name, reference)?;
-                }
-            }
-        }
-        if let Some(metadata) = &state.metadata {
-            for (name, reference) in metadata.evidence() {
-                if let Some(reference) = reference {
-                    self.evidence(name, reference)?;
-                }
-            }
-        }
-        for (ordinal, d) in state.data.iter().enumerate() {
-            let names = ledger::data_names(ordinal as u32);
-            for (name, reference) in [(&names.0, &d.request), (&names.1, &d.result)] {
-                if let Some(reference) = reference {
-                    self.evidence(name, reference)?;
-                }
-            }
-        }
-        if let Some(status) = &state.final_status {
-            for (name, reference) in status.evidence() {
-                if let Some(reference) = reference {
-                    self.evidence(name, reference)?;
-                }
-            }
+        for (name, reference) in state.evidence() {
+            self.evidence(&name, reference)?;
         }
         // Only an exact published receipt can outlive its original target claim.
         // Readiness or retained staging alone must not authorize publication.
@@ -185,39 +150,10 @@ impl CaptureOperation {
         }
         for entry in self.directory.entries(15 + 2 * state.data.len())? {
             let entry = entry?;
-            let admitted = match entry.name.to_str() {
-                Some("lock" | "plan.json" | "ledger.bin") => true,
-                Some("metadata-request.bin") => {
-                    state.metadata.as_ref().is_some_and(|m| m.request.is_some())
-                }
-                Some("metadata-result.bin") => {
-                    state.metadata.as_ref().is_some_and(|m| m.result.is_some())
-                }
-                Some("final-status-request.bin") => state
-                    .final_status
-                    .as_ref()
-                    .is_some_and(|s| s.request.is_some()),
-                Some("final-status-result.bin") => state
-                    .final_status
-                    .as_ref()
-                    .is_some_and(|s| s.result.is_some()),
-                Some("status-request.bin") => state.request.is_some(),
-                Some("status-result.bin") => state.result.is_some(),
-                Some("lookup-request.bin") => {
-                    state.lookup.as_ref().is_some_and(|s| s.request.is_some())
-                }
-                Some("lookup-certificate.bin") => state
-                    .lookup
-                    .as_ref()
-                    .is_some_and(|s| s.certificate.is_some()),
-                Some(name) if state.data_name_admitted(name) => true,
-                Some(name) => state
-                    .snapshot
-                    .evidence()
-                    .iter()
-                    .any(|(expected, reference)| name == *expected && reference.is_some()),
-                None => false,
-            };
+            let admitted = entry.name.to_str().is_some_and(|name| {
+                matches!(name, "lock" | "plan.json" | "ledger.bin")
+                    || state.evidence_name_admitted(name)
+            });
             if !admitted {
                 return Err(CaptureError::Changed);
             }
@@ -657,59 +593,10 @@ impl CaptureOperation {
         // No fallible persistence below can leave live dispatch authority behind.
         self.usable = false;
         file.sync_all()?;
-        if state.request.is_some() {
-            open_optional(&self.directory, "status-request.bin")?
+        for (name, _) in state.evidence() {
+            open_optional(&self.directory, &name)?
                 .ok_or(CaptureError::Incomplete)?
                 .sync_all()?;
-        }
-        if state.result.is_some() {
-            open_optional(&self.directory, "status-result.bin")?
-                .ok_or(CaptureError::Incomplete)?
-                .sync_all()?;
-        }
-        for (name, reference) in state.snapshot.evidence() {
-            if reference.is_some() {
-                open_optional(&self.directory, name)?
-                    .ok_or(CaptureError::Incomplete)?
-                    .sync_all()?;
-            }
-        }
-        if let Some(lookup) = &state.lookup {
-            for (name, reference) in lookup.evidence() {
-                if reference.is_some() {
-                    open_optional(&self.directory, name)?
-                        .ok_or(CaptureError::Incomplete)?
-                        .sync_all()?;
-                }
-            }
-        }
-        if let Some(metadata) = &state.metadata {
-            for (name, reference) in metadata.evidence() {
-                if reference.is_some() {
-                    open_optional(&self.directory, name)?
-                        .ok_or(CaptureError::Incomplete)?
-                        .sync_all()?;
-                }
-            }
-        }
-        for (ordinal, d) in state.data.iter().enumerate() {
-            let names = ledger::data_names(ordinal as u32);
-            for (name, reference) in [(&names.0, &d.request), (&names.1, &d.result)] {
-                if reference.is_some() {
-                    open_optional(&self.directory, name)?
-                        .ok_or(CaptureError::Incomplete)?
-                        .sync_all()?;
-                }
-            }
-        }
-        if let Some(status) = &state.final_status {
-            for (name, reference) in status.evidence() {
-                if reference.is_some() {
-                    open_optional(&self.directory, name)?
-                        .ok_or(CaptureError::Incomplete)?
-                        .sync_all()?;
-                }
-            }
         }
         self.directory.sync()?;
         if let Some((name, bytes)) = evidence {

@@ -29,35 +29,43 @@ impl RestoreStatusSigner for Signer {
         arguments: &[u8],
     ) -> Result<PreparedStatus, ()> {
         self.calls += 1;
-        let content = EnvelopeContent::Call {
-            nonce: None,
-            ingress_expiry: a.submit_deadline_ns,
-            sender: plan.request().sender.as_slice().try_into().unwrap(),
-            canister_id: [].as_slice().try_into().unwrap(),
-            method_name: "canister_status".into(),
-            arg: arguments.to_vec(),
-            sender_info: None,
-        };
-        let id = content.to_request_id();
-        let signature = SigningKey::from_bytes(&[17; 32]).sign(&id.signable());
-        let envelope = encode_envelope(
-            &Envelope {
-                content: Cow::Owned(content),
-                sender_pubkey: Some(der()),
-                sender_sig: Some(signature.to_bytes().to_vec()),
-                sender_delegation: None,
-            },
-            a.request_bytes as usize,
-        )
-        .map_err(|_| ())?;
-        Ok(PreparedStatus {
-            request_id: *id,
-            expires_ns: a.submit_deadline_ns,
-            envelope,
-            // Opaque retained bytes only: this fixture grants no HTTP observation policy.
-            observation: vec![1],
-        })
+        signed(plan, a, arguments, vec![1])
     }
+}
+
+pub(super) fn signed(
+    plan: &RestorePlan,
+    a: &StatusAdmissionRecord,
+    arguments: &[u8],
+    observation: Vec<u8>,
+) -> Result<PreparedStatus, ()> {
+    let content = EnvelopeContent::Call {
+        nonce: None,
+        ingress_expiry: a.submit_deadline_ns,
+        sender: plan.request().sender.as_slice().try_into().unwrap(),
+        canister_id: [].as_slice().try_into().unwrap(),
+        method_name: "canister_status".into(),
+        arg: arguments.to_vec(),
+        sender_info: None,
+    };
+    let id = content.to_request_id();
+    let signature = SigningKey::from_bytes(&[17; 32]).sign(&id.signable());
+    let envelope = encode_envelope(
+        &Envelope {
+            content: Cow::Owned(content),
+            sender_pubkey: Some(der()),
+            sender_sig: Some(signature.to_bytes().to_vec()),
+            sender_delegation: None,
+        },
+        a.request_bytes as usize,
+    )
+    .map_err(|_| ())?;
+    Ok(PreparedStatus {
+        request_id: *id,
+        expires_ns: a.submit_deadline_ns,
+        envelope,
+        observation,
+    })
 }
 
 pub(super) async fn check(

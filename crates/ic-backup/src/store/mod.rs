@@ -33,9 +33,10 @@ mod manifest;
 mod payload;
 mod restore;
 pub use restore::{
-    RestoreLimitsRecord, RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError,
-    RestoreRequest, RestoreStatusEvidenceError, RestoreStatusPreparation,
-    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
+    DirectRestoreStatus, DirectRestoreStatusError, RestoreLimitsRecord, RestoreOperation,
+    RestorePersistenceError, RestorePlan, RestorePlanError, RestoreRequest,
+    RestoreStatusEvidenceError, RestoreStatusPreparation, RestoreStatusPreparationError,
+    RestoreStatusSigner, RestoreStatusSubmissionError, RestoreStatusView,
 };
 #[cfg(test)]
 mod tests;

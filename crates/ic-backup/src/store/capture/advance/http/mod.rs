@@ -78,19 +78,25 @@ impl StatusHttpTransport {
     }
 
     pub(super) fn admit_plan(&self, plan: &CapturePlan) -> Result<(), StatusHttpError> {
-        if plan.request().target.network != self.network
-            || plan.request().trust_root != Sha256Digest::compute(&self.root_key_der)
-        {
+        self.admit_binding(plan.request().target.network, plan.request().trust_root)
+    }
+
+    pub(in crate::store) fn admit_binding(
+        &self,
+        network: Sha256Digest,
+        trust_root: Sha256Digest,
+    ) -> Result<(), StatusHttpError> {
+        if network != self.network || trust_root != Sha256Digest::compute(&self.root_key_der) {
             return Err(StatusHttpError::Binding);
         }
         Ok(())
     }
 
-    pub(super) fn root_key_der(&self) -> &[u8] {
+    pub(in crate::store) fn root_key_der(&self) -> &[u8] {
         &self.root_key_der
     }
 
-    pub(super) fn commitment(&self) -> [u8; 32] {
+    pub(in crate::store) fn commitment(&self) -> [u8; 32] {
         let mut bytes = b"ic-backup/status-http/1\n".to_vec();
         bytes.extend_from_slice(self.network.as_bytes());
         bytes.extend_from_slice(Sha256Digest::compute(&self.root_key_der).as_bytes());
@@ -224,21 +230,10 @@ impl StatusHttpTransport {
                 error => StatusHttpError::Request(error),
             })?;
         self.admit_plan(plan)?;
-        let mut url = self.origin.clone();
-        url.set_path(&format!(
-            "/api/v3/canister/{}/call",
-            plan.request().target.canister.to_text()
-        ));
         let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
-        let maximum = admission.result_bytes as usize;
-        let bytes = self
-            .post_cbor(url, prepared.envelope.clone(), deadline, maximum)
+        let certificate = self
+            .call_certificate(plan.request().target.canister, admission, prepared)
             .await?;
-        let TransportCallResponse::Replied { certificate } =
-            decode_call_response(&bytes, maximum).map_err(|_| StatusHttpError::Response)?
-        else {
-            return Err(StatusHttpError::NoCertificate);
-        };
         let (rejected, response) = super::certificate::authenticated_expected_response(
             plan,
             admission,
@@ -259,6 +254,28 @@ impl StatusHttpTransport {
             .map_err(StatusHttpError::Admission)?;
         remaining(deadline)?;
         Ok(evidence)
+    }
+
+    // Caller admits exact signed call, original authority and durable reservation.
+    pub(in crate::store) async fn call_certificate(
+        &self,
+        canister: ic_platform::Principal,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+    ) -> Result<Vec<u8>, StatusHttpError> {
+        let mut url = self.origin.clone();
+        url.set_path(&format!("/api/v3/canister/{}/call", canister.to_text()));
+        let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
+        let maximum = admission.result_bytes as usize;
+        let bytes = self
+            .post_cbor(url, prepared.envelope.clone(), deadline, maximum)
+            .await?;
+        let TransportCallResponse::Replied { certificate } =
+            decode_call_response(&bytes, maximum).map_err(|_| StatusHttpError::Response)?
+        else {
+            return Err(StatusHttpError::NoCertificate);
+        };
+        Ok(certificate)
     }
 
     async fn post_cbor(

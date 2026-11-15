@@ -1,0 +1,18 @@
+workspace/crate                             app/lib  tests  examples  bench  tooling  ???  total
+---------------------------------------     -------  -----  --------  -----  -------  ---  -----
+ic-backup                                     10329  19148         0      0        0    0  29477
+  ic-backup                                   10329  17448         0      0        0    0  27777
+    store                                     10327  17448         0      0        0    0  27775
+      capture                                  8171  13137         0      0        0    0  21308
+      manifest                                  180      0         0      0        0    0    180
+      payload                                   416      0         0      0        0    0    416
+      restore                                  1271   2581         0      0        0    0   3852
+      tests                                       0   1728         0      0        0    0   1728
+  qualification/ic-backup-qualification           0   1700         0      0        0    0   1700
+    tests                                         0   1700         0      0        0    0   1700
+      direct_status                               0    599         0      0        0    0    599
+      lookup                                      0    263         0      0        0    0    263
+      lost_reply                                  0    166         0      0        0    0    166
+      metadata                                    0    411         0      0        0    0    411
+      restore_preparation                         0    118         0      0        0    0    118
+      restore_submission                          0    143         0      0        0    0    143
