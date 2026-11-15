@@ -693,3 +693,13 @@ this assembler starts with all certified reads already retained, allowing comple
 unrecorded members to be compared and reused offline. Native regressions exercise
 that changed recovery contract; no legacy source was copied. Actual IC
 qualification assembles the eight-byte Wasm and replays after server shutdown.
+
+## Restore source scheduling
+
+Authenticated `CaptureSource` now supplies the pure
+[`plan_restore_transfer`](../design/local-store.md#exact-restore-transfer-calculation)
+calculation. It reuses this module's ordinal-to-kind mapper while applying exact
+admitted chunk lengths and restore's upload/readback count. Capture's conservative
+unknown-chunk allowance, existing schemas, original limits and request order are
+unchanged. Restore intent, allocation, request signing, full remote readback and
+load authority remain separate work.

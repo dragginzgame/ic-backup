@@ -277,6 +277,7 @@ pub(super) async fn replay<P: CaptureProvider>(
         .iter()
         .map(|hex| u8::from_str_radix(std::str::from_utf8(hex).unwrap(), 16).unwrap())
         .collect();
+    let capture_request = op.inspect().unwrap().request().clone();
     let mut source = store
         .open_capture_source(op, &receipt, 8.try_into().unwrap(), t, p)
         .await
@@ -294,6 +295,55 @@ pub(super) async fn replay<P: CaptureProvider>(
         fs::read(root.join("payload-oracle.bin")).unwrap()
     );
     assert_eq!(source.summary(), &receipt);
+    let schedule = source
+        .plan_restore_transfer(&ic_backup::store::RestoreTransferRequest {
+            target: receipt.target,
+            release: receipt.release,
+            extent_bytes: 3,
+            maximum_payload_bytes: 8,
+            maximum_management_calls: 13,
+        })
+        .unwrap();
+    assert_eq!(
+        (schedule.data_calls(), schedule.minimum_management_calls()),
+        (3, 13)
+    );
+    let restored_source: Vec<_> = schedule
+        .source_requests()
+        .flat_map(|r| source.read_data(&r).unwrap())
+        .collect();
+    assert_eq!(
+        restored_source,
+        fs::read(root.join("payload-oracle.bin")).unwrap()
+    );
+    let ic_backup::store::CaptureExecution::Direct { sender } = capture_request.execution else {
+        panic!("direct fixture")
+    };
+    let plan = ic_backup::store::RestorePlan::new(
+        &source,
+        ic_backup::store::RestoreRequest {
+            operation_id: "cd".repeat(16),
+            target: receipt.target,
+            trust_root: capture_request.trust_root,
+            initiator: capture_request.initiator,
+            release: receipt.release,
+            sender,
+            limits: ic_backup::store::RestoreLimitsRecord {
+                payload_bytes: 8,
+                extent_bytes: 3,
+                network_requests: 13,
+                observations: 0,
+                signing_requests: 13,
+                evidence_bytes: 6 * 1024 * 1024,
+            },
+        },
+    )
+    .unwrap();
+    assert_eq!(plan.source(), &receipt);
+    let replayed = ic_backup::store::RestorePlan::decode(&source, plan.encoded().to_vec()).unwrap();
+    assert_eq!(replayed.digest(), plan.digest());
+    assert_eq!(replayed.encoded(), plan.encoded());
+    assert!(!root.join("store/operations").join("cd".repeat(16)).exists());
     drop(source);
     let original = fs::read(root.join("completion-oracle.bin")).unwrap();
     assert_eq!(

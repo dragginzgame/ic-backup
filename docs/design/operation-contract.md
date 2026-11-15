@@ -6,8 +6,9 @@ This design describes the selected capture/restore direction. The implemented
 [transfer contract](../architecture/capture-transfer.md) own exact maintained
 behavior. Small direct-host captures reach authenticated local completion and
 target succession with actual-IC qualification. Read-only completion verification
-and authenticated held capture sources are implemented; restore planning, durable
-source references and restore effects remain proposed.
+and authenticated held capture sources are implemented. Exact restore transfer
+scheduling and source-bound restore plan encoding/decoding are implemented local
+calculations; durable restore creation, source references and effects remain proposed.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage

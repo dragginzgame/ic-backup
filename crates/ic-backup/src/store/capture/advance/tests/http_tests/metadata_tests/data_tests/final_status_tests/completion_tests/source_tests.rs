@@ -142,3 +142,7 @@ fn changed_held_bytes_refuse_and_invalidate_without_repair() {
     assert_eq!(fs::read(ledger_path).unwrap(), ledger);
     assert_eq!(server.count(), 1);
 }
+
+mod transfer_tests;
+
+mod plan_tests;

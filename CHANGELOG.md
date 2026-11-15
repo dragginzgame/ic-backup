@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.101.9] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Calculate bounded restore transfer schedules from authenticated held sources,
+  requiring the same network, canister and release. Reuse capture extent ordering,
+  account for exact whole-chunk lengths and full upload/readback call counts.
+  This pure calculation creates no restore intent, source reference or IC effect.
+- Encode and re-admit immutable direct-host restore plans bound to the source
+  manifest/capture plan, ordered source request commitment, exact target/release,
+  sender and finite limits. Approval hashes original bytes; source substitution
+  and malformed records refuse. No restore operation or reference is written.
+
 ## [0.101.8] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

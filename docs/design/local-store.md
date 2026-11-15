@@ -367,3 +367,104 @@ invalid requests and changed bytes. Existing bounded/cross-block reader regressi
 are rerun. The real-IC fixture reads the authenticated source offline before and
 after target succession. This does not qualify restore effects or physical power
 loss. No legacy source was copied.
+
+### Exact restore transfer calculation
+
+`CaptureSource::plan_restore_transfer` takes an explicit target, release, extent,
+actual-payload ceiling and base management-call ceiling. Target/network and release
+must match the authenticated receipt. Extent is 1..=1 MiB, payload ceiling 1..=1 GiB,
+and base call ceiling 1..=8192. An invalidated source cannot create a new schedule.
+This method reads admitted member lengths only: no filesystem, provider, clock,
+signature, serialization or journal mutation occurs.
+
+`RestoreTransfer` retains the exact source receipt and lazily emits source read DTOs.
+One shared ordinal mapper owns capture and restore ordering: module, heap, stable,
+then chunks sorted by hash. Region extents use the newly selected ceiling and exact
+length; empty regions emit nothing. Whole chunks each emit one request even when
+empty, and cannot be split to fit a smaller ceiling. Restore uses known actual
+chunk lengths, without capture's conservative unknown-length allowance.
+
+For `N` extents/chunks the selected base cost is `2*N + 7`, including upload and
+complete readback. Count admission precedes iteration and all retained collections
+remain bounded by the already-admitted source profile. This is not network/signing
+admission: executor hops, proofs, observations and provider-specific envelope limits
+remain separate. Source DTOs identify the original snapshot, not a new destination.
+
+This calculation is not the durable `RestorePlan`: it has no approval commitment,
+destination allocation, request digests, spending or source reference. Future
+restore intent must bind this receipt and schedule alongside execution/application
+authority before any effect. An owned calculation does not keep source files alive;
+retain/re-admit the matching `CaptureSource` before consuming its reads.
+
+Focused legacy review inspected frozen `4ae087fa`'s `model/data_stage_plan`,
+`ic_snapshot_upload` cases for empty chunks and exact wire identity, the guarded
+upload-plan/source readers, and `9f7b886a824eec67dda8f81792a560436419bb2a`'s shared
+reader consolidation. Reuse original-source association, fixed ordering, exact
+coverage and admission before data-stage work. Do not copy the legacy child-plan
+workflow graph, allocation association or retries ahead of a durable restore
+contract. Native tests exercise exact region boundaries, zero-length regions and
+chunks, sorted chunks, selection/budget refusal and invalidated sources. Existing
+capture/readback regressions exercise the shared mapper; the real-IC fixture reads
+all source bytes through a newly sized restore schedule offline. No restore effect
+or physical power-loss qualification is implied; no legacy source was copied.
+
+### Immutable restore plan and approval
+
+`RestorePlan::new` consumes an authenticated held `CaptureSource` and an explicit
+`RestoreRequest`. This implemented slice encodes intent in memory; it does not yet
+persist a restore operation, target owner, source reference or initial journal.
+The profile is direct-host only. Canic can own host signing/application admission;
+executor-route restore is not declared by this request.
+
+The request selects a fresh 32-character lowercase operation ID, same source
+network/canister/release and trust-root commitment, approving initiator, direct
+sender and `RestoreLimitsRecord`. The sender/initiator may differ from capture;
+this declaration does not prove current controller or rewind authority. Payload
+and evidence ceilings are 1..=1 GiB, extent 1..=1 MiB and at most payload allowance,
+network/signing ceilings 1..=8192, with observations a subset of network allowance.
+Base `2*N + 7` calls must fit both network and signing ceilings. Provider overhead
+and initial-journal capacity still require admission before creation/effects.
+
+The closed `ic-backup/local-restore-plan/1` record has fixed writer field order:
+`format`, `operation_id`, `network`, `canister`, `trust_root`, `initiator`, `release`,
+`module_sha256`, `sender`, `source_operation_id`, `source_plan_sha256`,
+`source_manifest_sha256`, `limits`, `data_calls`, `minimum_management_calls`,
+`source_requests_sha256`. Limits use the documented payload/extent/network/
+observations/signing/evidence field order. Exact record bytes are capped at 1 MiB.
+The source manifest commits the original metadata and payload; raw float state is
+not copied into plan JSON. Source module and derived counts are not caller overrides.
+
+Approval is `SHA256(UTF8("ic-backup/local-restore-plan/1\0") || original_json_bytes)`.
+The independent encoding vector is
+[restore-plan.json](../../crates/ic-backup/src/store/restore/restore-plan.json), with
+[its SHA-256](../../crates/ic-backup/src/store/restore/restore-plan.sha256) calculated
+using the separate system SHA-256 utility. That passive record is an encoding
+vector, not a real authenticated capture or permission to restore.
+
+The ordered-source commitment hashes `UTF8("ic-backup/restore-source-requests/1\0")`
+followed, for every source DTO, by its u32 little-endian ordinal, u32 little-endian
+encoded length and raw 32-byte SHA-256 of Platform's owned Candid argument bytes.
+Each encoding is bounded to 4 KiB; hashing streams into a 1 MiB bounded sink.
+At most 4092 requests fit the admitted management ceiling. Destination-specific
+metadata/data/load arguments cannot be selected until allocation is authenticated;
+those exact requests must later be bound in the original restore journal before
+submission. The plan commitment is not a replacement for that evidence.
+
+`RestorePlan::decode` bounds raw input before parsing, refuses unknown/duplicate
+fields and noncanonical identities, re-admits the declaration against the currently
+held authenticated source, and recomputes every derived binding. Valid original
+JSON whitespace/order remains unchanged and therefore affects approval. It never
+pretty-prints a recovered plan or infers unused spending from a missing journal.
+No file, source reference, clock or provider is touched by construction/decoding.
+
+Focused legacy review inspected frozen `4ae087fa`'s `model/operation_plan`, its
+canonical commitment, changed-owner/budget and closed-schema regressions, plus
+`a860d14421b9ff1c61c1dce079cdc6a19316bfd0`'s ownership consolidation. Reuse exact
+source/authority binding and bounded schema admission; do not import inventory
+selection graphs, child-plan journals or recursive intent. Unlike legacy's alias
+normalization test, persisted identities here must already be canonical and replay
+retains original bytes. Native tests cover source/count substitutions, each mutable
+declaration field, bounds, duplicate/unknown/partial records and exact replay.
+The real-IC fixture builds and decodes this plan against an offline authenticated
+source without creating a restore operation or adding signatures. No legacy code
+was copied; upload/load and durable restore-reference creation remain unqualified.

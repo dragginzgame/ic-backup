@@ -1,4 +1,7 @@
 //! Authenticated capture evidence and held payload custody, without restore authority.
+mod transfer;
+pub use transfer::{RestoreTransfer, RestoreTransferError, RestoreTransferRequest};
+
 use super::{
     BackupStore, CaptureCompletionError, CaptureError, CaptureOperation, CaptureProvider,
     StatusHttpTransport, same_identity,
@@ -90,6 +93,10 @@ impl BackupStore {
 }
 
 impl CaptureSource<'_, '_> {
+    pub(in crate::store) fn original_plan(&self) -> &super::CapturePlan {
+        &self._capture.plan
+    }
+
     /// Original authenticated receipt selected at admission; no restore permission.
     #[must_use]
     pub fn summary(&self) -> &BackupSummary {

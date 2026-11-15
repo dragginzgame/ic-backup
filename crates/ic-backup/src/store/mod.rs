@@ -31,6 +31,8 @@
 mod capture;
 mod manifest;
 mod payload;
+mod restore;
+pub use restore::{RestoreLimitsRecord, RestorePlan, RestorePlanError, RestoreRequest};
 #[cfg(test)]
 mod tests;
 
@@ -51,14 +53,14 @@ pub use capture::{
     CaptureSuccessionError, CaptureTiming, CaptureTransfer, CaptureTransferBindError,
     CaptureTransferView, DataReadError, DirectCaptureError, DirectCaptureProvider, LedgerError,
     MetadataReadError, PreparedCaptureCall, PreparedStatus, ReadbackDataError,
-    ReadbackMetadataError, SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress,
-    SnapshotReplyError, StatusAdmissionRecord, StatusAdvanceError, StatusCertificateError,
-    StatusEvidence, StatusHttpError, StatusHttpTransport, StatusProgress, StatusProvider,
-    StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
-    UploadedSnapshotReadback, authenticate_capture_lookup, authenticate_metadata_reply,
-    authenticate_status_evidence, authenticate_status_request, decode_snapshot_list,
-    decode_taken_snapshot, observe_capture_certificate, status_certificate_evidence,
-    status_certificate_observation,
+    ReadbackMetadataError, RestoreTransfer, RestoreTransferError, RestoreTransferRequest,
+    SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress, SnapshotReplyError,
+    StatusAdmissionRecord, StatusAdvanceError, StatusCertificateError, StatusEvidence,
+    StatusHttpError, StatusHttpTransport, StatusProgress, StatusProvider, StatusRequestError,
+    TransferDataError, TransferError, TransferMetadataError, UploadedSnapshotReadback,
+    authenticate_capture_lookup, authenticate_metadata_reply, authenticate_status_evidence,
+    authenticate_status_request, decode_snapshot_list, decode_taken_snapshot,
+    observe_capture_certificate, status_certificate_evidence, status_certificate_observation,
 };
 pub use manifest::ManifestError;
 pub use payload::{PayloadReadError, PayloadSource};

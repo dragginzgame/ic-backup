@@ -2,14 +2,13 @@
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy remains read-only.
 
-The 0.101.8 GitHub-only checkpoint adds read-only verification and held capture sources.
-Product manifests and both locks select 0.101.8; private qualification remains 0.1.0.
+The 0.101.9 GitHub-only checkpoint adds restore transfer scheduling and immutable plans.
+Product manifests and both locks select 0.101.9; private qualification remains 0.1.0.
 All packages remain `publish = false`; no tag or registry publication is selected.
-GitHub `main` was verified at `8c833f1` (0.101.7). The scoped post-push review
-covered claim replacement, shared intent creation, completed-owner replay and
-native/IC callers. No actionable architectural drift was found; a completion API
-comment implying succession remained future work was clarified. Delivery of
-0.101.8 and its required review precede the next increment.
+GitHub `main` was verified at `e838fec` (0.101.8). The scoped post-push review
+covered completion authentication, assembly verification, held source custody and
+native/IC callers. No actionable drift was found in that delivered scope.
+Delivery of 0.101.9 and its required review precede the next increment.
 
 ## Implemented capture and recovery
 
@@ -81,8 +80,16 @@ approval. `open_capture_source` now binds that verification to an exact receipt,
 caller byte limit, original operation borrow/lock and existing held payload
 descriptors. The same store is mandatory. Bounded reads reuse block checks and
 refuse changed bytes; they do not repeat certificate authentication per extent.
-Source custody is ephemeral. Restore intent/references, restore, CLI and Canic
-adapters remain unfinished. Local completion reconciliation can synchronize
+Source custody is ephemeral. Local `plan_restore_transfer` now computes exact
+source extents with the shared capture ordinal mapper, same-target/release checks
+and `2*N + 7` base management calls. Whole chunks use actual lengths and cannot
+be split; empty chunks still count. The result retains the exact source receipt
+but creates no destination or authority. `RestorePlan` now binds the admitted
+source and exact ordered request commitment to a direct sender, initiator, trust
+root, same target/release and finite restore limits. It encodes a bounded closed
+record and approval digest; decoding re-admits source/derived fields and retains
+original bytes. This is in-memory intent only. Durable restore creation/references,
+restore effects, CLI and Canic adapters remain unfinished. Local completion reconciliation can synchronize
 files; read-only inspection/inventory and settled remote-call replay are separate.
 Small fixtures are qualified; repeated proof/file checks have not established
 practical maximum-size throughput. No cache or generic recovery engine was added.
@@ -125,11 +132,20 @@ eight existing held-reader regressions, plus offline actual-IC source reads befo
 and after succession. Strict product/private lint and documentation checks apply.
 No upload/load effects or durable restore-reference writer are qualified yet.
 
+`target/evidence/restore-transfer/` records four source-schedule tests, 48
+capture/readback regressions and the real-IC offline source journey. Product and
+private lint plus documentation checks qualify the local calculation only.
+
+`target/evidence/restore-plan/` records four source-bound plan regression groups,
+one independent encoding/approval vector, strict product/private lint and the
+real-IC offline plan construction/decode consumer. No restore files are written.
+
 ## Next work
 
-Define the bounded same-release/target restore plan and exact upload/readback
-schedule over admitted source metadata. Bind its durable source reference before
-any restore effect; preserve target-before-source lock order. Then implement bounded
+Persist the approved restore plan, initial bounded journal, target claim and exact
+source reference together under target-before-source lock order. Define retained
+interruption admission before implementing this writer; do not grant effects from
+partial creation. Bind allocation-dependent exact requests before submission. Then implement bounded
 same-release restore to the same existing ID, left stopped.
 Preserve original evidence and finite authority; do not add cleanup or reset paths.
 Canic owns membership, routing, concurrency, release identity and maintenance;

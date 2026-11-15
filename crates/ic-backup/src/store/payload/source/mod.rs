@@ -106,6 +106,16 @@ impl BackupStore {
 }
 
 impl PayloadSource<'_> {
+    pub(in crate::store) fn member_lengths(&self) -> Option<impl Iterator<Item = (&str, u64)>> {
+        self.active.then(|| {
+            self.original
+                .decoded
+                .members
+                .iter()
+                .map(|m| (m.name.as_str(), m.bytes))
+        })
+    }
+
     /// Manifest summary bound at opening; still not authenticated capture evidence.
     #[must_use]
     pub fn summary(&self) -> &BackupSummary {

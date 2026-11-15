@@ -202,28 +202,43 @@ impl CaptureTransfer<'_> {
         })
     }
 
-    fn kind(&self, mut ordinal: u64) -> SnapshotDataKind {
-        let extent = u64::from(self.plan.request().limits.extent_bytes);
-        let sizes = [
-            self.metadata.wasm_module_size,
-            self.metadata.wasm_memory_size,
-            self.metadata.stable_memory_size,
-        ];
-        for (region, count) in self.region_calls.into_iter().enumerate() {
-            if ordinal < count {
-                let offset = ordinal * extent;
-                let size = extent.min(sizes[region] - offset);
-                return match region {
-                    0 => SnapshotDataKind::WasmModule { offset, size },
-                    1 => SnapshotDataKind::WasmMemory { offset, size },
-                    _ => SnapshotDataKind::StableMemory { offset, size },
-                };
-            }
-            ordinal -= count;
+    fn kind(&self, ordinal: u64) -> SnapshotDataKind {
+        data_kind(
+            [
+                self.metadata.wasm_module_size,
+                self.metadata.wasm_memory_size,
+                self.metadata.stable_memory_size,
+            ],
+            self.region_calls,
+            u64::from(self.plan.request().limits.extent_bytes),
+            &self.chunks,
+            ordinal,
+        )
+    }
+}
+
+// Both capture and restore admit counts/lengths before using this fixed ordering.
+pub(in crate::store::capture) fn data_kind(
+    sizes: [u64; 3],
+    region_calls: [u64; 3],
+    extent: u64,
+    chunks: &[[u8; 32]],
+    mut ordinal: u64,
+) -> SnapshotDataKind {
+    for (region, count) in region_calls.into_iter().enumerate() {
+        if ordinal < count {
+            let offset = ordinal * extent;
+            let size = extent.min(sizes[region] - offset);
+            return match region {
+                0 => SnapshotDataKind::WasmModule { offset, size },
+                1 => SnapshotDataKind::WasmMemory { offset, size },
+                _ => SnapshotDataKind::StableMemory { offset, size },
+            };
         }
-        SnapshotDataKind::WasmChunk {
-            hash: self.chunks[ordinal as usize].to_vec(),
-        }
+        ordinal -= count;
+    }
+    SnapshotDataKind::WasmChunk {
+        hash: chunks[ordinal as usize].to_vec(),
     }
 }
 
