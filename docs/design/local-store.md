@@ -6,9 +6,9 @@ This is the persistence design for the [operation design](operation-contract.md)
 Initialization, opening, bounded manifest inventory and payload byte checks are implemented;
 [the inventory contract](../architecture/local-inventory.md) owns their exact bounds.
 The [capture-intent contract](../architecture/capture-intent.md) implements immutable
-plans, durable target claims and initial status advancement/inspection. Snapshot
-advancement, terminal claim succession, completion publication and full bundle
-verification remain proposed. No legacy records or unfinished operations are imported.
+plans, durable target claims and initial status advancement/inspection. Snapshot advancement and [artifact assembly](../architecture/capture-transfer.md#local-artifact-assembly)
+are implemented. Final status and local completion publication/reconciliation are implemented.
+Terminal claim succession and standalone full-bundle admission remain proposed. No legacy records or unfinished operations are imported.
 
 ## Small public surface
 
@@ -139,30 +139,72 @@ all local evidence. The integration must maintain the stated private-store custo
 
 ## Completion and interrupted publication
 
-For capture, the final ledger transition is `PublishReady`: all required calls
-are settled, final stopped-state evidence and complete verified payload commitments
-are durable, and the original completion timestamp is retained. No remote work
-follows it. It also binds the fields from which the manifest is generated.
+`CaptureOperation::complete_capture` is implemented local completion and
+reconciliation. It requires an already-settled successful final status; it cannot
+sign, submit, poll or settle a missing remote result. It reauthenticates original
+capture/payload/final evidence and synchronizes the verified assembly. A retained
+lookup must have recorded original-call settlement; unresolved or unused lookup
+lanes currently refuse completion. Canic still owns continuous maintenance and
+external-effect safety; completion does not rewind obligations.
 
-Publish the exact manifest create-only after syncing payload and evidence files.
-The manifest binds the final ledger length/digest. There is no circular hash:
-`PublishReady` binds content/summary fields, while the manifest additionally binds
-the completed ledger prefix. Do not add another catalog row or completion marker.
-The durably published manifest is the capture completion receipt.
+`PublishReady` is the final ledger event. Its canonical body is
+`{"kind":"publish_ready","completed_at_ns":N}` with positive u64 host Unix
+nanoseconds, selected once. The existing prefix already binds the immutable plan,
+source metadata, exact accepted payloads, verified assembly and final status.
+No summary duplicate or separate completion journal is persisted. The original
+evidence budget reserves one maximum-size frame and the 1 MiB manifest ceiling
+before this event. Every subsequent ledger event refuses, including a second
+`PublishReady`. Reopening never invents a new timestamp or allowance.
 
-A crash before manifest publication leaves an incomplete capture. A crash after
-publication but before its directory sync or return requires local reconciliation:
-verify the retained prefix, manifest and payload commitments, synchronize original
-files/directories, then return the original receipt. Never recapture or invent a
-new completion timestamp. Mere visibility is not proof that the prior call returned
-success. Inventory may report such a visible completion declaration; only held
-operation admission establishes durable replay or permission to reuse its target.
+The existing `ic-backup/local-manifest/1` schema owns serialization and validation.
+The writer uses ASCII-sorted members, the original metadata snapshot ID/timestamp,
+plan release/module identity and actual payload lengths/hashes. Plan, closed
+ledger, metadata arguments and metadata reply commitments are raw SHA-256 of
+those exact original bytes, with exact lengths. Metadata arguments come from the
+retained signed envelope and the reply from retained certified evidence; neither
+is re-encoded. The manifest binds the entire closed ledger, including
+`PublishReady`. There is no circular hash or post-publication journal event.
+The existing golden schema and exact original-byte regressions cover the writer.
 
-Restore has no new bundle. Its terminal `LoadedStopped` ledger transition binds
-settled load and final status evidence. Source references remain on success and
-failure. Create/sync the exact source reference before a restore can dispatch;
-a missing reference on reopen refuses effects. No reference release, pruning or
-remote snapshot deletion is implied by local completion.
+The fixed bundle already holds `payload/`. Create `manifest.pending` exclusively
+with private permissions, write/synchronize it, verify its exact bytes and held
+identity, then use Host's no-replace publisher to rename it to `manifest.json`
+and synchronize the directory. The manifest is the sole completion receipt;
+no catalog row, extra completion marker, second payload copy or cleanup is added.
+All fallible publication invalidates the live handle until closing custody and
+original-record admission succeed. A failure preserves every named file.
+
+On local reconciliation, reauthenticate the original evidence and derive only the
+same v1 manifest from the frozen prefix. Missing manifest/staging after readiness
+can be created; exact complete staging can be published; an exact visible manifest
+can be synchronized and returned. Partial, changed, unsafe, aliased, semantically
+equivalent-but-differently-encoded, or simultaneously staged/published files refuse
+without replacement or cleanup. A partial ledger tail still refuses reopen.
+Local reconciliation may synchronize or publish retained local files; it performs
+no remote effect and appends no new event after readiness. Read-only inventory
+and inspection remain separate from durability reconciliation.
+
+Inventory may observe a manifest whose publisher lost its return; visibility alone
+is not proof of that earlier invocation's success. `complete_capture` returns the
+original `BackupSummary`, including its exact manifest hash, after local admission
+and synchronization. Existing list/latest and payload verification consume that
+same manifest. Standalone complete-bundle admission for restore is still separate.
+
+Legacy review revisited frozen artifact-writer finish/publication and tests for
+changed closing custody and acknowledged process death at
+`4ae087fad8c23de712aa60bf569bde4b2b932651`. The
+`29bf7a51044e72c4bd8cf6dc5cd6cb24d3711b4d` history removed an unnecessary downloaded
+stage. Reuse exact retained-byte checks, fail-closed partial recovery and the Host
+publisher; do not import the old layout or add another persisted lifecycle stage.
+Native tests exercise full/partial readiness frames and publication crash images.
+The small real IC journey now reaches manifest publication and existing inventory,
+then reconciles after gateway shutdown and revoked live authority. Physical power
+loss, maximum-size throughput and hosted macOS remain unqualified.
+
+Target claims remain retained even after completion. Terminal claim succession is
+not implemented, so this API does not yet permit a second capture of the same
+target. Restore has no new bundle; its terminal state, source references and load
+qualification remain proposed below. No pruning or remote deletion is implied.
 
 ## Concurrency and target ownership
 
@@ -175,7 +217,8 @@ then operation custody. Ordinary advancement holds only its admitted source and
 operation locks and checks its retained owner binding. Never acquire the target
 lock while holding an operation in the reverse order.
 
-The durable owner record remains after process death. An occupied unfinished or
+The remaining succession rules are design requirements: the current writer keeps
+the original owner even after completion. The durable owner record remains after process death. An occupied unfinished or
 uncertain owner refuses new work. A new operation may replace that owner only under
 the target lock after admitting the prior exact terminal evidence and acquiring
 its operation lock nonblockingly. Preserve the prior operation and bundle. Never

@@ -1,24 +1,28 @@
 //! Local capture intent and exclusive original custody. Direct-host status and snapshot continuation.
 
 mod advance;
+mod assembly;
+mod completion;
+pub use completion::CaptureCompletionError;
 mod ledger;
 pub use advance::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
-    CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupError,
-    CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy, CaptureLookupPhase,
-    CaptureLookupPolicy, CaptureLookupProgress, CaptureLookupSettlementError, CaptureLookupSigner,
-    CaptureLookupView, CaptureMetadataAdmissionRecord, CaptureMetadataAdvanceError,
-    CaptureMetadataPhase, CaptureMetadataProgress, CaptureMetadataSigner, CaptureMetadataView,
-    CaptureObservation, CaptureObservationError, CaptureObservationPolicy, CaptureProvider,
-    CaptureSettlementError, CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase,
-    CaptureSnapshotView, CaptureStatusView, CaptureTiming, DirectCaptureError,
-    DirectCaptureProvider, MetadataReadError, PreparedCaptureCall, PreparedStatus,
-    SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress, StatusAdmissionRecord,
-    StatusAdvanceError, StatusCertificateError, StatusEvidence, StatusHttpError,
-    StatusHttpTransport, StatusProgress, StatusProvider, StatusRequestError,
-    authenticate_capture_lookup, authenticate_metadata_reply, authenticate_status_evidence,
-    authenticate_status_request, observe_capture_certificate, status_certificate_evidence,
-    status_certificate_observation,
+    CaptureDataAdmissionRecord, CaptureDataAdvanceError, CaptureDataPhase, CaptureDataProgress,
+    CaptureDataSigner, CaptureDataView, CaptureFinalStatusError, CaptureLookupAdmissionRecord,
+    CaptureLookupAdvanceError, CaptureLookupError, CaptureLookupEvidence, CaptureLookupHttpError,
+    CaptureLookupHttpPolicy, CaptureLookupPhase, CaptureLookupPolicy, CaptureLookupProgress,
+    CaptureLookupSettlementError, CaptureLookupSigner, CaptureLookupView,
+    CaptureMetadataAdmissionRecord, CaptureMetadataAdvanceError, CaptureMetadataPhase,
+    CaptureMetadataProgress, CaptureMetadataSigner, CaptureMetadataView, CaptureObservation,
+    CaptureObservationError, CaptureObservationPolicy, CaptureProvider, CaptureSettlementError,
+    CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase, CaptureSnapshotView,
+    CaptureStatusView, CaptureTiming, DirectCaptureError, DirectCaptureProvider, MetadataReadError,
+    PreparedCaptureCall, PreparedStatus, SnapshotAdmissionRecord, SnapshotAdvanceError,
+    SnapshotProgress, StatusAdmissionRecord, StatusAdvanceError, StatusCertificateError,
+    StatusEvidence, StatusHttpError, StatusHttpTransport, StatusProgress, StatusProvider,
+    StatusRequestError, authenticate_capture_lookup, authenticate_metadata_reply,
+    authenticate_status_evidence, authenticate_status_request, observe_capture_certificate,
+    status_certificate_evidence, status_certificate_observation,
 };
 mod plan;
 mod snapshot;
@@ -56,7 +60,8 @@ use thiserror::Error;
 ///
 /// Direct-host status and snapshot continuation use durable attempt reservations.
 /// Retained original replies and terminal lookup evidence can settle pending calls.
-/// There is no download, completion or owner-release API yet.
+/// Payload acquisition, assembly and completion retain original evidence.
+/// Target-owner succession remains unimplemented.
 #[derive(Debug)]
 pub struct CaptureOperation {
     store: Directory,
@@ -143,7 +148,23 @@ impl CaptureOperation {
             }
         }
         exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
-        for entry in self.directory.entries(13)? {
+        for (ordinal, d) in state.data.iter().enumerate() {
+            let names = ledger::data_names(ordinal as u32);
+            for (name, reference) in [(&names.0, &d.request), (&names.1, &d.result)] {
+                if let Some(reference) = reference {
+                    self.evidence(name, reference)?;
+                }
+            }
+        }
+        if let Some(status) = &state.final_status {
+            for (name, reference) in status.evidence() {
+                if let Some(reference) = reference {
+                    self.evidence(name, reference)?;
+                }
+            }
+        }
+        self.check_assembly(&state)?;
+        for entry in self.directory.entries(15 + 2 * state.data.len())? {
             let entry = entry?;
             let admitted = match entry.name.to_str() {
                 Some("lock" | "plan.json" | "ledger.bin") => true,
@@ -153,6 +174,14 @@ impl CaptureOperation {
                 Some("metadata-result.bin") => {
                     state.metadata.as_ref().is_some_and(|m| m.result.is_some())
                 }
+                Some("final-status-request.bin") => state
+                    .final_status
+                    .as_ref()
+                    .is_some_and(|s| s.request.is_some()),
+                Some("final-status-result.bin") => state
+                    .final_status
+                    .as_ref()
+                    .is_some_and(|s| s.result.is_some()),
                 Some("status-request.bin") => state.request.is_some(),
                 Some("status-result.bin") => state.result.is_some(),
                 Some("lookup-request.bin") => {
@@ -162,6 +191,7 @@ impl CaptureOperation {
                     .lookup
                     .as_ref()
                     .is_some_and(|s| s.certificate.is_some()),
+                Some(name) if state.data_name_admitted(name) => true,
                 Some(name) => state
                     .snapshot
                     .evidence()
@@ -456,7 +486,38 @@ impl CaptureOperation {
         let state = self.check()?;
         let frame = state.candidate(event, &self.plan)?;
         match (event, evidence) {
-            (ledger::EventRecord::TransferBound { .. }, None) => {}
+            (
+                ledger::EventRecord::FinalStatusStarted { .. }
+                | ledger::EventRecord::FinalStatusSubmissionReserved,
+                None,
+            ) => {}
+            (
+                ledger::EventRecord::FinalStatusPrepared { request },
+                Some(("final-status-request.bin", bytes)),
+            ) if *request == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::FinalStatusSettled { result },
+                Some(("final-status-result.bin", bytes)),
+            ) if *result == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::DataStarted { .. }
+                | ledger::EventRecord::DataSubmissionReserved { .. }
+                | ledger::EventRecord::DataAccepted { .. },
+                None,
+            ) => {}
+            (ledger::EventRecord::DataPrepared { ordinal, request }, Some((name, bytes)))
+                if name == ledger::data_names(*ordinal).0
+                    && *request == ledger::EvidenceRecord::new(bytes) => {}
+            (ledger::EventRecord::DataSettled { ordinal, result }, Some((name, bytes)))
+                if name == ledger::data_names(*ordinal).1
+                    && *result == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::TransferBound { .. }
+                | ledger::EventRecord::PublishReady { .. }
+                | ledger::EventRecord::AssemblyStarted
+                | ledger::EventRecord::AssemblyVerified { .. },
+                None,
+            ) => {}
             (
                 ledger::EventRecord::MetadataStarted { .. }
                 | ledger::EventRecord::MetadataSubmissionReserved,
@@ -565,6 +626,25 @@ impl CaptureOperation {
         }
         if let Some(metadata) = &state.metadata {
             for (name, reference) in metadata.evidence() {
+                if reference.is_some() {
+                    open_optional(&self.directory, name)?
+                        .ok_or(CaptureError::Incomplete)?
+                        .sync_all()?;
+                }
+            }
+        }
+        for (ordinal, d) in state.data.iter().enumerate() {
+            let names = ledger::data_names(ordinal as u32);
+            for (name, reference) in [(&names.0, &d.request), (&names.1, &d.result)] {
+                if reference.is_some() {
+                    open_optional(&self.directory, name)?
+                        .ok_or(CaptureError::Incomplete)?
+                        .sync_all()?;
+                }
+            }
+        }
+        if let Some(status) = &state.final_status {
+            for (name, reference) in status.evidence() {
                 if reference.is_some() {
                     open_optional(&self.directory, name)?
                         .ok_or(CaptureError::Incomplete)?

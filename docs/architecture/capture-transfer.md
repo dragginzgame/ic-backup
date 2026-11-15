@@ -131,7 +131,7 @@ The result contains only decoded bytes. The caller must retain raw evidence and
 authenticate its association with the exact target, snapshot and request. Valid
 same-length region bytes do not establish authenticity; chunk hashes are only as
 trusted as their metadata. Decoding performs no IO, reservation, progress update,
-settlement or complete-coverage check. Effectful payload acquisition remains unimplemented.
+settlement or complete-coverage check. Durable acquisition composes it as described below.
 
 ## Uploaded metadata readback
 
@@ -505,7 +505,7 @@ This authenticates one supplied result, not its source metadata provenance,
 original reservations, current snapshot custody or local persistence. It performs
 no IO, clock read, signing, HTTP, settlement or progress update. Callers must retain
 and authenticate source metadata and its schedule binding separately. These are
-local helpers; durable data acquisition and complete coverage remain unimplemented.
+local helpers reused by durable acquisition and complete coverage verification below.
 
 Payload limits and retained-evidence limits are independent. The original result
 record contains both response bytes and the certificate containing that response.
@@ -529,3 +529,167 @@ empty chunks, signed identity/range substitution, wrong ordinals, damaged
 signature/proof/time/outcome, certified malformed payloads, rejection/pending
 outcomes and independent complete-evidence bounds. Existing IC fixtures regress
 shared certificate callers; they do not qualify remote payload acquisition.
+
+## Durable sequential payload acquisition
+
+`CaptureOperation::advance_data(ordinal, admission, transport, signer, original)`
+acquires one exact zero-based data ordinal against an existing `TransferBound`.
+`CaptureDataAdmissionRecord` retains the original call limits, transport and
+signer identities, read-authority witness, expiry and certificate windows.
+`CaptureDataSigner` is a bounded sign-only integration: its permission check is
+local and effect-free; it owns process custody and cannot dispatch or retry.
+
+The workflow reauthenticates original capture/metadata, recomputes the retained
+schedule binding and verifies preceding accepted payloads before dependent work.
+No ordinal can be skipped, and the next ordinal requires the previous one to be
+accepted. A prior accepted ordinal can be replayed without advancing later work.
+The existing journal's cumulative limits count all original calls, metadata,
+lookup and every data admission, including five maximum-size frames per data
+read. Reopening never resets signer, network or evidence spending.
+
+The five events are `DataStarted`, `DataPrepared`, `DataSubmissionReserved`,
+`DataSettled` and `DataAccepted`. The first reserves signing before invocation;
+`data-NNNN-request.bin` retains exact signed bytes before the submission reservation.
+`data-NNNN-result.bin` retains the complete certified result before payload policy.
+`DataAccepted` records validated byte length and SHA-256, including a valid empty
+chunk, only after exact scheduled response authentication. Ordinals are canonical
+four-digit decimal names within the original 8,192 signing/network ceiling.
+Evidence files are create-only, held and rechecked through the existing custody
+owner; extra, missing, altered or orphan files refuse without repair or cleanup.
+Existing event bytes are unchanged; older readers refuse the added data events.
+
+Payload bytes remain inside certified result evidence. There is no separate
+payload file or per-extent journal. `Ready` returns bytes decoded from that evidence,
+not a completion receipt. On replay both the certificate and recorded byte identity
+must match. An accepted marker alone cannot authorize another read. A valid
+certificate carrying malformed or unsupported payload remains settled and blocks
+progress; it cannot become accepted. `inspect_data` reports phase, original
+admission and additional reservations without authenticating coverage.
+
+Prepared continuation reuses exact bytes after fresh read permission. Failed,
+cancelled or invalid signing remains pending and consumed; lost HTTP remains
+pending and consumed. Neither retries. A settled valid result can be accepted
+locally after interruption. An already accepted result replays without a clock,
+metadata/data signer, live guard, HTTP or journal mutation. Complete uncertain
+frames survive reopen with their original spending; partial frames refuse.
+Data lookup/surviving-reply reconciliation is not implemented.
+
+Before new signing or submission, admit room for the scheduled payload ceiling
+plus 8 KiB reply overhead, the existing 1 MiB certificate cap and five framing
+bytes under the original complete-result limit (at most 2 MiB). Region ceilings
+use the exact scheduled size; chunks use the original extent ceiling. Accepted
+raw replies also enforce that overhead bound. Full 1 MiB extents therefore refuse
+before spending, rather than changing ranges or widening limits. Actual response,
+certificate, Candid and cumulative evidence limits still apply independently.
+
+This slice qualifies small sequential transfers, not maximum-size throughput.
+It reauthenticates the preceding accepted prefix and rechecks retained files;
+large-transfer performance needs measurement before claiming practical support
+at the declaration ceilings. Closing custody is checked around the prefix, not
+by rescanning the whole operation separately for every preceding payload.
+No cache, second authority index or generic retry engine is introduced.
+
+Focused legacy review revisited the transfer-read model, policy and regressions
+linked above, its
+[workflow](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/workflow/ic_snapshot_transfer_read/mod.rs)
+and a860d144 consolidation history. Preserve original reservation association,
+retained replies on policy failure and separate validation from completion. Adapt
+those lessons to the existing single journal rather than importing legacy stage
+catalogs, qualified receipts or per-operation journals. No code was copied.
+
+Eight new native groups qualify sequential acquisition/replay, signing failure and
+cancellation, lost HTTP, exact prepared continuation, invalid certified payload,
+pre-effect binding/permission/proof limits, all five uncertain-write boundaries,
+cumulative budget exhaustion, retained evidence damage and false accepted markers.
+The fourth IC fixture acquires the real eight-byte Wasm payload and replays it
+exactly after server shutdown and signer revocation, preserving the journal and
+original canister state. Final status and completion now extend that journey;
+restore remains unfinished.
+
+## Complete retained payload verification
+
+`CaptureOperation::verify_data` requires every bound ordinal to be accepted,
+reauthenticates original capture/metadata and the exact transfer binding, then
+reuses each retained request/certificate/payload check in schedule order. Exact
+region lengths and named chunk hashes remain the existing decoder's responsibility;
+no duplicate coverage map is added. The combined Wasm SHA-256 must match the
+immutable plan. Host Artifacts' bounded `HashingWriter` streams into a sink;
+only one bounded decoded reply is retained at a time. Actual payload bytes must
+fit the original schedule ceiling, including unknown-length chunks.
+
+Opening and closing custody checks surround verification. Incomplete acceptance,
+invalid evidence or a wrong module hash refuse without writes, allowance changes,
+cleanup or renewed authority. Success returns the actual payload byte count,
+not a persisted receipt: there are no output files, final status check or completed
+backup. Verification is repeatable offline using the original provider's replay
+validation; it does not call signing, live admission or HTTP.
+
+Legacy review at `4ae087fad8c23de712aa60bf569bde4b2b932651` covered
+`model/ic_snapshot_coverage` and its gap/overlap/duplicate/empty-chunk regressions,
+plus `ops/persistence/download_journal/ic_snapshot_artifact` and its finish-time
+coverage/custody checks. History `94b94db` consolidated those implementations.
+Keep complete coverage distinct from durable publication. The fixed new schedule
+already owns order and ranges, so do not import legacy interleaving maps, writer
+stages or a second progress journal. No source was copied.
+
+## Local artifact assembly
+
+`CaptureOperation::assemble_data` first runs complete authenticated coverage/module
+verification, then retains `{"kind":"assembly_started"}` in the original ledger.
+Admission reserves two maximum-size frames within the original evidence budget
+before filesystem effects. No new signing, HTTP or observation allowance is spent.
+The operation ID selects `bundles/<operation-id>/payload/`; staged files occupy
+their final location, without a second copy, relocation protocol or manifest.
+Inventory counts this unfinished bundle but omits it from completed results.
+
+The fixed member set is `module.wasm`, `heap.bin`, `stable.bin`, followed by
+`chunk-<lowercase-sha256>.bin` members from the bound schedule. Empty heap/stable
+files and named empty chunks are retained. The source schedule owns ranges/order;
+assembly only groups those ordinals by member. At most 1,027 members and original
+payload bytes are admitted. Host owns private directories, exclusive 0600 files,
+held no-follow reads, file identities and hashing. There is no whole-snapshot
+buffer; scratch holds bounded replies/comparison bytes and bounded member handles.
+
+All existing files must match complete authenticated source bytes before creating
+any missing file. Partial, altered, extra, unsafe or hard-linked files refuse
+without overwrite, append, deletion or a new staging location. A complete file
+surviving before verification can be synchronized and reused. Missing files can
+be created only before the verification event; after verification, any missing
+file or directory refuses reopen instead of reconstruction. An unclaimed bundle
+at the selected ID also refuses. The integration excludes noncooperating namespace
+and content writers throughout; sequential held checks are not a filesystem fence.
+
+New files are written from the original certified payloads, synchronized and read
+back against source-derived exact lengths/hashes. The payload, bundle and parent
+are synchronized; retained ledger synchronization also applies on replay. Closing
+file/directory custody checks surround hashing. Filesystem uncertainty invalidates
+the live operation handle. Reopen preserves partial bytes and consumed authority;
+there is no automatic recovery for a partial member in this version.
+
+`{"kind":"assembly_verified","sha256":[...]}` retains the 32-byte local tree
+commitment after successful file verification and synchronization. This compact
+commitment introduces no second member manifest. Hash input is ASCII
+`ic-backup/assembled-payload/1` plus NUL, followed in ASCII filename order by each
+u32 little-endian name length, UTF-8 name bytes, u64 little-endian member length
+and raw 32-byte SHA-256. The two-extent `helloworld` module with empty heap/stable
+has independent golden commitment
+`71f4aa3d4064e1e45191510033efb8118152f5c8e4bb41f40ee883bef04e43dc`.
+Existing ledger bytes are unchanged; older readers refuse the new events.
+
+Verified assembly replays by authenticating original evidence and checking exact
+files, without journal appends, signing or HTTP. Success returns payload bytes;
+it does not assert final canister state, publish `manifest.json`, release target
+custody or grant restore permission. `PublishReady` and completion publication are implemented separately under
+[the local-store contract](../design/local-store.md#completion-and-interrupted-publication). Small fixtures qualify this
+path; repeated source/file checking is not a maximum-size performance claim.
+
+Legacy review at `4ae087fad8c23de712aa60bf569bde4b2b932651` covered
+`ops/persistence/download_journal/ic_snapshot_artifact` and its partial-drop,
+changed/unsafe/missing-file, empty-region/chunk and custody regressions. History
+`29bf7a51044e72c4bd8cf6dc5cd6cb24d3711b4d` removed a redundant downloaded transition.
+Preserve exact byte checking and partial-file retention; do not import that old
+journal/layout or add a downloaded stage. Unlike its streaming remote writer,
+this assembler starts with all certified reads already retained, allowing complete
+unrecorded members to be compared and reused offline. Native regressions exercise
+that changed recovery contract; no legacy source was copied. Actual IC
+qualification assembles the eight-byte Wasm and replays after server shutdown.

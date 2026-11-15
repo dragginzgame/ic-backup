@@ -113,7 +113,7 @@ pub enum CaptureMetadataProgress {
     SigningPending,
     /// Submission is unresolved and must not be repeated.
     SubmissionPending,
-    /// Authenticated, supported metadata. No durable data-read schedule exists yet.
+    /// Authenticated, supported metadata; this outcome alone does not bind a schedule.
     Ready(Box<ReadCanisterSnapshotMetadataResult>),
 }
 /// Metadata refusal or uncertainty; original evidence and spending remain retained.

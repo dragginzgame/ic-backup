@@ -36,7 +36,9 @@ mod tests;
 
 pub use capture::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
-    CaptureError, CaptureExecution, CaptureLimitsRecord, CaptureLookupAdmissionRecord,
+    CaptureCompletionError, CaptureDataAdmissionRecord, CaptureDataAdvanceError, CaptureDataPhase,
+    CaptureDataProgress, CaptureDataSigner, CaptureDataView, CaptureError, CaptureExecution,
+    CaptureFinalStatusError, CaptureLimitsRecord, CaptureLookupAdmissionRecord,
     CaptureLookupAdvanceError, CaptureLookupError, CaptureLookupEvidence, CaptureLookupHttpError,
     CaptureLookupHttpPolicy, CaptureLookupPhase, CaptureLookupPolicy, CaptureLookupProgress,
     CaptureLookupSettlementError, CaptureLookupSigner, CaptureLookupView,

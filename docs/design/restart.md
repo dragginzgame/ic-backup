@@ -2,7 +2,8 @@
 
 Status: local inventory, payload integrity, capture intent, transfer planning
 and bounded reply decoding are implemented, together with direct-host status/list/take
-and settlement from surviving certified replies. Full capture/restore remains proposed in the
+and settlement from surviving certified replies. Small single-canister captures now
+reach local completion; target succession and restore remain proposed in the
 [library design](library-design.md); the [current handoff](../status/current.md)
 links each implemented contract.
 The user selected a single-canister library first: capture one already-stopped
@@ -25,8 +26,8 @@ by default. A CLI, Agent wrapper, persisted schema and simulator workspace are
 not required merely to establish the library. The implemented inventory has a
 bounded manifest reader, initial operation records and a pure transfer planner.
 The direct provider and private PocketIC qualification cover status, snapshot
-list/take, surviving reply settlement, durable metadata acquisition and offline replay. Native injected providers
-prove persistence ordering only; complete download and restore remain unfinished.
+list/take, surviving reply settlement, durable metadata/payload acquisition and offline replay. Native injected providers
+prove persistence ordering only; target succession and restore remain unfinished.
 
 The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates

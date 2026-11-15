@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.101.6] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Complete a local capture through sequential authenticated payload reads, exact
+  module/coverage verification, durable artifact assembly, distinct final status
+  and create-only completion-manifest publication.
+- Preserve original bounded signing/network/evidence authority and uncertain
+  outcomes in one journal. Local completion reconciliation retains the exact
+  timestamp and manifest; partial or altered files refuse without cleanup.
+- Qualify the small actual-IC capture-to-inventory journey and cold reconciliation
+  after server shutdown. Target succession, restore and Canic adapters remain
+  unfinished; packages remain unpublished.
+
 ## [0.101.5] — GitHub checkpoint (unpublished)
 
 ### ✨ Features

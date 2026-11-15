@@ -2,7 +2,6 @@
 use super::{
     CaptureError, CaptureExecution, CaptureOperation, CapturePlan, CaptureStatusReplyError, ledger,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     candid_codec,
     ic_protocol::{EnvelopeContent, decode_call_content_strict},
@@ -12,6 +11,14 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use thiserror::Error;
 
+mod final_status;
+pub use final_status::CaptureFinalStatusError;
+use final_status::StatusSlot;
+mod data;
+pub use data::{
+    CaptureDataAdmissionRecord, CaptureDataAdvanceError, CaptureDataPhase, CaptureDataProgress,
+    CaptureDataSigner, CaptureDataView,
+};
 mod call;
 mod certificate;
 pub use call::{CaptureCall, CaptureProvider};
@@ -169,7 +176,7 @@ pub trait StatusProvider {
     ) -> Result<(), Self::Error>;
 }
 
-/// First-call result; none of these releases target ownership or completes a backup.
+/// Status-call result; none of these releases target ownership or completes a backup.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StatusProgress {
     /// Original authenticated response meets the stopped/module/controller policy.
@@ -238,8 +245,18 @@ impl CaptureOperation {
         admission: &StatusAdmissionRecord,
         provider: &mut P,
     ) -> Result<StatusProgress, StatusAdvanceError<P::Error>> {
-        use ledger::{CaptureStatusPhase, EventRecord};
-        let mut state = self.check()?;
+        self.advance_status_slot(admission, provider, StatusSlot::Initial)
+            .await
+    }
+    async fn advance_status_slot<P: StatusProvider>(
+        &mut self,
+        admission: &StatusAdmissionRecord,
+        provider: &mut P,
+        slot: StatusSlot,
+    ) -> Result<StatusProgress, StatusAdvanceError<P::Error>> {
+        use ledger::CaptureStatusPhase;
+
+        let mut state = slot.state(&self.check()?);
         admission.validate(&self.plan)?;
         if state
             .admission
@@ -253,7 +270,9 @@ impl CaptureOperation {
                 return Ok(StatusProgress::PreparationPending);
             }
             CaptureStatusPhase::SubmissionReserved => return Ok(StatusProgress::SubmissionPending),
-            CaptureStatusPhase::Settled => return self.status_result(provider, admission),
+            CaptureStatusPhase::Settled => {
+                return self.status_result_slot(provider, admission, slot);
+            }
             CaptureStatusPhase::Created | CaptureStatusPhase::Prepared => {}
         }
         let args = arguments(&self.plan)?;
@@ -261,14 +280,7 @@ impl CaptureOperation {
             provider
                 .admit(&self.plan, admission, &args, None)
                 .map_err(StatusAdvanceError::Provider)?;
-            self.commit(
-                &EventRecord::PreparationReserved {
-                    sequence: 1,
-                    admission: admission.clone(),
-                    arguments_sha256: *Sha256Digest::compute(&args).as_bytes(),
-                },
-                None,
-            )?;
+            self.commit(&slot.started(admission, &args), None)?;
             let prepared = provider
                 .prepare(&self.plan, admission, &args)
                 .await
@@ -276,27 +288,26 @@ impl CaptureOperation {
             self.check()?;
             let bytes = prepared.encode(admission.request_bytes)?;
             prepared.validate_call(&self.plan)?;
+            slot.distinct_request(self, &prepared)?;
             provider
                 .admit(&self.plan, admission, &args, Some(&prepared))
                 .map_err(StatusAdvanceError::Provider)?;
             self.commit(
-                &EventRecord::Prepared {
-                    sequence: 2,
-                    request: ledger::EvidenceRecord::new(&bytes),
-                },
-                Some(("status-request.bin", &bytes)),
+                &slot.prepared(ledger::EvidenceRecord::new(&bytes)),
+                Some((slot.names().0, &bytes)),
             )?;
-            state = self.check()?;
+            state = slot.state(&self.check()?);
         }
         let prepared = PreparedStatus::decode(&self.evidence(
-            "status-request.bin",
+            slot.names().0,
             state.request.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
         prepared.validate_call(&self.plan)?;
+        slot.distinct_request(self, &prepared)?;
         provider
             .admit(&self.plan, admission, &args, Some(&prepared))
             .map_err(StatusAdvanceError::Provider)?;
-        self.commit(&EventRecord::SubmissionReserved { sequence: 3 }, None)?;
+        self.commit(&slot.submitted(), None)?;
         let evidence = provider
             .submit_once(&self.plan, admission, &prepared)
             .await
@@ -307,13 +318,10 @@ impl CaptureOperation {
             .authenticate(&self.plan, admission, &prepared, &evidence)
             .map_err(StatusAdvanceError::Provider)?;
         self.commit(
-            &EventRecord::Settled {
-                sequence: 4,
-                result: ledger::EvidenceRecord::new(&bytes),
-            },
-            Some(("status-result.bin", &bytes)),
+            &slot.settled(ledger::EvidenceRecord::new(&bytes)),
+            Some((slot.names().1, &bytes)),
         )?;
-        self.status_result(provider, admission)
+        self.status_result_slot(provider, admission, slot)
     }
 
     pub(super) fn status_result<P: StatusProvider>(
@@ -321,17 +329,28 @@ impl CaptureOperation {
         provider: &P,
         admission: &StatusAdmissionRecord,
     ) -> Result<StatusProgress, StatusAdvanceError<P::Error>> {
-        let state = self.check()?;
+        self.status_result_slot(provider, admission, StatusSlot::Initial)
+    }
+    fn status_result_slot<P: StatusProvider>(
+        &self,
+        provider: &P,
+        admission: &StatusAdmissionRecord,
+        slot: StatusSlot,
+    ) -> Result<StatusProgress, StatusAdvanceError<P::Error>> {
+        let state = slot.state(&self.check()?);
         let prepared = PreparedStatus::decode(&self.evidence(
-            "status-request.bin",
+            slot.names().0,
             state.request.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
         prepared.validate_call(&self.plan)?;
+        slot.distinct_request(self, &prepared)?;
         let evidence = StatusEvidence::decode(&self.evidence(
-            "status-result.bin",
+            slot.names().1,
             state.result.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
-        if !self.authenticate_lookup_settlement(CaptureCall::Status, &evidence)? {
+        if slot != StatusSlot::Initial
+            || !self.authenticate_lookup_settlement(CaptureCall::Status, &evidence)?
+        {
             provider
                 .authenticate(&self.plan, admission, &prepared, &evidence)
                 .map_err(StatusAdvanceError::Provider)?;
@@ -521,15 +540,20 @@ impl CaptureOperation {
     /// evidence, malformed or plan-mismatched request content and changed closing custody. No partial
     /// view is returned and absent history never becomes unused authority.
     pub fn inspect_status(&self) -> Result<CaptureStatusView, CaptureError> {
+        self.inspect_status_slot(StatusSlot::Initial)
+    }
+    fn inspect_status_slot(&self, slot: StatusSlot) -> Result<CaptureStatusView, CaptureError> {
         use super::CaptureStatusPhase;
-        let state = self.check()?;
+        let original = self.check()?;
+        let state = slot.state(&original);
         let request_id = state
             .request
             .as_ref()
             .map(|reference| {
-                let bytes = self.evidence("status-request.bin", reference)?;
+                let bytes = self.evidence(slot.names().0, reference)?;
                 let prepared = PreparedStatus::decode(&bytes)?;
                 prepared.validate_call(&self.plan)?;
+                slot.distinct_request(self, &prepared)?;
                 Ok::<_, CaptureError>(prepared.request_id)
             })
             .transpose()?;
@@ -550,7 +574,7 @@ impl CaptureOperation {
                     }
             }
         };
-        if self.check()? != state {
+        if self.check()? != original {
             return Err(CaptureError::Changed);
         }
         Ok(CaptureStatusView {

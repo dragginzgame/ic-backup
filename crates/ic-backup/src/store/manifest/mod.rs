@@ -10,12 +10,11 @@ use serde::{
 use std::{collections::BTreeSet, fmt};
 use thiserror::Error;
 
-const FORMAT: &str = "ic-backup/local-manifest/1";
+pub(super) const FORMAT: &str = "ic-backup/local-manifest/1";
 const MAX_MEMBERS: usize = 1027; // Three regions plus at most 1,024 whole chunks.
 const MAX_PAYLOAD: u64 = 1024 * 1024 * 1024;
 
-#[derive(Deserialize)]
-#[cfg_attr(test, derive(serde::Serialize))]
+#[derive(Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ManifestRecord {
     pub format: String,
@@ -36,16 +35,14 @@ pub(super) struct ManifestRecord {
     pub members: Vec<MemberRecord>,
 }
 
-#[derive(Deserialize)]
-#[cfg_attr(test, derive(serde::Serialize))]
+#[derive(Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct CommitmentRecord {
     pub bytes: u64,
     pub sha256: String,
 }
 
-#[derive(Deserialize)]
-#[cfg_attr(test, derive(serde::Serialize))]
+#[derive(Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct MemberRecord {
     pub name: String,

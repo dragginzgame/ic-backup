@@ -224,7 +224,7 @@ fn check_members(
 
 // Keep the original descriptor alive through the name comparison, preventing
 // inode reuse from making a removed/recreated file look like the original.
-fn unchanged_file(
+pub(super) fn unchanged_file(
     parent: &Directory,
     name: &str,
     held: &File,

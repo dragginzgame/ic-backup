@@ -2,7 +2,7 @@
 use super::*;
 use crate::store::CaptureTransferBindError;
 
-fn settle(
+pub(super) fn settle(
     op: &mut CaptureOperation,
     s: &Snapshot,
     r: &PreparedStatus,

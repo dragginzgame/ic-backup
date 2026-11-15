@@ -321,3 +321,44 @@ Scheduled data authentication is selected by
 documentation examples, strict product/private Clippy and warning-denying Rustdoc.
 All four existing PocketIC fixtures pass after sharing certificate comparison;
 these regress status/snapshot/metadata callers, not remote payload acquisition.
+
+Durable data acquisition uses the focused native selection
+`store::capture::advance::tests::http_tests::metadata_tests::data_tests`.
+Evidence under `target/evidence/data-acquisition/` records 149 advance, 10 ledger
+and 16 custody tests, 24 documentation examples, strict product/private Clippy
+and warning-denying Rustdoc. All four IC fixtures pass; the fourth is now
+`metadata_and_payload_acquisition_and_offline_replay` and reads real Wasm bytes
+before exact offline replay. Its larger fixture evidence allowance admits the
+retained data proof without changing product ceilings. Artifact assembly and
+complete backup/restore remain unqualified.
+
+Complete payload verification reuses that native selection: `cargo test -p
+ic-backup --lib data_tests --locked --offline` selects 33 metadata/data tests.
+`target/evidence/data-verification/` records those checks, 24 documentation
+examples, strict product/private Clippy, warning-denying Rustdoc and four IC
+fixtures. Coverage and combined module-hash refusal preserve accepted evidence;
+the actual IC fixture also verifies complete bytes after shutdown. No assembled
+files or completed backup are qualified by these checks.
+
+Local assembly extends the same caller fixture and adds the native child
+`data_tests::assembly_tests`. Latest `target/evidence/assembly/` records 159 advance,
+10 ledger, 16 custody and 23 shared payload tests; 24 examples; strict product/private
+Clippy; warning-denying Rustdoc; and all four IC fixtures. Eight assembly groups
+cover exact files, empty members, incomplete coverage/hash refusal, interrupted
+members, unsafe/changed custody, both uncertain journal transitions, original
+frame budgets and event ordering. The real IC fixture writes and replays the
+unpublished bundle after server shutdown. These checks do not qualify completion
+publication, automatic partial-member recovery or physical power loss.
+
+Final status and completion use the existing native advance selection and the
+renamed actual IC fixture `complete_capture_and_offline_replay`.
+`target/evidence/completion/` records 169 advance tests (four worker threads),
+10 ledger and 54 store tests, 24 examples, strict product/private Clippy and
+warning-denying Rustdoc. All four IC fixtures pass. The complete fixture validates
+capture-to-manifest, inventory and payload verification before exact local
+reconciliation after shutdown. Its original evidence allowance is 6 MiB, including
+all six calls and the 1 MiB manifest ceiling; product bounds did not increase.
+Four final-status groups and six completion groups cover distinct request identity,
+original budgets, refused policy, uncertain frames, exact receipt/hash/timestamp,
+full/partial staging and existing consumers. Physical power loss, target succession,
+large-transfer performance and restore are not qualified by this batch.

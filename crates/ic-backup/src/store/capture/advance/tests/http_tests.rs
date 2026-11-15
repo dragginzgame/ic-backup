@@ -63,6 +63,7 @@ fn http(status: u16, headers: &str, body: &[u8]) -> Vec<u8> {
 }
 
 enum Response {
+    Sequence(Vec<Vec<u8>>),
     Bytes(Vec<u8>),
     Disconnect,
     HoldBody,
@@ -113,6 +114,12 @@ impl Server {
                     captured.push(request);
                     drop(captured);
                     match &response {
+                        Response::Sequence(replies) => {
+                            let n = requests.lock().unwrap().len() - 1;
+                            if let Some(bytes) = replies.get(n) {
+                                let _ = stream.write_all(bytes);
+                            }
+                        }
                         Response::Bytes(bytes) => {
                             let _ = stream.write_all(bytes);
                         }

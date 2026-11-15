@@ -14,6 +14,10 @@ use std::{
 };
 use thiserror::Error;
 
+mod final_status;
+pub(super) use final_status::StatusState;
+mod data;
+pub(super) use data::{DataState, data_names};
 mod metadata;
 use metadata::MetadataState;
 mod lookup;
@@ -127,6 +131,42 @@ impl EvidenceRecord {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum EventRecord {
+    PublishReady {
+        completed_at_ns: u64,
+    },
+    FinalStatusStarted {
+        admission: StatusAdmissionRecord,
+    },
+    FinalStatusPrepared {
+        request: EvidenceRecord,
+    },
+    FinalStatusSubmissionReserved,
+    FinalStatusSettled {
+        result: EvidenceRecord,
+    },
+    AssemblyStarted,
+    AssemblyVerified {
+        sha256: [u8; 32],
+    },
+    DataStarted {
+        ordinal: u32,
+        admission: super::advance::CaptureDataAdmissionRecord,
+    },
+    DataPrepared {
+        ordinal: u32,
+        request: EvidenceRecord,
+    },
+    DataSubmissionReserved {
+        ordinal: u32,
+    },
+    DataSettled {
+        ordinal: u32,
+        result: EvidenceRecord,
+    },
+    DataAccepted {
+        ordinal: u32,
+        payload: EvidenceRecord,
+    },
     TransferBound {
         binding: super::transfer::TransferBindingRecord,
     },
@@ -200,6 +240,11 @@ pub(super) enum EventRecord {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct State {
+    pub completed_at_ns: Option<u64>,
+    pub final_status: Option<StatusState>,
+    pub assembly_started: bool,
+    pub assembly_sha256: Option<[u8; 32]>,
+    pub data: Vec<DataState>,
     pub transfer: Option<super::transfer::TransferBindingRecord>,
     pub metadata: Option<MetadataState>,
     pub lookup: Option<LookupState>,
@@ -214,7 +259,63 @@ pub(super) struct State {
 }
 impl State {
     fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
-        if let EventRecord::TransferBound { binding } = event {
+        if self.completed_at_ns.is_some() {
+            return Err(LedgerError::Transition);
+        }
+        if let EventRecord::PublishReady { completed_at_ns } = event {
+            if *completed_at_ns == 0
+                || self.assembly_sha256.is_none()
+                || !self
+                    .final_status
+                    .as_ref()
+                    .is_some_and(|s| s.phase == CaptureStatusPhase::Settled)
+                || self
+                    .lookup
+                    .as_ref()
+                    .is_some_and(|l| l.settlement_root.is_none())
+            {
+                return Err(LedgerError::Transition);
+            }
+            self.completed_at_ns = Some(*completed_at_ns);
+            return self.additional_budget(plan);
+        }
+        if matches!(
+            event,
+            EventRecord::FinalStatusStarted { .. }
+                | EventRecord::FinalStatusPrepared { .. }
+                | EventRecord::FinalStatusSubmissionReserved
+                | EventRecord::FinalStatusSettled { .. }
+        ) {
+            self.apply_final_status(event, plan)?;
+        } else if matches!(event, EventRecord::AssemblyStarted) {
+            if self.assembly_started
+                || !self
+                    .transfer
+                    .as_ref()
+                    .is_some_and(|b| b.data_calls as usize == self.data.len())
+                || self
+                    .data
+                    .iter()
+                    .any(|d| d.phase != super::advance::CaptureDataPhase::Accepted)
+            {
+                return Err(LedgerError::Transition);
+            }
+            self.assembly_started = true;
+        } else if let EventRecord::AssemblyVerified { sha256 } = event {
+            if !self.assembly_started || self.assembly_sha256.is_some() {
+                return Err(LedgerError::Transition);
+            }
+            self.assembly_sha256 = Some(*sha256);
+        } else if matches!(
+            event,
+            EventRecord::DataStarted { .. }
+                | EventRecord::DataPrepared { .. }
+                | EventRecord::DataSubmissionReserved { .. }
+                | EventRecord::DataSettled { .. }
+                | EventRecord::DataAccepted { .. }
+        ) {
+            self.apply_data(event, plan)?;
+        } else if let EventRecord::TransferBound { binding } = event {
             if self.transfer.is_some()
                 || !self
                     .metadata
@@ -364,6 +465,11 @@ impl State {
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
     let mut state = State {
+        completed_at_ns: None,
+        final_status: None,
+        assembly_started: false,
+        assembly_sha256: None,
+        data: Vec::new(),
         transfer: None,
         metadata: None,
         lookup: None,
@@ -648,6 +754,15 @@ impl State {
         if let Some(metadata) = &self.metadata {
             calls.push(&metadata.admission.call);
         }
+        calls.extend(self.data.iter().map(|d| &d.admission.call));
+        if let Some(final_status) = &self.final_status {
+            calls.push(
+                final_status
+                    .admission
+                    .as_ref()
+                    .ok_or(LedgerError::Transition)?,
+            );
+        }
         let lookup = self.lookup.as_ref().map(|l| &l.admission);
         // Conservatively admit complete call allowances, including any admitted future take.
         let network = calls
@@ -656,6 +771,10 @@ impl State {
             .sum::<u64>()
             + lookup.map_or(0, |a| u64::from(a.prepare_requests) + 1);
         let bytes = initial(plan)?.len() as u64
+            + u64::from(self.completed_at_ns.is_some())
+                * (FRAME_BYTES as u64 + 36 + crate::store::MANIFEST_LIMIT as u64)
+            + u64::from(self.assembly_started) * 2 * (FRAME_BYTES as u64 + 36)
+            + self.data.len() as u64 * (FRAME_BYTES as u64 + 36)
             + u64::from(self.transfer.is_some()) * (FRAME_BYTES as u64 + 36)
             + (calls.len() as u64 + u64::from(lookup.is_some())) * 4 * (FRAME_BYTES as u64 + 36)
             + calls

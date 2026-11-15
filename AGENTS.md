@@ -15,8 +15,11 @@ retained observations can settle the original call locally; replay preserves
 the separate observation time policy and dependent effects require live admission. PocketIC
 qualifies these calls, interrupted reply settlement and offline replay with fixture signing and application authority.
 Durable metadata acquisition authenticates the retained take, reserves finite
-signing/network allowance and retains exact certified evidence for offline replay. Canic process/maintenance
-adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+signing/network allowance and retains exact certified evidence for offline replay.
+Sequential payload acquisition and local artifact assembly are qualified for
+retained evidence and offline replay. Final status and exact local completion
+publication/reconciliation are qualified for the small IC fixture. Target succession,
+Canic process/maintenance adapters and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 

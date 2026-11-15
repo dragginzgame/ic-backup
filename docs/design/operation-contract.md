@@ -227,7 +227,7 @@ management sequence is:
 | Read metadata; admit the schedule and its conservative resource bounds. | Upload the exact source extents and complete stored chunks. |
 | Read all scheduled extents/chunks. | Read destination metadata and every destination extent/chunk. |
 | Observe final stopped state under continuous custody. | Recheck stopped state and restore admission; load the exact verified destination once. |
-| Verify local bytes, publish manifest, retain `BackupVerified`. | Observe final stopped state; retain `LoadedStopped`. |
+| Verify local bytes and publish the original completion manifest. | Observe final stopped state; retain `LoadedStopped`. |
 
 List evidence is a preflight refusal aid, not a reservation of remote capacity.
 A later capacity rejection stays a consumed failed request. No replacement,
@@ -401,22 +401,21 @@ a real pending-take read-state fixture. Explicit original-call settlement from r
 its observation source and preserves historical authentication. An observation
 alone still authorizes no dependent effect.
 
-## Next payload acquisition slice (not implemented)
+## Payload acquisition and completion
 
-Use the retained transfer binding and exact ordinal as the data-read identity.
-Reauthenticate original capture/metadata and compare the schedule before new
-work. Admit one sequential read at a time, with fresh integration-owned read
-permission and complete request/proof/payload bounds. Retain its admission and
-reserve signing before invoking the signer; retain exact signed bytes before
-reserving submission. Reuse one-shot HTTP and the scheduled data authenticator.
+Sequential payload acquisition is now implemented under the
+[transfer contract](../architecture/capture-transfer.md#durable-sequential-payload-acquisition).
+It uses the retained schedule, original journal, one-shot HTTP and exact data
+reply authenticator. Certified evidence retains the payload bytes; acceptance
+records their length/hash without another mutable progress store. `verify_data`
+authenticates complete retained coverage and the combined original module hash
+offline; its byte count is not a completion receipt.
 
-Retain certified result evidence before recording an accepted payload. A certified
-rejection or invalid payload cannot count toward coverage. Failed signing and lost
-HTTP replies remain spent and unresolved; no automatic replacement, polling or
-range splitting is permitted. A complete uncertain journal frame survives reopen;
-partial frames and orphan files refuse without repair. Replaying an accepted read
-must authenticate the original evidence and leave journal and payload bytes intact.
-Use the original journal and held-file custody owners; no per-extent journal or
-second mutable progress index. Exact evidence layout and cumulative bounds must
-be implemented and qualified before this flow dispatches. Final coverage, module
-hash, final status and durable bundle completion remain subsequent work.
+[Artifact assembly](../architecture/capture-transfer.md#local-artifact-assembly)
+now writes and verifies exact unpublished bundle files under the original journal.
+[Final status](../architecture/capture-intent.md#final-capture-status) and
+[local completion](local-store.md#completion-and-interrupted-publication) now
+retain the distinct final call and publish the exact original manifest.
+Neither a full set of accepted read markers nor matching decoded bytes alone
+completes the backup or releases its target claim. Recovery and uncertain writes
+must preserve the original evidence and authority through each implemented step.

@@ -34,17 +34,30 @@ and transfer checks. `advance_metadata` acquires one certified metadata reply in
 the original capture journal, with finite reservations and offline replay.
 `inspect_metadata` reports its retained phase and spending. `bind_transfer`
 retains a versioned schedule commitment after authenticating that metadata;
-`inspect_transfer` reports its counts and commitment. Durable payload
-download and local backup completion remain future work.
+`inspect_transfer` reports its counts and commitment. `advance_data` acquires one
+scheduled payload ordinal at a time, retaining certified evidence and validated
+byte identities in the same journal; `inspect_data` reports retained phase and
+spending. Accepted payloads replay offline. Local assembly and create-only backup
+completion are implemented for the qualified capture profile.
 `data_arguments` and `authenticate_data_reply` bind one scheduled payload reply
 to its exact signed request and certified outcome before checking lengths/hashes;
-these are local checks, not a payload downloader.
+these local checks are reused by durable payload acquisition.
 `CaptureTransfer::decode_uploaded_metadata` checks bounded restore readback metadata
 against the captured state, including exact float bits and the complete chunk set.
 `CaptureTransfer::begin_readback` adds ordered byte comparison of every destination
 extent and chunk against caller-held source slices. Completion requires full local
 comparison coverage; authenticated evidence, source custody and load authority
 remain separate requirements.
+`CaptureOperation::verify_data` authenticates all accepted scheduled payloads and
+checks the combined original module hash with bounded memory. It returns the
+payload byte count without publishing artifacts or granting restore authority.
+`CaptureOperation::assemble_data` writes verified payload files directly into the
+unpublished bundle directory. It retains interrupted files and reuses only complete
+exact files. `advance_final_status` uses a distinct reserved request to recheck
+stopped state, the original module and controller. `inspect_final_status` projects
+its original allowance and progress. `complete_capture` reauthenticates retained
+evidence and publishes the original manifest, timestamp and closed ledger prefix.
+Local reconciliation preserves the exact receipt without another remote call.
 `CaptureOperation::advance_status` now durably reserves signing and submission,
 retains exact request/result evidence and replays the initial direct-host status
 call without repeating pending effects. `inspect_status` recovers the retained
@@ -79,12 +92,14 @@ reports its separate spending. `settle_capture_lookup` settles a terminal retain
 observation locally, preserving its separate time policy and original spending.
 Continuation reauthenticates that evidence and still requires live permission
 before dependent effects.
-Private PocketIC fixtures qualify status, snapshot creation and offline reply recovery; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
-Download, completion writing, full bundle verification, restore and CLI
-workflows remain unimplemented. See the
+Private PocketIC fixtures qualify the small capture-to-manifest journey, inventory/payload consumers and cold reconciliation; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+Target succession, standalone full-bundle admission, restore and CLI workflows
+remain unimplemented. A completed capture still retains its target claim, so a
+second capture of that same target is not yet supported. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Publication remains disabled; `0.101.5` is an
-unpublished development version following the GitHub-only 0.101.4 checkpoint.
+and the public Rustdoc example. Crate publication remains disabled; `0.101.6` is an
+unpublished GitHub checkpoint covering the qualified small capture-to-manifest
+journey. Target succession and restore remain separate work.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

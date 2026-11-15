@@ -114,7 +114,7 @@ fn durable_take_lookup_retains_observation_and_replays_offline() {
 }
 
 #[test]
-fn metadata_acquisition_and_offline_replay() {
+fn complete_capture_and_offline_replay() {
     run_fixture(false, false, true);
 }
 
@@ -229,7 +229,11 @@ async fn status_fixture(
             network_requests: if metadata_read { 6 } else { 4 },
             observations: 1,
             signing_requests: if metadata_read { 6 } else { 4 },
-            evidence_bytes: 2 * 1024 * 1024,
+            evidence_bytes: if metadata_read {
+                6 * 1024 * 1024
+            } else {
+                2 * 1024 * 1024
+            },
         },
     })
     .unwrap();
@@ -444,12 +448,15 @@ async fn status_fixture(
         )
         .await;
     }
-    assert_eq!(calls.load(Ordering::SeqCst), 3);
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        if metadata_read { 4 } else { 3 }
+    );
     if interrupt {
         fs::write(evidence.join("settlement-verified.txt"), b"original take settled from retained original or separately reserved lookup proof; server absent and guard revoked; no extra signatures or submissions
 ").unwrap();
     }
-    fs::write(evidence.join("verified.txt"), b"certified status, list and take; original snapshot and stopped module preserved; three signatures and reserved HTTP requests; cold replay with server absent\n").unwrap();
+    fs::write(evidence.join("verified.txt"), b"certified capture calls; original snapshot and stopped module preserved; exact reserved signature count checked; cold replay with server absent\n").unwrap();
     eprintln!("retained qualification evidence: {}", evidence.display());
 }
 

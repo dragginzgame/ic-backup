@@ -70,7 +70,7 @@ pub struct CaptureRequest {
 /// Validated capture declaration retaining its exact encoding and approval digest.
 ///
 /// It supplies no controller, application, signer or transport authority. Provider
-/// cost admission and durable schedule binding remain unimplemented.
+/// cost admission and durable schedule binding belong to the operation workflow.
 /// [`Self::plan_transfer`] supplies pure metadata-dependent scheduling only.
 #[derive(Debug)]
 pub struct CapturePlan {

@@ -5,8 +5,8 @@ pure; `BackupStore::create_capture` writes intent; `open_capture` and
 `CaptureOperation::inspect` admit original intent without repair. There is no
 reservation API for arbitrary calls. Initial direct-host status continuation is
 followed by durable snapshot list/take and local retained-result settlement below;
-remote observation, download, completion
-and target release remain unfinished. The
+bounded lookup, payload acquisition, final status and local completion now extend
+that journal. Target succession and restore remain unfinished. The
 [operation design](../design/operation-contract.md) owns the proposed next steps.
 
 ## Exact declaration
@@ -1082,3 +1082,40 @@ The new public method/error are additive, while new `LookupSettlement` variants 
 status/snapshot errors require downstream exhaustive matches to be updated. Review
 that Rust API change before publication; the development workspace remains private.
 Older readers refuse the new event; existing journals need no rewrite or reset.
+
+## Final capture status
+
+`advance_final_status` requires retained verified assembly, authenticates the
+original capture and complete payload coverage, then reuses the initial-status
+workflow, provider and stopped/module/controller policy. Its finite admission must
+retain the original provider and continuous application witness. No arbitrary
+management method or second provider framework is introduced.
+
+The final lane has its own `FinalStatusStarted`, `FinalStatusPrepared`,
+`FinalStatusSubmissionReserved` and `FinalStatusSettled` events, and exact
+`final-status-request.bin` / `final-status-result.bin` evidence. Initial-status
+wire bytes and lookup-settlement behavior remain unchanged. The cumulative
+original budget reserves this call's request/result ceilings and all four frames
+before signing. A final request ID equal to the original initial-status ID refuses
+before retaining preparation or submitting: IC deduplication must not turn the
+initial result into the final check. The external signer supplies a fresh exact
+request within the original protocol, sender and expiry rules.
+
+Signing/submission failure remains spent. Cold pending stages never reinvoke a
+provider; prepared continuation uses only its retained bytes after live admission.
+Authenticated final replies are retained before the unchanged status policy is
+applied, so a running canister or changed module cannot be hidden by a retry.
+Final lookup/surviving-reply settlement is not implemented. Initial-call settlement
+APIs cannot settle this distinct final lane. `inspect_final_status` returns the
+existing status view with zero allowance before reservation; it grants no success
+or completion authority. Settled final replay is local and effect-free.
+
+Focused legacy review covered `policy/ic_observation/settlement` and its exact
+original-request/evidence association regressions at frozen
+`4ae087fad8c23de712aa60bf569bde4b2b932651`. History
+`c47b96b6f8d6be31e47a473d897fde31feea5d4a` removed a duplicated outcome projection.
+Retain exact request attribution and derive views from the original record;
+do not import lifecycle mutation attribution or a qualified-receipt framework
+for this direct read. New native regressions cover final identity, bad status,
+original bindings/budgets and all four uncertain frame boundaries. The real IC
+fixture adds the sixth reserved capture call and replays after shutdown.

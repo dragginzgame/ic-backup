@@ -8,6 +8,7 @@ use crate::store::{
     BackupStore,
     tests::{root, write_file},
 };
+use ic_host_artifacts::artifact::Sha256Digest;
 use std::{
     borrow::Cow,
     cell::Cell,

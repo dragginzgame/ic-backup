@@ -720,3 +720,5 @@ fn metadata_cannot_reuse_allowance_committed_to_an_original_lookup() {
 }
 
 mod schedule_tests;
+
+mod data_tests;

@@ -4,8 +4,9 @@ The Unix-only `ic_backup::store` API implements initialization, opening,
 `list_backups`, `latest_completed_backup`, `verify_payload` and `open_payload`. Its
 [public documentation and example](../../crates/ic-backup/src/store/mod.rs) are
 compiled with the library. [Capture intent and initial status](capture-intent.md)
-own operation ledgers and target claims. Snapshot capture, restore, completion
-writing and full bundle-evidence verification remain unimplemented. The wider
+own operation ledgers and target claims. Capture now publishes completion through
+[the local completion contract](../design/local-store.md#completion-and-interrupted-publication).
+Restore and standalone full bundle-evidence admission remain unimplemented. The wider
 [local-store design](../design/local-store.md) remains their implementation input.
 
 ## Custody and initialization
