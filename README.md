@@ -96,14 +96,15 @@ Private PocketIC fixtures qualify the small capture-to-manifest journey, invento
 `create_capture_after` admits a completed predecessor and creates the next capture
 for the same target, preserving the old receipt and evidence. Standalone bundle import, restore upload/load and CLI workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Crate publication remains disabled; `0.101.11` is an
+and the public Rustdoc example. Crate publication remains disabled; `0.101.12` is an
 unpublished GitHub checkpoint covering capture, held source reads, restore transfer
-scheduling, immutable restore plans, local restore intent persistence, status policy and durable signing preparation.
+scheduling, immutable restore plans, local restore intent persistence, status policy, durable signing preparation and local certificate authentication.
 Local `create_restore`/`open_restore` now retain approved intent and source custody;
 `RestoreOperation::inspect` rechecks it without effects. `prepare_status` reserves
 one bounded external signing attempt and retains the exact authenticated request;
-prepared and uncertain replay never signs again. Management submission and upload/load
-remain unimplemented.
+prepared and uncertain replay never signs again. Local certificate authentication
+binds original signed requests, trust, target and historical time windows without
+spending or settlement. Management submission and upload/load remain unimplemented.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

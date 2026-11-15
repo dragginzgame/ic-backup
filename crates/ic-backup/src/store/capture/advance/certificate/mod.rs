@@ -223,22 +223,12 @@ pub(in crate::store::capture) fn authenticate_expected_evidence(
     evidence
         .encode(admission.result_bytes)
         .map_err(StatusCertificateError::Admission)?;
-    let (rejected, response) = authenticated_expected_response(
-        plan,
-        admission,
-        prepared,
-        &evidence.proof,
-        root_key_der,
-        method,
-        arguments,
-    )?;
-    if rejected != evidence.rejected {
-        return Err(StatusCertificateError::Outcome);
+    validate_certificate_request(plan, admission, prepared, method, arguments)?;
+    CertificateRequirements {
+        canister: plan.request().target.canister,
+        trust_root: plan.request().trust_root,
     }
-    if response != evidence.response {
-        return Err(StatusCertificateError::Response);
-    }
-    Ok(())
+    .authenticate(admission, prepared, evidence, root_key_der)
 }
 
 fn authenticated_response(
@@ -271,6 +261,21 @@ pub(super) fn authenticated_expected_response(
     method: &str,
     arguments: &[u8],
 ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
+    validate_certificate_request(plan, admission, prepared, method, arguments)?;
+    CertificateRequirements {
+        canister: plan.request().target.canister,
+        trust_root: plan.request().trust_root,
+    }
+    .response(admission, prepared, certificate, root_key_der)
+}
+
+fn validate_certificate_request(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    method: &str,
+    arguments: &[u8],
+) -> Result<(), StatusCertificateError> {
     admission
         .validate(plan)
         .map_err(StatusCertificateError::Admission)?;
@@ -281,29 +286,62 @@ pub(super) fn authenticated_expected_response(
     prepared
         .validate_expected_call(plan, method, arguments)
         .map_err(StatusCertificateError::Admission)?;
-    if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != plan.request().trust_root
-    {
-        return Err(StatusCertificateError::TrustRoot);
+    Ok(())
+}
+
+/// Original certificate authority only; callers admit request identity and full frame bounds.
+pub(in crate::store) struct CertificateRequirements {
+    pub canister: ic_platform::Principal,
+    pub trust_root: Sha256Digest,
+}
+impl CertificateRequirements {
+    pub(in crate::store) fn authenticate(
+        &self,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        evidence: &StatusEvidence,
+        root_key_der: &[u8],
+    ) -> Result<(), StatusCertificateError> {
+        let (rejected, response) =
+            self.response(admission, prepared, &evidence.proof, root_key_der)?;
+        if rejected != evidence.rejected {
+            return Err(StatusCertificateError::Outcome);
+        }
+        if response != evidence.response {
+            return Err(StatusCertificateError::Response);
+        }
+        Ok(())
     }
-    let maximum = (admission.result_bytes as usize)
-        .checked_sub(certificate.len())
-        .and_then(|n| n.checked_sub(5))
-        .ok_or(StatusCertificateError::Admission(
-            CaptureError::StatusAdmission,
-        ))?;
-    let authenticated = historical::authenticate_certificate_at(
-        certificate,
-        root_key_der,
-        plan.request().target.canister,
-        observation(&prepared.observation)?,
-        LIMITS,
-    )
-    .map_err(StatusCertificateError::Certificate)?;
-    terminal_response(
-        &authenticated.certificate.tree,
-        &prepared.request_id,
-        maximum,
-    )
+    fn response(
+        &self,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        certificate: &[u8],
+        root_key_der: &[u8],
+    ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
+        if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != self.trust_root {
+            return Err(StatusCertificateError::TrustRoot);
+        }
+        let maximum = (admission.result_bytes as usize)
+            .checked_sub(certificate.len())
+            .and_then(|n| n.checked_sub(5))
+            .ok_or(StatusCertificateError::Admission(
+                CaptureError::StatusAdmission,
+            ))?;
+        let authenticated = historical::authenticate_certificate_at(
+            certificate,
+            root_key_der,
+            self.canister,
+            observation(&prepared.observation)?,
+            LIMITS,
+        )
+        .map_err(StatusCertificateError::Certificate)?;
+        terminal_response(
+            &authenticated.certificate.tree,
+            &prepared.request_id,
+            maximum,
+        )
+    }
 }
 
 fn terminal_response(

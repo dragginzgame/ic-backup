@@ -3,7 +3,7 @@ use crate::store::{
     BackupStore, CaptureMetadataAdmissionRecord, CaptureMetadataSigner,
     capture::{
         advance::tests::{
-            certificate_tests::{reply_tree, signed},
+            fixtures::certificates::{reply_tree, signed},
             fixtures::{
                 durable_lookup::reserve_original,
                 http::{Response, http, now, set_expiry},

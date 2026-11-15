@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.101.12] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Authenticate restore status certificates against the original signed request,
+  trust root, canister and historical time windows using capture’s bounded verifier.
+  This local check preserves evidence and grants no submission or retry authority.
+
 ## [0.101.11] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

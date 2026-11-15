@@ -2,7 +2,7 @@ use super::super::*;
 use crate::store::{
     BackupStore,
     capture::{
-        advance::tests::{certificate_tests::der, fixtures::http::HttpProvider},
+        advance::tests::{fixtures::certificates::der, fixtures::http::HttpProvider},
         ledger::{EventRecord, EvidenceRecord},
     },
 };

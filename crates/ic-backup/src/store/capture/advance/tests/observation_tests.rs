@@ -1,6 +1,6 @@
 //! Real signatures over synthetic certificates; no remote observation is performed.
 use super::{
-    certificate_tests::{delegated, der, signed},
+    fixtures::certificates::{delegated, der, signed},
     fixtures::signatures::{Scheme, change, fixture as signed_request},
     *,
 };

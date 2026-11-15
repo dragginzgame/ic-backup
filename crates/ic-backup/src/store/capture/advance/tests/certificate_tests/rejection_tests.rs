@@ -1,5 +1,6 @@
 //! Certified rejection projection and durable terminal replay, without IC effects.
 use super::*;
+use ic_platform::certification::HashTree;
 fn rejected_tree(
     id: &[u8; 32],
     code: Option<&[u8]>,

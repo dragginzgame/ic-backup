@@ -1,7 +1,7 @@
 //! Real loopback read-state with signed synthetic certificates; no IC effect simulation.
 use super::*;
 use crate::store::capture::advance::tests::{
-    certificate_tests::{der, reply_tree, signed},
+    fixtures::certificates::{der, reply_tree, signed},
     fixtures::{
         http::{Response, Server, http, input, input_for, now, runtime},
         lookup::{body, lookup, policy},

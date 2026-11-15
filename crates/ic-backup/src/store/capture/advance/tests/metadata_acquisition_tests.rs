@@ -4,7 +4,7 @@ use crate::store::{
     BackupStore, CaptureMetadataAdvanceError, CaptureMetadataPhase, CaptureMetadataProgress,
     capture::{
         advance::tests::{
-            certificate_tests::{reply_tree, signed},
+            fixtures::certificates::{reply_tree, signed},
             fixtures::{
                 durable_lookup::reopen,
                 http::{HttpProvider, Response, Server, runtime},

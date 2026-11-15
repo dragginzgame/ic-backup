@@ -1,62 +1,47 @@
 # Current handoff — 2026-11-15
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy is read-only.
-GitHub `main` was verified at `eb99058` (0.101.10), delivering local restore intent
-persistence and status policy. Local product manifests and both locks now select
-0.101.11; qualification stays 0.1.0. All packages remain unpublished. No tag, registry publication or deployment
-occurred. Post-push review covered restore creation/reopen, source/owner custody, shared
-framing/status policy and affected native/IC callers. It found duplicate completion
-authentication/sync when source and predecessor are the same capture. Local 0.101.11
-removes that repeat, retaining exact source admission and closing custody checks.
-Distinct older sources still synchronize separately; no other actionable drift
-was found in the delivered scope.
-The separate local `rand` 0.10.4 updates in both locks were preserved and excluded
-from delivery. The delivered graph retains 0.10.3; do not silently stage that refresh.
+GitHub `main` was verified at `6f6cb771da5ce606d95f8a0ecdbff59d8dff36b6`
+(0.101.11), delivering restore signing preparation, flat tests and Tooling 0.44.4.
+No tag, registry publication or deployment occurred; every package stays unpublished.
+0.101.12 is prepared for GitHub delivery; qualification remains independently 0.1.0.
+Its exact rand 0.10.3 graph passes 343 unit tests, 24 examples, five IC journeys
+and strict product/private lint and Rustdoc in `target/evidence/delivery-0.101.12/`.
+Post-push review covered shared framing/signature admission, restore reservations,
+source/owner custody, flat test fixtures, qualification paths and documentation.
+No further actionable drift was found in that delivered scope. The pre-push review
+corrected signer HTTP wording and stale test selectors without changing behavior.
+The separate local `rand` 0.10.4 edits are preserved under
+`target/evidence/delivery-0.101.12/`; delivery retains 0.10.3. Restore those exact
+local selections after delivery. Do not silently stage that refresh.
 
 ## Implemented behavior and boundaries
 
-The [inventory contract](../architecture/local-inventory.md) owns private stores,
-bounded list/latest queries, manifest-bound integrity and held payload reads.
-The [capture contract](../architecture/capture-intent.md) owns immutable intent,
-target claims, bounded chained journals and exact status/list/take evidence.
-Uncertain writes invalidate handles. Complete uncertain frames remain spent;
-partial tails, orphan evidence and changed custody refuse without repair.
-Prepared continuation never resigns; pending calls never repeat. Surviving replies
-and one durable lookup can settle original calls; lookup evidence retains its
-separate original time policy. Dependent effects require live permission.
-Historical replay never consults a current clock, guard or signer.
+The [inventory contract](../architecture/local-inventory.md),
+[capture contract](../architecture/capture-intent.md) and
+[transfer contract](../architecture/capture-transfer.md) own implemented capture.
+Immutable intents, bounded journals and original authority/evidence remain mandatory.
+Uncertain writes invalidate handles; complete uncertain frames remain spent.
+Partial tails, orphan/changed evidence and custody failures refuse without repair.
+Prepared continuation never resigns; pending calls never repeat. Surviving original
+replies and one durable lookup can settle status/list/take. Dependent effects need
+live permission; historical replay reads no current clock, guard or signer.
+Only direct Ed25519/secp256k1 are qualified. Root/network/route, sender, protocol
+and application bindings remain mandatory. Integrations own signing, maintenance,
+snapshot custody and external obligations; Backup owns no keys or fleet scheduling.
 
-The direct provider composes bounded external signing and one-shot Host HTTP.
-Original root/network/route, sender, protocol and application bindings remain
-mandatory. Only direct Ed25519/secp256k1 are qualified. Integrations own signer
-custody, application maintenance, snapshot custody and external obligations.
-Backup owns no keys, Canic runtime, fleet membership or scheduling.
-
-The [transfer contract](../architecture/capture-transfer.md) owns bounded metadata/
-data decoding, the lazy schedule and sequential acquisition. Exact signed requests,
-certified results and reservations remain in the original journal. Settled invalid
-payload blocks progress; accepted payload replays offline. Full 1 MiB extents cannot
-fit the 2 MiB result cap with proof/framing and refuse. Metadata/data reconciliation
-remains unfinished. Assembly writes exact files directly to the unpublished bundle;
-partial/altered files remain retained and refuse automatic repair.
-
-Final status reserves a distinct original request and spending after assembly.
-Policy failures stay settled; final lookup/surviving-reply reconciliation is absent.
+Metadata/data acquisition retains exact requests, certified results and reservations.
+Settled invalid payload blocks progress; accepted payload replays offline. Full
+1 MiB extents exceed the 2 MiB result cap with proof/framing and refuse.
+Metadata/data and final-status reconciliation remain unfinished. Assembly retains
+partial/altered files without repair. Final status has distinct request/spending.
 [Completion](../design/local-store.md#completion-and-interrupted-publication)
-authenticates original evidence and synchronizes assembly before `PublishReady`
-freezes the timestamp and closes the ledger. Exact create-only manifest publication
-can reconcile locally; partial/changed/aliased/duplicate files refuse intact.
-No event follows readiness. Inventory consumes the same published manifest.
-
-Authenticated completed-capture succession uses target-then-predecessor locks,
-Host atomic owner replacement and shared intent creation. Initial capacity is
-admitted before writes. Old receipts and lock identities remain. Interrupted
-replacement/creation preserves occupied claims and partial files without repair.
-Read-only `verify_completion` authenticates exact original receipts and bytes.
-`open_capture_source` binds this to the same store, original capture lock and held
-payload descriptors. Bounded block-checked reads refuse changed bytes without
-reauthenticating certificates per extent. Completed receipts outlive ownership
-changes; unfinished/readiness/staging paths still require their original owner.
+authenticates evidence, synchronizes assembly and closes the journal at readiness;
+exact create-only manifest publication can reconcile locally. No later event is valid.
+Succession uses target-then-predecessor locks and Host atomic owner replacement,
+preserving old receipts, occupied claims and interrupted files. Held source reads
+bind completion, same-store capture lock and block-checked payload descriptors.
+Completed receipts outlive ownership changes; unfinished paths need original owners.
 
 `RestoreTransfer` calculates exact same-target/release extents and `2*N + 7` base
 management calls using shared capture ordering. Whole chunks cannot split; empty
@@ -64,49 +49,48 @@ chunks count. `RestorePlan` binds source/ordered requests, direct sender, initia
 trust and finite limits. Strict decoding re-admits source and derived fields while
 retaining original bytes. Local create/reopen now retain original intent, target
 ownership and source custody.
-They now support signing-only status preparation and read-only inspection. Pure restore status validation now shares the capture
-wire reader and policy, selecting the restore sender and original source module.
-`RestorePlan::authenticate_status_request` now reuses bounded call-content,
-per-call ceiling and direct-key signature checks for that plan's sender/target.
-It preserves original bytes; signature validity grants no spending or dispatch.
-Upload/load effects, CLI and Canic adapters are unfinished.
+They support signing-only status preparation and read-only inspection. Status
+policy uses the shared bounded capture reader with the restore sender and original
+source module. Request authentication reuses exact direct-key/call admission.
+Local `RestorePlan::authenticate_status_evidence` now checks that request plus
+original root, effective canister, historical certificate/delegation windows and
+exact certified outcome/response. It reuses capture's bounded verifier, without a
+fabricated capture plan or new provider framework. No clock, IO, spending or
+journal changes occur; callers still establish original custody. An authentic
+rejection is not successful status; apply status policy separately.
 
-## Continuation selected after delivery
+## Current continuation
 
 The [restore creation contract](../design/local-store.md#restore-creation-and-interrupted-intent)
-now describes implemented original-source versus current-owner admission and retained
-interruption refusal. An older source may differ from the current
-completed capture owner; both require authentication under target-first custody.
-The immutable restore plan itself retains the source dependency. Separate reverse
-reference files were removed from the proposal: no pruning or reference release
-exists, and every source/operation stays retained. Completed bundle admission is
-unchanged. Creation uses existing Host mechanics and one initial journal; reopening
-requires the caller's original approved plan and does not write or synchronize.
-Initial, signing-reserved and prepared journals are admitted with exact original
-request evidence; partial/unknown suffixes and orphan evidence refuse intact.
-Bind allocation-dependent exact requests and consume bounded authority before
-later effects. Restore targets the same existing ID and leaves it stopped.
-One signing reservation is now synchronized before signer entry. Cancellation,
-failure and invalid output stay spent; prepared and pending replay never resign.
-Next integrate bounded status submission and certificate/route/timing admission,
-retaining original spending and exact requests. Upload/load remain unfinished.
-The 0.101.11 batch is prepared for the requested GitHub-only checkpoint.
-The exact delivery graph (rand 0.10.3) passes all 341 unit tests, 24 examples,
-five IC journeys and strict product/private lint under
-`target/evidence/delivery-0.101.11/`. The separate local rand update stays excluded.
-Next development version: 0.101.12, after delivery and its post-push review.
+owns original source versus current completed-owner admission under target-first
+custody. Both retain authentication and original evidence. No pruning or reverse
+reference files exist. Creation uses existing Host mechanics and one journal;
+reopening needs the original approved plan and does not write or synchronize.
+Initial, signing-reserved and prepared journals revalidate original custody,
+canonical transitions and exact signed evidence. Partial/unknown suffixes and
+orphan files refuse intact. Uncertain persistence invalidates handles.
+One synchronized signing reservation precedes signer entry. Failure, cancellation
+or invalid output stays spent; pending/prepared replay never resigns. The IC
+fixture signs locally and cold-reopens; its opaque observation placeholder is not
+a certificate policy or dispatch authority. Physical power loss/external signer
+processes remain unqualified.
 
-Four new native preparation groups, ten shared journal regressions, strict
-product/private Clippy, warning-denying Rustdoc, formatting and documentation links
-pass under `target/evidence/restore-preparation/`. The IC fixture signs locally and
-reopens the exact prepared request without another signature; it submits no restore
-request. Physical power loss and external signer processes remain unqualified.
+The [certificate contract](../design/local-store.md#restore-status-certificate-authentication)
+records focused legacy review and changed assumptions. Two native groups cover
+both direct keys, wrong roots/results/outcomes/IDs, altered proof, strict observation,
+exact frame limits, historical windows and delegated target. They preserve source
+journal and supplied bytes without creating a restore operation or issuing HTTP.
+Named shared certificate fixtures keep restore tests flat under `restore/tests/`.
+All 343 unit tests, 24 documentation tests and five IC journeys pass, with strict
+product/private Clippy, warning-denying Rustdoc, formatting, links and snapshot
+admission. Evidence: `target/evidence/restore-certificates/`. The IC cases retain
+capture qualification; they do not qualify restore dispatch.
 
-Test layout is now flat: capture workflow cases stay in `capture/advance/tests/`,
-restore cases in `restore/tests/`, with named shared fixtures. All 341 unit tests
-and 24 documentation tests pass; the registered unit-test inventory is unchanged.
-Strict product/private lint passes. `target/evidence/test-layout/` retains results.
-No runtime behavior or release metadata changed in this layout cleanup.
+Next: original route/transport and live application/timing admission, then reserved
+one-shot status submission and retained certified evidence in the same journal.
+Unknown outcomes stay pending; original requests/spending cannot reset. Actual-IC
+restore status qualification accompanies dispatch. Upload/load, CLI and Canic
+adapters remain unfinished; restore targets the same existing ID and leaves it stopped.
 
 ## Dependencies and evidence
 
@@ -116,30 +100,21 @@ Testkit 0.106.0/PocketIC 16.1 and `thiserror` 2.0.18; product uses 2.0.21.
 The preserved local rand 0.10.4 graph was fetched and used for this batch's checks.
 No sibling patches or shared targets. [Setup](../development/setup.md) owns commands.
 
-`target/evidence/0.101.11/` retains same-owner and distinct older-source regressions,
-the offline actual-IC intent fixture and lint/documentation checks for the local fix.
-The exact 0.101.10 checkpoint was checked with rand 0.10.3 in the isolated delivery
-checkout under `target/evidence/0.101.10/`: 27 native cases and the offline IC
-fixture passed, with strict product/private lint and formatting/documentation checks.
+The delivered 0.101.11 graph (rand 0.10.3) passed 341 unit tests, 24 examples,
+five IC journeys and strict product/private lint in `target/evidence/delivery-0.101.11/`.
+Earlier preparation, request, policy, intent, transfer and plan evidence remains
+under root `target/evidence/restore-*/`; earlier completion/succession/source and
+failed fixtures remain in root and qualification targets. Git `f86f274` and the
+owning contracts retain historical detail. Nothing was removed.
 
-Earlier request, status-policy, intent, transfer and plan qualification remains
-under `target/evidence/restore-status-request/`, `restore-status-policy/`,
-`restore-intent/`, `restore-transfer/` and `restore-plan/`. These older batches
-qualify their named local boundaries, not signing or remote restore effects.
-Historical completion/succession/source evidence and failed bundles remain under
-root and qualification `target/`; Git `f86f274` and the owning contracts retain
-historical detail. Isolated delivery evidence remains under
-`/tmp/ic-backup-release-0.101.9/target/evidence/`. Nothing was removed.
-
-Toko Tooling 0.44.4 was checksum-verified and adopted through exporter preview and
-update; both workspace pins/locks and the receipt agree. Only the installed
-baseline document changed. The private package now lives directly at
-`qualification/ic-backup-qualification/`, matching its package name; the redundant
-`crates/` level is gone. Original evidence still uses `qualification/target/fixtures/`.
-All five IC journeys, strict product/private Clippy, tool/snapshot admission,
-formatting, links, dependency listing and LOC reporting pass. Evidence is under
-`target/evidence/tooling-0.44.4/`. Package versions, publication flags and unrelated
-dependency selections were unchanged by adoption. GitHub delivery is now requested.
+Toko Tooling 0.44.4 was checksum-verified and adopted through exporter preview/update;
+both workspace pins/locks and receipt agree. Only the managed baseline changed.
+Private qualification lives directly in `qualification/ic-backup-qualification/`;
+evidence stays in `qualification/target/fixtures/`. Five IC journeys, strict lint,
+tool/snapshot admission, formatting, links, dependency listing and LOC reporting
+passed in `target/evidence/tooling-0.44.4/`. Flat test cleanup passed the unchanged
+341-test registry plus 24 documentation tests in `target/evidence/test-layout/`.
+Both batches shipped in 0.101.11.
 
 Small fixtures do not qualify physical power loss, external signer processes,
 Canic fences, trusted HTTPS, hosted macOS, maximum-size throughput or restore.

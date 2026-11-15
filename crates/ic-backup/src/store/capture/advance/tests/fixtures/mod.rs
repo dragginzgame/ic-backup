@@ -1,5 +1,6 @@
 //! Shared native capture fixtures. Synthetic evidence does not qualify IC effects.
 
+pub(in crate::store) mod certificates;
 pub(in crate::store) mod completion;
 pub(in crate::store) mod data;
 pub(in crate::store) mod durable_lookup;

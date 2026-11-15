@@ -1,6 +1,6 @@
 //! Real signatures over synthetic metadata certificates; no remote read is simulated.
 use super::{
-    certificate_tests::{der, reply_tree, signed},
+    fixtures::certificates::{der, reply_tree, signed},
     fixtures::signatures::{Scheme, change},
     *,
 };

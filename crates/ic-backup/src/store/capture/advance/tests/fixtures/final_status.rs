@@ -3,7 +3,7 @@ use crate::store::{
     CaptureFinalStatusError, StatusProgress,
     capture::{
         advance::tests::{
-            certificate_tests::{reply_tree, signed},
+            fixtures::certificates::{reply_tree, signed},
             fixtures::{
                 data::Fixture,
                 http::{HttpProvider, Server, runtime},

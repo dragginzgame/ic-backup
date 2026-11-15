@@ -1,7 +1,7 @@
 //! Local capture intent and exclusive original custody. Direct-host status and snapshot continuation.
 
 mod advance;
-pub(in crate::store) use advance::authenticate_direct_request;
+pub(in crate::store) use advance::{CertificateRequirements, authenticate_direct_request};
 mod assembly;
 mod completion;
 mod source;

@@ -1,6 +1,6 @@
 //! Real signatures and synthetic certified replies; no remote payload effects.
 use super::{
-    certificate_tests::{der, reply_tree, signed},
+    fixtures::certificates::{der, reply_tree, signed},
     fixtures::signatures::{Scheme, change},
     *,
 };

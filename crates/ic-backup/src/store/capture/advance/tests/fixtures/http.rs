@@ -3,7 +3,8 @@ use crate::store::{
     capture::{
         advance::tests::{
             admission,
-            certificate_tests::{der, fixture, reply_tree, signed},
+            certificate_tests::fixture,
+            fixtures::certificates::{der, reply_tree, signed},
             fixtures::signatures::{Scheme, change, fixture as request_fixture},
         },
         status::tests::status,

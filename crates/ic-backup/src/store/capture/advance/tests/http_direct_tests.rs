@@ -4,7 +4,7 @@ use crate::store::{
     BackupStore,
     capture::{
         advance::tests::{
-            certificate_tests::{der, signed},
+            fixtures::certificates::{der, signed},
             fixtures::{
                 http::{Response, Server, http, input, now, runtime, set_expiry},
                 signatures::{Scheme, change, fixture as request_fixture},

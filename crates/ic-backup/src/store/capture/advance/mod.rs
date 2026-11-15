@@ -22,6 +22,7 @@ pub use data::{
 mod call;
 mod certificate;
 pub use call::{CaptureCall, CaptureProvider};
+pub(in crate::store) use certificate::CertificateRequirements;
 pub(super) use certificate::authenticate_expected_evidence;
 pub(super) use request::authenticate_expected_request;
 // Shared representations retain the original public status names and wire bytes.

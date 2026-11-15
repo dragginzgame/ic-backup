@@ -13,6 +13,7 @@ fn canonical_plan_record_and_domain_commitment_are_frozen() {
     assert_ne!(plan_digest(bytes), Sha256Digest::compute(bytes));
 }
 
+mod certificate_tests;
 mod fixtures;
 mod persistence_tests;
 mod plan_tests;

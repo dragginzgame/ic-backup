@@ -5,7 +5,7 @@ use crate::store::{
     CaptureLookupProgress, CaptureLookupSigner,
     capture::{
         advance::tests::{
-            certificate_tests::{der, reply_tree, signed},
+            fixtures::certificates::{der, reply_tree, signed},
             fixtures::{
                 durable_lookup::{reopen, reserve_original},
                 http::{HttpProvider, Response, Server, http, input, now, runtime},

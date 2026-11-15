@@ -644,8 +644,9 @@ reservations, not measured usage. Prepared replay reads no clock or live signer;
 pending signing returns `SigningPending` without refund or another invocation.
 Changed admission refuses. Signer failure, invalid output, timeout or cancellation
 after reservation stays spent. No pending-signature import/recovery API exists yet.
-Provider-owned observation bytes are retained and bounded but remain opaque here;
-HTTP route, proof policy and certified-result admission are still unimplemented.
+Provider-owned observation bytes are retained and bounded but remain opaque here.
+Signing does not admit HTTP routes or certified results; the separate local verifier
+below checks certificate evidence without changing the prepared journal.
 
 Focused review used frozen legacy `4ae087fa`'s `ops/persistence/attempt_journal`,
 including `failed_reservation_never_returns_a_slot_and_forces_exact_recovery`
@@ -659,3 +660,46 @@ with revoked signing permission, unchanged request/journal bytes and no addition
 capture signatures. Its opaque observation placeholder grants no HTTP authority.
 These checks do not qualify physical power loss, every filesystem failure boundary,
 external signer processes, status dispatch or restore upload/load.
+
+
+### Restore status certificate authentication
+
+`RestorePlan::authenticate_status_evidence` authenticates the exact direct-key
+request and bounded evidence using the source-bound trust root, effective canister,
+original request ID and retained certificate/delegation time windows. It reuses
+capture's bounded Platform certificate verifier through a private authority
+projection, with no fabricated capture plan or second provider framework.
+The observation profile remains the exact 79-byte capture certificate policy;
+unsupported or malformed profiles and excessive records refuse without rewriting
+supplied bytes. Original policy custody remains the caller’s responsibility.
+No current clock, file, signer, transport or journal is accessed.
+
+Successful authentication establishes certified response bytes and outcome only.
+Callers must establish original custody separately. A certified rejection is
+valid evidence, not a successful status result; stopped/module/controller policy
+still uses `validate_status_reply`. Neither method grants submission, settlement,
+retry or application authority. Signing-only fixtures with opaque observation
+placeholders remain unsuitable for this certificate profile or dispatch.
+
+Focused legacy review used frozen `4ae087fad8c23de712aa60bf569bde4b2b932651`'s
+`crates/ic-backup-agent/src/reply_evidence` and its
+`original_adapter_domains_and_chronological_attempt_framing_match_fixed_goldens`
+regression, plus consolidation history `94b94db89f77968eb4b480ef6d0576d41f6472e2`
+(`standalone/application` reply authority). Preserve original authority, request
+and reply association. Legacy's domain-separated digest was not certificate proof;
+reuse the new capture verifier rather than copying that envelope or workflow graph.
+No legacy code was copied. Native real-signature cases exercise both direct keys,
+wrong roots/results/outcomes/request IDs, malformed proofs, original time windows,
+exact frame limits and delegation target binding. Existing capture rejection and
+certificate cases cover the shared decoder. These are local crypto checks, not
+qualification of restore IC effects.
+
+### Next restore status boundary (proposed)
+
+Next admit the prepared request's original network/route/transport commitment and
+live application/timing authority, then reserve submission in the existing restore
+journal before a one-shot HTTP call. Retain exact certified evidence before applying
+status policy. Unsupported original observations refuse intact, without replacement,
+resigning or reset spending. Uncertain submission remains pending without automatic
+retries; historical replay remains effect-free. Add changed-route and actual-IC
+restore status qualification with dispatch. Upload/load remain unfinished.

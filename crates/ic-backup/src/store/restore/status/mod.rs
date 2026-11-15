@@ -1,4 +1,4 @@
-//! Local restore status policy and signed-request authentication; no spending.
+//! Local restore status policy, signed-request and certificate checks; no spending.
 use super::RestorePlan;
 use crate::store::{
     CaptureError, CaptureStatusError, CaptureStatusReplyError, PreparedStatus,
@@ -95,5 +95,51 @@ impl RestorePlan {
             "canister_status",
             &arguments,
         )
+    }
+}
+
+/// Local signed-request or retained-certificate refusal; no retry or effect permission.
+#[derive(Debug, thiserror::Error)]
+pub enum RestoreStatusEvidenceError {
+    /// The exact original direct-key request or its allowance refused.
+    #[error(transparent)]
+    Request(#[from] StatusRequestError),
+    /// Original trust/time policy, proof, framing or exact result association refused.
+    #[error(transparent)]
+    Certificate(#[from] crate::store::StatusCertificateError),
+}
+
+impl RestorePlan {
+    /// Authenticate a retained initial status result using this restore's original authority.
+    ///
+    /// Verifies the direct-key request, complete evidence allowance, provisioned root,
+    /// original observation windows, effective canister and exact certified request/result.
+    /// Shares capture's bounded Platform certificate verifier and rejection projection.
+    /// Reads no clock, performs no IO and preserves every supplied byte.
+    ///
+    /// Callers must establish original request/proof custody. Success grants no signing,
+    /// submission, settlement or retry authority and does not validate successful status
+    /// contents; use `validate_status_reply` separately. Certified rejection is authentic
+    /// evidence, not success. Current routing/application authority remains separate.
+    /// # Errors
+    /// Refuses altered signatures, unsupported observation bytes, wrong roots/targets,
+    /// invalid certificates, excessive records and mismatched responses or outcomes.
+    pub fn authenticate_status_evidence(
+        &self,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        evidence: &crate::store::StatusEvidence,
+        root_key_der: &[u8],
+    ) -> Result<(), RestoreStatusEvidenceError> {
+        self.authenticate_status_request(admission, prepared)?;
+        evidence
+            .encode(admission.result_bytes)
+            .map_err(crate::store::StatusCertificateError::Admission)?;
+        crate::store::capture::CertificateRequirements {
+            canister: self.request().target.canister,
+            trust_root: self.request().trust_root,
+        }
+        .authenticate(admission, prepared, evidence, root_key_der)?;
+        Ok(())
     }
 }

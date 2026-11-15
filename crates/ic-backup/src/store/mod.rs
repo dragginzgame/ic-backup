@@ -34,8 +34,8 @@ mod payload;
 mod restore;
 pub use restore::{
     RestoreLimitsRecord, RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError,
-    RestoreRequest, RestoreStatusPreparation, RestoreStatusPreparationError, RestoreStatusSigner,
-    RestoreStatusView,
+    RestoreRequest, RestoreStatusEvidenceError, RestoreStatusPreparation,
+    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusView,
 };
 #[cfg(test)]
 mod tests;
