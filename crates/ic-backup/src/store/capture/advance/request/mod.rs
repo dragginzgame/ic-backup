@@ -69,6 +69,15 @@ pub fn authenticate_status_request(
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
 ) -> Result<(), StatusRequestError> {
+    authenticate_call_request(plan, admission, prepared, super::CaptureCall::Status)
+}
+
+pub(super) fn authenticate_call_request(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    call: super::CaptureCall,
+) -> Result<(), StatusRequestError> {
     admission
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
@@ -77,7 +86,7 @@ pub fn authenticate_status_request(
         .encode(admission.request_bytes)
         .map_err(StatusRequestError::Admission)?;
     prepared
-        .validate_call(plan)
+        .validate_call_for(plan, call)
         .map_err(StatusRequestError::Admission)?;
     let envelope = decode_envelope(&prepared.envelope, admission.request_bytes as usize)
         .map_err(|_| StatusRequestError::Envelope)?;

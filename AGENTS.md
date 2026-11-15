@@ -7,8 +7,9 @@ never edit that receipt or files under `vendor/toko-tooling/` by hand.
 Read [README.md](README.md), [the handoff](docs/status/current.md) and
 [the restart direction](docs/design/restart.md) at session start.
 Local inventory, payload integrity, capture intent, transfer planning, bounded reply
-decoding and initial direct-host status persistence are implemented. Concrete
-providers and authenticated IC execution remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+decoding and direct-host status/list/take continuation are implemented. PocketIC
+qualifies these calls and offline replay with fixture signing and application authority.
+Canic process/maintenance adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 
@@ -80,6 +81,23 @@ repository's target directory; do not add sibling patches or shared targets.
 libraries belong under `crates/`. Add a separate `qualification/` workspace only
 when actual test-only packages justify one; product must never depend on it.
 Use directory modules with `mod.rs` when modules exist. Keep tests with owners.
+
+The private `qualification/` workspace owns actual management ingress through
+Testkit 0.106 and its native `ic_testkit::pocket_ic` boundary. Product dependencies
+never point back into it. Its independent lock selects PocketIC 16.1 and that
+client's exact `thiserror` 2.0.18 constraint; the product lock retains 2.0.21.
+The compatible product requirement admits both. Revisit this constraint when
+PocketIC relaxes its pin. Fixture keys, upstream DTOs and runtime construction
+remain test-only; no production identity alias or direct PocketIC dependency.
+
+`make install-testkit-server` selects the unique locked Testkit CLI through the
+shared Cargo installer, then uses Testkit's authenticated setup.
+`make testkit-server-check` admits the server offline; `make test-qualification`
+runs the actual-IC caller under `qualification/target/`. Fixtures independently
+call the locked Testkit library's offline check before managed startup and retain
+server logs, original journals and byte evidence under that target. Keep failed
+fixtures. Native core checks use root `target/` and do not run this separate
+qualification target implicitly. Shared formatting covers both workspaces.
 
 The configured native CI hosts are Linux x86-64 and macOS ARM64/x86-64; configuration
 alone does not prove hosted support. Ordinary work leaves staging, commits and

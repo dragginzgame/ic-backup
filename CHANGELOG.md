@@ -1,12 +1,34 @@
 # Changelog
 
-## [0.101.2] — pending
+## [0.101.2] — GitHub checkpoint (unpublished)
 
 ### 📝 Summary
 
-- Open the next compatible development version after the 0.101.1 GitHub
-  checkpoint. Publication remains disabled; no further product behavior is
-  included in this version-opening commit.
+- Compose direct-host status and snapshot signing, live authority/time admission and authenticated
+  HTTP through `DirectCaptureProvider`. Integrations retain bounded sign-only and
+  continuous application-authority hooks. Preserve original spending on uncertain
+  effects and verify settled replay without a live signer, guard or clock.
+
+- Qualify real stopped-canister status, non-replacing snapshot creation and offline cold replay through a private
+  Testkit/PocketIC workspace. Add explicit server setup, offline admission and
+  qualification targets through the installed Tooling and Testkit owners.
+  Product remains unpublished; download and complete backup/restore remain unfinished.
+
+- Continue verified initial status with durable snapshot list/take reservations,
+  original signed bytes and authenticated replies. Check cumulative budgets and
+  capacity; preserve existing snapshots and installed code. Pending effects are
+  never retried or inferred from inventory differences.
+
+### 📦 Dependencies
+
+- Use the already selected Tokio timer in production for bounded signing waits.
+  Select Testkit 0.106.0/PocketIC 16.1 only in the private qualification graph.
+  Admit PocketIC's `thiserror` 2.0.18 pin there while retaining 2.0.21 in the
+  product lock; no supplier source or sibling override is added.
+
+- Retain the incoming Platform 0.33.6 product lock selection and align the private
+  qualification graph. Its new Cloud Engine module is outside selected features;
+  canonical Types remain 0.20.4.
 
 ## [0.101.1] — GitHub checkpoint (unpublished)
 

@@ -1,4 +1,4 @@
-//! Initial status only. Providers are trusted integration boundaries, not IC emulators.
+//! Finite status and snapshot calls. Providers are trusted integration boundaries, not IC emulators.
 use super::{
     CaptureError, CaptureExecution, CaptureOperation, CapturePlan, CaptureStatusReplyError, ledger,
 };
@@ -12,17 +12,34 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use thiserror::Error;
 
+mod call;
 mod certificate;
+pub use call::{CaptureCall, CaptureProvider};
+// Shared representations retain the original public status names and wire bytes.
+pub use PreparedStatus as PreparedCaptureCall;
+pub use StatusAdmissionRecord as CaptureCallAdmissionRecord;
+pub use StatusEvidence as CaptureCallEvidence;
+mod direct;
 mod http;
 mod request;
+pub(super) mod snapshots;
 pub use certificate::{
     StatusCertificateError, authenticate_status_evidence, status_certificate_evidence,
     status_certificate_observation,
 };
+pub use direct::{
+    CaptureApplicationGuard, CaptureSigner, CaptureSigningRequest, CaptureTiming,
+    DirectCaptureError, DirectCaptureProvider,
+};
 pub use http::{StatusHttpError, StatusHttpTransport};
 pub use request::{StatusRequestError, authenticate_status_request};
+pub use snapshots::{
+    CaptureSnapshotPhase, CaptureSnapshotView, SnapshotAdmissionRecord, SnapshotAdvanceError,
+    SnapshotProgress,
+};
 
-/// Original finite authority for the first status call, retained before preparation.
+/// Original finite call authority, retained before preparation.
+/// The historical status name and `CaptureCallAdmissionRecord` share this representation.
 /// Bindings identify the provider protocol and continuous application maintenance witness.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -90,7 +107,7 @@ pub struct StatusEvidence {
     pub proof: Vec<u8>,
 }
 
-/// Trusted direct-host status integration. No implementation is supplied or qualified here.
+/// Trusted direct-host status integration. See [`DirectCaptureProvider`] for the supplied composition.
 ///
 /// Admission and authentication are local, bounded, effect-free checks. Admission
 /// verifies the exact network, trust root, sender, target, application continuity,
@@ -185,7 +202,7 @@ impl CaptureOperation {
     /// replay performs local historical authentication and policy validation only.
     /// Prepared and settled calls must match the plan, exact arguments and request ID.
     /// Dropping the future never starts detached work or replenishes an allowance.
-    /// No concrete provider, Canic executor, reconciliation or snapshot is implemented.
+    /// This method performs no snapshot call, reconciliation or Canic execution.
     ///
     /// ```no_run
     /// use ic_backup::store::{CaptureOperation, StatusAdmissionRecord, StatusProvider,
@@ -285,7 +302,7 @@ impl CaptureOperation {
         self.status_result(provider, admission)
     }
 
-    fn status_result<P: StatusProvider>(
+    pub(super) fn status_result<P: StatusProvider>(
         &self,
         provider: &P,
         admission: &StatusAdmissionRecord,
@@ -317,7 +334,15 @@ impl CaptureOperation {
 impl PreparedStatus {
     // Inspect the original bytes; never normalize or re-encode a signed envelope.
     // Authentication metadata, routing, observation and freshness stay provider-owned.
-    fn validate_call(&self, plan: &CapturePlan) -> Result<(), CaptureError> {
+    pub(super) fn validate_call(&self, plan: &CapturePlan) -> Result<(), CaptureError> {
+        self.validate_call_for(plan, CaptureCall::Status)
+    }
+
+    pub(super) fn validate_call_for(
+        &self,
+        plan: &CapturePlan,
+        call: CaptureCall,
+    ) -> Result<(), CaptureError> {
         let CaptureExecution::Direct { sender: expected } = plan.request().execution else {
             return Err(CaptureError::StatusAdmission);
         };
@@ -336,8 +361,8 @@ impl PreparedStatus {
         };
         let matches_status = sender.as_slice() == expected.as_slice()
             && canister_id.as_slice().is_empty()
-            && method_name == "canister_status"
-            && *arg == arguments(plan)?;
+            && method_name == call.method_name()
+            && *arg == call.arguments(plan)?;
         if !matches_status
             || *ingress_expiry != self.expires_ns
             || *content.to_request_id() != self.request_id
@@ -347,7 +372,7 @@ impl PreparedStatus {
         Ok(())
     }
 
-    fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
+    pub(super) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
         if self.expires_ns == 0 {
             return Err(CaptureError::StatusAdmission);
         }
@@ -359,7 +384,7 @@ impl PreparedStatus {
         ]
         .concat())
     }
-    fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
+    pub(super) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
         if bytes.len() < 46 {
             return Err(CaptureError::Changed);
         }
@@ -381,11 +406,11 @@ impl PreparedStatus {
     }
 }
 impl StatusEvidence {
-    fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
+    pub(super) fn encode(&self, limit: u32) -> Result<Vec<u8>, CaptureError> {
         let tail = pair(&self.response, &self.proof, limit.saturating_sub(1))?;
         Ok([&[u8::from(self.rejected)], tail.as_slice()].concat())
     }
-    fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
+    pub(super) fn decode(bytes: &[u8]) -> Result<Self, CaptureError> {
         let Some((&kind, tail)) = bytes.split_first() else {
             return Err(CaptureError::Changed);
         };

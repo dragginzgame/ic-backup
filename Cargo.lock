@@ -881,9 +881,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.33.5"
+version = "0.33.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e61489a7377a2a67791f949a70976ec1445c75ac3dcc0ab5229cc1ea569385a"
+checksum = "24586654cc055365afd1c4bfb8dcd8f26f389bedba5cbee3dc722d99fce4a00a"
 dependencies = [
  "crypto-bigint",
  "curve25519-dalek",

@@ -270,6 +270,19 @@ primitives, request domains and self-authenticating Principal derivation; no
 supplier change or issue is needed for this initial profile. Exact standard
 Ed25519/secp256k1 keys are supported; delegated, canister and other identity forms
 refuse. This does not qualify the Canic sign-only process or application custody.
-External preparation and live observation/application admission remain the next
-composition work. The [owning contract](../architecture/capture-intent.md#direct-key-status-request-authentication)
+`DirectCaptureProvider` now composes bounded sign-only invocation, retained time
+policy and live application admission with these helpers. The private PocketIC
+caller qualifies actual initial status and offline replay with fixture hooks.
+Canic still owns implementation and qualification of its process and maintenance
+adapters; Backup supplies no Canic executor or fresh maintenance authority. The [owning contract](../architecture/capture-intent.md#direct-key-status-request-authentication)
 records the focused legacy review, changed assumptions and native regressions.
+
+The direct provider now shares its bounded signing/HTTP path across status and
+snapshot list/take. Canic still supplies `CaptureSigner` and
+`CaptureApplicationGuard`, including exclusive snapshot custody and uninterrupted
+application maintenance. The [durable snapshot contract](../architecture/capture-intent.md#durable-snapshot-list-and-take)
+retains original per-call authority and cumulative costs. The fixture qualifies
+management effects with a direct controller key; it does not qualify Canic's
+manager-controlled executor, signer processes or fenced application recovery.
+[Canic #1](https://github.com/dragginzgame/canic/issues/1) remains the owning
+integration issue; no new supplier API gap was required for list/take.

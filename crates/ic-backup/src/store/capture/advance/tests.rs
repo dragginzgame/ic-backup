@@ -1216,3 +1216,5 @@ fn mismatched_retained_request_refuses_dispatch_and_settled_replay_without_repai
 mod certificate_tests;
 mod http_tests;
 mod request_tests;
+
+mod snapshot_tests;

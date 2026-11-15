@@ -104,8 +104,26 @@ pub fn status_certificate_evidence(
     certificate: &[u8],
     root_key_der: &[u8],
 ) -> Result<StatusEvidence, StatusCertificateError> {
+    call_certificate_evidence(
+        plan,
+        admission,
+        prepared,
+        certificate,
+        root_key_der,
+        super::CaptureCall::Status,
+    )
+}
+
+pub(super) fn call_certificate_evidence(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    certificate: &[u8],
+    root_key_der: &[u8],
+    call: super::CaptureCall,
+) -> Result<StatusEvidence, StatusCertificateError> {
     let (rejected, response) =
-        authenticated_response(plan, admission, prepared, certificate, root_key_der)?;
+        authenticated_response(plan, admission, prepared, certificate, root_key_der, call)?;
     let evidence = StatusEvidence {
         rejected,
         response,
@@ -159,14 +177,38 @@ pub fn authenticate_status_evidence(
     evidence: &StatusEvidence,
     root_key_der: &[u8],
 ) -> Result<(), StatusCertificateError> {
+    authenticate_call_evidence(
+        plan,
+        admission,
+        prepared,
+        evidence,
+        root_key_der,
+        super::CaptureCall::Status,
+    )
+}
+
+pub(super) fn authenticate_call_evidence(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    evidence: &StatusEvidence,
+    root_key_der: &[u8],
+    call: super::CaptureCall,
+) -> Result<(), StatusCertificateError> {
     admission
         .validate(plan)
         .map_err(StatusCertificateError::Admission)?;
     evidence
         .encode(admission.result_bytes)
         .map_err(StatusCertificateError::Admission)?;
-    let (rejected, response) =
-        authenticated_response(plan, admission, prepared, &evidence.proof, root_key_der)?;
+    let (rejected, response) = authenticated_response(
+        plan,
+        admission,
+        prepared,
+        &evidence.proof,
+        root_key_der,
+        call,
+    )?;
     if rejected != evidence.rejected {
         return Err(StatusCertificateError::Outcome);
     }
@@ -182,6 +224,7 @@ fn authenticated_response(
     prepared: &PreparedStatus,
     certificate: &[u8],
     root_key_der: &[u8],
+    call: super::CaptureCall,
 ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
     admission
         .validate(plan)
@@ -191,7 +234,7 @@ fn authenticated_response(
         .encode(admission.request_bytes)
         .map_err(StatusCertificateError::Admission)?;
     prepared
-        .validate_call(plan)
+        .validate_call_for(plan, call)
         .map_err(StatusCertificateError::Admission)?;
     if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != plan.request().trust_root
     {
@@ -289,7 +332,7 @@ fn rejection(
     Ok(bytes)
 }
 
-fn observation(bytes: &[u8]) -> Result<TimePolicy, StatusCertificateError> {
+pub(super) fn observation(bytes: &[u8]) -> Result<TimePolicy, StatusCertificateError> {
     let values = bytes
         .strip_prefix(OBSERVATION)
         .filter(|bytes| bytes.len() == 48)

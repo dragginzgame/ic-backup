@@ -766,3 +766,5 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
     ));
     peer.join().unwrap();
 }
+
+mod direct_tests;

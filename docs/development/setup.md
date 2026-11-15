@@ -20,8 +20,8 @@ suite for the earlier 0.77.3 adoption remain under
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
 Compatible development now continues as unpublished 0.101.2 after the 0.101.1
-GitHub checkpoint. This version opening changes no product behavior.
-Platform 0.33.4 resolves canonical Types 0.20.4 through the existing dependency.
+GitHub checkpoint. The direct capture provider composes status, list and take through the existing helpers.
+Locked Platform 0.33.6 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
 consumer graph evidence are under `target/evidence/types-0.20.4/`.
@@ -100,9 +100,10 @@ establish no IC capture/load behavior.
 CI configures Linux x86-64 and macOS ARM64/x86-64, plus formatting and a separate
 pinned history secret scan. Local Linux validation does not qualify macOS.
 
-Add ordinary tests beside implemented code. Introduce an independent
-`qualification/` workspace only when maintained test-only packages are needed.
-Tooling can discover that location; fetch and validation must be extended then.
+Ordinary tests stay beside implemented code. The independent `qualification/`
+workspace owns the actual-IC caller and its lock; product never depends on it.
+`make fetch-dependencies` prepares both locked graphs and shared formatting
+covers both. `make check` remains the core check; IC qualification is explicit.
 Future dependency adoption uses the root exact tooling pin, member inheritance,
 lockfile and `make toko-tooling-update`; never edit managed payloads manually.
 
@@ -124,8 +125,8 @@ Use `store::capture::advance::tests::http_tests` for real loopback HTTP, exact
 request capture, response bounds, no-retry behavior and workflow replay. Request
 bytes remain in the caller-owned `target/local-store-tests/status-http-*`
 fixtures. TLS negotiation/plaintext refusal is also exercised; completed trusted
-TLS handshakes, real IC effects and a complete signer/
-application provider or hosted macOS remain unqualified. Original transport
+TLS handshakes, external signer process custody and hosted macOS remain unqualified
+by these native tests. Original transport
 evidence remains under `target/evidence/status-http/`. No separate transport crate
 or runtime wrapper was introduced for this native host capability.
 
@@ -147,3 +148,49 @@ verification bypass or IC trust discovery is added. The incoming Platform 0.33.5
 lock selection is preserved; the manifest still permits 0.33.4. The graph adds
 Host HTTP and Reqwest's native-verifier/AWS-LC support, including target-specific
 packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.
+
+## Direct-provider and IC qualification
+
+`store::capture::advance::tests::http_tests::direct_tests` selects concrete-provider
+native tests; the full advance selection also covers retained historical checks.
+The independent private package under `qualification/crates/ic-backup-qualification`
+uses Testkit's native client boundary for real stopped-canister status, snapshot list/take and
+cold replay after gateway shutdown. It uses fixture signing/maintenance authority;
+Canic process/fence qualification remains with its integration owner.
+
+```bash
+make install-testkit-server
+make testkit-server-check
+make test-qualification
+```
+
+Setup selects the unique Testkit version from `qualification/Cargo.lock` through
+Tooling's Cargo installer and delegates server assets to Testkit. It is also an
+ordered `install-tools` extension after common tools and locked fetch. The matching
+`tools-check` extension and fixture library admission are offline and never install.
+There is no second PocketIC catalog, auto-download or IC executable bundle.
+Keep `.tools/testkit/` setup evidence and `qualification/target/fixtures/` original
+journals, roots and raw server output, including failed runs. Production builds
+use root `target/`; qualification uses its own `target/`, never sibling/shared output.
+
+Testkit 0.106.0 archive SHA-256 is
+`090cea21af2208dad7a359e99fe803b356fe8daa27cdc52d545df7de3b32c43e`, from source
+`d12b0174cd04c556f065c39bc12dd366628cc6df`. Its native PocketIC 16.1 client pins
+`thiserror = 2.0.18`; the separate qualification lock satisfies that requirement.
+The product's compatible requirement admits it while its original lock retains
+2.0.21. Both graphs select Platform 0.33.6/Types 0.20.4 and Host 0.79.0. Revisit
+this concrete constraint when the client pin changes. No direct PocketIC, registry
+management, Candid or CBOR dependency is added; native DTOs stay fixture-private.
+
+`target/evidence/direct-status/` retains the initial archive/index verification.
+`target/evidence/snapshot-capture/` retains snapshot, custody, codec and consumer
+validation logs; failed and successful IC fixture bundles remain retained. For fixture linting, run `cargo clippy --manifest-path
+qualification/Cargo.toml --locked --offline --all-targets -- -D warnings`.
+Local Linux acceptance does not establish hosted macOS or production HTTPS acceptance.
+
+The incoming Platform 0.33.6 product selection is also locked in qualification.
+Its cached registry archive matches SHA-256
+`24586654cc055365afd1c4bfb8dcd8f26f389bedba5cbee3dc722d99fce4a00a`, source
+`95b61fb4bcdeb9f8e70ddcb65e83929213ff99a5`. Comparison with 0.33.5 found the new
+Cloud Engine module and feature exports outside Backup's selected features;
+canonical Types remain 0.20.4. The capture and actual-IC checks use this selection.

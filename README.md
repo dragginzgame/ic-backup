@@ -37,8 +37,8 @@ remain separate requirements.
 retains exact request/result evidence and replays the initial direct-host status
 call without repeating pending effects. `inspect_status` recovers the retained
 stage, original admission, reserved counts and request identity without provider
-calls or writes. It requires an independently qualified
-provider; none is supplied yet. Prepared call content is checked against the
+calls or writes. `DirectCaptureProvider` composes external signing, live admission
+and authenticated HTTP under those reservations. Prepared call content is checked against the
 original plan and request ID through Platform. `status_certificate_evidence` builds bounded reply/rejection evidence, and
 `authenticate_status_evidence` verifies retained certificates against original trust, request ID
 and admitted time windows, using Platform. `authenticate_status_request` verifies
@@ -47,10 +47,15 @@ original direct Ed25519/secp256k1 signatures and sender bindings without changin
 status ingress once with bounded deadlines/body reads and no retries or polling.
 Host HTTP supplies the shared body reader and Reqwest re-export; Backup owns the
 request and recovery policy.
-The integration still supplies signing, original time policy and current
-application admission; the transport helper is not a full provider. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
-Snapshot capture, completion writing, full bundle verification, restore, CLI and
-simulator workflows remain unimplemented. See the
+Integrations supply a bounded sign-only adapter, continuous application-authority
+guard and explicit certificate timing policy. Backup retains the original time
+window and verifies settled replay without live authority or a current clock.
+`advance_snapshot` follows authenticated status with a durable list and one
+non-replacing snapshot take. It preserves original requests, per-call budgets
+and unresolved outcomes; `inspect_snapshot` reports cumulative reservations.
+A private PocketIC fixture qualifies status, snapshot creation and offline replay; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
+Download, original-request reconciliation, completion writing, full bundle verification, restore and CLI
+workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
 and the public Rustdoc example. Publication remains disabled; `0.101.2` is an
 unpublished development version following the legacy `0.67.x` line.

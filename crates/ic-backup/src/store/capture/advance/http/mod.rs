@@ -1,7 +1,7 @@
 //! One bounded HTTP dispatch of already-retained initial status ingress.
 use super::{
     CaptureError, CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
-    StatusEvidence, StatusRequestError, authenticate_status_request, status_certificate_evidence,
+    StatusEvidence, StatusRequestError,
 };
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_http::{
@@ -71,6 +71,28 @@ pub enum StatusHttpError {
 }
 
 impl StatusHttpTransport {
+    pub(super) fn admit_plan(&self, plan: &CapturePlan) -> Result<(), StatusHttpError> {
+        if plan.request().target.network != self.network
+            || plan.request().trust_root != Sha256Digest::compute(&self.root_key_der)
+        {
+            return Err(StatusHttpError::Binding);
+        }
+        Ok(())
+    }
+
+    pub(super) fn root_key_der(&self) -> &[u8] {
+        &self.root_key_der
+    }
+
+    pub(super) fn commitment(&self) -> [u8; 32] {
+        let mut bytes = b"ic-backup/status-http/1\n".to_vec();
+        bytes.extend_from_slice(self.network.as_bytes());
+        bytes.extend_from_slice(Sha256Digest::compute(&self.root_key_der).as_bytes());
+        bytes.extend_from_slice(&(self.timeout.as_nanos() as u64).to_le_bytes());
+        bytes.extend_from_slice(self.origin.as_str().as_bytes());
+        *Sha256Digest::compute(&bytes).as_bytes()
+    }
+
     /// Configure HTTPS or an explicit literal-loopback HTTP root origin.
     ///
     /// Credentials, written paths (including normalized dot segments), query,
@@ -127,7 +149,7 @@ impl StatusHttpTransport {
     ///
     /// The original network/root, exact status call and framed request bounds are
     /// checked before dispatch, along with direct-key signature authentication through
-    /// [`authenticate_status_request`]. Effective routing uses the original target. The
+    /// [`super::authenticate_status_request`]. Effective routing uses the original target. The
     /// request timeout is the lesser of the configured maximum, original submit
     /// deadline and ingress expiry. That timeout spans connection and body reads;
     /// absolute time is rechecked before returning authenticated evidence.
@@ -166,15 +188,24 @@ impl StatusHttpTransport {
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
     ) -> Result<StatusEvidence, StatusHttpError> {
-        authenticate_status_request(plan, admission, prepared).map_err(|error| match error {
-            StatusRequestError::Admission(error) => StatusHttpError::Admission(error),
-            error => StatusHttpError::Request(error),
-        })?;
-        if plan.request().target.network != self.network
-            || plan.request().trust_root != Sha256Digest::compute(&self.root_key_der)
-        {
-            return Err(StatusHttpError::Binding);
-        }
+        self.submit_call(plan, admission, prepared, super::CaptureCall::Status)
+            .await
+    }
+
+    pub(super) async fn submit_call(
+        &self,
+        plan: &CapturePlan,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        call: super::CaptureCall,
+    ) -> Result<StatusEvidence, StatusHttpError> {
+        super::request::authenticate_call_request(plan, admission, prepared, call).map_err(
+            |error| match error {
+                StatusRequestError::Admission(error) => StatusHttpError::Admission(error),
+                error => StatusHttpError::Request(error),
+            },
+        )?;
+        self.admit_plan(plan)?;
         let mut url = self.origin.clone();
         url.set_path(&format!(
             "/api/v3/canister/{}/call",
@@ -225,12 +256,13 @@ impl StatusHttpTransport {
         else {
             return Err(StatusHttpError::NoCertificate);
         };
-        let evidence = status_certificate_evidence(
+        let evidence = super::certificate::call_certificate_evidence(
             plan,
             admission,
             prepared,
             &certificate,
             &self.root_key_der,
+            call,
         )
         .map_err(StatusHttpError::Authentication)?;
         remaining(deadline)?;

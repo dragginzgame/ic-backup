@@ -4,7 +4,8 @@ This Unix-only slice persists local intent, not a backup. `CapturePlan::new` is
 pure; `BackupStore::create_capture` writes intent; `open_capture` and
 `CaptureOperation::inspect` admit original intent without repair. There is no
 reservation API for arbitrary calls. Initial direct-host status continuation is
-implemented below; reconciliation, snapshots, completion and target release are not. The
+followed by durable snapshot list/take below; reconciliation, download, completion
+and target release remain unfinished. The
 [operation design](../design/operation-contract.md) owns the proposed next steps.
 
 ## Exact declaration
@@ -133,11 +134,11 @@ before signing; individual files do not each receive the full allowance.
 ## Durable initial status
 
 `CaptureOperation::advance_status` implements the initial direct-host status call
-through a caller-supplied `StatusProvider`. The library has no concrete provider;
-the trait is a trusted integration contract, not proof that its implementation is
-qualified. Canic execution refuses before spending until its executor/receipt
-protocol is implemented. No snapshot, observation/reconciliation, completion or
-owner-release flow is included.
+through a `StatusProvider`. The supplied `DirectCaptureProvider` composes the
+helpers described below with integration-owned signer and application hooks; the
+trait remains a trusted integration contract, not proof of any adapter's qualification. Canic execution refuses before spending until its executor/receipt
+protocol is implemented. The initial-status method includes no snapshot or reconciliation call; the
+snapshot continuation below is separate. Completion and owner release remain absent.
 
 The workflow constructs Platform's `CanisterIdRecord` for `canister_status` and
 encodes its single argument within 256 bytes. A strict `StatusAdmissionRecord`
@@ -498,9 +499,8 @@ with the future concrete provider.
 
 `StatusHttpTransport` composes with the trusted provider's live `submit_once`
 invocation. It authenticates the direct-key request profile described below before
-HTTP, but is not a full `StatusProvider`: the integration signs, chooses original
-observation windows, binds its provider protocol,
-admits application continuity and invokes transport only under the workflow's
+HTTP. `DirectCaptureProvider` composes it with explicit timing, original provider
+bindings and integration-owned signing/application checks, under the workflow's
 durable submission reservation. Possessing this helper or a reconstructed request
 is not replay authority. No journal writer, signer, background worker or retry
 framework is added; local historical authentication remains separately usable.
@@ -642,3 +642,138 @@ now use real signed ingress, test both key profiles against synthetic BLS reply
 certificates, and prove invalid signatures/keys/delegations make zero HTTP requests.
 These are native crypto/transport/persistence checks, not actual IC acceptance,
 external signer process custody, live application admission or full Canic support.
+
+## Direct status provider
+
+`DirectCaptureProvider<S, A>` composes the existing request, certificate and HTTP
+helpers under `advance_status` and `advance_snapshot`. It adds no separate ledger, retry machinery, private-key
+store, process launcher or runtime. Two trusted integration hooks remain explicit:
+
+- `CaptureSigner` performs at most one sign-only invocation. It receives the exact
+  approved plan/finite call/arguments, original preparation deadline, maximum ingress expiry,
+  envelope-byte allowance and total preparation network allowance. It must bound
+  output while receiving, own child/request custody on cancellation, remain
+  cooperative/nonblocking and never submit management ingress. Backup enforces a
+  Tokio timeout and independently checks returned size, content, identity and
+  signature. A returned `Vec` alone cannot prove the adapter's allocation or
+  network accounting; these are adapter qualification requirements.
+- `CaptureApplicationGuard` locally verifies the original application commitment
+  and uninterrupted maintenance/external-obligation authority for this exact plan.
+  It must not acquire new maintenance or perform remote work. It runs before
+  preparation, after signing and immediately before HTTP. A stopped status does
+  not substitute for application safety. These hooks belong to Canic's adapter
+  for a Canic fleet; Backup imports no Canic runtime.
+
+For a new operation, the integration puts `provider.commitment()` into original
+`StatusAdmissionRecord::provider` before the first reservation. The domain-bound
+SHA-256 includes normalized origin, network, root digest, timeout, signer protocol,
+guard protocol and all timing values. Reopen supplies the original admission and
+matching configuration; changing protocols or configuration does not create new
+spending. `submit_requests` must be exactly one. Preparation may have zero network
+requests, but still consumes its one signing reservation.
+
+`CaptureTiming` has no defaults: certificate age, delegation age and clock skew
+are explicit nanosecond allowances. Preparation samples host Unix time once for
+its retained reference. The original submit deadline must be within 300 seconds
+of that reference and the preparation deadline must remain future. Both certificate
+windows retain this reference; their future allowance is the remaining interval
+to the original submission deadline plus selected skew. Past allowances remain
+separate. All arithmetic is checked, including window underflow/overflow.
+The signer may select an expiry strictly after the reference and no later than
+the original submission deadline. Backup derives request ID/expiry from exact
+returned bytes; the signer cannot choose the observation window.
+
+The existing 79-byte certificate observation is retained with the exact envelope
+before submission. Envelope allowance subtracts observation and 44-byte request
+framing from original request bytes. Prepared admission rechecks the signature,
+original policy bytes, live expiry/deadline and application authority; a clock
+before the original reference refuses. Preparation checks completion time again
+after local validation. HTTP independently enforces its remaining deadline.
+Timeout/cancellation/error leaves the workflow's original reservation spent.
+Cold pending replay invokes neither hook nor HTTP. Settled authentication checks
+original provider/request/observation/root/certificate bindings locally, with no
+current clock or application guard; it grants no new effects or maintenance.
+Existing record formats and recovery custody are unchanged.
+
+The focused review reused frozen legacy
+[submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
+[boundary tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs)
+and [original request/admission consolidation](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2).
+Those checks prevent stale-context submission and retries after uncertain effects.
+Here signing is external, retained certificates support historical replay, and the
+existing workflow owns spending; legacy Agent identity ownership and live-only
+reply verification are not copied. No legacy source was imported.
+
+[Native provider regressions](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/direct_tests.rs)
+exercise changed commitments/arguments/costs, live time bounds, modified windows,
+invalid/oversized/over-expiry signed output, revoked authority, timeout/cancellation,
+spent cold replay and old-certificate authentication without live authority.
+The [private IC caller](../../qualification/crates/ic-backup-qualification/tests/direct_status.rs)
+creates an isolated empty-module canister with the fixture signer as controller,
+stops it, and submits real signed ingress through PocketIC's literal-loopback
+HTTP gateway. It authenticates status, lists an existing fixture snapshot and takes
+one new snapshot, checking that the original snapshot and installed code remain
+unchanged and the canister stays stopped. It then
+reopens and verifies after shutting down the server and revoking its local guard.
+Its fixed fixture key and empty application's local guard do not qualify an
+external signer process, Canic fence, payment recovery, trusted HTTPS session,
+full backup/restore or hosted macOS. Native cancellation tests establish
+retained spending; they do not demonstrate cancellation of an accepted IC effect.
+
+## Durable snapshot list and take
+
+`advance_snapshot` requires settled, authenticated initial status. Its original
+`SnapshotAdmissionRecord` contains explicit capacity (1–1,024) and separate list/take
+call admissions. All three calls must share the original provider and application
+commitments. Before list signing, admission checks at least three signing slots,
+the sum of all preparation/submission network allowances, and enough evidence for
+all three request/result caps plus twelve bounded ledger frames. No allowance is
+renewed by reopening or changed deadlines.
+
+The original ledger adds ordered sequences 5–8 for list and 9–12 for take:
+preparation reservation, exact prepared request, submission reservation and
+retained authenticated result. Each reservation is durable before its invocation.
+The four snapshot evidence files use the existing bounded request/result framing;
+all referenced evidence participates in custody checks and synchronization before
+further appends. Old status-only records and APIs remain valid. Older readers
+refuse unknown new ledger suffixes; no reset, migration or compatibility decoder
+is introduced. `CaptureCallAdmissionRecord`, `PreparedCaptureCall` and
+`CaptureCallEvidence` re-export the existing representations without new wire formats.
+
+`CaptureProvider` extends the existing status boundary with finite `CaptureCall`
+values. Shared private request/certificate/HTTP helpers bind the selected exact
+method and canonical Platform arguments. The public status-only helpers continue
+to reject snapshot envelopes. Take arguments never replace a snapshot, uninstall
+code or set sender-canister version. The signer receives those exact bytes.
+
+The authenticated original list passes bounded decoding and capacity preflight
+before take reservation. The authenticated take reply must identify a new opaque
+snapshot ID absent from that list. Rejection or malformed authenticated data never
+grants another take. Integrations retain exclusive snapshot custody and continuous
+application maintenance across the calls; an earlier stopped status alone does
+not establish those properties.
+
+Prepared replay may submit the exact retained request once after fresh admission,
+without signing again. Pending preparation/submission returns its original pending
+stage without invoking the provider. Settled replay authenticates the retained
+status, list and take locally, without effects. A missing take reply is unresolved:
+a new list or inventory difference is never its receipt. `inspect_snapshot` reports
+stage, original admission, request IDs and cumulative reservations including status;
+inspection alone authenticates nothing. Captured means a remote snapshot exists,
+not that a complete local backup exists. Reconciliation, download, completion and
+owner release still need their own implemented contracts.
+
+The focused frozen-legacy review covered
+[capture ordering](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/workflow/ic_snapshot_capture/mod.rs),
+[its regression cases](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/workflow/ic_snapshot_capture/tests/mod.rs),
+[bounded reply policy](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/mod.rs)
+and [receipt qualification history](https://github.com/dragginzgame/ic-backup-legacy/commit/278016b369f4312b4311410bbb7a0ad770ba3de6).
+These prevent recapture after uncertain effects, mismatched receipts and layout or
+authority drift. The new flow preserves reservation-before-effect and exact-reply
+binding in one existing ledger, with retained certificates instead of treating a
+reply digest as authentication. It does not import legacy stage graphs, cleanup
+or source code. [New native regressions](../../crates/ic-backup/src/store/capture/advance/tests/snapshot_tests.rs)
+cover interrupted signing/submission, prepared reopen, changed authority/budgets,
+capacity, rejection/reused IDs, evidence corruption and illegal transitions.
+The actual IC fixture above qualifies the three management calls and offline replay;
+native fakes establish persistence behavior only.

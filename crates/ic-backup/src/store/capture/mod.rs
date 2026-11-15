@@ -1,9 +1,13 @@
-//! Local capture intent and exclusive original custody. Initial direct-host status continuation.
+//! Local capture intent and exclusive original custody. Direct-host status and snapshot continuation.
 
 mod advance;
 mod ledger;
 pub use advance::{
-    CaptureStatusView, PreparedStatus, StatusAdmissionRecord, StatusAdvanceError,
+    CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
+    CaptureProvider, CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase,
+    CaptureSnapshotView, CaptureStatusView, CaptureTiming, DirectCaptureError,
+    DirectCaptureProvider, PreparedCaptureCall, PreparedStatus, SnapshotAdmissionRecord,
+    SnapshotAdvanceError, SnapshotProgress, StatusAdmissionRecord, StatusAdvanceError,
     StatusCertificateError, StatusEvidence, StatusHttpError, StatusHttpTransport, StatusProgress,
     StatusProvider, StatusRequestError, authenticate_status_evidence, authenticate_status_request,
     status_certificate_evidence, status_certificate_observation,
@@ -41,8 +45,8 @@ use thiserror::Error;
 
 /// Held original capture intent. Dropping releases process exclusion, not target ownership.
 ///
-/// Initial direct-host status continuation uses durable attempt reservations.
-/// There is no snapshot, reconciliation, completion or owner-release API yet.
+/// Direct-host status and snapshot continuation use durable attempt reservations.
+/// There is no reconciliation, download, completion or owner-release API yet.
 #[derive(Debug)]
 pub struct CaptureOperation {
     store: Directory,
@@ -109,14 +113,24 @@ impl CaptureOperation {
         if let Some(reference) = &state.result {
             self.evidence("status-result.bin", reference)?;
         }
+        for (name, reference) in state.snapshot.evidence() {
+            if let Some(reference) = reference {
+                self.evidence(name, reference)?;
+            }
+        }
         exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
-        for entry in self.directory.entries(5)? {
+        for entry in self.directory.entries(9)? {
             let entry = entry?;
             let admitted = match entry.name.to_str() {
                 Some("lock" | "plan.json" | "ledger.bin") => true,
                 Some("status-request.bin") => state.request.is_some(),
                 Some("status-result.bin") => state.result.is_some(),
-                _ => false,
+                Some(name) => state
+                    .snapshot
+                    .evidence()
+                    .iter()
+                    .any(|(expected, reference)| name == *expected && reference.is_some()),
+                None => false,
             };
             if !admitted {
                 return Err(CaptureError::Changed);
@@ -405,6 +419,18 @@ impl CaptureOperation {
         let state = self.check()?;
         let frame = state.candidate(event, &self.plan)?;
         match (event, evidence) {
+            (ledger::EventRecord::SnapshotPrepared { call, request, .. }, Some((name, bytes)))
+                if name == advance::snapshots::names(*call)?.0
+                    && *request == ledger::EvidenceRecord::new(bytes) => {}
+            (ledger::EventRecord::SnapshotSettled { call, result, .. }, Some((name, bytes)))
+                if name == advance::snapshots::names(*call)?.1
+                    && *result == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::SnapshotStarted { .. }
+                | ledger::EventRecord::SnapshotTakeReserved { .. }
+                | ledger::EventRecord::SnapshotSubmissionReserved { .. },
+                None,
+            ) => {}
             (
                 ledger::EventRecord::Prepared { request, .. },
                 Some(("status-request.bin", bytes)),
@@ -439,6 +465,18 @@ impl CaptureOperation {
             open_optional(&self.directory, "status-request.bin")?
                 .ok_or(CaptureError::Incomplete)?
                 .sync_all()?;
+        }
+        if state.result.is_some() {
+            open_optional(&self.directory, "status-result.bin")?
+                .ok_or(CaptureError::Incomplete)?
+                .sync_all()?;
+        }
+        for (name, reference) in state.snapshot.evidence() {
+            if reference.is_some() {
+                open_optional(&self.directory, name)?
+                    .ok_or(CaptureError::Incomplete)?
+                    .sync_all()?;
+            }
         }
         self.directory.sync()?;
         if let Some((name, bytes)) = evidence {

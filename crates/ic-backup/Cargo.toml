@@ -16,15 +16,16 @@ ic-platform.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+tokio.workspace = true
 
 [target.'cfg(any())'.dev-dependencies]
 toko-tooling.workspace = true
 
-[target.'cfg(unix)'.dev-dependencies]
-tokio.workspace = true
-
 [package.metadata.cargo-machete]
 ignored = ["toko-tooling"]
+
+[target.'cfg(unix)'.dev-dependencies]
+tokio = { workspace = true, features = ["rt", "net"] }
 
 [lints]
 workspace = true

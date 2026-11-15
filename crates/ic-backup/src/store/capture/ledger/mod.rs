@@ -1,6 +1,9 @@
-//! Bounded chained frames and held original-ledger admission. Private first-status transitions.
+//! Bounded chained frames and held original-ledger admission. Private ordered status and snapshot transitions.
 
-use super::advance::{StatusAdmissionRecord, arguments};
+use super::advance::{
+    CaptureCall, StatusAdmissionRecord, arguments,
+    snapshots::{CaptureSnapshotPhase, SnapshotAdmissionRecord, SnapshotState},
+};
 use super::{CaptureError, CapturePlan, open_optional};
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_fs::{capability::Directory, identity::FileIdentity};
@@ -119,6 +122,29 @@ impl EvidenceRecord {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum EventRecord {
+    SnapshotStarted {
+        sequence: u32,
+        admission: SnapshotAdmissionRecord,
+        arguments_sha256: [u8; 32],
+    },
+    SnapshotTakeReserved {
+        sequence: u32,
+        arguments_sha256: [u8; 32],
+    },
+    SnapshotPrepared {
+        sequence: u32,
+        call: CaptureCall,
+        request: EvidenceRecord,
+    },
+    SnapshotSubmissionReserved {
+        sequence: u32,
+        call: CaptureCall,
+    },
+    SnapshotSettled {
+        sequence: u32,
+        call: CaptureCall,
+        result: EvidenceRecord,
+    },
     PreparationReserved {
         sequence: u32,
         admission: StatusAdmissionRecord,
@@ -139,6 +165,7 @@ pub(super) enum EventRecord {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct State {
+    pub snapshot: SnapshotState,
     pub phase: CaptureStatusPhase,
     pub admission: Option<StatusAdmissionRecord>,
     pub request: Option<EvidenceRecord>,
@@ -149,6 +176,23 @@ pub(super) struct State {
 }
 impl State {
     fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
+        if matches!(
+            event,
+            EventRecord::SnapshotStarted { .. }
+                | EventRecord::SnapshotTakeReserved { .. }
+                | EventRecord::SnapshotPrepared { .. }
+                | EventRecord::SnapshotSubmissionReserved { .. }
+                | EventRecord::SnapshotSettled { .. }
+        ) {
+            if self.phase != CaptureStatusPhase::Settled {
+                return Err(LedgerError::Transition);
+            }
+            return self.snapshot.apply(
+                event,
+                plan,
+                self.admission.as_ref().ok_or(LedgerError::Transition)?,
+            );
+        }
         match (self.phase, event) {
             (
                 CaptureStatusPhase::Created,
@@ -241,6 +285,7 @@ impl State {
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
     let mut state = State {
+        snapshot: SnapshotState::new(),
         phase: CaptureStatusPhase::Created,
         admission: None,
         request: None,
@@ -375,3 +420,135 @@ pub enum LedgerError {
 
 #[cfg(test)]
 mod tests;
+
+impl SnapshotState {
+    fn apply(
+        &mut self,
+        event: &EventRecord,
+        plan: &CapturePlan,
+        status: &StatusAdmissionRecord,
+    ) -> Result<(), LedgerError> {
+        use CaptureSnapshotPhase as Phase;
+        match (self.phase, event) {
+            (
+                Phase::Created,
+                EventRecord::SnapshotStarted {
+                    sequence: 5,
+                    admission,
+                    arguments_sha256,
+                },
+            ) => {
+                admission
+                    .validate(plan, status)
+                    .map_err(|_| LedgerError::Transition)?;
+                if Sha256Digest::compute(
+                    &CaptureCall::ListSnapshots
+                        .arguments(plan)
+                        .map_err(|_| LedgerError::Transition)?,
+                )
+                .as_bytes()
+                    != arguments_sha256
+                {
+                    return Err(LedgerError::Transition);
+                }
+                self.admission = Some(admission.clone());
+                self.phase = Phase::ListPreparationReserved;
+            }
+            (
+                Phase::ListPreparationReserved,
+                EventRecord::SnapshotPrepared {
+                    sequence: 6,
+                    call: CaptureCall::ListSnapshots,
+                    request,
+                },
+            ) => {
+                let admission = self.admission.as_ref().ok_or(LedgerError::Transition)?;
+                if !(46..=admission.list.request_bytes).contains(&request.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.list_request = Some(request.clone());
+                self.phase = Phase::ListPrepared;
+            }
+            (
+                Phase::ListPrepared,
+                EventRecord::SnapshotSubmissionReserved {
+                    sequence: 7,
+                    call: CaptureCall::ListSnapshots,
+                },
+            ) => self.phase = Phase::ListSubmissionReserved,
+            (
+                Phase::ListSubmissionReserved,
+                EventRecord::SnapshotSettled {
+                    sequence: 8,
+                    call: CaptureCall::ListSnapshots,
+                    result,
+                },
+            ) => {
+                let admission = self.admission.as_ref().ok_or(LedgerError::Transition)?;
+                if !(7..=admission.list.result_bytes).contains(&result.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.list_result = Some(result.clone());
+                self.phase = Phase::ListSettled;
+            }
+            (
+                Phase::ListSettled,
+                EventRecord::SnapshotTakeReserved {
+                    sequence: 9,
+                    arguments_sha256,
+                },
+            ) => {
+                if Sha256Digest::compute(
+                    &CaptureCall::TakeSnapshot
+                        .arguments(plan)
+                        .map_err(|_| LedgerError::Transition)?,
+                )
+                .as_bytes()
+                    != arguments_sha256
+                {
+                    return Err(LedgerError::Transition);
+                }
+                self.phase = Phase::TakePreparationReserved;
+            }
+            (
+                Phase::TakePreparationReserved,
+                EventRecord::SnapshotPrepared {
+                    sequence: 10,
+                    call: CaptureCall::TakeSnapshot,
+                    request,
+                },
+            ) => {
+                let admission = self.admission.as_ref().ok_or(LedgerError::Transition)?;
+                if !(46..=admission.take.request_bytes).contains(&request.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.take_request = Some(request.clone());
+                self.phase = Phase::TakePrepared;
+            }
+            (
+                Phase::TakePrepared,
+                EventRecord::SnapshotSubmissionReserved {
+                    sequence: 11,
+                    call: CaptureCall::TakeSnapshot,
+                },
+            ) => self.phase = Phase::TakeSubmissionReserved,
+            (
+                Phase::TakeSubmissionReserved,
+                EventRecord::SnapshotSettled {
+                    sequence: 12,
+                    call: CaptureCall::TakeSnapshot,
+                    result,
+                },
+            ) => {
+                let admission = self.admission.as_ref().ok_or(LedgerError::Transition)?;
+                if !(7..=admission.take.result_bytes).contains(&result.bytes) {
+                    return Err(LedgerError::Transition);
+                }
+                self.take_result = Some(result.clone());
+                self.phase = Phase::Settled;
+            }
+            _ => return Err(LedgerError::Transition),
+        }
+        Ok(())
+    }
+}
