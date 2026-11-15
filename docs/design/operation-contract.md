@@ -8,7 +8,8 @@ behavior. Small direct-host captures reach authenticated local completion and
 target succession with actual-IC qualification. Read-only completion verification
 and authenticated held capture sources are implemented. Exact restore transfer
 scheduling and source-bound restore plan encoding/decoding are implemented local
-calculations; durable restore creation, source references and effects remain proposed.
+calculations; local restore creation/reopen are implemented. Restore effects remain proposed. The immutable restore plan
+will retain the source binding; no separate reference catalog is selected.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage
@@ -29,7 +30,7 @@ The following are semantic signatures, not compiling Rust declarations:
 | --- | --- | --- |
 | `plan_capture` | Network/trust binding, initiator, execution binding, target, release, profile limits. | Immutable plan and approval commitment; pure, no providers. |
 | `plan_restore` | Held verified source, target/release/execution binding, profile limits. | Independent plan committing to source manifest and complete upload/readback schedule; pure over admitted inputs. |
-| `create_capture` / `create_restore` | Private store, unused operation ID, plan, exact approval commitment. | Durable intent and target claim; restore also retains its source reference. Local IO only. |
+| `create_capture` / `create_restore` | Private store, unused operation ID, plan, exact approval commitment. | Durable intent and target claim; restore retains its source binding in that plan. Local IO only. |
 | `open` / `inspect` | Existing operation location and bounded local replay. | Held operation or read-only diagnosis; no provider calls or implicit repair. |
 | `advance` | Held operation, transport, application admission provider, finite step allowance. | Progress, attention or stored terminal receipt. Only the next eligible original step may dispatch. |
 | `reconcile` | Held operation, exact pending attempt, transport, finite observation allowance. | Original result settlement or retained uncertainty; never resubmits the original request. |

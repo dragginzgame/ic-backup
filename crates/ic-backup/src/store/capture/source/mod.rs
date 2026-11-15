@@ -92,7 +92,12 @@ impl BackupStore {
     }
 }
 
-impl CaptureSource<'_, '_> {
+impl<'store> CaptureSource<'_, 'store> {
+    // Restore retains the owning CaptureOperation beside these descriptors.
+    pub(in crate::store) fn into_payload(self) -> PayloadSource<'store> {
+        self.payload
+    }
+
     pub(in crate::store) fn original_plan(&self) -> &super::CapturePlan {
         &self._capture.plan
     }

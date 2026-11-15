@@ -224,7 +224,8 @@ pub(super) async fn replay<P: CaptureProvider>(
     a: &CaptureMetadataAdmissionRecord,
     p: &mut P,
     root: &Path,
-) where
+) -> ic_backup::store::RestorePlan
+where
     P::Error: Debug,
 {
     let path = root.join("store/operations/00000000000000000000000000000001/ledger.bin");
@@ -358,6 +359,7 @@ pub(super) async fn replay<P: CaptureProvider>(
     assert_eq!(fs::read(&path).unwrap(), before);
 
     assert_eq!(signer.calls, 0);
+    plan
 }
 
 fn data_admission(a: &CaptureMetadataAdmissionRecord) -> CaptureDataAdmissionRecord {

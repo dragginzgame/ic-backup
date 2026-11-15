@@ -76,17 +76,24 @@ fn chain_binds_plan_header_payload_and_previous_frame() {
         Err(LedgerError::Chain)
     ));
 
-    let (first, head) = frame(seed(&p), b"one");
+    let (first, head) = frame(seed(p.encoded()), b"one");
     let (second, _) = frame(head, b"two");
     let joined = [first.as_slice(), second.as_slice()].concat();
-    let mut frames = Frames::new(joined.as_slice(), seed(&p), Bounds::for_plan(&p));
+    let mut frames = Frames::new(joined.as_slice(), seed(p.encoded()), Bounds::for_plan(&p));
     assert_eq!(frames.next().unwrap().unwrap(), b"one");
     assert_eq!(frames.next().unwrap().unwrap(), b"two");
     assert!(frames.next().unwrap().is_none());
     let reordered = [second.as_slice(), first.as_slice()].concat();
-    let mut frames = Frames::new(reordered.as_slice(), seed(&p), Bounds::for_plan(&p));
+    let mut frames = Frames::new(
+        reordered.as_slice(),
+        seed(p.encoded()),
+        Bounds::for_plan(&p),
+    );
     assert!(matches!(frames.next(), Err(LedgerError::Chain)));
-    assert_eq!((frames.count, frames.bytes, frames.head), (0, 0, seed(&p)));
+    assert_eq!(
+        (frames.count, frames.bytes, frames.head),
+        (0, 0, seed(p.encoded()))
+    );
 }
 
 #[test]
@@ -100,13 +107,13 @@ fn valid_hash_does_not_admit_unsupported_or_ambiguous_transitions() {
         b"{ \"sequence\":0,\"kind\":\"created\"}",
         b"not json",
     ] {
-        let (bytes, _) = frame(seed(&p), payload);
+        let (bytes, _) = frame(seed(p.encoded()), payload);
         assert!(matches!(
             replay(bytes.as_slice(), &p),
             Err(LedgerError::Transition)
         ));
     }
-    let (first, head) = frame(seed(&p), CREATED);
+    let (first, head) = frame(seed(p.encoded()), CREATED);
     let (second, _) = frame(head, CREATED);
     assert!(matches!(
         replay([first, second].concat().as_slice(), &p),
@@ -134,7 +141,7 @@ fn oversized_header_refuses_before_any_body_read_or_allocation() {
         let reader = HeaderOnly {
             bytes: Cursor::new(size.to_le_bytes()),
         };
-        let mut frames = Frames::new(reader, seed(&p), Bounds::for_plan(&p));
+        let mut frames = Frames::new(reader, seed(p.encoded()), Bounds::for_plan(&p));
         assert!(matches!(frames.next(), Err(LedgerError::FrameSize)));
     }
     let reader = HeaderOnly {
@@ -142,32 +149,32 @@ fn oversized_header_refuses_before_any_body_read_or_allocation() {
     };
     let mut bounds = Bounds::for_plan(&p);
     bounds.bytes = 65;
-    let mut frames = Frames::new(reader, seed(&p), bounds);
+    let mut frames = Frames::new(reader, seed(p.encoded()), bounds);
     assert!(matches!(frames.next(), Err(LedgerError::ByteLimit)));
 }
 
 #[test]
 fn frame_and_cumulative_bounds_are_independent_and_exact() {
     let p = plan();
-    let (bytes, _) = frame(seed(&p), &vec![0x42; FRAME_BYTES]);
+    let (bytes, _) = frame(seed(p.encoded()), &vec![0x42; FRAME_BYTES]);
     let mut bounds = Bounds::for_plan(&p);
     bounds.bytes = bytes.len() as u64;
-    let mut frames = Frames::new(bytes.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(bytes.as_slice(), seed(p.encoded()), bounds);
     assert_eq!(frames.next().unwrap().unwrap().len(), FRAME_BYTES);
     assert!(frames.next().unwrap().is_none());
     bounds.bytes -= 1;
-    let mut frames = Frames::new(bytes.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(bytes.as_slice(), seed(p.encoded()), bounds);
     assert!(matches!(frames.next(), Err(LedgerError::ByteLimit)));
 
-    let (first, head) = frame(seed(&p), b"a");
+    let (first, head) = frame(seed(p.encoded()), b"a");
     let (second, _) = frame(head, b"b");
     let combined = [first.as_slice(), second.as_slice()].concat();
     bounds.bytes = combined.len() as u64 - 1;
-    let mut frames = Frames::new(combined.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(combined.as_slice(), seed(p.encoded()), bounds);
     frames.next().unwrap();
     assert!(matches!(frames.next(), Err(LedgerError::ByteLimit)));
     bounds.bytes = first.len() as u64;
-    let mut frames = Frames::new(combined.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(combined.as_slice(), seed(p.encoded()), bounds);
     frames.next().unwrap();
     assert!(matches!(frames.next(), Err(LedgerError::ByteLimit)));
 }
@@ -176,7 +183,7 @@ fn frame_and_cumulative_bounds_are_independent_and_exact() {
 fn production_frame_count_limit_accepts_exactly_its_bound() {
     let p = plan();
     let mut bytes = Vec::new();
-    let mut head = seed(&p);
+    let mut head = seed(p.encoded());
     for _ in 0..FRAMES {
         let (next, next_head) = frame(head, b"x");
         bytes.extend(next);
@@ -187,7 +194,7 @@ fn production_frame_count_limit_accepts_exactly_its_bound() {
         frames: FRAMES,
         bytes: LEDGER_BYTES,
     };
-    let mut frames = Frames::new(bytes.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(bytes.as_slice(), seed(p.encoded()), bounds);
     for _ in 0..FRAMES {
         assert_eq!(frames.next().unwrap().unwrap(), b"x");
     }
@@ -195,7 +202,7 @@ fn production_frame_count_limit_accepts_exactly_its_bound() {
     assert_eq!(frames.count, FRAMES);
     // Only the EOF probe is needed to reject an additional frame, even a partial one.
     bytes.push(1);
-    let mut frames = Frames::new(bytes.as_slice(), seed(&p), bounds);
+    let mut frames = Frames::new(bytes.as_slice(), seed(p.encoded()), bounds);
     for _ in 0..FRAMES {
         frames.next().unwrap();
     }

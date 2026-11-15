@@ -1,5 +1,6 @@
 //! Pure status preconditions; observation authentication stays with the caller.
 use super::{CaptureExecution, CapturePlan};
+use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     Principal,
     management_canister_types::{CanisterStatusResult, CanisterStatusType},
@@ -7,6 +8,11 @@ use ic_platform::{
 mod wire;
 use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
+
+pub(in crate::store) struct StatusRequirements {
+    pub module_sha256: Sha256Digest,
+    pub sender: Principal,
+}
 
 const MAX_CONTROLLERS: usize = 10;
 
@@ -44,6 +50,25 @@ impl CapturePlan {
         &self,
         observed: &CanisterStatusResult,
     ) -> Result<(), CaptureStatusError> {
+        self.status_requirements().validate_status(observed)
+    }
+
+    fn status_requirements(&self) -> StatusRequirements {
+        StatusRequirements {
+            module_sha256: self.request().module_sha256,
+            sender: match self.request().execution {
+                CaptureExecution::Direct { sender } => sender,
+                CaptureExecution::Canic { executor, .. } => executor,
+            },
+        }
+    }
+}
+
+impl StatusRequirements {
+    pub(in crate::store) fn validate_status(
+        &self,
+        observed: &CanisterStatusResult,
+    ) -> Result<(), CaptureStatusError> {
         self.validate_status_fields(
             observed.status,
             observed.module_hash.as_deref(),
@@ -68,22 +93,17 @@ impl CapturePlan {
         if status != CanisterStatusType::Stopped {
             return Err(CaptureStatusError::NotStopped(status));
         }
-        let request = self.request();
-        if module_hash != Some(request.module_sha256.as_bytes().as_slice()) {
+        if module_hash != Some(self.module_sha256.as_bytes().as_slice()) {
             return Err(CaptureStatusError::ModuleMismatch);
         }
-        let sender = match &request.execution {
-            CaptureExecution::Direct { sender } => sender,
-            CaptureExecution::Canic { executor, .. } => executor,
-        };
-        if !controllers.contains(sender) {
+        if !controllers.contains(&self.sender) {
             return Err(CaptureStatusError::NotController);
         }
         Ok(())
     }
 }
 
-/// A decoded status fails an original capture precondition; no effect is authorized.
+/// A decoded status fails an original capture or restore precondition; no effect is authorized.
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum CaptureStatusError {
     /// The declared controller set exceeds the supported ten-controller boundary.

@@ -1,4 +1,4 @@
-//! Immutable direct-host restore declarations; no persistence or dispatch authority.
+//! Immutable direct-host restore plans and local intent persistence; no dispatch.
 use super::{
     BackupSummary, BackupTarget, CaptureSource, RestoreTransfer, RestoreTransferError,
     RestoreTransferRequest, manifest::lower_hex,
@@ -8,6 +8,10 @@ use ic_platform::{Principal, candid_codec};
 use serde::{Deserialize, Serialize};
 use std::io::{Write, sink};
 use thiserror::Error;
+
+mod persistence;
+mod status;
+pub use persistence::{RestoreOperation, RestorePersistenceError};
 
 const PLAN_LIMIT: usize = 1024 * 1024;
 const FORMAT: &str = "ic-backup/local-restore-plan/1";
@@ -52,7 +56,7 @@ pub struct RestoreRequest {
 
 /// Exact encoded source-bound intent and approval commitment, not an executable restore.
 ///
-/// No owner, source reference, journal or destination snapshot is created. Restore
+/// Plan construction creates no files. Local create/reopen retain original intent; restore
 /// execution still requires original durable custody, provider/application admission
 /// and retained allocation/request evidence. Source custody must be re-admitted on use.
 #[derive(Debug)]

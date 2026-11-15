@@ -1,6 +1,6 @@
 [package]
 name = "ic-backup"
-version = "0.101.9"
+version = "0.101.10"
 description = "Local backup inventory for Internet Computer canisters"
 edition.workspace = true
 rust-version.workspace = true

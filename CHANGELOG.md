@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.101.10] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Persist and reopen approved restore intent with exact source binding, a bounded
+  initial journal and durable target ownership. Retain original source custody,
+  refuse incomplete or changed files without repair, and admit older sources only
+  after authenticating the current completed capture owner. No upload or load
+  effects, reverse-reference catalog or cleanup are introduced.
+- Validate restore status against its approved sender and source module using the
+  existing bounded status reader and stopped/controller policy. This pure check
+  grants no signing, dispatch or settlement authority.
+
 ## [0.101.9] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

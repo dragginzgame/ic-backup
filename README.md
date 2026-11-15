@@ -94,12 +94,13 @@ Continuation reauthenticates that evidence and still requires live permission
 before dependent effects.
 Private PocketIC fixtures qualify the small capture-to-manifest journey, inventory/payload consumers and cold reconciliation; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
 `create_capture_after` admits a completed predecessor and creates the next capture
-for the same target, preserving the old receipt and evidence. Standalone full-bundle
-admission, restore and CLI workflows remain unimplemented. See the
+for the same target, preserving the old receipt and evidence. Standalone bundle import, restore upload/load and CLI workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Crate publication remains disabled; `0.101.9` is an
+and the public Rustdoc example. Crate publication remains disabled; `0.101.10` is an
 unpublished GitHub checkpoint covering capture, held source reads, restore transfer
-scheduling and immutable restore plan encoding. Restore remains unimplemented.
+scheduling, immutable restore plans, local restore intent persistence and status policy.
+Local `create_restore`/`open_restore` now retain approved intent and source custody;
+`RestoreOperation::inspect` rechecks it without effects. Upload/load remain unimplemented.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

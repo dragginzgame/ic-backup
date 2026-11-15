@@ -11,7 +11,7 @@ pub use source::{
     RestoreTransferRequest,
 };
 pub use succession::CaptureSuccessionError;
-mod ledger;
+pub(in crate::store) mod ledger;
 pub use advance::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
     CaptureDataAdmissionRecord, CaptureDataAdvanceError, CaptureDataPhase, CaptureDataProgress,
@@ -34,7 +34,7 @@ pub use advance::{
 mod plan;
 mod snapshot;
 pub use snapshot::{SnapshotReplyError, decode_snapshot_list, decode_taken_snapshot};
-mod status;
+pub(in crate::store) mod status;
 mod transfer;
 pub use ledger::{CaptureStatusPhase, LedgerError};
 pub use plan::{CaptureExecution, CaptureLimitsRecord, CapturePlan, CaptureRequest};
@@ -91,6 +91,14 @@ impl CaptureOperation {
     pub fn inspect(&self) -> Result<&CapturePlan, CaptureError> {
         self.check()?;
         Ok(&self.plan)
+    }
+
+    pub(in crate::store) fn require_published(&self) -> Result<(), CaptureError> {
+        let state = self.check()?;
+        if !self.check_assembly(&state)? {
+            return Err(CaptureError::Incomplete);
+        }
+        Ok(())
     }
 
     fn check(&self) -> Result<ledger::State, CaptureError> {
@@ -347,7 +355,11 @@ impl BackupStore {
     }
 }
 
-fn child(parent: &Directory, name: &str, create: bool) -> Result<Directory, CaptureError> {
+pub(in crate::store) fn child(
+    parent: &Directory,
+    name: &str,
+    create: bool,
+) -> Result<Directory, CaptureError> {
     parent
         .open_directory(OsStr::new(name), if create { CREATE } else { PRIVATE })?
         .ok_or(CaptureError::Incomplete)
@@ -357,11 +369,18 @@ fn target_directory(
     plan: &CapturePlan,
     create: bool,
 ) -> Result<Directory, CaptureError> {
-    let targets = child(root, "targets", false)?;
-    let network = child(&targets, &plan.request().target.network.to_string(), create)?;
-    child(&network, &plan.request().target.canister.to_text(), create)
+    target_for(root, plan.request().target, create)
 }
-fn acquire(file: std::fs::File) -> Result<ExclusiveFileLock, CaptureError> {
+pub(in crate::store) fn target_for(
+    root: &Directory,
+    target: super::BackupTarget,
+    create: bool,
+) -> Result<Directory, CaptureError> {
+    let targets = child(root, "targets", false)?;
+    let network = child(&targets, &target.network.to_string(), create)?;
+    child(&network, &target.canister.to_text(), create)
+}
+pub(in crate::store) fn acquire(file: std::fs::File) -> Result<ExclusiveFileLock, CaptureError> {
     ExclusiveFileLock::try_acquire(file).map_err(|error| {
         if error.kind() == io::ErrorKind::WouldBlock {
             CaptureError::Locked
@@ -383,14 +402,18 @@ fn lock_target(target: &Directory) -> Result<(ExclusiveFileLock, bool), CaptureE
     file.sync_all()?;
     Ok((acquire(file)?, true))
 }
-fn retain(directory: &Directory, name: &str, bytes: &[u8]) -> Result<(), CaptureError> {
+pub(in crate::store) fn retain(
+    directory: &Directory,
+    name: &str,
+    bytes: &[u8],
+) -> Result<(), CaptureError> {
     let parent = directory.open_syncable()?;
     let mut file = create_retained_at(parent.as_fd(), OsStr::new(name), 0o600)?;
     file.write_all(bytes)?;
     file.sync_all()?;
     Ok(())
 }
-fn exact(
+pub(in crate::store) fn exact(
     directory: &Directory,
     name: &str,
     expected: &[u8],
@@ -402,7 +425,10 @@ fn exact(
     }
     Ok(())
 }
-fn same_identity(first: &Directory, second: &Directory) -> Result<(), CaptureError> {
+pub(in crate::store) fn same_identity(
+    first: &Directory,
+    second: &Directory,
+) -> Result<(), CaptureError> {
     if FileIdentity::from_metadata(&first.open_syncable()?.metadata()?)
         != FileIdentity::from_metadata(&second.open_syncable()?.metadata()?)
     {
@@ -410,7 +436,11 @@ fn same_identity(first: &Directory, second: &Directory) -> Result<(), CaptureErr
     }
     Ok(())
 }
-fn same_directory(parent: &Directory, name: &str, held: &Directory) -> Result<(), CaptureError> {
+pub(in crate::store) fn same_directory(
+    parent: &Directory,
+    name: &str,
+    held: &Directory,
+) -> Result<(), CaptureError> {
     same_identity(&child(parent, name, false)?, held)
 }
 
@@ -420,11 +450,17 @@ struct OwnerRecord<'a> {
     operation_id: &'a str,
     plan_sha256: String,
 }
-fn owner(plan: &CapturePlan) -> Result<Vec<u8>, CaptureError> {
+pub(in crate::store) fn owner(plan: &CapturePlan) -> Result<Vec<u8>, CaptureError> {
+    owner_bytes(&plan.request().operation_id, plan.digest())
+}
+pub(in crate::store) fn owner_bytes(
+    id: &str,
+    digest: Sha256Digest,
+) -> Result<Vec<u8>, CaptureError> {
     Ok(serde_json::to_vec(&OwnerRecord {
         format: "ic-backup/local-target-owner/1",
-        operation_id: &plan.request().operation_id,
-        plan_sha256: plan.digest().to_string(),
+        operation_id: id,
+        plan_sha256: digest.to_string(),
     })?)
 }
 /// Capture intent admission or local persistence refusal. No error authorizes retrying effects.

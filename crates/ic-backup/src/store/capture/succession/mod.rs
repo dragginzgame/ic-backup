@@ -71,10 +71,7 @@ impl BackupStore {
         let mut previous =
             self.open_capture(&predecessor.request().operation_id, predecessor.digest())?;
         same_identity(&target, &previous.target)?;
-        let state = previous.check()?;
-        if !previous.check_assembly(&state)? {
-            return Err(CaptureError::Incomplete.into());
-        }
+        previous.require_published()?;
         previous
             .complete_capture(transport, provider)
             .await

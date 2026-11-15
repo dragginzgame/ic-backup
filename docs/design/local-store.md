@@ -27,7 +27,8 @@ Canic calls capture/restore and supplies the execution/application providers.
 
 List/latest, payload checking and held payload reads exist on `BackupStore`. `CaptureOperation::inspect`
 reads original intent; `inspect_status` additionally reads initial status progress,
-original admission and reserved attempt counts. Authenticated held capture sources are implemented below; restore intent and durable references remain proposed.
+original admission and reserved attempt counts. Authenticated held capture sources,
+immutable restore plans and local creation/reopen are implemented below.
 Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:
 a cheap inventory cannot establish that files remain intact today. A manifest
 declares completion; the reader does not authenticate capture verification or
@@ -88,7 +89,6 @@ store/
   bundles/<capture-operation-id>/
     manifest.json
     payload/
-    references/<restore-operation-id>.json
 ```
 
 `format` identifies the restart store, not legacy v1. Operation IDs are validated
@@ -107,8 +107,9 @@ new empty store. Reading never initializes it.
 
 The plan is immutable. Only the ledger consumes attempts and settles their results.
 Large arguments, envelopes, certificates and replies are create-only evidence
-files referenced by length and hash. The manifest closes the payload member set;
-references are outside `payload/` and do not change its content commitment.
+files referenced by length and hash. The manifest closes the payload member set. The restore plan itself binds its
+source operation, original plan and exact manifest; no reverse-reference catalog
+is selected. All source bundles and original operations remain retained.
 No separate stage journals, learned-edge files or settlement catalog are added.
 
 Use versioned typed JSON records with unknown/duplicate-field refusal and bounded
@@ -203,8 +204,8 @@ loss, maximum-size throughput and hosted macOS remain unqualified.
 
 Target claims remain retained after completion. Explicit `create_capture_after`
 authenticates the completed predecessor and replaces its claim to create a new
-capture of the same target. Restore has no new bundle; its terminal state, source references and load
-qualification remain proposed below. No pruning or remote deletion is implied.
+capture of the same target. Restore has no new bundle. Durable source binding in its plan is implemented;
+terminal restore state and load qualification remain proposed. No pruning or remote deletion is implied.
 
 ## Concurrency and target ownership
 
@@ -315,7 +316,7 @@ The operation's plan bounds still cap evidence, payload and individual reads.
 Completion publication and verification share authentication and manifest decoding.
 The verifier cannot finish staging, choose a timestamp or append an event. The
 returned `BackupSummary` is passive evidence: a future restore still needs an exact
-same-release/target plan, held payload/source custody and durable source references.
+same-release/target plan, held payload/source custody and the exact durable source binding in its plan.
 A previous verification does not make future reads safe or create live permission.
 
 The focused review inspected frozen `4ae087fa`'s
@@ -411,8 +412,8 @@ or physical power-loss qualification is implied; no legacy source was copied.
 ### Immutable restore plan and approval
 
 `RestorePlan::new` consumes an authenticated held `CaptureSource` and an explicit
-`RestoreRequest`. This implemented slice encodes intent in memory; it does not yet
-persist a restore operation, target owner, source reference or initial journal.
+`RestoreRequest`. Construction encodes intent in memory; separate create/reopen methods below
+retain the original plan, target owner and initial journal.
 The profile is direct-host only. Canic can own host signing/application admission;
 executor-route restore is not declared by this request.
 
@@ -467,4 +468,117 @@ retains original bytes. Native tests cover source/count substitutions, each muta
 declaration field, bounds, duplicate/unknown/partial records and exact replay.
 The real-IC fixture builds and decodes this plan against an offline authenticated
 source without creating a restore operation or adding signatures. No legacy code
-was copied; upload/load and durable restore-reference creation remain unqualified.
+was copied; upload/load remain unqualified. Local persistence qualification follows below.
+
+### Restore creation and interrupted intent
+
+`BackupStore::create_restore` persists the approved `RestorePlan` as the sole
+source-dependency declaration. It accepts the plan and exact approval, an explicit
+completed predecessor plan and the historical transport/provider. Both captures
+must be admissible under that supplied transport/provider; there is no route fallback.
+Its existing source operation, source-plan digest and manifest digest identify
+what must remain available. No `bundles/*/references/` files, second dependency
+journal or reference-release API are needed while every operation and bundle is
+retained and deletion is unsupported. This does not authorize external cleanup:
+missing source custody refuses restore. Any future retention feature must first
+account for original plans and unfinished operations; absence of a reverse index
+is never evidence that a source is unused. Completed bundle admission stays strict.
+
+The source may be an older completed capture of the same target and release;
+it need not be the current target owner. Creation must independently authenticate
+the current owner's completed capture before replacing its claim. An unfinished,
+uncertain, unsupported or missing owner refuses. The writer does not infer
+terminal restore ownership or add a generic terminal-operation abstraction.
+
+Creation uses the existing nonblocking locks in this order: target, current-owner capture,
+source capture when distinct, then new restore operation. When source and owner
+are the same capture, retain one handle instead of reacquiring its lock. These are acquired
+internally; a caller-held source operation must be released before creation
+so that the API cannot invert target/source ordering. The resulting `RestoreOperation` holds source operation and
+payload custody; historical receipt admission
+continues to work after its target claim changes. Independent targets remain
+independent; no store-wide lock or scheduler is introduced.
+
+Before replacing the claim, check exact approval, unused operation ID, source
+identity/bytes, current-owner completion and capacity for the initial journal.
+Re-admit the plan against that held source; an earlier in-memory calculation is
+not fresh file custody. Synchronize admitted completed source/predecessor evidence
+through the existing completion path. Historical authentication must not sign,
+read a current clock or dispatch network requests. Do not weaken original
+provider/root/route bindings to make a predecessor fit a new restore selection.
+
+Then use Host's existing atomic owner replacement and shared private create-only
+file mechanics: retain the new operation lock, exact approved `plan.json` and
+`ledger.bin`, synchronize files/directories, and check closing custody before
+returning. Reuse the existing length/digest framing for the sole `Created` frame,
+seeded with original restore-plan bytes. Admit it against the original evidence
+ceiling before any claim change. No new completion marker, staging journal,
+implicit retry or allocation record is required for this local creation step.
+
+| Retained interruption image | Required admission |
+| --- | --- |
+| Original owner unchanged, no new operation | Original owner still governs; no restore exists. |
+| Host owner-publication staging or uncertain replacement | Preserve all names; strict target admission refuses ambiguous custody. |
+| New owner with missing/partial operation, plan or journal | Preserve the occupied claim and every byte; refuse without rollback or completing missing files. |
+| Complete exact owner, plan and initial journal; return lost | Explicit reopen can validate the original intent and source without creating anything or replenishing allowance. |
+| Changed source, approval, owner, lock identity, extra files or ledger tail | Refuse intact; never regenerate records or infer zero spending. |
+
+`open_restore` accepts the exact original plan and approval; it is read-only.
+Callers may retain that plan, or decode its bounded original bytes against an
+authenticated source and release the temporary source handle before reopening.
+No API bootstraps a plan from an arbitrary operation ID yet. `inspect` checks
+original owner, plan/journal bytes, held file identities and source custody.
+Every journal suffix is currently unsupported and refuses. The reopened handle
+is for local intent inspection, not management effects.
+Before later effect APIs exist, qualify synchronization after uncertain returns,
+original source custody, bounded reservations and exact allocation-dependent
+requests. No create/reopen path may create an upload snapshot, sign or load state.
+
+Focused review used frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`'s
+`ops/persistence/immutable_record`, `journal_lock`, `layout_lifetime` and
+`restore_reference_release`, their private/create-only, changed-binding, lock
+substitution and incomplete-terminal regressions, and the `a860d144` ownership
+consolidation history. Retain original-byte checks, stable exclusion and refusal
+of unresolved custody. The old mutable reference-release catalog and external
+command sidecars solve lifetime responsibilities absent from this selected writer;
+copying them would add another persisted owner without a consumer. No code was copied.
+
+Six native groups cover exact creation/reopen, private files and stable locks,
+initial budget/approval/contention refusal, partial/changed/extra retained records,
+source corruption, held file replacement and older-source selection with complete
+or unfinished current owners. The distinct completed-owner case uses explicitly
+synthetic call evidence rebound to its own plan; it does not qualify two real IC
+captures. The actual-IC fixture creates and reopens restore intent after gateway
+shutdown and revoked live permission, with byte-identical journals and no additional
+signatures. These tests qualify local intent, not upload/load, physical power loss
+or every Host publication failure boundary. Capture succession regressions continue
+to cover shared predecessor admission and the existing Host replacement path.
+
+### Restore status prerequisites
+
+`RestorePlan::validate_status` and `validate_status_reply` apply the existing
+stopped/module/controller policy to the source module and the restore plan's
+approved direct sender. Capture's sender and the approving initiator cannot
+substitute for that sender. Capture and restore share one private requirements
+projection and one Platform wire reader; no synthetic capture plan or alternative
+management DTO is constructed. Existing `CaptureStatusError` and
+`CaptureStatusReplyError` types are reused without an alias or changed variants.
+
+The wire path retains exact single-argument framing, the 1 MiB reply ceiling,
+ten-controller bound, fixed module hash and the existing allocation/header/work
+limits with separate cumulative skipped-work accounting. Other fields are skipped,
+not semantically admitted. Typed and wire validation are pure: they preserve input,
+plan and journal bytes and do not authenticate the request, network, target or time.
+A matching status does not prove a load outcome, continuous maintenance or safe
+rewinding of external obligations. Durable restore reservations and status dispatch
+are not implemented by these methods.
+
+Focused legacy review revisited `policy/ic_observation/settlement` at frozen
+`4ae087fad8c23de712aa60bf569bde4b2b932651`, especially
+`statuses_never_infer_original_outcomes_or_change_spending`. History `c47b96b6`
+removed a duplicate outcome projection. Retain that separation between observed
+status and effect attribution; import neither a settlement graph nor a cached
+success flag. No legacy code was copied. Two new authenticated-source native groups
+exercise the restore sender, source module, controller and raw-wire bounds with
+unchanged journals; all shared capture status regressions pass. This qualifies
+pure policy, not restore signing, submission, recovery or IC effects.

@@ -44,18 +44,25 @@ impl Bounds {
     }
 }
 
-fn seed(plan: &CapturePlan) -> Sha256Digest {
-    Sha256Digest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan.encoded()].concat())
+fn seed(plan: &[u8]) -> Sha256Digest {
+    Sha256Digest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
 }
 fn chain(previous: Sha256Digest, length: &[u8; 4], payload: &[u8]) -> Sha256Digest {
     Sha256Digest::compute(&[previous.as_bytes().as_slice(), length, payload].concat())
 }
 
 pub(super) fn initial(plan: &CapturePlan) -> Result<Vec<u8>, LedgerError> {
+    initial_bytes(plan.encoded(), plan.request().limits.evidence_bytes)
+}
+
+pub(in crate::store) fn initial_bytes(
+    plan: &[u8],
+    evidence_bytes: u64,
+) -> Result<Vec<u8>, LedgerError> {
     let length = (CREATED.len() as u32).to_le_bytes();
     let digest = chain(seed(plan), &length, CREATED);
     let bytes = [length.as_slice(), CREATED, digest.as_bytes().as_slice()].concat();
-    if bytes.len() as u64 > Bounds::for_plan(plan).bytes {
+    if bytes.len() as u64 > LEDGER_BYTES.min(evidence_bytes) {
         return Err(LedgerError::ByteLimit);
     }
     Ok(bytes)
@@ -463,7 +470,7 @@ impl State {
 }
 
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
-    let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
+    let mut frames = Frames::new(reader, seed(plan.encoded()), Bounds::for_plan(plan));
     let mut state = State {
         completed_at_ns: None,
         final_status: None,
@@ -478,7 +485,7 @@ fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
         admission: None,
         request: None,
         result: None,
-        head: seed(plan),
+        head: seed(plan.encoded()),
         bytes: 0,
         count: 0,
     };

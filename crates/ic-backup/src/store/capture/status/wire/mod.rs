@@ -1,5 +1,5 @@
 //! Bounded projection; Platform owns wire traversal and management field labels.
-use super::{CapturePlan, CaptureStatusError, MAX_CONTROLLERS};
+use super::{CapturePlan, CaptureStatusError, MAX_CONTROLLERS, StatusRequirements};
 use ic_platform::{
     Principal,
     candid_codec::{
@@ -41,6 +41,15 @@ impl CapturePlan {
     /// Refuses excessive or malformed wire input, missing required fields,
     /// exhausted decoding/skipping budgets and failed capture preconditions.
     pub fn validate_status_reply(&self, reply: &[u8]) -> Result<(), CaptureStatusReplyError> {
+        self.status_requirements().validate_status_reply(reply)
+    }
+}
+
+impl StatusRequirements {
+    pub(in crate::store) fn validate_status_reply(
+        &self,
+        reply: &[u8],
+    ) -> Result<(), CaptureStatusReplyError> {
         if reply.len() > MAX_REPLY_BYTES {
             return Err(CaptureStatusReplyError::ReplyTooLarge);
         }

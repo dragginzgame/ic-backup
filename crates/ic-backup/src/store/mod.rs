@@ -32,7 +32,10 @@ mod capture;
 mod manifest;
 mod payload;
 mod restore;
-pub use restore::{RestoreLimitsRecord, RestorePlan, RestorePlanError, RestoreRequest};
+pub use restore::{
+    RestoreLimitsRecord, RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError,
+    RestoreRequest,
+};
 #[cfg(test)]
 mod tests;
 

@@ -100,25 +100,36 @@ impl CaptureApplicationGuard for FixtureGuard {
 
 #[test]
 fn stopped_canister_snapshot_and_offline_cold_replay() {
-    run_fixture(false, false, false);
+    run_fixture(false, false, Completion::None);
 }
 
 #[test]
 fn surviving_take_reply_settles_after_interruption_and_server_shutdown() {
-    run_fixture(true, false, false);
+    run_fixture(true, false, Completion::None);
 }
 
 #[test]
 fn durable_take_lookup_retains_observation_and_replays_offline() {
-    run_fixture(true, true, false);
+    run_fixture(true, true, Completion::None);
 }
 
 #[test]
 fn complete_capture_and_offline_replay() {
-    run_fixture(false, false, true);
+    run_fixture(false, false, Completion::Capture);
 }
 
-fn run_fixture(interrupt: bool, durable: bool, metadata_read: bool) {
+#[test]
+fn completed_capture_admits_restore_intent_offline() {
+    run_fixture(false, false, Completion::Restore);
+}
+#[derive(Clone, Copy)]
+enum Completion {
+    None,
+    Capture,
+    Restore,
+}
+
+fn run_fixture(interrupt: bool, durable: bool, completion: Completion) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -139,11 +150,7 @@ fn run_fixture(interrupt: bool, durable: bool, metadata_read: bool) {
         .build()
         .unwrap();
     rt.block_on(status_fixture(
-        &evidence,
-        binary,
-        interrupt,
-        durable,
-        metadata_read,
+        &evidence, binary, interrupt, durable, completion,
     ));
 }
 
@@ -152,8 +159,9 @@ async fn status_fixture(
     binary: PathBuf,
     interrupt: bool,
     durable: bool,
-    metadata_read: bool,
+    completion: Completion,
 ) {
+    let metadata_read = !matches!(completion, Completion::None);
     let mut owned = PocketIcStartupConfig::Spawn {
         server_binary: binary,
         timeout: Duration::from_secs(30),
@@ -439,7 +447,7 @@ async fn status_fixture(
         .await;
     }
     if let Some(metadata_admission) = metadata_admission {
-        metadata::replay(
+        let restore_plan = metadata::replay(
             &mut reopened,
             &lookup_transport,
             &metadata_admission,
@@ -453,35 +461,66 @@ async fn status_fixture(
         let next = CapturePlan::new(next).unwrap();
         let approval = next.digest();
         drop(reopened);
-        let successor = store
-            .create_capture_after(
-                next,
-                approval,
-                &predecessor,
+        if matches!(completion, Completion::Restore) {
+            let op = store
+                .create_restore(
+                    &restore_plan,
+                    restore_plan.digest(),
+                    &predecessor,
+                    &lookup_transport,
+                    &mut provider,
+                )
+                .await
+                .unwrap();
+            assert_eq!(op.inspect().unwrap().encoded(), restore_plan.encoded());
+            let path = evidence
+                .join("store/operations")
+                .join(&restore_plan.request().operation_id)
+                .join("ledger.bin");
+            let original = fs::read(&path).unwrap();
+            drop(op);
+            let op = store
+                .open_restore(
+                    &restore_plan,
+                    restore_plan.digest(),
+                    &lookup_transport,
+                    &mut provider,
+                )
+                .await
+                .unwrap();
+            assert_eq!(op.inspect().unwrap().digest(), restore_plan.digest());
+            assert_eq!(fs::read(path).unwrap(), original);
+        } else {
+            let successor = store
+                .create_capture_after(
+                    next,
+                    approval,
+                    &predecessor,
+                    &lookup_transport,
+                    &mut provider,
+                )
+                .await
+                .unwrap();
+            assert_eq!(successor.inspect().unwrap().digest(), approval);
+            assert_eq!(
+                successor
+                    .inspect_status()
+                    .unwrap()
+                    .network_requests_reserved,
+                0
+            );
+            let mut original = store
+                .open_capture(&predecessor.request().operation_id, predecessor.digest())
+                .unwrap();
+            metadata::replay(
+                &mut original,
                 &lookup_transport,
+                &metadata_admission,
                 &mut provider,
+                evidence,
             )
-            .await
-            .unwrap();
-        assert_eq!(successor.inspect().unwrap().digest(), approval);
-        assert_eq!(
-            successor
-                .inspect_status()
-                .unwrap()
-                .network_requests_reserved,
-            0
-        );
-        let mut original = store
-            .open_capture(&predecessor.request().operation_id, predecessor.digest())
-            .unwrap();
-        metadata::replay(
-            &mut original,
-            &lookup_transport,
-            &metadata_admission,
-            &mut provider,
-            evidence,
-        )
-        .await;
+            .await;
+        }
     }
     assert_eq!(
         calls.load(Ordering::SeqCst),
