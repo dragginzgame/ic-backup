@@ -400,3 +400,23 @@ lookup cannot be retried merely because its response was lost. The new event enc
 a real pending-take read-state fixture. Explicit original-call settlement from retained terminal evidence now records
 its observation source and preserves historical authentication. An observation
 alone still authorizes no dependent effect.
+
+## Next payload acquisition slice (not implemented)
+
+Use the retained transfer binding and exact ordinal as the data-read identity.
+Reauthenticate original capture/metadata and compare the schedule before new
+work. Admit one sequential read at a time, with fresh integration-owned read
+permission and complete request/proof/payload bounds. Retain its admission and
+reserve signing before invoking the signer; retain exact signed bytes before
+reserving submission. Reuse one-shot HTTP and the scheduled data authenticator.
+
+Retain certified result evidence before recording an accepted payload. A certified
+rejection or invalid payload cannot count toward coverage. Failed signing and lost
+HTTP replies remain spent and unresolved; no automatic replacement, polling or
+range splitting is permitted. A complete uncertain journal frame survives reopen;
+partial frames and orphan files refuse without repair. Replaying an accepted read
+must authenticate the original evidence and leave journal and payload bytes intact.
+Use the original journal and held-file custody owners; no per-extent journal or
+second mutable progress index. Exact evidence layout and cumulative bounds must
+be implemented and qualified before this flow dispatches. Final coverage, module
+hash, final status and durable bundle completion remain subsequent work.

@@ -1,5 +1,7 @@
 //! Bounded Platform-schema data replies and exact scheduled byte admission.
+mod authentication;
 use super::CaptureTransfer;
+pub use authentication::DataReadError;
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     candid_codec::{

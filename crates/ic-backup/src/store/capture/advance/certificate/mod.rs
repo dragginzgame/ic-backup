@@ -195,19 +195,42 @@ pub(super) fn authenticate_call_evidence(
     root_key_der: &[u8],
     call: super::CaptureCall,
 ) -> Result<(), StatusCertificateError> {
+    authenticate_expected_evidence(
+        plan,
+        admission,
+        prepared,
+        evidence,
+        root_key_der,
+        call.method_name(),
+        &call
+            .arguments(plan)
+            .map_err(StatusCertificateError::Admission)?,
+    )
+}
+
+pub(in crate::store::capture) fn authenticate_expected_evidence(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    evidence: &StatusEvidence,
+    root_key_der: &[u8],
+    method: &str,
+    arguments: &[u8],
+) -> Result<(), StatusCertificateError> {
     admission
         .validate(plan)
         .map_err(StatusCertificateError::Admission)?;
     evidence
         .encode(admission.result_bytes)
         .map_err(StatusCertificateError::Admission)?;
-    let (rejected, response) = authenticated_response(
+    let (rejected, response) = authenticated_expected_response(
         plan,
         admission,
         prepared,
         &evidence.proof,
         root_key_der,
-        call,
+        method,
+        arguments,
     )?;
     if rejected != evidence.rejected {
         return Err(StatusCertificateError::Outcome);
@@ -226,6 +249,28 @@ fn authenticated_response(
     root_key_der: &[u8],
     call: super::CaptureCall,
 ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
+    authenticated_expected_response(
+        plan,
+        admission,
+        prepared,
+        certificate,
+        root_key_der,
+        call.method_name(),
+        &call
+            .arguments(plan)
+            .map_err(StatusCertificateError::Admission)?,
+    )
+}
+
+pub(super) fn authenticated_expected_response(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    certificate: &[u8],
+    root_key_der: &[u8],
+    method: &str,
+    arguments: &[u8],
+) -> Result<(bool, Vec<u8>), StatusCertificateError> {
     admission
         .validate(plan)
         .map_err(StatusCertificateError::Admission)?;
@@ -234,7 +279,7 @@ fn authenticated_response(
         .encode(admission.request_bytes)
         .map_err(StatusCertificateError::Admission)?;
     prepared
-        .validate_call_for(plan, call)
+        .validate_expected_call(plan, method, arguments)
         .map_err(StatusCertificateError::Admission)?;
     if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != plan.request().trust_root
     {

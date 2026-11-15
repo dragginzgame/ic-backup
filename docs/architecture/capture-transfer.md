@@ -131,7 +131,7 @@ The result contains only decoded bytes. The caller must retain raw evidence and
 authenticate its association with the exact target, snapshot and request. Valid
 same-length region bytes do not establish authenticity; chunk hashes are only as
 trusted as their metadata. Decoding performs no IO, reservation, progress update,
-settlement or complete-coverage check. Effectful capture remains unimplemented.
+settlement or complete-coverage check. Effectful payload acquisition remains unimplemented.
 
 ## Uploaded metadata readback
 
@@ -333,3 +333,199 @@ library regressions, covering exact identities, wire bytes, hashes and local
 recovery custody. Four public documentation examples also compile. Graph evidence
 is retained under `target/evidence/platform-0.33.0/`; no IC effects, supplier suite,
 host matrix or release workflow was run.
+
+## Local metadata request and certified-reply authentication
+
+`CapturePlan::metadata_read_arguments(snapshot)` encodes Platform's
+`ReadCanisterSnapshotMetadataArgs` with the plan target and exact opaque snapshot
+ID, admitting 1–256 ID bytes before cloning and a 512-byte argument ceiling.
+The fixed method is `read_canister_snapshot_metadata`, management receiver
+`aaaaa-aa`, with the plan canister as effective routing target. It grants no call
+permission and does not establish that a caller-supplied snapshot came from the
+original take.
+
+`authenticate_metadata_reply` binds this exact expected request to externally
+supplied `PreparedStatus` and `StatusEvidence` (the existing prepared-call/evidence
+types). It checks complete request/result bounds, original sender, receiver,
+method, arguments, expiry and request ID. Direct Ed25519/low-S secp256k1 signature
+checks share the existing owner. The certificate verifier checks original root,
+effective target, retained certificate/delegation windows and exact terminal
+request-status response. Both response bytes and rejection flag must match the
+retained evidence. Rejections and nonterminal outcomes cannot become metadata.
+
+The existing bounded metadata decoder and transfer profile then apply unchanged.
+The metadata timestamp must match the selected original take's timestamp; this
+is a consistency check, not proof of freshness or provenance. The take's reported
+`total_size` is not equated to metadata extents or local payload size. Globals,
+floating-point bits, optional state and raw evidence remain unchanged.
+
+This helper performs no clock read, signing, HTTP, journaling or scheduling.
+The effectful workflow described below must authenticate the original settled take, preserve
+snapshot custody, check current permission and durably reserve signing/network/
+evidence allowances before acquisition. It must retain authenticated metadata and
+the admitted schedule before data reads. This local helper introduces no public
+arbitrary-method interface, call enum variant, persisted format or retry framework.
+Private expected-call validation is shared with existing status/list/take verifiers;
+their public contracts and event encodings remain unchanged.
+
+Focused legacy review reread the frozen
+[metadata request/reply owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_metadata/mod.rs)
+and [identity/wire regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_metadata/tests/mod.rs),
+plus [codec migration 1af7e219](https://github.com/dragginzgame/ic-backup-legacy/commit/1af7e219c3073395992c316ecaa5e83e74b1aecc).
+They separate effective target from management receiver, preserve exact snapshot
+arguments, bound metadata before allocation and treat decoded declarations as
+unauthenticated. The new helper reuses canonical Platform identity/codec and
+Backup's signature/certificate owners. Legacy digest wrappers and request objects
+are unnecessary for this local slice and were not copied. The existing decoder
+retains strict optional-field and allocation lessons from that migration.
+
+Six [native test groups](../../crates/ic-backup/src/store/capture/advance/tests/metadata_tests.rs)
+cover both keys and exact float bits; ID/timestamp bounds; signed substitution of
+method/receiver/target/arguments/sender; signature/proof/root/window and byte limits;
+unsupported profile/payload size; and certified rejection/nonterminal outcomes.
+Real signatures over synthetic certificates qualify local authentication only.
+The original three PocketIC fixtures check the shared verifier's capture/recovery
+callers. The fourth fixture qualifies metadata acquisition as described below;
+none qualifies a complete downloaded backup.
+
+## Durable metadata acquisition
+
+`CaptureOperation::advance_metadata` requires a settled original snapshot and
+replays its original status/list/take authentication before admitting metadata.
+The derived snapshot ID, timestamp and reported total size are retained with
+`CaptureMetadataAdmissionRecord`; a caller cannot substitute a separate snapshot.
+The admission binds the existing call bounds, transport, signer protocol, read
+permission witness, expiry and certificate observation windows. Integrations own
+continuous application maintenance and exclusive snapshot custody.
+
+The original ledger records `MetadataStarted`, `MetadataPrepared`,
+`MetadataSubmissionReserved` and `MetadataSettled`. Signing is reserved before
+invocation; `metadata-request.bin` retains exact signed bytes before one bounded
+HTTP submission; `metadata-result.bin` retains certified evidence before metadata
+policy is applied. The common ledger budget counts complete admitted original
+calls, metadata and any lookup against the immutable signing/network/evidence
+limits. Metadata cannot reuse allowance already committed to lookup. Existing
+event bytes remain unchanged; older readers refuse the new events.
+
+`CaptureMetadataSigner::admit_read` checks current permission before signing or
+submission. Prepared continuation reuses the exact request after fresh admission.
+Failed, cancelled or invalid signing stays `SigningPending`; uncertain HTTP stays
+`SubmissionPending`. Neither repeats, refunds spending or starts another attempt.
+Metadata reconciliation through read-state or surviving replies is not implemented.
+Complete uncertain frames remain spent after reopening; partial frames and orphan,
+changed or missing evidence refuse without cleanup or repair.
+
+Settled replay checks the original capture, request, expiry, certificate windows,
+root and metadata policy locally without live admission, signing or HTTP. Certified
+rejections and unsupported metadata remain retained but cannot produce `Ready`.
+`inspect_metadata` reports only metadata phase and additional reservations; original
+status/snapshot views are unchanged. A settled phase alone is not policy success.
+No durable data schedule, payload read or completed local backup is produced.
+
+Focused legacy review used the frozen revision's
+[artifact persistence owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/mod.rs),
+[verification owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs)
+and [journal regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/download_journal/tests/mod.rs).
+Exact metadata/request retention, timestamp association, independent reported size
+and refusal after incomplete writes carry forward. Backup's existing original
+journal and custody checks replace the legacy separate download journal; no
+legacy cleanup, retry framework or source code was copied.
+
+Eight new native test groups exercise reservation ordering, exact offline replay,
+permission/binding/budget refusal, lookup spending, prepared continuation, lost
+outcomes, all four uncertain-write boundaries and evidence damage. The fourth
+PocketIC fixture acquires real metadata, verifies unchanged snapshot/canister
+state, then replays exact metadata after shutdown and guard revocation. Evidence
+is retained under `target/evidence/metadata-acquisition/`; this does not qualify
+full payload capture, external signer processes or Canic maintenance adapters.
+
+## Durable schedule binding
+
+`CaptureOperation::bind_transfer` explicitly binds the schedule after metadata is
+settled. It shares private original-capture and retained-metadata authentication
+with `advance_metadata`, without calling that effectful entrypoint. Its only inputs
+are the bound transport and original capture authentication provider. Admission
+comes from the retained journal; no metadata signer is accepted. Metadata signing,
+live read admission and HTTP are never invoked. Before settlement it refuses
+without advancing metadata acquisition.
+
+One `TransferBound` event retains a version-one commitment, exact data-call count
+and conservative payload ceiling in the original journal. There is no separate
+schedule file or duplicate decoded metadata. The commitment hashes the following
+binary concatenation with SHA-256: domain `ic-backup/transfer-schedule/1\0`,
+32-byte original encoded-plan digest, 32-byte metadata-request evidence digest,
+32-byte metadata-result evidence digest, u32 snapshot-ID length and original ID,
+u32 extent size, three u64 region sizes in module/heap/stable order, u32 chunk
+count and sorted 32-byte hashes, u32 data-call count and u64 payload ceiling.
+Integers are little-endian. The version fixes the existing region/extent/chunk
+ordering algorithm. Computing this descriptor is bounded by the chunk limit;
+it never materializes or enumerates all data requests. Exact original metadata
+wire order and floating-point bits remain bound through the result evidence.
+
+The first bind appends and syncs one local frame within the original evidence
+budget. Identical calls reauthenticate and compare the commitment without writes.
+Unknown versions refuse journal admission; changed geometry, evidence or policy
+cannot silently replace the retained binding. A complete uncertain frame survives
+reopen; partial frames refuse. `inspect_transfer` is only a read-only projection,
+not authentication. Binding grants no additional signing/network allowance and
+makes no claim that remaining provider costs fit; each future data attempt still
+needs its own cumulative budget admission and fresh application permission.
+There are no payload reads, progress records or completion effects in this slice.
+
+The focused legacy review revisited the artifact verification and journal tests
+linked above, plus [plan-ownership history a860d144](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0).
+Those checks keep original evidence admission separate from progress projections.
+This implementation preserves exact source association and uncertain-write
+refusal using the existing journal; it does not import the legacy second journal,
+artifact-tree checksum or mutable progress graph before payload files exist.
+No source code was copied. New native cases cover original-evidence and geometry
+binding, canonical chunk ordering, pre-settlement refusal, unchanged spending,
+cold replay, conflicting/unknown records, partial/complete uncertain frames and
+authentication/evidence-budget refusal. The real metadata fixture now binds its
+one-request, eight-byte schedule and verifies unchanged offline replay.
+
+## Scheduled data request and certified-reply authentication
+
+`CaptureTransfer::data_arguments(ordinal)` encodes Platform's fixed
+`read_canister_snapshot_data` request under a 1 KiB argument cap. It derives the
+exact target, snapshot and region offset/size or chunk hash from the existing
+zero-based schedule, without iterating preceding extents or accepting arbitrary
+ranges. Out-of-range ordinals refuse before request construction.
+
+`authenticate_data_reply` checks the exact direct-key signed request and original
+certificate root/time policy, including receiver, method, sender, expiry, request
+ID and scheduled arguments. The retained reply bytes and rejection flag must
+match the certified terminal outcome. Only then does the existing bounded decoder
+check region length or whole-chunk ceiling/hash. A valid signature and certificate
+for another same-length extent cannot satisfy this ordinal. Original requests,
+proofs and response bytes are not rewritten. Status, metadata and data share the
+private certificate evidence comparison; there is no public arbitrary-call API.
+
+This authenticates one supplied result, not its source metadata provenance,
+original reservations, current snapshot custody or local persistence. It performs
+no IO, clock read, signing, HTTP, settlement or progress update. Callers must retain
+and authenticate source metadata and its schedule binding separately. These are
+local helpers; durable data acquisition and complete coverage remain unimplemented.
+
+Payload limits and retained-evidence limits are independent. The original result
+record contains both response bytes and the certificate containing that response.
+The 2 MiB complete-evidence ceiling therefore cannot admit a full 1 MiB payload
+plus framing/proof overhead. A 512 KiB region with the qualified certificate fits;
+this is not a guarantee for every smaller user-selected evidence cap. Future live
+admission must account for complete bounded proofs before spending; it must not
+widen limits or alter an already-bound extent size after a refused read.
+
+Focused legacy review used the frozen
+[data request owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_data/mod.rs),
+[transfer-read owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_transfer_read/mod.rs),
+[response regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/policy/ic_snapshot_transfer_read/tests/mod.rs)
+and the a860d144 history linked above. Preserve original payload association,
+separate bounds and the distinction between validated bytes and transfer success.
+Use existing Platform DTOs and Backup's shared verifiers instead of copying
+legacy request/digest/response wrappers or its operation graph. No code was copied.
+
+Six native groups exercise both supported keys, every region and chunk kind,
+empty chunks, signed identity/range substitution, wrong ordinals, damaged
+signature/proof/time/outcome, certified malformed payloads, rejection/pending
+outcomes and independent complete-evidence bounds. Existing IC fixtures regress
+shared certificate callers; they do not qualify remote payload acquisition.

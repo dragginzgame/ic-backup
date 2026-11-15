@@ -27,6 +27,18 @@ existing snapshots and installed code without performing a call.
 from Platform metadata. `CapturePlan::decode_metadata` bounds raw metadata and
 checks it against the original plan. `CaptureTransfer::decode_data` bounds raw replies and checks
 exact region lengths and chunk hashes; see the [transfer contract](docs/architecture/capture-transfer.md).
+`CapturePlan::metadata_read_arguments` builds the fixed metadata request.
+`authenticate_metadata_reply` verifies its signature and certified reply against
+the selected snapshot, original trust and timing, then applies bounded metadata
+and transfer checks. `advance_metadata` acquires one certified metadata reply in
+the original capture journal, with finite reservations and offline replay.
+`inspect_metadata` reports its retained phase and spending. `bind_transfer`
+retains a versioned schedule commitment after authenticating that metadata;
+`inspect_transfer` reports its counts and commitment. Durable payload
+download and local backup completion remain future work.
+`data_arguments` and `authenticate_data_reply` bind one scheduled payload reply
+to its exact signed request and certified outcome before checking lengths/hashes;
+these are local checks, not a payload downloader.
 `CaptureTransfer::decode_uploaded_metadata` checks bounded restore readback metadata
 against the captured state, including exact float bits and the complete chunk set.
 `CaptureTransfer::begin_readback` adds ordered byte comparison of every destination
@@ -71,8 +83,8 @@ Private PocketIC fixtures qualify status, snapshot creation and offline reply re
 Download, completion writing, full bundle verification, restore and CLI
 workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Publication remains disabled; `0.101.4` is an
-unpublished development version following the legacy `0.67.x` line.
+and the public Rustdoc example. Publication remains disabled; `0.101.5` is an
+unpublished development version following the GitHub-only 0.101.4 checkpoint.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

@@ -779,3 +779,5 @@ mod direct_tests;
 mod lookup_tests;
 
 mod durable_lookup_tests;
+
+mod metadata_tests;

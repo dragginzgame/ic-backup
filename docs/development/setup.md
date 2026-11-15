@@ -19,7 +19,7 @@ suite for the earlier 0.77.3 adoption remain under
 `target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
-Unpublished 0.101.4 development follows the 0.101.3 recovery-authentication checkpoint. The direct capture provider composes status, list and take through the existing helpers.
+Unpublished 0.101.5 development follows the 0.101.4 durable recovery checkpoint. The direct capture provider composes status, list and take through the existing helpers.
 Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
@@ -283,3 +283,41 @@ Clippy, warning-denying Rustdoc and format/link checks. The pending-take fixture
 settles from the lookup proof after shutdown and reopens again for offline replay.
 Direct Cargo invocation uses a physical default Testkit asset path without `..`;
 Make and an explicit `IC_BACKUP_TESTKIT_DIRECTORY` keep their existing selection.
+
+For the 0.101.5 local metadata authentication boundary, select
+`store::capture::advance::tests::metadata_tests`. Six native groups exercise exact
+signed request/certificate identity, metadata profile and bounds. Evidence under
+`target/evidence/metadata-auth/` includes the full advance and transfer selections,
+strict lints and Rustdoc. The existing actual-IC suite covers unchanged callers of
+the shared verifier. The subsequent metadata acquisition fixture is described below.
+
+For durable metadata acquisition, select
+`store::capture::advance::tests::http_tests::metadata_tests`. Eight native groups
+cover the original journal's four metadata boundaries and retained authority.
+`target/evidence/metadata-acquisition/` contains 132 advance, 10 ledger and 16
+custody tests, 21 documentation examples, strict product/private Clippy and
+warning-denying Rustdoc. `make test-qualification` passes all four IC fixtures;
+`metadata_acquisition_and_offline_replay` reads real metadata and replays it after
+server shutdown and signer revocation. Payload download remains unqualified.
+
+For durable schedule binding, the native selections are
+`store::capture::advance::tests::http_tests::metadata_tests::schedule_tests` and
+`store::capture::transfer::binding`. Evidence under
+`target/evidence/transfer-binding/` contains 135 advance, 48 transfer and 10 ledger
+tests, strict product/private Clippy and all four PocketIC fixtures. The real
+metadata fixture now verifies schedule binding and byte-preserving offline replay.
+The existing deterministic geometry tests remain the version-one schedule owner;
+future ordering changes require explicit compatibility handling.
+
+The signer-free local binding cleanup is qualified under
+`target/evidence/transfer-replay-cleanup/`: 135 capture-flow tests, 22 documentation
+examples, strict product/private Clippy, warning-denying Rustdoc and all four IC
+fixtures. The binding callers compile without a metadata signer or supplied
+metadata admission; shared replay checks retain original capture authentication.
+
+Scheduled data authentication is selected by
+`store::capture::advance::tests::data_tests`. Evidence in
+`target/evidence/data-auth/` records 141 advance and 48 transfer tests, 23
+documentation examples, strict product/private Clippy and warning-denying Rustdoc.
+All four existing PocketIC fixtures pass after sharing certificate comparison;
+these regress status/snapshot/metadata callers, not remote payload acquisition.

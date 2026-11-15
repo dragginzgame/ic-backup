@@ -1,9 +1,12 @@
 //! Pure bounded transfer planning over Platform metadata; no dispatch authority.
 
+mod binding;
+pub(super) use binding::TransferBindingRecord;
+pub use binding::{CaptureTransferBindError, CaptureTransferView};
 mod data;
 mod metadata;
 mod readback;
-pub use data::TransferDataError;
+pub use data::{DataReadError, TransferDataError};
 pub use metadata::TransferMetadataError;
 pub use readback::{ReadbackDataError, ReadbackMetadataError, UploadedSnapshotReadback};
 

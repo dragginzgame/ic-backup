@@ -14,7 +14,9 @@ read-state transport and one durable lookup per operation are qualified. Termina
 retained observations can settle the original call locally; replay preserves
 the separate observation time policy and dependent effects require live admission. PocketIC
 qualifies these calls, interrupted reply settlement and offline replay with fixture signing and application authority.
-Canic process/maintenance adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+Durable metadata acquisition authenticates the retained take, reserves finite
+signing/network allowance and retains exact certified evidence for offline replay. Canic process/maintenance
+adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 
@@ -108,3 +110,16 @@ The configured native CI hosts are Linux x86-64 and macOS ARM64/x86-64; configur
 alone does not prove hosted support. Ordinary work leaves staging, commits and
 remote delivery to the user unless specifically authorized. Update the handoff
 after meaningful work. Preserve the legacy checkout and its recovery evidence.
+
+## Post-push review focus
+
+After every successful push, apply the installed baseline's
+[post-push review](TOKO-TOOLING.md#post-push-review) to the delivered commits and
+directly affected callers before starting the next increment. In Backup, explicitly
+check architectural drift, creeping complexity and legacy sediment: duplicated
+policy or recovery paths, unnecessary stage APIs/authority inputs, extra journals
+or persisted representations, and mechanisms imported without a current consumer.
+Prefer reuse, deletion and simplification while preserving original evidence,
+finite spending and recovery guarantees. Report concrete findings and their
+smallest correction, or the reviewed scope with no actionable findings. This
+adds no separate report framework and does not authorize another push.

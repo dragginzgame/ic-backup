@@ -1,7 +1,7 @@
 //! Lookup transitions share the original chain without renumbering original calls.
 use super::{
     CaptureCall, CaptureError, CapturePlan, CaptureSnapshotPhase, CaptureStatusPhase, EventRecord,
-    EvidenceRecord, FRAME_BYTES, LedgerError, State, StatusAdmissionRecord, initial,
+    EvidenceRecord, LedgerError, State, StatusAdmissionRecord,
 };
 use crate::store::{CaptureLookupAdmissionRecord, CaptureLookupPhase};
 
@@ -156,41 +156,6 @@ impl State {
                 lookup.phase = Phase::Observed;
             }
             _ => return Err(LedgerError::Transition),
-        }
-        Ok(())
-    }
-    pub(super) fn lookup_budget(&self, plan: &CapturePlan) -> Result<(), LedgerError> {
-        let Some(lookup) = &self.lookup else {
-            return Ok(());
-        };
-        let original = self.admission.as_ref().ok_or(LedgerError::Transition)?;
-        let mut calls = vec![original];
-        if let Some(snapshot) = &self.snapshot.admission {
-            calls.extend([&snapshot.list, &snapshot.take]);
-        }
-        let a = &lookup.admission;
-        // Conservatively admit complete call allowances, including any admitted future take.
-        let network = calls
-            .iter()
-            .map(|a| u64::from(a.prepare_requests) + u64::from(a.submit_requests))
-            .sum::<u64>()
-            + u64::from(a.prepare_requests)
-            + 1;
-        let bytes = initial(plan)?.len() as u64
-            + (calls.len() as u64 + 1) * 4 * (FRAME_BYTES as u64 + 36)
-            + calls
-                .iter()
-                .map(|a| u64::from(a.request_bytes) + u64::from(a.result_bytes))
-                .sum::<u64>()
-            + u64::from(a.request_bytes)
-            + u64::from(a.result_bytes);
-        let limits = &plan.request().limits;
-        if limits.observations < 1
-            || calls.len() as u32 + 1 > limits.signing_requests
-            || network > u64::from(limits.network_requests)
-            || bytes > limits.evidence_bytes
-        {
-            return Err(LedgerError::Transition);
         }
         Ok(())
     }

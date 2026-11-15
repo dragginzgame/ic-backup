@@ -78,6 +78,24 @@ pub(super) fn authenticate_call_request(
     prepared: &PreparedStatus,
     call: super::CaptureCall,
 ) -> Result<(), StatusRequestError> {
+    authenticate_expected_request(
+        plan,
+        admission,
+        prepared,
+        call.method_name(),
+        &call
+            .arguments(plan)
+            .map_err(StatusRequestError::Admission)?,
+    )
+}
+
+pub(in crate::store::capture) fn authenticate_expected_request(
+    plan: &CapturePlan,
+    admission: &StatusAdmissionRecord,
+    prepared: &PreparedStatus,
+    method: &str,
+    arguments: &[u8],
+) -> Result<(), StatusRequestError> {
     admission
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
@@ -86,7 +104,7 @@ pub(super) fn authenticate_call_request(
         .encode(admission.request_bytes)
         .map_err(StatusRequestError::Admission)?;
     prepared
-        .validate_call_for(plan, call)
+        .validate_expected_call(plan, method, arguments)
         .map_err(StatusRequestError::Admission)?;
     let envelope = decode_envelope(&prepared.envelope, admission.request_bytes as usize)
         .map_err(|_| StatusRequestError::Envelope)?;

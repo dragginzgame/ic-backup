@@ -58,7 +58,7 @@ fn signer(bytes: Vec<u8>) -> Signer {
         stop_prepared: false,
     }
 }
-fn reserve_original(
+pub(super) fn reserve_original(
     store: &BackupStore,
     p: CapturePlan,
     r: &PreparedStatus,
@@ -104,7 +104,7 @@ fn authority(t: &StatusHttpTransport) -> CaptureLookupAdmissionRecord {
         observation: status_certificate_observation(policy.observation.time).unwrap(),
     }
 }
-fn reopen(store: &BackupStore, p: &CapturePlan) -> CaptureOperation {
+pub(super) fn reopen(store: &BackupStore, p: &CapturePlan) -> CaptureOperation {
     store
         .open_capture(&p.request().operation_id, p.digest())
         .unwrap()

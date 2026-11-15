@@ -15,6 +15,8 @@ use thiserror::Error;
 mod call;
 mod certificate;
 pub use call::{CaptureCall, CaptureProvider};
+pub(super) use certificate::authenticate_expected_evidence;
+pub(super) use request::authenticate_expected_request;
 // Shared representations retain the original public status names and wire bytes.
 pub use PreparedStatus as PreparedCaptureCall;
 pub use StatusAdmissionRecord as CaptureCallAdmissionRecord;
@@ -357,6 +359,15 @@ impl PreparedStatus {
         plan: &CapturePlan,
         call: CaptureCall,
     ) -> Result<(), CaptureError> {
+        self.validate_expected_call(plan, call.method_name(), &call.arguments(plan)?)
+    }
+
+    pub(super) fn validate_expected_call(
+        &self,
+        plan: &CapturePlan,
+        method: &str,
+        arguments: &[u8],
+    ) -> Result<(), CaptureError> {
         let CaptureExecution::Direct { sender: expected } = plan.request().execution else {
             return Err(CaptureError::StatusAdmission);
         };
@@ -375,8 +386,8 @@ impl PreparedStatus {
         };
         let matches_status = sender.as_slice() == expected.as_slice()
             && canister_id.as_slice().is_empty()
-            && method_name == call.method_name()
-            && *arg == call.arguments(plan)?;
+            && method_name == method
+            && arg.as_slice() == arguments;
         if !matches_status
             || *ingress_expiry != self.expires_ns
             || *content.to_request_id() != self.request_id
@@ -556,4 +567,11 @@ pub(super) mod lookup;
 pub use lookup::{
     CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupPhase,
     CaptureLookupProgress, CaptureLookupSettlementError, CaptureLookupSigner, CaptureLookupView,
+};
+
+mod metadata;
+pub use metadata::{
+    CaptureMetadataAdmissionRecord, CaptureMetadataAdvanceError, CaptureMetadataPhase,
+    CaptureMetadataProgress, CaptureMetadataSigner, CaptureMetadataView, MetadataReadError,
+    authenticate_metadata_reply,
 };

@@ -31,6 +31,7 @@ use std::{
 
 mod lookup;
 mod lost_reply;
+mod metadata;
 
 fn now() -> u64 {
     SystemTime::now()
@@ -99,20 +100,25 @@ impl CaptureApplicationGuard for FixtureGuard {
 
 #[test]
 fn stopped_canister_snapshot_and_offline_cold_replay() {
-    run_fixture(false, false);
+    run_fixture(false, false, false);
 }
 
 #[test]
 fn surviving_take_reply_settles_after_interruption_and_server_shutdown() {
-    run_fixture(true, false);
+    run_fixture(true, false, false);
 }
 
 #[test]
 fn durable_take_lookup_retains_observation_and_replays_offline() {
-    run_fixture(true, true);
+    run_fixture(true, true, false);
 }
 
-fn run_fixture(interrupt: bool, durable: bool) {
+#[test]
+fn metadata_acquisition_and_offline_replay() {
+    run_fixture(false, false, true);
+}
+
+fn run_fixture(interrupt: bool, durable: bool, metadata_read: bool) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -132,7 +138,13 @@ fn run_fixture(interrupt: bool, durable: bool) {
         .enable_all()
         .build()
         .unwrap();
-    rt.block_on(status_fixture(&evidence, binary, interrupt, durable));
+    rt.block_on(status_fixture(
+        &evidence,
+        binary,
+        interrupt,
+        durable,
+        metadata_read,
+    ));
 }
 
 async fn status_fixture(
@@ -140,6 +152,7 @@ async fn status_fixture(
     binary: PathBuf,
     interrupt: bool,
     durable: bool,
+    metadata_read: bool,
 ) {
     let mut owned = PocketIcStartupConfig::Spawn {
         server_binary: binary,
@@ -213,9 +226,9 @@ async fn status_fixture(
         limits: CaptureLimitsRecord {
             payload_bytes: 1024 * 1024,
             extent_bytes: 4096,
-            network_requests: 4,
+            network_requests: if metadata_read { 6 } else { 4 },
             observations: 1,
-            signing_requests: 4,
+            signing_requests: if metadata_read { 6 } else { 4 },
             evidence_bytes: 2 * 1024 * 1024,
         },
     })
@@ -305,7 +318,7 @@ async fn status_fixture(
             )
             .await,
         )
-    } else {
+    } else if !metadata_read {
         lookup::qualify(
             &lookup_transport,
             operation.inspect().unwrap(),
@@ -315,6 +328,23 @@ async fn status_fixture(
             &taken,
         )
         .await;
+        None
+    } else {
+        None
+    };
+    let metadata_admission = if metadata_read {
+        Some(
+            metadata::qualify(
+                &mut operation,
+                &lookup_transport,
+                &admission,
+                &mut provider,
+                &taken,
+                evidence,
+            )
+            .await,
+        )
+    } else {
         None
     };
     let inventory = pic
@@ -400,6 +430,16 @@ async fn status_fixture(
             &mut reopened,
             &lookup_transport,
             &lookup_admission,
+            evidence,
+        )
+        .await;
+    }
+    if let Some(metadata_admission) = metadata_admission {
+        metadata::replay(
+            &mut reopened,
+            &lookup_transport,
+            &metadata_admission,
+            &mut provider,
             evidence,
         )
         .await;

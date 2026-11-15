@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.101.5] — GitHub checkpoint (unpublished)
+
+### ✨ Features
+
+- Authenticate certified payload replies against exact scheduled data requests.
+  Reuse shared request/certificate validation and bounded payload decoding; refuse
+  substituted ranges, mismatched chunks and over-budget complete evidence.
+  Durable payload dispatch and persistence remain unimplemented.
+
+- Keep local transfer binding independent of metadata signing: use retained
+  admission and shared replay verification, removing unnecessary signer inputs.
+
+- Bind authenticated metadata to a compact versioned transfer schedule in the
+  original journal. Reauthenticate and compare on replay without new signing or
+  HTTP; refuse conflicting records and partial writes. Qualify real metadata
+  binding and offline replay. Payload reads remain unimplemented.
+
+- Add fixed metadata-read argument construction and local authentication of signed
+  requests and certified metadata replies. Bind the exact target, snapshot ID and
+  take timestamp, preserve original timing and reuse bounded transfer validation.
+  Payload download and local completion remain unimplemented.
+- Add one durable metadata acquisition in the original capture journal, with
+  original snapshot authentication, cumulative reservations, exact request/result
+  retention and offline replay. Lost signing or HTTP outcomes remain spent.
+  Qualify interruption boundaries and real metadata acquisition with PocketIC.
+- Share private exact-call validation with the existing capture verifiers, without
+  adding a public arbitrary-method interface. Existing event encodings remain
+  unchanged; older readers refuse the new metadata events.
+
 ## [0.101.4] — GitHub checkpoint (unpublished)
 
 ### ✨ Features

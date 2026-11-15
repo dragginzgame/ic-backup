@@ -1222,3 +1222,7 @@ mod snapshot_tests;
 mod observation_tests;
 
 mod lookup_tests;
+
+mod metadata_tests;
+
+mod data_tests;

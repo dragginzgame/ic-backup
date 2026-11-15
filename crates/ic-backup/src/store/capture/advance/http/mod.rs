@@ -205,12 +205,24 @@ impl StatusHttpTransport {
         prepared: &PreparedStatus,
         call: super::CaptureCall,
     ) -> Result<StatusEvidence, StatusHttpError> {
-        super::request::authenticate_call_request(plan, admission, prepared, call).map_err(
-            |error| match error {
+        let arguments = call.arguments(plan).map_err(StatusHttpError::Admission)?;
+        self.submit_expected(plan, admission, prepared, call.method_name(), &arguments)
+            .await
+    }
+
+    pub(super) async fn submit_expected(
+        &self,
+        plan: &CapturePlan,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        method: &str,
+        arguments: &[u8],
+    ) -> Result<StatusEvidence, StatusHttpError> {
+        super::request::authenticate_expected_request(plan, admission, prepared, method, arguments)
+            .map_err(|error| match error {
                 StatusRequestError::Admission(error) => StatusHttpError::Admission(error),
                 error => StatusHttpError::Request(error),
-            },
-        )?;
+            })?;
         self.admit_plan(plan)?;
         let mut url = self.origin.clone();
         url.set_path(&format!(
@@ -227,15 +239,24 @@ impl StatusHttpTransport {
         else {
             return Err(StatusHttpError::NoCertificate);
         };
-        let evidence = super::certificate::call_certificate_evidence(
+        let (rejected, response) = super::certificate::authenticated_expected_response(
             plan,
             admission,
             prepared,
             &certificate,
             &self.root_key_der,
-            call,
+            method,
+            arguments,
         )
         .map_err(StatusHttpError::Authentication)?;
+        let evidence = StatusEvidence {
+            rejected,
+            response,
+            proof: certificate,
+        };
+        evidence
+            .encode(admission.result_bytes)
+            .map_err(StatusHttpError::Admission)?;
         remaining(deadline)?;
         Ok(evidence)
     }

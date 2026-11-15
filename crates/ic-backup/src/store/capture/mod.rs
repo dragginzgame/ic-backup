@@ -7,15 +7,18 @@ pub use advance::{
     CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupError,
     CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy, CaptureLookupPhase,
     CaptureLookupPolicy, CaptureLookupProgress, CaptureLookupSettlementError, CaptureLookupSigner,
-    CaptureLookupView, CaptureObservation, CaptureObservationError, CaptureObservationPolicy,
-    CaptureProvider, CaptureSettlementError, CaptureSigner, CaptureSigningRequest,
-    CaptureSnapshotPhase, CaptureSnapshotView, CaptureStatusView, CaptureTiming,
-    DirectCaptureError, DirectCaptureProvider, PreparedCaptureCall, PreparedStatus,
+    CaptureLookupView, CaptureMetadataAdmissionRecord, CaptureMetadataAdvanceError,
+    CaptureMetadataPhase, CaptureMetadataProgress, CaptureMetadataSigner, CaptureMetadataView,
+    CaptureObservation, CaptureObservationError, CaptureObservationPolicy, CaptureProvider,
+    CaptureSettlementError, CaptureSigner, CaptureSigningRequest, CaptureSnapshotPhase,
+    CaptureSnapshotView, CaptureStatusView, CaptureTiming, DirectCaptureError,
+    DirectCaptureProvider, MetadataReadError, PreparedCaptureCall, PreparedStatus,
     SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress, StatusAdmissionRecord,
     StatusAdvanceError, StatusCertificateError, StatusEvidence, StatusHttpError,
     StatusHttpTransport, StatusProgress, StatusProvider, StatusRequestError,
-    authenticate_capture_lookup, authenticate_status_evidence, authenticate_status_request,
-    observe_capture_certificate, status_certificate_evidence, status_certificate_observation,
+    authenticate_capture_lookup, authenticate_metadata_reply, authenticate_status_evidence,
+    authenticate_status_request, observe_capture_certificate, status_certificate_evidence,
+    status_certificate_observation,
 };
 mod plan;
 mod snapshot;
@@ -26,7 +29,8 @@ pub use ledger::{CaptureStatusPhase, LedgerError};
 pub use plan::{CaptureExecution, CaptureLimitsRecord, CapturePlan, CaptureRequest};
 pub use status::{CaptureStatusError, CaptureStatusReplyError};
 pub use transfer::{
-    CaptureTransfer, ReadbackDataError, ReadbackMetadataError, TransferDataError, TransferError,
+    CaptureTransfer, CaptureTransferBindError, CaptureTransferView, DataReadError,
+    ReadbackDataError, ReadbackMetadataError, TransferDataError, TransferError,
     TransferMetadataError, UploadedSnapshotReadback,
 };
 
@@ -131,11 +135,24 @@ impl CaptureOperation {
                 }
             }
         }
+        if let Some(metadata) = &state.metadata {
+            for (name, reference) in metadata.evidence() {
+                if let Some(reference) = reference {
+                    self.evidence(name, reference)?;
+                }
+            }
+        }
         exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
-        for entry in self.directory.entries(11)? {
+        for entry in self.directory.entries(13)? {
             let entry = entry?;
             let admitted = match entry.name.to_str() {
                 Some("lock" | "plan.json" | "ledger.bin") => true,
+                Some("metadata-request.bin") => {
+                    state.metadata.as_ref().is_some_and(|m| m.request.is_some())
+                }
+                Some("metadata-result.bin") => {
+                    state.metadata.as_ref().is_some_and(|m| m.result.is_some())
+                }
                 Some("status-request.bin") => state.request.is_some(),
                 Some("status-result.bin") => state.result.is_some(),
                 Some("lookup-request.bin") => {
@@ -439,6 +456,20 @@ impl CaptureOperation {
         let state = self.check()?;
         let frame = state.candidate(event, &self.plan)?;
         match (event, evidence) {
+            (ledger::EventRecord::TransferBound { .. }, None) => {}
+            (
+                ledger::EventRecord::MetadataStarted { .. }
+                | ledger::EventRecord::MetadataSubmissionReserved,
+                None,
+            ) => {}
+            (
+                ledger::EventRecord::MetadataPrepared { request },
+                Some(("metadata-request.bin", bytes)),
+            ) if *request == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::MetadataSettled { result },
+                Some(("metadata-result.bin", bytes)),
+            ) if *result == ledger::EvidenceRecord::new(bytes) => {}
             (ledger::EventRecord::LookupSettled { result, .. }, Some((name, bytes)))
                 if name
                     == advance::lookup::result_name(
@@ -525,6 +556,15 @@ impl CaptureOperation {
         }
         if let Some(lookup) = &state.lookup {
             for (name, reference) in lookup.evidence() {
+                if reference.is_some() {
+                    open_optional(&self.directory, name)?
+                        .ok_or(CaptureError::Incomplete)?
+                        .sync_all()?;
+                }
+            }
+        }
+        if let Some(metadata) = &state.metadata {
+            for (name, reference) in metadata.evidence() {
                 if reference.is_some() {
                     open_optional(&self.directory, name)?
                         .ok_or(CaptureError::Incomplete)?

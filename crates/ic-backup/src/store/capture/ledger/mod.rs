@@ -14,6 +14,8 @@ use std::{
 };
 use thiserror::Error;
 
+mod metadata;
+use metadata::MetadataState;
 mod lookup;
 use lookup::LookupState;
 
@@ -125,6 +127,22 @@ impl EvidenceRecord {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum EventRecord {
+    TransferBound {
+        binding: super::transfer::TransferBindingRecord,
+    },
+    MetadataStarted {
+        admission: super::advance::CaptureMetadataAdmissionRecord,
+        snapshot_id: Vec<u8>,
+        timestamp: u64,
+        total_size: u64,
+    },
+    MetadataPrepared {
+        request: EvidenceRecord,
+    },
+    MetadataSubmissionReserved,
+    MetadataSettled {
+        result: EvidenceRecord,
+    },
     LookupSettled {
         root_key_der: Vec<u8>,
         result: EvidenceRecord,
@@ -182,6 +200,8 @@ pub(super) enum EventRecord {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct State {
+    pub transfer: Option<super::transfer::TransferBindingRecord>,
+    pub metadata: Option<MetadataState>,
     pub lookup: Option<LookupState>,
     pub snapshot: SnapshotState,
     pub phase: CaptureStatusPhase,
@@ -194,7 +214,29 @@ pub(super) struct State {
 }
 impl State {
     fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
-        if matches!(
+        if let EventRecord::TransferBound { binding } = event {
+            if self.transfer.is_some()
+                || !self
+                    .metadata
+                    .as_ref()
+                    .is_some_and(|m| m.phase == super::advance::CaptureMetadataPhase::Settled)
+                || binding.version != 1
+                || binding.data_calls == 0
+                || binding.data_calls > plan.request().limits.signing_requests
+                || binding.payload_ceiling > plan.request().limits.payload_bytes
+            {
+                return Err(LedgerError::Transition);
+            }
+            self.transfer = Some(binding.clone());
+        } else if matches!(
+            event,
+            EventRecord::MetadataStarted { .. }
+                | EventRecord::MetadataPrepared { .. }
+                | EventRecord::MetadataSubmissionReserved
+                | EventRecord::MetadataSettled { .. }
+        ) {
+            self.apply_metadata(event, plan)?;
+        } else if matches!(
             event,
             EventRecord::LookupStarted { .. }
                 | EventRecord::LookupPrepared { .. }
@@ -206,7 +248,7 @@ impl State {
         } else {
             self.apply_original(event, plan)?;
         }
-        self.lookup_budget(plan)
+        self.additional_budget(plan)
     }
     fn apply_original(
         &mut self,
@@ -322,6 +364,8 @@ impl State {
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
     let mut state = State {
+        transfer: None,
+        metadata: None,
         lookup: None,
         snapshot: SnapshotState::new(),
         phase: CaptureStatusPhase::Created,
@@ -586,6 +630,48 @@ impl SnapshotState {
                 self.phase = Phase::Settled;
             }
             _ => return Err(LedgerError::Transition),
+        }
+        Ok(())
+    }
+}
+
+impl State {
+    fn additional_budget(&self, plan: &CapturePlan) -> Result<(), LedgerError> {
+        if self.lookup.is_none() && self.metadata.is_none() {
+            return Ok(());
+        }
+        let original = self.admission.as_ref().ok_or(LedgerError::Transition)?;
+        let mut calls = vec![original];
+        if let Some(snapshot) = &self.snapshot.admission {
+            calls.extend([&snapshot.list, &snapshot.take]);
+        }
+        if let Some(metadata) = &self.metadata {
+            calls.push(&metadata.admission.call);
+        }
+        let lookup = self.lookup.as_ref().map(|l| &l.admission);
+        // Conservatively admit complete call allowances, including any admitted future take.
+        let network = calls
+            .iter()
+            .map(|a| u64::from(a.prepare_requests) + u64::from(a.submit_requests))
+            .sum::<u64>()
+            + lookup.map_or(0, |a| u64::from(a.prepare_requests) + 1);
+        let bytes = initial(plan)?.len() as u64
+            + u64::from(self.transfer.is_some()) * (FRAME_BYTES as u64 + 36)
+            + (calls.len() as u64 + u64::from(lookup.is_some())) * 4 * (FRAME_BYTES as u64 + 36)
+            + calls
+                .iter()
+                .map(|a| u64::from(a.request_bytes) + u64::from(a.result_bytes))
+                .sum::<u64>()
+            + lookup.map_or(0, |a| {
+                u64::from(a.request_bytes) + u64::from(a.result_bytes)
+            });
+        let limits = &plan.request().limits;
+        if limits.observations < u32::from(lookup.is_some())
+            || calls.len() as u32 + u32::from(lookup.is_some()) > limits.signing_requests
+            || network > u64::from(limits.network_requests)
+            || bytes > limits.evidence_bytes
+        {
+            return Err(LedgerError::Transition);
         }
         Ok(())
     }
