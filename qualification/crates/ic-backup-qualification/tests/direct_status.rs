@@ -29,6 +29,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+mod lookup;
 mod lost_reply;
 
 fn now() -> u64 {
@@ -98,22 +99,27 @@ impl CaptureApplicationGuard for FixtureGuard {
 
 #[test]
 fn stopped_canister_snapshot_and_offline_cold_replay() {
-    run_fixture(false);
+    run_fixture(false, false);
 }
 
 #[test]
 fn surviving_take_reply_settles_after_interruption_and_server_shutdown() {
-    run_fixture(true);
+    run_fixture(true, false);
 }
 
-fn run_fixture(interrupt: bool) {
+#[test]
+fn durable_take_lookup_retains_observation_and_replays_offline() {
+    run_fixture(true, true);
+}
+
+fn run_fixture(interrupt: bool, durable: bool) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
         .unwrap();
     let assets = std::env::var_os("IC_BACKUP_TESTKIT_DIRECTORY")
         .map(PathBuf::from)
-        .unwrap_or_else(|| workspace.join("../.tools/testkit"));
+        .unwrap_or_else(|| workspace.parent().unwrap().join(".tools/testkit"));
     // Never downloads. The Make setup target explicitly provisions this Testkit release.
     let binary = server_assets::check(&assets).expect("run make install-testkit-server");
     let evidence = workspace.join("target/fixtures").join(format!(
@@ -126,10 +132,15 @@ fn run_fixture(interrupt: bool) {
         .enable_all()
         .build()
         .unwrap();
-    rt.block_on(status_fixture(&evidence, binary, interrupt));
+    rt.block_on(status_fixture(&evidence, binary, interrupt, durable));
 }
 
-async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: bool) {
+async fn status_fixture(
+    evidence: &std::path::Path,
+    binary: PathBuf,
+    interrupt: bool,
+    durable: bool,
+) {
     let mut owned = PocketIcStartupConfig::Spawn {
         server_binary: binary,
         timeout: Duration::from_secs(30),
@@ -204,8 +215,8 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: 
             extent_bytes: 4096,
             network_requests: 4,
             observations: 1,
-            signing_requests: 3,
-            evidence_bytes: 1024 * 1024,
+            signing_requests: 4,
+            evidence_bytes: 2 * 1024 * 1024,
         },
     })
     .unwrap();
@@ -276,6 +287,36 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: 
     assert_eq!(snapshot_view.network_requests_reserved, 3);
     assert_eq!(calls.load(Ordering::SeqCst), 3);
     assert_ne!(taken.id, existing.id);
+    let lookup_transport = StatusHttpTransport::new(
+        endpoint.as_str(),
+        network,
+        root.clone(),
+        Duration::from_secs(30),
+    )
+    .unwrap();
+    let durable_admission = if durable {
+        Some(
+            lookup::qualify_durable(
+                &mut operation,
+                &lookup_transport,
+                &admission,
+                evidence,
+                &taken,
+            )
+            .await,
+        )
+    } else {
+        lookup::qualify(
+            &lookup_transport,
+            operation.inspect().unwrap(),
+            &admission,
+            provider.take_request(),
+            evidence,
+            &taken,
+        )
+        .await;
+        None
+    };
     let inventory = pic
         .list_canister_snapshots(canister, Some(native_sender))
         .await
@@ -319,16 +360,31 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: 
                 .unwrap(),
             SnapshotProgress::SubmissionPending(CaptureCall::TakeSnapshot)
         );
-        let original = lost_reply::load(&evidence.join("surviving-reply"), admission.result_bytes);
-        reopened
-            .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
-            .unwrap();
-        let ledger = evidence.join("store/operations/00000000000000000000000000000001/ledger.bin");
-        let settled = fs::read(&ledger).unwrap();
-        reopened
-            .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
-            .unwrap();
-        assert_eq!(fs::read(&ledger).unwrap(), settled);
+        if durable {
+            reopened.settle_capture_lookup(&lookup_transport).unwrap();
+            let ledger =
+                evidence.join("store/operations/00000000000000000000000000000001/ledger.bin");
+            let settled = fs::read(&ledger).unwrap();
+            drop(reopened);
+            reopened = store
+                .open_capture("00000000000000000000000000000001", digest)
+                .unwrap();
+            reopened.settle_capture_lookup(&lookup_transport).unwrap();
+            assert_eq!(fs::read(&ledger).unwrap(), settled);
+        } else {
+            let original =
+                lost_reply::load(&evidence.join("surviving-reply"), admission.result_bytes);
+            reopened
+                .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
+                .unwrap();
+            let ledger =
+                evidence.join("store/operations/00000000000000000000000000000001/ledger.bin");
+            let settled = fs::read(&ledger).unwrap();
+            reopened
+                .settle_capture_result(CaptureCall::TakeSnapshot, &original, &provider)
+                .unwrap();
+            assert_eq!(fs::read(&ledger).unwrap(), settled);
+        }
         snapshot_view.phase = CaptureSnapshotPhase::Settled;
     }
     assert_eq!(
@@ -339,9 +395,18 @@ async fn status_fixture(evidence: &std::path::Path, binary: PathBuf, interrupt: 
         SnapshotProgress::Captured(taken)
     );
     assert_eq!(reopened.inspect_snapshot().unwrap(), snapshot_view);
+    if let Some(lookup_admission) = durable_admission {
+        lookup::replay_durable(
+            &mut reopened,
+            &lookup_transport,
+            &lookup_admission,
+            evidence,
+        )
+        .await;
+    }
     assert_eq!(calls.load(Ordering::SeqCst), 3);
     if interrupt {
-        fs::write(evidence.join("settlement-verified.txt"), b"real take reply survived provider interruption; settled with server absent and guard revoked; no extra signatures or submissions
+        fs::write(evidence.join("settlement-verified.txt"), b"original take settled from retained original or separately reserved lookup proof; server absent and guard revoked; no extra signatures or submissions
 ").unwrap();
     }
     fs::write(evidence.join("verified.txt"), b"certified status, list and take; original snapshot and stopped module preserved; three signatures and reserved HTTP requests; cold replay with server absent\n").unwrap();

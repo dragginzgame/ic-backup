@@ -4,10 +4,13 @@ mod advance;
 mod ledger;
 pub use advance::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
-    CaptureLookupError, CaptureLookupPolicy, CaptureObservation, CaptureObservationError,
-    CaptureObservationPolicy, CaptureProvider, CaptureSettlementError, CaptureSigner,
-    CaptureSigningRequest, CaptureSnapshotPhase, CaptureSnapshotView, CaptureStatusView,
-    CaptureTiming, DirectCaptureError, DirectCaptureProvider, PreparedCaptureCall, PreparedStatus,
+    CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupError,
+    CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy, CaptureLookupPhase,
+    CaptureLookupPolicy, CaptureLookupProgress, CaptureLookupSettlementError, CaptureLookupSigner,
+    CaptureLookupView, CaptureObservation, CaptureObservationError, CaptureObservationPolicy,
+    CaptureProvider, CaptureSettlementError, CaptureSigner, CaptureSigningRequest,
+    CaptureSnapshotPhase, CaptureSnapshotView, CaptureStatusView, CaptureTiming,
+    DirectCaptureError, DirectCaptureProvider, PreparedCaptureCall, PreparedStatus,
     SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress, StatusAdmissionRecord,
     StatusAdvanceError, StatusCertificateError, StatusEvidence, StatusHttpError,
     StatusHttpTransport, StatusProgress, StatusProvider, StatusRequestError,
@@ -48,7 +51,8 @@ use thiserror::Error;
 /// Held original capture intent. Dropping releases process exclusion, not target ownership.
 ///
 /// Direct-host status and snapshot continuation use durable attempt reservations.
-/// There is no reconciliation, download, completion or owner-release API yet.
+/// Retained original replies and terminal lookup evidence can settle pending calls.
+/// There is no download, completion or owner-release API yet.
 #[derive(Debug)]
 pub struct CaptureOperation {
     store: Directory,
@@ -120,13 +124,27 @@ impl CaptureOperation {
                 self.evidence(name, reference)?;
             }
         }
+        if let Some(lookup) = &state.lookup {
+            for (name, reference) in lookup.evidence() {
+                if let Some(reference) = reference {
+                    self.evidence(name, reference)?;
+                }
+            }
+        }
         exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
-        for entry in self.directory.entries(9)? {
+        for entry in self.directory.entries(11)? {
             let entry = entry?;
             let admitted = match entry.name.to_str() {
                 Some("lock" | "plan.json" | "ledger.bin") => true,
                 Some("status-request.bin") => state.request.is_some(),
                 Some("status-result.bin") => state.result.is_some(),
+                Some("lookup-request.bin") => {
+                    state.lookup.as_ref().is_some_and(|s| s.request.is_some())
+                }
+                Some("lookup-certificate.bin") => state
+                    .lookup
+                    .as_ref()
+                    .is_some_and(|s| s.certificate.is_some()),
                 Some(name) => state
                     .snapshot
                     .evidence()
@@ -421,6 +439,31 @@ impl CaptureOperation {
         let state = self.check()?;
         let frame = state.candidate(event, &self.plan)?;
         match (event, evidence) {
+            (ledger::EventRecord::LookupSettled { result, .. }, Some((name, bytes)))
+                if name
+                    == advance::lookup::result_name(
+                        state
+                            .lookup
+                            .as_ref()
+                            .ok_or(CaptureError::Incomplete)?
+                            .admission
+                            .call,
+                    )
+                    && *result == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::LookupStarted { .. }
+                | ledger::EventRecord::LookupSubmissionReserved,
+                None,
+            ) => {}
+            (
+                ledger::EventRecord::LookupPrepared { request },
+                Some(("lookup-request.bin", bytes)),
+            ) if *request == ledger::EvidenceRecord::new(bytes) => {}
+            (
+                ledger::EventRecord::LookupObserved { certificate },
+                Some(("lookup-certificate.bin", bytes)),
+            ) if *certificate == ledger::EvidenceRecord::new(bytes) => {}
+
             (ledger::EventRecord::SnapshotPrepared { call, request, .. }, Some((name, bytes)))
                 if name == advance::snapshots::names(*call)?.0
                     && *request == ledger::EvidenceRecord::new(bytes) => {}
@@ -478,6 +521,15 @@ impl CaptureOperation {
                 open_optional(&self.directory, name)?
                     .ok_or(CaptureError::Incomplete)?
                     .sync_all()?;
+            }
+        }
+        if let Some(lookup) = &state.lookup {
+            for (name, reference) in lookup.evidence() {
+                if reference.is_some() {
+                    open_optional(&self.directory, name)?
+                        .ok_or(CaptureError::Incomplete)?
+                        .sync_all()?;
+                }
             }
         }
         self.directory.sync()?;

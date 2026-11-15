@@ -71,6 +71,12 @@ pub enum StatusHttpError {
 }
 
 impl StatusHttpTransport {
+    /// Exact HTTP route/trust/timeout commitment to retain before lookup signing.
+    #[must_use]
+    pub fn lookup_commitment(&self) -> [u8; 32] {
+        self.commitment()
+    }
+
     pub(super) fn admit_plan(&self, plan: &CapturePlan) -> Result<(), StatusHttpError> {
         if plan.request().target.network != self.network
             || plan.request().trust_root != Sha256Digest::compute(&self.root_key_der)
@@ -211,8 +217,36 @@ impl StatusHttpTransport {
             "/api/v3/canister/{}/call",
             plan.request().target.canister.to_text()
         ));
-        let body = prepared.envelope.clone();
         let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
+        let maximum = admission.result_bytes as usize;
+        let bytes = self
+            .post_cbor(url, prepared.envelope.clone(), deadline, maximum)
+            .await?;
+        let TransportCallResponse::Replied { certificate } =
+            decode_call_response(&bytes, maximum).map_err(|_| StatusHttpError::Response)?
+        else {
+            return Err(StatusHttpError::NoCertificate);
+        };
+        let evidence = super::certificate::call_certificate_evidence(
+            plan,
+            admission,
+            prepared,
+            &certificate,
+            &self.root_key_der,
+            call,
+        )
+        .map_err(StatusHttpError::Authentication)?;
+        remaining(deadline)?;
+        Ok(evidence)
+    }
+
+    async fn post_cbor(
+        &self,
+        url: Url,
+        body: Vec<u8>,
+        deadline: u64,
+        maximum: usize,
+    ) -> Result<Vec<u8>, StatusHttpError> {
         let timeout = remaining(deadline)?.min(self.timeout);
         let response = self
             .client
@@ -241,7 +275,6 @@ impl StatusHttpTransport {
         {
             return Err(StatusHttpError::Response);
         }
-        let maximum = admission.result_bytes as usize;
         let bytes = read_body(response, maximum)
             .await
             .map_err(|error| match error {
@@ -251,26 +284,11 @@ impl StatusHttpTransport {
                 ReadError::Transport(_) | ReadError::Allocation(_) => StatusHttpError::Uncertain,
             })?;
         remaining(deadline)?;
-        let TransportCallResponse::Replied { certificate } =
-            decode_call_response(&bytes, maximum).map_err(|_| StatusHttpError::Response)?
-        else {
-            return Err(StatusHttpError::NoCertificate);
-        };
-        let evidence = super::certificate::call_certificate_evidence(
-            plan,
-            admission,
-            prepared,
-            &certificate,
-            &self.root_key_der,
-            call,
-        )
-        .map_err(StatusHttpError::Authentication)?;
-        remaining(deadline)?;
-        Ok(evidence)
+        Ok(bytes)
     }
 }
 
-fn remaining(deadline: u64) -> Result<Duration, StatusHttpError> {
+pub(super) fn remaining(deadline: u64) -> Result<Duration, StatusHttpError> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|_| StatusHttpError::Deadline)?;
@@ -325,3 +343,6 @@ fn origin(endpoint: &str) -> Result<Url, StatusHttpError> {
     }
     Ok(url)
 }
+
+mod lookup;
+pub use lookup::{CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy};

@@ -59,13 +59,19 @@ original authority and leaves application-policy evaluation to continuation.
 `observe_capture_certificate` separately verifies original-request certificates
 under explicit observation windows. `authenticate_capture_lookup` checks signed
 read-state requests against the original sender/request ID, exact lookup expiry
-and single status path. These are local helpers; live lookup and durable
-observation settlement remain unfinished.
+and single status path. `StatusHttpTransport::lookup_once` performs one bounded
+read-state request under separately reserved caller authority and returns the exact
+authenticated certificate and projected outcome. `advance_lookup` reserves one lookup in the original journal, retains its signed
+request and certificate, and replays the observation offline. `inspect_lookup`
+reports its separate spending. `settle_capture_lookup` settles a terminal retained
+observation locally, preserving its separate time policy and original spending.
+Continuation reauthenticates that evidence and still requires live permission
+before dependent effects.
 Private PocketIC fixtures qualify status, snapshot creation and offline reply recovery; Canic's process and maintenance adapters remain separate integration work. See the [first-call contract](docs/architecture/capture-intent.md#durable-initial-status).
-Download, remote original-request observation, completion writing, full bundle verification, restore and CLI
+Download, completion writing, full bundle verification, restore and CLI
 workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Publication remains disabled; `0.101.3` is an
+and the public Rustdoc example. Publication remains disabled; `0.101.4` is an
 unpublished development version following the legacy `0.67.x` line.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains

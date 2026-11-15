@@ -860,10 +860,9 @@ rejection bytes have no derived Debug output.
 Observation windows can authenticate a later certificate without changing the
 original envelope, request ID, expiry or submission-time policy. That does not
 make it acceptable to the original `settle_capture_result` path: its unchanged
-provider still requires the original timing. Persisting a newly observed result
-needs the pending observation workflow and a distinct retained authority/evidence
-association. No observation record, mutable policy replacement or automatic
-conversion to an original receipt is introduced here.
+provider still requires the original timing. The durable single-lookup workflow below now retains the observation with its
+separate authority and evidence. The explicit settlement method below binds terminal evidence to the original
+call without changing its original timing policy.
 
 The focused observation/settlement legacy review above remains applicable: exact
 original association and explicit unresolved outcomes are retained; inventory-delta
@@ -879,10 +878,9 @@ Adopted Platform 0.33.7 supplies the strict read-state content reader requested 
 [Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167).
 Its raw-input cap does not establish a work/allocation quota or authenticate
 signatures, exact request-status paths, sender, deadlines or trust roots.
-Backup still needs bounded signing, exact-path admission, independently spent
-network/observation allowances and retained observation settlement, followed by
-actual read-state ingress qualification with PocketIC. Supplier adoption alone
-implements none of those flows.
+Backup owns bounded signing, exact-path admission and independently spent
+network/observation allowances in the durable workflow below. Original-call settlement below retains the distinct observation source; supplier
+adoption alone implements none of those flows.
 
 ## Strict signed recovery lookup admission
 
@@ -922,3 +920,165 @@ carry exact original binding, unchanged bytes and refusal cases into the current
 implementation. They exercise real signatures for both keys and all three calls,
 including valid signatures over wrong paths/expiry/senders and ambiguous CBOR.
 These tests do not establish actual read-state ingress or durable observation.
+
+## One-shot read-state transport
+
+`StatusHttpTransport::lookup_once` uses the existing configured HTTP client and
+shared bounded CBOR response reader. `CaptureLookupHttpPolicy` binds the exact
+lookup envelope/expiry, observation certificate/delegation windows and absolute
+deadline. Invalid windows/bounds, original or lookup signatures, network/root and
+elapsed deadlines refuse before connection. Effective routing is always the
+original target's `/api/v2/canister/<target>/read_state` endpoint. The connection
+and body timeout is bounded by the configured timeout, lookup expiry and deadline;
+absolute time is checked after body read and certificate authentication.
+
+The complete encoded response uses the observation evidence cap, no larger than
+the original result allowance. Platform decodes its certificate; the existing
+observer checks original root/target/request identity and combined proof/result
+bounds. `CaptureLookupEvidence` retains the exact certificate and distinct outcome.
+There is no management dispatch, signing, polling, redirect, retry, replacement
+request or journal mutation. An expired original call may be observed using a
+separately approved lookup; its original expiry remains unchanged.
+
+This helper is not the durable workflow. Before calling it, integrations must
+retain original association, policy and exact request bytes, reserve finite
+signing/network/observation authority and admit live read permission/freshness.
+The transport does not inspect or replenish reservations. Loss of its response
+stays spent. Returning a certificate does not settle the original call or permit
+dependent work, and does not bypass original settlement timing.
+
+Focused legacy review reread the frozen shared submission owner linked above:
+it admits original context before dispatch, retains signed ingress first, performs
+one send and leaves lost replies uncertain. The new path preserves these ordering
+requirements with external reservations, reuses Backup's existing client/reader
+and authenticates read-state proof directly. Legacy Agent signing and implicit
+polling are not imported; no legacy code was copied. Earlier original-association
+and reservation regressions/history remain the relevant recovery rationale.
+
+[Loopback cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/lookup_tests.rs)
+qualify exact route/body for both keys and all three calls, original expired
+requests, pre-connection refusals, single attempts after disconnect/redirect,
+response caps, compressed/malformed proof refusal, stalled bodies and processing
+without polling. Both actual IC fixtures additionally retrieve the real take reply,
+compare its full snapshot DTO, retain lookup request/policy/certificate and verify
+that the original journal remains byte-identical. Their extra signature/read is
+explicitly reserved by fixture-owned files within a four-signature/four-network/
+one-observation plan; product journal counters still report only three original
+calls. This is real read-state transport qualification, not production durable
+observation, crash recovery of the lookup or a completed backup.
+
+Lookup cancellation qualification waits until the loopback server has received
+one complete request before dropping the future. The server observes connection
+closure, then keeps accepting while the runtime stays active; no second request
+appears. Separate stalled-body cases make lookup expiry and explicit deadline each
+expire before the configured HTTP timeout. These establish transport cancellation
+and time bounds, not persistence of spent observation authority after process death.
+
+## Durable single lookup
+
+`CaptureOperation::advance_lookup` composes the authenticators and one-shot HTTP
+transport with the original ledger. `CaptureLookupAdmissionRecord` binds the
+pending status/list/take, transport and signer commitments, read-permission
+witness, exact deadlines/expiry, byte caps and observation time policy. The
+integration's `CaptureLookupSigner` checks live read permission locally and signs
+only the exact original request-status path. It owns external signer custody and
+must enforce its declared network/byte limits; the library bounds the signing
+future and requires a preparation deadline at most 300 seconds ahead.
+
+The four new events preserve original transition ordinals and record bytes:
+
+| Event | Retained state and effect allowance |
+| --- | --- |
+| `LookupStarted` | Exact admission; consumes one signing invocation, its network allowance and one observation before signing. |
+| `LookupPrepared` | Create-only `lookup-request.bin` and its length/hash; no HTTP yet. |
+| `LookupSubmissionReserved` | Consumes one HTTP request before sending the retained bytes. |
+| `LookupObserved` | Create-only `lookup-certificate.bin` and its length/hash, authenticated before persistence and reporting. |
+
+One lookup is supported per operation, even when the plan permits more. Admission
+conservatively fits complete original-call allowances, four frames per original
+call/lookup and all request/result caps within immutable plan limits. Later
+snapshot admission cannot reuse lookup allowance. The result cap cannot exceed
+the original call's cap. `inspect_lookup` reports this lookup's separate spending;
+original status/snapshot views continue to report only their original calls.
+
+Failed or cancelled signing remains `SigningPending`. A prepared lookup may
+continue with exactly its retained bytes and fresh read permission, without
+resigning. Lost HTTP replies remain `LookupPending`, with no second dispatch.
+Observed replay verifies the retained request and certificate against original
+trust and retained observation windows without a signer, live permission, clock
+or server. This also works after separate settlement of a surviving original
+reply. Exact admission changes refuse; neither an observed reply nor an absent,
+processing, done or unknown result settles the original call, grants new mutation
+authority or permits dependent effects.
+
+All files use existing custody, create-only evidence and chained sync rules.
+Uncertain writes invalidate the handle. Complete uncertain frames remain spent
+after reopen; partial tails and orphan/damaged evidence refuse without repair.
+Old journals remain readable without rewriting; older readers refuse the new
+event variants. No storage reset or journal migration is introduced.
+
+The focused legacy review revisited the frozen
+[attempt journal](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/attempt_journal/mod.rs)
+alongside the observation association, regression and history anchors above.
+It preserves finite spending, original evidence association and unresolved lost
+replies. The new library uses four events in its existing chain, without importing
+legacy observation graphs, retry machinery or Agent-owned signing. No code was copied.
+
+[Native durable lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/http_tests/durable_lookup_tests.rs)
+cover eight groups: offline replay, failed/cancelled/invalid signing, exact prepared
+continuation and lost HTTP, exhausted budgets, damaged evidence, complete/partial
+uncertain writes at all four boundaries, later admission respecting spent allowance,
+and pre-reservation binding/permission/time refusal. The third
+[actual IC fixture](../../qualification/crates/ic-backup-qualification/tests/direct_status.rs)
+observes a real pending take through this workflow, checks its complete snapshot
+DTO and unchanged original call state, then settles from the retained lookup certificate after server shutdown and
+signer revocation, reopens again and replays without new effects. These checks do not establish physical
+power-loss behavior, external signer process custody or a complete local backup.
+
+## Settlement from retained lookup evidence
+
+`settle_capture_lookup` requires the already observed lookup and its exact original
+transport commitment. It reauthenticates the original signed call, exact signed
+lookup and retained certificate under the lookup's retained time policy. Only a
+certified reply or rejection can settle. Received, processing, done, absent and
+unknown outcomes refuse without writes or new allowance. It reads no clock and
+invokes no signer, application guard or network.
+
+`LookupSettled` records the original plan-bound 133-byte root key and the result
+file's length/hash in the same journal. This event replaces the original call's
+settlement frame, retaining its existing status/list/take ordinal and result file;
+it does not add another attempt or increase the four-frame-per-call allowance.
+The result retains the exact certificate and projected response under the original
+result cap. The lookup's original policy, request and proof remain referenced.
+Admission checks root length/hash and the exact pending original call before any
+write; the existing evidence sync, uncertain-write and orphan refusal rules apply.
+
+Original-call replay recognizes this retained observation source, reauthenticates
+its certificate under the separate window, and compares exact response, proof and
+rejection fields. It never substitutes the new window into the original request.
+Ordinary original-reply settlement retains its original provider authentication.
+Repeated lookup settlement is local and byte-identical; it cannot replace a result
+from the ordinary path, even if both describe the same outcome. Settling a rejection
+or malformed application reply is not application success. Existing stopped-state,
+list/capacity and new-snapshot checks remain in continuation. A list recovered under
+revoked live permission cannot reserve or prepare a take.
+
+This reuses the frozen legacy observation/settlement identity and regression lessons
+linked above: bind the exact original authority and evidence, preserve spending,
+and never infer a result from inventory cardinality. Here an authenticated original
+request-status certificate supplies attribution directly; no legacy inventory claim
+or attribution graph is imported. No legacy code was copied.
+
+Six new native groups exercise distinct original/observation windows, cold replay,
+policy-invalid replies, nonterminal refusal, complete/partial/orphan settlement
+writes, conflicting roots/results, recovered-list live admission and rejection.
+The actual IC pending-take fixture now settles from its retained lookup proof after
+server shutdown and guard revocation, then reopens again and returns the complete
+snapshot DTO without further signing or submission. The surviving-original-reply
+fixture remains separate. Physical power loss and external signer custody remain
+outside this qualification.
+
+The new public method/error are additive, while new `LookupSettlement` variants in
+status/snapshot errors require downstream exhaustive matches to be updated. Review
+that Rust API change before publication; the development workspace remains private.
+Older readers refuse the new event; existing journals need no rewrite or reset.

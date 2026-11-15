@@ -26,7 +26,7 @@ not required merely to establish the library. The implemented inventory has a
 bounded manifest reader, initial operation records and a pure transfer planner.
 The direct provider and private PocketIC qualification cover status, snapshot
 list/take, surviving reply settlement and offline replay. Native injected providers
-prove persistence ordering only; remote observation, download and restore remain unfinished.
+prove persistence ordering only; complete download and restore remain unfinished.
 
 The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
@@ -34,6 +34,9 @@ the new implementation from legacy without implying maturity or compatibility.
 The GitHub-only 0.101.2 checkpoint includes the direct provider and durable snapshot
 capture. The 0.101.3 GitHub checkpoint adds retained-reply recovery and local
 lookup/certificate authentication with the reviewed dependency refresh.
+Local unpublished 0.101.4 now retains one durable recovery lookup per operation.
+Terminal retained observations now settle locally with distinct timing and
+effect-free replay; dependent actions still require live application admission.
 The 0.101 minor accounts for Host 0.79 public Rust type identities. The pending
 patch opens compatible development; it does not claim a finished capture/restore
 product or pre-authorize a breaking API change.

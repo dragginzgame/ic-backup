@@ -380,3 +380,23 @@ private and add its workspace only with the real fixtures. Acceptance must cover
 - An independent Rust consumer and a Canic adapter contract using external signing;
   actual manager-controlled capture/restore additionally requires the executor,
   its two-hop failure tests and Canic's fenced reopening journey.
+
+## Recovery continuation after the 0.101.3 checkpoint
+
+The post-push review of `d8955cf` inspected strict lookup admission, the shared
+signature verifier, exports, direct-provider callers, regression tests and scope
+claims. No actionable defect or duplicate policy owner was found in that delivered
+scope. The missing durable workflow is an explicit limitation, not an implemented
+capability inferred from the two local authentication helpers.
+
+The implemented [single-lookup workflow](../architecture/capture-intent.md#durable-single-lookup)
+retains one ledger owner. Existing status/list/take
+events use fixed transition ordinals (1–12); inserting observations must preserve
+those original bytes and distinguish mutation ordinals from observation attempts.
+Do not renumber existing records, append public arbitrary events or add a second
+journal. Observation allowance already belongs to the original plan; signing,
+network requests and retained proof must also fit its cumulative limits. A pending
+lookup cannot be retried merely because its response was lost. The new event encoding and replay admission have native interruption tests and
+a real pending-take read-state fixture. Explicit original-call settlement from retained terminal evidence now records
+its observation source and preserves historical authentication. An observation
+alone still authorizes no dependent effect.

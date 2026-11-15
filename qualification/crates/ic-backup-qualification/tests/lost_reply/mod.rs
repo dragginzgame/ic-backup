@@ -14,8 +14,12 @@ pub(super) struct LostReply<P> {
     inner: P,
     directory: PathBuf,
     interrupt: bool,
+    take: Option<PreparedStatus>,
 }
 impl<P> LostReply<P> {
+    pub fn take_request(&self) -> &PreparedStatus {
+        self.take.as_ref().expect("prepared take")
+    }
     pub fn new(inner: P, directory: PathBuf, interrupt: bool) -> Self {
         fs::DirBuilder::new()
             .mode(0o700)
@@ -25,6 +29,7 @@ impl<P> LostReply<P> {
             inner,
             directory,
             interrupt,
+            take: None,
         }
     }
 }
@@ -129,6 +134,14 @@ impl<P: CaptureProvider + Send> CaptureProvider for LostReply<P> {
         call: CaptureCall,
         r: &PreparedStatus,
     ) -> Result<StatusEvidence, ()> {
+        if call == CaptureCall::TakeSnapshot {
+            self.take = Some(PreparedStatus {
+                request_id: r.request_id,
+                expires_ns: r.expires_ns,
+                envelope: r.envelope.clone(),
+                observation: r.observation.clone(),
+            });
+        }
         let evidence = self
             .inner
             .submit_call(p, a, call, r)

@@ -14,6 +14,9 @@ use std::{
 };
 use thiserror::Error;
 
+mod lookup;
+use lookup::LookupState;
+
 const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
 const FRAME_BYTES: usize = 16 * 1024;
 const FRAMES: u32 = 65_536;
@@ -122,6 +125,20 @@ impl EvidenceRecord {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum EventRecord {
+    LookupSettled {
+        root_key_der: Vec<u8>,
+        result: EvidenceRecord,
+    },
+    LookupStarted {
+        admission: super::advance::CaptureLookupAdmissionRecord,
+    },
+    LookupPrepared {
+        request: EvidenceRecord,
+    },
+    LookupSubmissionReserved,
+    LookupObserved {
+        certificate: EvidenceRecord,
+    },
     SnapshotStarted {
         sequence: u32,
         admission: SnapshotAdmissionRecord,
@@ -165,6 +182,7 @@ pub(super) enum EventRecord {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct State {
+    pub lookup: Option<LookupState>,
     pub snapshot: SnapshotState,
     pub phase: CaptureStatusPhase,
     pub admission: Option<StatusAdmissionRecord>,
@@ -176,6 +194,25 @@ pub(super) struct State {
 }
 impl State {
     fn apply(&mut self, event: &EventRecord, plan: &CapturePlan) -> Result<(), LedgerError> {
+        if matches!(
+            event,
+            EventRecord::LookupStarted { .. }
+                | EventRecord::LookupPrepared { .. }
+                | EventRecord::LookupSubmissionReserved
+                | EventRecord::LookupObserved { .. }
+                | EventRecord::LookupSettled { .. }
+        ) {
+            self.apply_lookup(event, plan)?;
+        } else {
+            self.apply_original(event, plan)?;
+        }
+        self.lookup_budget(plan)
+    }
+    fn apply_original(
+        &mut self,
+        event: &EventRecord,
+        plan: &CapturePlan,
+    ) -> Result<(), LedgerError> {
         if matches!(
             event,
             EventRecord::SnapshotStarted { .. }
@@ -285,6 +322,7 @@ impl State {
 fn replay(reader: impl Read, plan: &CapturePlan) -> Result<State, LedgerError> {
     let mut frames = Frames::new(reader, seed(plan), Bounds::for_plan(plan));
     let mut state = State {
+        lookup: None,
         snapshot: SnapshotState::new(),
         phase: CaptureStatusPhase::Created,
         admission: None,

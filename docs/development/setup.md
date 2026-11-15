@@ -19,7 +19,7 @@ suite for the earlier 0.77.3 adoption remain under
 `target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
-The unpublished 0.101.3 GitHub checkpoint includes local recovery authentication. The direct capture provider composes status, list and take through the existing helpers.
+Unpublished 0.101.4 development follows the 0.101.3 recovery-authentication checkpoint. The direct capture provider composes status, list and take through the existing helpers.
 Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
@@ -38,10 +38,10 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.44.1 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.44.3 is adopted from its registry
 archive with SHA-256
-`5b0da6eee9b9d4b95fc4e92fe86c54b90372a6babee661aa2e70f2b084082cc7`,
-source `d9072adb355612043dbaac06960e60a6aea8a55e`. Both workspaces declare
+`8a9bc7b6827044baac8134cada7ee6bc31f86c70beec9608d1d39d911eba15e1`,
+source `69ea17e551f33254d87de9824c30f2e74536eb10`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs nine selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -61,7 +61,7 @@ status. `deps-update` explicitly updates Cargo dependencies and can use the
 network. To update one dependency, use `DEPENDENCY_PACKAGE=name`; add
 `DEPENDENCY_PRECISE=version` for a specific compatible version. The exact tooling
 pin still controls its selection. `toko-cloc` and `toko-cloc -d 0` produce the same
-crate-level report; `-d 1` expands modules. Both run the installed PATH reporter; without the launcher,
+compact totals; `-d 1` adds crate rows and `-d 2` adds top-level modules. Both run the installed PATH reporter; without the launcher,
 use `bash vendor/toko-tooling/scripts/dev/toko-cloc -d 0` after host-tool setup.
 
 Focused checks are `make toko-tooling-check`, `make doc-links-check`,
@@ -240,3 +240,46 @@ requests; use the full `store::capture::advance` filter for that shared boundary
 `target/evidence/capture-lookup/` retains focused and full capture checks, lints,
 documentation and existing actual IC fixture runs. Synthetic signed lookups qualify
 local admission only; actual read-state and durable observation remain pending.
+
+The 0.44.2 refresh changes only the selected baseline and ownership receipt;
+all executable bytes remain identical to 0.44.1. Both workspace pins/locks are
+updated without changing other suppliers. Registry checksum, exporter preview,
+update and focused checks are retained under `target/evidence/tooling-refresh-next/`.
+Existing product/IC qualification remains applicable; this documentation-only
+supplier change does not justify rerunning those suites.
+
+`store::capture::advance::tests::http_tests::lookup_tests` selects one-shot lookup
+transport checks. Evidence is under `target/evidence/lookup-http/`; the full advance
+suite also checks the shared HTTP reader's original call behavior. Both maintained
+IC fixtures now perform one additional externally reserved read-state request and
+retain its policy, exact request, certificate and projected reply. Their production
+ledger remains unchanged by lookup; native durable observation is still pending.
+
+Tooling 0.44.3 preserves the baseline and updates the two selected LOC reporter
+files. Default/zero depth now shows totals, depth one shows crates and depth two
+shows top-level modules; JSON counting is unchanged. The canonical preview/update
+and local depth checks are under `target/evidence/tooling-refresh-latest/`.
+That directory also retains six lookup HTTP regression groups and strict Clippy:
+new cases acknowledge server receipt before dropping a lookup, verify connection
+closure with the listener/runtime still active, and independently bound stalled
+reads by lookup expiry and deadline. No runtime dependency or production code
+changed in this follow-up; earlier actual IC qualification is reused.
+
+The durable single-lookup continuation supersedes the earlier pending-accounting
+notes above. `store::capture::advance::tests::http_tests::durable_lookup_tests`
+selects eight native groups covering conserved spending, exact replay, live
+admission and uncertain writes at all four new transitions. Evidence under
+`target/evidence/durable-lookup/` records 112 advance tests, 10 ledger tests,
+16 custody tests, 18 documentation examples, strict product/private Clippy and
+warning-denying Rustdoc. All three actual IC fixtures pass; the new fixture uses
+product journal reservations for pending-take lookup and replays retained proof
+without a signer or server. The subsequent settlement batch below qualifies original-call recovery from
+this new proof.
+
+The retained-observation settlement batch uses the same native filters plus all
+three actual IC fixtures. `target/evidence/lookup-settlement/` retains 118 advance,
+10 ledger and 16 custody tests, 19 documentation examples, strict product/private
+Clippy, warning-denying Rustdoc and format/link checks. The pending-take fixture now
+settles from the lookup proof after shutdown and reopens again for offline replay.
+Direct Cargo invocation uses a physical default Testkit asset path without `..`;
+Make and an explicit `IC_BACKUP_TESTKIT_DIRECTORY` keep their existing selection.

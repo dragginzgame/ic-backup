@@ -34,7 +34,10 @@ pub use direct::{
     CaptureApplicationGuard, CaptureSigner, CaptureSigningRequest, CaptureTiming,
     DirectCaptureError, DirectCaptureProvider,
 };
-pub use http::{StatusHttpError, StatusHttpTransport};
+pub use http::{
+    CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy, StatusHttpError,
+    StatusHttpTransport,
+};
 pub use request::{
     CaptureLookupError, CaptureLookupPolicy, StatusRequestError, authenticate_capture_lookup,
     authenticate_status_request,
@@ -179,6 +182,9 @@ pub enum StatusProgress {
 /// Status continuation failure. No error grants retry or fresh spending authority.
 #[derive(Debug, Error)]
 pub enum StatusAdvanceError<E> {
+    /// Retained observation settlement failed historical authentication.
+    #[error(transparent)]
+    LookupSettlement(#[from] CaptureLookupSettlementError),
     /// Local original-custody or persistence failure.
     #[error(transparent)]
     Capture(#[from] CaptureError),
@@ -323,9 +329,11 @@ impl CaptureOperation {
             "status-result.bin",
             state.result.as_ref().ok_or(CaptureError::Incomplete)?,
         )?)?;
-        provider
-            .authenticate(&self.plan, admission, &prepared, &evidence)
-            .map_err(StatusAdvanceError::Provider)?;
+        if !self.authenticate_lookup_settlement(CaptureCall::Status, &evidence)? {
+            provider
+                .authenticate(&self.plan, admission, &prepared, &evidence)
+                .map_err(StatusAdvanceError::Provider)?;
+        }
         self.check()?;
         if evidence.rejected {
             return Ok(StatusProgress::Rejected);
@@ -543,3 +551,9 @@ impl CaptureOperation {
         })
     }
 }
+
+pub(super) mod lookup;
+pub use lookup::{
+    CaptureLookupAdmissionRecord, CaptureLookupAdvanceError, CaptureLookupPhase,
+    CaptureLookupProgress, CaptureLookupSettlementError, CaptureLookupSigner, CaptureLookupView,
+};

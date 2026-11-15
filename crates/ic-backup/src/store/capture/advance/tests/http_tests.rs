@@ -66,6 +66,7 @@ enum Response {
     Bytes(Vec<u8>),
     Disconnect,
     HoldBody,
+    ObserveCancellation(Arc<AtomicBool>),
 }
 struct Server {
     endpoint: String,
@@ -116,6 +117,12 @@ impl Server {
                             let _ = stream.write_all(bytes);
                         }
                         Response::Disconnect => {}
+                        Response::ObserveCancellation(closed) => {
+                            stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 10\r\n\r\n").unwrap();
+                            let mut byte = [0];
+                            let result = stream.read(&mut byte);
+                            closed.store(matches!(result, Ok(0)), Ordering::SeqCst);
+                        }
                         Response::HoldBody => {
                             stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 10\r\n\r\n").unwrap();
                             while !stop.load(Ordering::SeqCst) {
@@ -768,3 +775,7 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
 }
 
 mod direct_tests;
+
+mod lookup_tests;
+
+mod durable_lookup_tests;

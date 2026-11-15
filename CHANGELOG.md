@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.101.4] — GitHub checkpoint (unpublished)
+
+### ✨ Features
+
+- Add one-shot authenticated read-state lookup through the existing HTTP transport.
+  Preserve exact signed lookup bytes, original trust/request binding and distinct
+  unresolved outcomes; bound deadlines and responses without retries or polling.
+  The integrating workflow must reserve and retain lookup authority separately.
+- Qualify real take-reply lookup with PocketIC while preserving original journal,
+  snapshots and stopped module.
+- Add one durable lookup per capture operation in its original journal. Reserve
+  signing and observation before signing, retain exact requests before dispatch,
+  and retain authenticated certificates before reporting observations. Replay is
+  offline; lost replies stay spent.
+- Qualify all four new durability boundaries, cumulative budget admission and
+  real pending-take observation with offline replay in PocketIC.
+- Settle original calls from terminal retained lookup certificates without new
+  remote work. Preserve observation timing separately, replay authentication and
+  live admission before dependent effects. Qualify status/list recovery, rejection,
+  conflicting results, uncertain settlement writes and real take recovery after
+  server shutdown.
+- Fix the private fixture default asset path so direct Cargo runs admit the same
+  offline Testkit directory as Make.
+
+### 📦 Dependencies
+
+- Adopt Toko Tooling 0.44.3 through its verified exporter, including the revised
+  LOC depth defaults and focused post-push review guidance.
+
 ## [0.101.3] — GitHub checkpoint (unpublished)
 
 ### 📝 Summary

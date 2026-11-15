@@ -981,7 +981,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.101.3"
+version = "0.101.4"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -2614,9 +2614,9 @@ dependencies = [
 
 [[package]]
 name = "toko-tooling"
-version = "0.44.1"
+version = "0.44.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b0da6eee9b9d4b95fc4e92fe86c54b90372a6babee661aa2e70f2b084082cc7"
+checksum = "8a9bc7b6827044baac8134cada7ee6bc31f86c70beec9608d1d39d911eba15e1"
 
 [[package]]
 name = "tower"

@@ -90,6 +90,9 @@ pub enum SnapshotProgress {
 /// Snapshot refusal or uncertain outcome; no failure grants retry authority.
 #[derive(Debug, Error)]
 pub enum SnapshotAdvanceError<E> {
+    /// Retained observation settlement failed historical authentication.
+    #[error(transparent)]
+    LookupSettlement(#[from] super::CaptureLookupSettlementError),
     /// Original local evidence, bounds or custody refused.
     #[error(transparent)]
     Capture(#[from] CaptureError),
@@ -374,9 +377,11 @@ impl CaptureOperation {
         let evidence = StatusEvidence::decode(
             &self.evidence(names(call)?.1, result.ok_or(CaptureError::Incomplete)?)?,
         )?;
-        provider
-            .authenticate_call(&self.plan, admission, call, &prepared, &evidence)
-            .map_err(SnapshotAdvanceError::Provider)?;
+        if !self.authenticate_lookup_settlement(call, &evidence)? {
+            provider
+                .authenticate_call(&self.plan, admission, call, &prepared, &evidence)
+                .map_err(SnapshotAdvanceError::Provider)?;
+        }
         if self.check()? != state {
             return Err(CaptureError::Changed.into());
         }
