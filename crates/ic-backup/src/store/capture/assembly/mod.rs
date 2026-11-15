@@ -26,6 +26,12 @@ struct Member {
     ordinals: Vec<u32>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AssemblyMode {
+    Verify,
+    Reconcile,
+}
+
 impl CaptureOperation {
     /// Assemble authenticated payloads into the original bundle's private `payload/` tree.
     ///
@@ -44,6 +50,28 @@ impl CaptureOperation {
         transport: &StatusHttpTransport,
         original: &mut P,
     ) -> Result<u64, CaptureDataAdvanceError<P::Error, Infallible>> {
+        self.assemble_data_with(transport, original, AssemblyMode::Reconcile)
+            .await
+    }
+
+    pub(super) async fn verify_assembled_data<P: CaptureProvider>(
+        &mut self,
+        transport: &StatusHttpTransport,
+        original: &mut P,
+    ) -> Result<u64, CaptureDataAdvanceError<P::Error, Infallible>> {
+        self.assemble_data_with(transport, original, AssemblyMode::Verify)
+            .await
+    }
+
+    async fn assemble_data_with<P: CaptureProvider>(
+        &mut self,
+        transport: &StatusHttpTransport,
+        original: &mut P,
+        mode: AssemblyMode,
+    ) -> Result<u64, CaptureDataAdvanceError<P::Error, Infallible>> {
+        if mode == AssemblyMode::Verify && self.check()?.assembly_sha256.is_none() {
+            return Err(CaptureError::Incomplete.into());
+        }
         let total = self.verify_data(transport, original).await?;
         let mut state = self.check()?;
         let m = state.metadata.as_ref().ok_or(CaptureError::Incomplete)?;
@@ -62,10 +90,12 @@ impl CaptureOperation {
             self.commit(&EventRecord::AssemblyStarted, None)?;
             state = self.check()?;
         }
-        // Every filesystem failure below invalidates the live handle; retained evidence
-        // remains available to explicit reopen, never an implicit retry in this call.
-        self.usable = false;
-        let digest = self.assemble_files(&members, &state, &transfer, transport)?;
+        // Reconciliation invalidates the handle before fallible persistence.
+        // Verification only compares existing files and never synchronizes them.
+        if mode == AssemblyMode::Reconcile {
+            self.usable = false;
+        }
+        let digest = self.assemble_files(&members, &state, &transfer, transport, mode)?;
         self.usable = true;
         let checked = self.check();
         self.usable = checked.is_ok();
@@ -89,6 +119,7 @@ impl CaptureOperation {
         state: &State,
         transfer: &CaptureTransfer<'_>,
         transport: &StatusHttpTransport,
+        mode: AssemblyMode,
     ) -> Result<[u8; 32], super::DataReadError> {
         let bundles = child(&self.store, "bundles", false)?;
         let bundle = child(
@@ -142,6 +173,12 @@ impl CaptureOperation {
         same_directory(&bundle, "payload", &directory)?;
         same_directory(&bundles, &self.plan.request().operation_id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
+        if mode == AssemblyMode::Verify {
+            return Ok(tree_digest(
+                &directory,
+                self.plan.request().limits.payload_bytes,
+            )?);
+        }
         let parent = directory.open_syncable().map_err(CaptureError::from)?;
         for ((member, file), expected) in members.iter().zip(&mut files).zip(&expected) {
             if file.is_none() {

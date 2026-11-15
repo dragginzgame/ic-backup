@@ -3,8 +3,10 @@
 mod advance;
 mod assembly;
 mod completion;
+mod source;
 mod succession;
 pub use completion::CaptureCompletionError;
+pub use source::{CaptureSource, CaptureSourceError};
 pub use succession::CaptureSuccessionError;
 mod ledger;
 pub use advance::{

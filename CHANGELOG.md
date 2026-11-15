@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.101.8] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Verify an already-published capture against an expected manifest hash without
+  writes or publication. Reuse original certified-evidence and exact payload-byte
+  checks; incomplete publication and changed files refuse without repair.
+  Verification returns passive evidence, not restore authority.
+- Open authenticated capture sources under the original operation lock and held
+  payload descriptors. Exact receipt and byte limits select the source; bounded
+  reads reuse existing identity/block checks without reauthenticating the whole
+  backup per extent. No restore intent or durable source reference is created.
+
 ## [0.101.7] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

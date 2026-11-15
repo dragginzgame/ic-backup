@@ -262,6 +262,39 @@ pub(super) async fn replay<P: CaptureProvider>(
         ic_backup::store::StatusProgress::Verified
     );
     let receipt = op.complete_capture(t, p).await.unwrap();
+    assert_eq!(
+        op.verify_completion(receipt.manifest_sha256, t, p)
+            .await
+            .unwrap(),
+        receipt
+    );
+    let store = ic_backup::store::BackupStore::open(&root.join("store")).unwrap();
+    let snapshot_id = receipt
+        .snapshot_id_hex
+        .as_bytes()
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|hex| u8::from_str_radix(std::str::from_utf8(hex).unwrap(), 16).unwrap())
+        .collect();
+    let mut source = store
+        .open_capture_source(op, &receipt, 8.try_into().unwrap(), t, p)
+        .await
+        .unwrap();
+    let source_request = ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs {
+        canister_id: receipt.target.canister,
+        snapshot_id,
+        kind: ic_platform::management_canister_types::SnapshotDataKind::WasmModule {
+            offset: 0,
+            size: 8,
+        },
+    };
+    assert_eq!(
+        source.read_data(&source_request).unwrap(),
+        fs::read(root.join("payload-oracle.bin")).unwrap()
+    );
+    assert_eq!(source.summary(), &receipt);
+    drop(source);
     let original = fs::read(root.join("completion-oracle.bin")).unwrap();
     assert_eq!(
         fs::read(root.join("store/bundles/00000000000000000000000000000001/manifest.json"))

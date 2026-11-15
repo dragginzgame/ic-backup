@@ -2,13 +2,14 @@
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy remains read-only.
 
-The 0.101.7 GitHub-only checkpoint adds authenticated target succession.
-Product manifests and both locks select 0.101.7; private qualification remains 0.1.0.
+The 0.101.8 GitHub-only checkpoint adds read-only verification and held capture sources.
+Product manifests and both locks select 0.101.8; private qualification remains 0.1.0.
 All packages remain `publish = false`; no tag or registry publication is selected.
-GitHub `main` was verified at `84e9dad` (0.101.6). The required scoped post-push
-review covered data, assembly, final-status and completion callers, inventory and
-qualification claims. It found one stale development-version sentence, corrected
-locally; no other actionable drift was identified in that scope. Delivery of 0.101.7 and its required post-push review precede continuation.
+GitHub `main` was verified at `8c833f1` (0.101.7). The scoped post-push review
+covered claim replacement, shared intent creation, completed-owner replay and
+native/IC callers. No actionable architectural drift was found; a completion API
+comment implying succession remained future work was clarified. Delivery of
+0.101.8 and its required review precede the next increment.
 
 ## Implemented capture and recovery
 
@@ -72,7 +73,16 @@ Readiness, staging, missing or changed receipts cannot release the original clai
 Interrupted replacement/creation retains the owner and partial files; incomplete
 successors refuse without rollback, repair, blind retry or authority reset.
 
-Standalone complete-bundle admission, restore, CLI and Canic adapters remain unfinished. Local completion reconciliation can synchronize
+Local `verify_completion` checks a selected manifest hash, original certified
+evidence and exact assembled source bytes without writes, syncing or publication.
+It shares completion authentication and assembly comparison; readiness or staging
+alone refuses. Its summary is passive evidence, not a held source or restore
+approval. `open_capture_source` now binds that verification to an exact receipt,
+caller byte limit, original operation borrow/lock and existing held payload
+descriptors. The same store is mandatory. Bounded reads reuse block checks and
+refuse changed bytes; they do not repeat certificate authentication per extent.
+Source custody is ephemeral. Restore intent/references, restore, CLI and Canic
+adapters remain unfinished. Local completion reconciliation can synchronize
 files; read-only inspection/inventory and settled remote-call replay are separate.
 Small fixtures are qualified; repeated proof/file checks have not established
 practical maximum-size throughput. No cache or generic recovery engine was added.
@@ -105,10 +115,21 @@ power loss remains unqualified. The existing initial-budget regression caught a
 refactor ordering mistake; admission was restored before writes and a successor
 regression added. Earlier failed evidence is retained.
 
+`target/evidence/completion-verification/` retains native completion/succession
+regressions and the actual-IC fixture verifying before and after succession, with
+no new remote work. Strict product/private lint and documentation checks apply.
+Original schemas, dependencies and the published checkpoint version are unchanged.
+
+`target/evidence/capture-source/` retains three authenticated-source tests and
+eight existing held-reader regressions, plus offline actual-IC source reads before
+and after succession. Strict product/private lint and documentation checks apply.
+No upload/load effects or durable restore-reference writer are qualified yet.
+
 ## Next work
 
-Implement standalone authenticated complete-bundle admission for restore, retaining
-original plan, journal, metadata and payload commitments. Then implement bounded
+Define the bounded same-release/target restore plan and exact upload/readback
+schedule over admitted source metadata. Bind its durable source reference before
+any restore effect; preserve target-before-source lock order. Then implement bounded
 same-release restore to the same existing ID, left stopped.
 Preserve original evidence and finite authority; do not add cleanup or reset paths.
 Canic owns membership, routing, concurrency, release identity and maintenance;

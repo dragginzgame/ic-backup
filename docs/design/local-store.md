@@ -23,11 +23,11 @@ Canic calls capture/restore and supplies the execution/application providers.
 | `verify_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Check exact local payload bytes against a trusted manifest; no evidence replay or restore authority. |
 | `open_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Verify and hold original payload files for bounded source reads; complete capture-evidence admission remains separate. |
 | `inspect(operation)` | Read retained progress, failure or uncertainty separately from completed backups. |
-| `verify_bundle(bundle)` | Rehash and admit the complete original artifact under held custody before restore. |
+| `verify_completion(expected_manifest, transport, provider)` | Authenticate an already-published completion and exact source bytes without writes; returns passive evidence. |
 
 List/latest, payload checking and held payload reads exist on `BackupStore`. `CaptureOperation::inspect`
 reads original intent; `inspect_status` additionally reads initial status progress,
-original admission and reserved attempt counts. Full `verify_bundle` remains proposed.
+original admission and reserved attempt counts. Authenticated held capture sources are implemented below; restore intent and durable references remain proposed.
 Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:
 a cheap inventory cannot establish that files remain intact today. A manifest
 declares completion; the reader does not authenticate capture verification or
@@ -301,3 +301,69 @@ images. The real-IC completion fixture now succeeds through succession after
 server shutdown with revoked live permission, then replays the original receipt
 without extra signatures. This does not qualify physical power loss, maximum-size
 throughput or full second-capture effects. No legacy source was copied.
+
+### Read-only completion verification
+
+`CaptureOperation::verify_completion(expected_manifest, transport, provider)`
+requires original operation custody and an already-published exact manifest. It
+checks the selected hash before reauthenticating original capture, metadata,
+accepted data and final-status evidence. The shared assembly reader compares every
+member with its certified source bytes and rechecks the tree commitment; its
+private verification branch returns before creation, synchronization or publication.
+The operation's plan bounds still cap evidence, payload and individual reads.
+
+Completion publication and verification share authentication and manifest decoding.
+The verifier cannot finish staging, choose a timestamp or append an event. The
+returned `BackupSummary` is passive evidence: a future restore still needs an exact
+same-release/target plan, held payload/source custody and durable source references.
+A previous verification does not make future reads safe or create live permission.
+
+The focused review inspected frozen `4ae087fa`'s
+`ops/persistence/download_journal/ic_snapshot_artifact/verification`, its exact
+length/hash and replaced-file regressions, and `9f7b886a824eec67dda8f81792a560436419bb2a`'s
+shared verification/upload-reader change. Reuse one owner for exact original-byte
+checks and retain admission/closing custody; do not import legacy artifact layouts
+or upload authority. Native cases cover expected-hash mismatch, changed member
+bytes/length, staged/missing publication, and replay after owner change. The real-IC
+fixture verifies before and after succession with the gateway stopped and live
+permission revoked. No legacy source was copied; physical power loss and practical
+maximum-size throughput remain unqualified.
+
+### Authenticated held capture sources
+
+`BackupStore::open_capture_source(operation, expected_receipt, maximum_payload_bytes,
+transport, provider)` composes completion verification with the existing held
+payload reader. The selected exact `BackupSummary` binds the original operation,
+network, canister, release, module, snapshot, timestamps and manifest. The operation
+must belong to the same held store; identical names in another store are insufficient.
+Payload admission applies the caller's total byte limit before certificate replay.
+Closing checks retain the original payload descriptors through authentication.
+
+`CaptureSource` borrows the capture operation and store: the original operation
+lock cannot be dropped and its workflow cannot advance while the source is used.
+It exposes only the selected summary and existing bounded `read_data` behavior.
+Reads verify at most two original 1 MiB blocks and return at most 1 MiB, with the
+existing manifest/directory/file checks. They do not rescan the whole journal or
+reauthenticate certificates per extent. Invalid requests leave the reader usable;
+IO, integrity or custody refusal invalidates reads. External namespace/content
+writers remain excluded by the caller throughout the handle's lifetime.
+
+This is ephemeral source custody, not a restore plan, target claim or durable
+source reference. Original capture evidence is authenticated at admission; no
+future restore permission, immutable-host guarantee or upload schedule is inferred.
+The eventual restore workflow must acquire target custody before source-operation
+custody and persist its exact source reference and bounded intent before effects.
+No new stored record, hash scheme, block cache, reader or dependency is introduced.
+
+The focused legacy review inspected frozen `4ae087fa`'s
+`ops/persistence/download_journal/ic_snapshot_artifact/upload/plan/source`, its
+`streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_input`
+regression and `9f7b886a824eec67dda8f81792a560436419bb2a`'s shared reader consolidation.
+The reused lesson is to retain original custody and derive reads from the same
+verified bytes. The existing payload block reader owns that behavior here; legacy
+upload plans and destination bindings are not copied ahead of restore planning.
+Native source tests cover original-lock retention, wrong selections/stores/budgets,
+invalid requests and changed bytes. Existing bounded/cross-block reader regressions
+are rerun. The real-IC fixture reads the authenticated source offline before and
+after target succession. This does not qualify restore effects or physical power
+loss. No legacy source was copied.

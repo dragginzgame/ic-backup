@@ -215,3 +215,17 @@ can read a declaration without those payload or evidence files.
 Local Linux results do not qualify power-loss durability, hosted macOS, IC effects
 or Canic integration. Host owns OS primitives; Backup's native tests exercise its
 selected composition. Failed fixture directories remain under the owning target.
+
+Read-only `CaptureOperation::verify_completion` additionally authenticates the
+original completed capture evidence and compares payload members to certified
+source bytes under operation custody. It requires the caller-selected manifest
+hash and refuses missing/staged publication. This remains distinct from inventory
+or `verify_payload`, and grants no restore authority or held source files. See
+[completion verification](../design/local-store.md#read-only-completion-verification).
+
+`BackupStore::open_capture_source` composes that verification with held payload
+custody, selecting an exact `BackupSummary` and caller byte limit. Its
+`CaptureSource` retains the capture operation borrow/lock and delegates bounded
+reads to `PayloadSource`; evidence is authenticated at admission, not rechecked
+on every extent. It creates no restore intent, target claim or durable source
+reference. See [held capture sources](../design/local-store.md#authenticated-held-capture-sources).

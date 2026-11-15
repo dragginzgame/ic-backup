@@ -197,7 +197,7 @@ impl PayloadSource<'_> {
         Ok((index, offset, size as usize))
     }
 
-    fn check_files(&self) -> Result<(), StoreError> {
+    pub(in crate::store) fn check_files(&self) -> Result<(), StoreError> {
         self.original.check()?;
         for (member, held) in self.original.decoded.members.iter().zip(&self.members) {
             unchanged_file(

@@ -48,6 +48,9 @@ pub enum CaptureCompletionError<E> {
     /// A first completion timestamp cannot be represented as positive Unix nanoseconds.
     #[error("capture completion clock refused")]
     Clock,
+    /// Published manifest differs from the caller-selected original receipt.
+    #[error("capture completion manifest mismatch")]
+    ManifestMismatch,
 }
 impl CaptureOperation {
     /// Verify and durably publish the original local backup completion manifest.
@@ -58,7 +61,8 @@ impl CaptureOperation {
     /// and ledger. Complete retained staging or a visible manifest can reconcile
     /// locally; partial, changed, aliased or duplicate files refuse without cleanup.
     /// Returns the original receipt on replay, without a new timestamp or ledger
-    /// append. Target succession and restore admission remain separate work.
+    /// append. Explicit target succession uses this reconciliation; read-only completion
+    /// verification and restore authority remain distinct.
     /// # Errors
     /// Refuses unfinished calls, invalid original evidence, changed files/custody,
     /// exhausted evidence budget, partial publication or local IO. Failed writes
@@ -68,6 +72,82 @@ impl CaptureOperation {
         transport: &StatusHttpTransport,
         provider: &mut P,
     ) -> Result<BackupSummary, CaptureCompletionError<P::Error>> {
+        self.authenticate_completion(transport, provider).await?;
+        self.assemble_data(transport, provider)
+            .await
+            .map_err(|e| CaptureCompletionError::Payload(Box::new(e)))?;
+        if self.check()?.completed_at_ns.is_none() {
+            let completed_at_ns = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .ok()
+                .and_then(|d| u64::try_from(d.as_nanos()).ok())
+                .filter(|n| *n > 0)
+                .ok_or(CaptureCompletionError::Clock)?;
+            self.commit(&EventRecord::PublishReady { completed_at_ns }, None)?;
+        }
+        let state = self.check()?;
+        let bundles = child(&self.store, "bundles", false)?;
+        let bundle = child(&bundles, &self.plan.request().operation_id, false)?;
+        let bytes = self.manifest_bytes(&state, &bundle)?;
+        let summary = self.manifest_summary(&bytes)?;
+        // All fallible persistence retains an unusable live handle until closing checks.
+        self.usable = false;
+        self.publish_manifest(&bundle, &bytes)?;
+        same_directory(&bundles, &self.plan.request().operation_id, &bundle)?;
+        same_directory(&self.store, "bundles", &bundles)?;
+        self.usable = true;
+        let checked = self.check();
+        self.usable = checked.is_ok();
+        if checked? != state {
+            self.usable = false;
+            return Err(CaptureError::Changed.into());
+        }
+        Ok(summary)
+    }
+
+    /// Authenticate an already-published completion against the selected manifest hash.
+    ///
+    /// Rechecks original plan, closed journal, certified capture/data/final status and
+    /// exact payload/manifest bytes under existing operation custody. No signing,
+    /// HTTP, live admission, synchronization, publication or journal append occurs.
+    /// Readiness or staging alone refuses; this never finishes an interrupted publish.
+    /// The summary is passive evidence, not a restore approval or held payload source.
+    /// Future restore must bind its own same-release/target intent and source custody.
+    /// # Errors
+    /// Refuses an absent or mismatched receipt, damaged original evidence or custody,
+    /// failed authentication/policy, and IO. No refused file is repaired or removed.
+    pub async fn verify_completion<P: CaptureProvider>(
+        &mut self,
+        expected_manifest: Sha256Digest,
+        transport: &StatusHttpTransport,
+        provider: &mut P,
+    ) -> Result<BackupSummary, CaptureCompletionError<P::Error>> {
+        let state = self.check()?;
+        if !self.check_assembly(&state)? {
+            return Err(CaptureError::Incomplete.into());
+        }
+        let bundles = child(&self.store, "bundles", false)?;
+        let bundle = child(&bundles, &self.plan.request().operation_id, false)?;
+        let bytes = self.manifest_bytes(&state, &bundle)?;
+        let summary = self.manifest_summary(&bytes)?;
+        if summary.manifest_sha256 != expected_manifest {
+            return Err(CaptureCompletionError::ManifestMismatch);
+        }
+        self.authenticate_completion(transport, provider).await?;
+        self.verify_assembled_data(transport, provider)
+            .await
+            .map_err(|e| CaptureCompletionError::Payload(Box::new(e)))?;
+        if self.check()? != state {
+            return Err(CaptureError::Changed.into());
+        }
+        Ok(summary)
+    }
+
+    async fn authenticate_completion<P: CaptureProvider>(
+        &mut self,
+        transport: &StatusHttpTransport,
+        provider: &mut P,
+    ) -> Result<(), CaptureCompletionError<P::Error>> {
         let state = self.check()?;
         let final_status = state
             .final_status
@@ -93,41 +173,7 @@ impl CaptureOperation {
         {
             return Err(CaptureCompletionError::FinalStatusRequired);
         }
-        self.assemble_data(transport, provider)
-            .await
-            .map_err(|e| CaptureCompletionError::Payload(Box::new(e)))?;
-        if self.check()?.completed_at_ns.is_none() {
-            let completed_at_ns = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .ok()
-                .and_then(|d| u64::try_from(d.as_nanos()).ok())
-                .filter(|n| *n > 0)
-                .ok_or(CaptureCompletionError::Clock)?;
-            self.commit(&EventRecord::PublishReady { completed_at_ns }, None)?;
-        }
-        let state = self.check()?;
-        let bundles = child(&self.store, "bundles", false)?;
-        let bundle = child(&bundles, &self.plan.request().operation_id, false)?;
-        let bytes = self.manifest_bytes(&state, &bundle)?;
-        let summary = manifest::decode(&self.plan.request().operation_id, &bytes)
-            .map_err(|source| StoreError::Manifest {
-                bundle: self.plan.request().operation_id.clone(),
-                source,
-            })?
-            .summary;
-        // All fallible persistence retains an unusable live handle until closing checks.
-        self.usable = false;
-        self.publish_manifest(&bundle, &bytes)?;
-        same_directory(&bundles, &self.plan.request().operation_id, &bundle)?;
-        same_directory(&self.store, "bundles", &bundles)?;
-        self.usable = true;
-        let checked = self.check();
-        self.usable = checked.is_ok();
-        if checked? != state {
-            self.usable = false;
-            return Err(CaptureError::Changed.into());
-        }
-        Ok(summary)
+        Ok(())
     }
 
     pub(super) fn check_manifest(
@@ -148,6 +194,15 @@ impl CaptureOperation {
             }
         }
         Ok(completed)
+    }
+
+    fn manifest_summary(&self, bytes: &[u8]) -> Result<BackupSummary, StoreError> {
+        manifest::decode(&self.plan.request().operation_id, bytes)
+            .map(|manifest| manifest.summary)
+            .map_err(|source| StoreError::Manifest {
+                bundle: self.plan.request().operation_id.clone(),
+                source,
+            })
     }
 
     fn manifest_bytes(&self, state: &State, bundle: &Directory) -> Result<Vec<u8>, CaptureError> {

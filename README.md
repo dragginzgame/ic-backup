@@ -97,9 +97,9 @@ Private PocketIC fixtures qualify the small capture-to-manifest journey, invento
 for the same target, preserving the old receipt and evidence. Standalone full-bundle
 admission, restore and CLI workflows remain unimplemented. See the
 [implemented local-store contract](docs/architecture/local-inventory.md) for scope
-and the public Rustdoc example. Crate publication remains disabled; `0.101.7` is an
-unpublished GitHub checkpoint covering the small capture-to-manifest journey and
-authenticated target succession. Restore remains unimplemented.
+and the public Rustdoc example. Crate publication remains disabled; `0.101.8` is an
+unpublished GitHub checkpoint covering capture, target succession and authenticated
+held source reads. Restore remains unimplemented.
 
 The [legacy repository](https://github.com/dragginzgame/ic-backup-legacy) retains
 existing implementations, published history and recovery obligations. Its source,

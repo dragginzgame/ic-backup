@@ -1,13 +1,13 @@
 # Single-canister operation contract
 
-Proposed effectful contract, 2026-11-14. Capture/restore remains unimplemented;
-[local inventory](../architecture/local-inventory.md) and
-[capture intent](../architecture/capture-intent.md) and
-[pure transfer planning](../architecture/capture-transfer.md) are implemented subsets.
-Intent creation alone reserves no attempt. The implemented
-[initial-status continuation](../architecture/capture-intent.md#durable-initial-status)
-adds bounded direct-host preparation, submission and settlement through a caller
-provider; no concrete provider or authenticated IC journey is qualified yet.
+This design describes the selected capture/restore direction. The implemented
+[local inventory](../architecture/local-inventory.md),
+[capture contract](../architecture/capture-intent.md) and
+[transfer contract](../architecture/capture-transfer.md) own exact maintained
+behavior. Small direct-host captures reach authenticated local completion and
+target succession with actual-IC qualification. Read-only completion verification
+and authenticated held capture sources are implemented; restore planning, durable
+source references and restore effects remain proposed.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage

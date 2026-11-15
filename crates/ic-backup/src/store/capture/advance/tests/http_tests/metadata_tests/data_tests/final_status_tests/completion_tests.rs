@@ -338,3 +338,75 @@ fn changed_owner_never_authorizes_unfinished_or_missing_receipt_publication() {
 }
 
 mod succession_tests;
+
+#[test]
+fn readonly_completion_admits_exact_receipt_and_refuses_wrong_selection() {
+    let (mut f, server, mut p) = settled();
+    let receipt = complete(&mut f, &mut p).unwrap();
+    let ledger = fs::read(f.ledger()).unwrap();
+    let bytes = fs::read(manifest(&f)).unwrap();
+    let (owner, successor) = replace_owner(&f);
+    let mut f = f.reopen();
+    let verified = runtime()
+        .block_on(f.op.verify_completion(receipt.manifest_sha256, &f.t, &mut p))
+        .unwrap();
+    assert_eq!(verified, receipt);
+    assert!(matches!(
+        runtime().block_on(f.op.verify_completion(Sha256Digest::compute(b"wrong"), &f.t, &mut p)),
+        Err(CaptureCompletionError::ManifestMismatch)
+    ));
+    assert_eq!(fs::read(f.ledger()).unwrap(), ledger);
+    assert_eq!(fs::read(manifest(&f)).unwrap(), bytes);
+    assert_eq!(fs::read(owner).unwrap(), successor);
+    assert_eq!(server.count(), 1);
+}
+
+#[test]
+fn readonly_completion_never_finishes_missing_or_staged_publication() {
+    for staging in [false, true] {
+        let (mut f, server, mut p) = settled();
+        let receipt = complete(&mut f, &mut p).unwrap();
+        let path = manifest(&f);
+        let pending = path.with_file_name("manifest.pending");
+        let bytes = fs::read(&path).unwrap();
+        if staging {
+            fs::rename(&path, &pending).unwrap();
+        } else {
+            fs::remove_file(&path).unwrap();
+        }
+        let ledger = fs::read(f.ledger()).unwrap();
+        assert!(matches!(
+            runtime().block_on(f.op.verify_completion(receipt.manifest_sha256, &f.t, &mut p)),
+            Err(CaptureCompletionError::Capture(CaptureError::Incomplete))
+        ));
+        assert!(!path.exists());
+        assert_eq!(fs::read(&pending).ok(), staging.then_some(bytes));
+        assert_eq!(fs::read(f.ledger()).unwrap(), ledger);
+        assert_eq!(server.count(), 1);
+    }
+}
+
+#[test]
+fn readonly_completion_refuses_changed_source_bytes_without_repair() {
+    for member in ["module.wasm", "heap.bin"] {
+        let (mut f, server, mut p) = settled();
+        let receipt = complete(&mut f, &mut p).unwrap();
+        let path = manifest(&f).parent().unwrap().join("payload").join(member);
+        let changed = if member == "module.wasm" {
+            b"helloworlD".as_slice()
+        } else {
+            b"x".as_slice()
+        };
+        fs::write(&path, changed).unwrap();
+        let ledger = fs::read(f.ledger()).unwrap();
+        assert!(matches!(
+            runtime().block_on(f.op.verify_completion(receipt.manifest_sha256, &f.t, &mut p)),
+            Err(CaptureCompletionError::Capture(CaptureError::Changed))
+        ));
+        assert_eq!(fs::read(path).unwrap(), changed);
+        assert_eq!(fs::read(f.ledger()).unwrap(), ledger);
+        assert_eq!(server.count(), 1);
+    }
+}
+
+mod source_tests;
