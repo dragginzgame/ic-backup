@@ -19,8 +19,7 @@ suite for the earlier 0.77.3 adoption remain under
 `target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
-Compatible development now continues as unpublished 0.101.2 after the 0.101.1
-GitHub checkpoint. The direct capture provider composes status, list and take through the existing helpers.
+The unpublished 0.101.3 GitHub checkpoint includes local recovery authentication. The direct capture provider composes status, list and take through the existing helpers.
 Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
@@ -234,3 +233,10 @@ formatting, documentation links, dependency listing and equal default/`-d 0`
 LOC output. Native qualification covers existing status/list/take and interrupted
 reply settlement, not new remote observation. The broader product suite and
 hosted macOS were not selected. Original fixture bundles remain retained.
+
+`store::capture::advance::tests::lookup_tests` selects strict signed read-state
+request admission. The helper shares direct-key verification with existing call
+requests; use the full `store::capture::advance` filter for that shared boundary.
+`target/evidence/capture-lookup/` retains focused and full capture checks, lints,
+documentation and existing actual IC fixture runs. Synthetic signed lookups qualify
+local admission only; actual read-state and durable observation remain pending.

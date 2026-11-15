@@ -9,7 +9,8 @@ Read [README.md](README.md), [the handoff](docs/status/current.md) and
 Local inventory, payload integrity, capture intent, transfer planning, bounded reply
 decoding, direct-host status/list/take continuation and local settlement from
 surviving original reply evidence are implemented. Separate observation-certificate
-authentication is local only; live lookup and its durable spending remain pending. PocketIC
+authentication and strict signed lookup admission are local only; live lookup
+and its durable spending remain pending. PocketIC
 qualifies these calls, interrupted reply settlement and offline replay with fixture signing and application authority.
 Canic process/maintenance adapters, download and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,

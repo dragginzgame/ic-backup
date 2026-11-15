@@ -1220,3 +1220,5 @@ mod request_tests;
 mod snapshot_tests;
 
 mod observation_tests;
+
+mod lookup_tests;

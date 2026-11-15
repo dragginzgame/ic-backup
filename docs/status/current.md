@@ -6,10 +6,12 @@ No original journals, bundles or obligations were imported, migrated or cleaned 
 
 The 0.101.2 provider/snapshot checkpoint was pushed and remotely verified at
 [ec681f2](https://github.com/dragginzgame/ic-backup/commit/ec681f21506db0482b2cf3843f44593c56347994).
-The user selected GitHub delivery of retained-result recovery, local observation
-certificate authentication and the Platform/Tooling refresh. Pending 0.101.3
-notes cover these compatible changes; product manifests remain 0.101.2. All
-packages remain `publish = false`; no tag, publication or deployment is selected.
+Retained-result recovery, local certificate observation and the Platform/Tooling
+refresh were pushed and remotely verified at
+[fcee35c](https://github.com/dragginzgame/ic-backup/commit/fcee35ca868a68f53af6458893e294c55f177274).
+The user selected the complete recovery and signed lookup batch as the 0.101.3
+GitHub checkpoint. Product and qualification references now select 0.101.3.
+All packages remain `publish = false`; no tag, publication or deployment is selected.
 
 ## Implemented scope and safeguards
 
@@ -40,6 +42,12 @@ It distinguishes received/processing/done/absent/pruned without refunds or retry
 permission. It creates no observation receipt, spends no budget and performs no
 lookup. Later certificates do not widen original settlement timing.
 
+`authenticate_capture_lookup` now verifies signed read-state envelopes against
+original status/list/take signatures, sender and request ID, exact separately
+supplied expiry and one two-label request-status path. It shares direct-key
+verification, caps input before decoding and returns the lookup request ID.
+It changes no original bytes, reservations or journal; live dispatch remains pending.
+
 `DirectCaptureProvider` composes bounded external sign-only and HTTP submission
 for each call. Route/network/root, signer/guard protocols and historical timing
 remain bound to original authority; expiry and spending never renew. Direct
@@ -66,11 +74,15 @@ Reqwest remains behind Host HTTP; there are no sibling patches or source edits.
 Private qualification retains Testkit 0.106.0/PocketIC 16.1 and its exact
 `thiserror` 2.0.18 constraint; product retains 2.0.21. Other selections are unchanged.
 
-Current adoption checks pass: 93 capture/recovery tests, 17 documentation examples,
-strict product/private Clippy, warning-denying Rustdoc, both actual IC fixtures,
-tools/snapshot admission, formatting, documentation links, dependency listing and
-equal default/`-d 0` LOC output. Logs are under
-`target/evidence/platform-tooling-refresh/`. Earlier evidence remains under
+The dependency adoption passed 93 capture/recovery tests, 17 documentation examples,
+strict product/private Clippy, Rustdoc, both actual IC fixtures and tooling/LOC checks
+under `target/evidence/platform-tooling-refresh/`. The new batch passes all 98
+capture tests (including five lookup test groups), 18 documentation examples,
+strict product/private Clippy, warning-denying Rustdoc, both existing IC fixtures,
+formatting and documentation links. Logs are under `target/evidence/capture-lookup/`.
+Lookup cases cover both keys and all three original calls, wrong paths/senders/expiry,
+signatures, malformed content and caps; no live read-state flow is claimed.
+Earlier evidence remains under
 `target/evidence/snapshot-capture/`, `target/evidence/capture-settlement/` and
 `target/evidence/capture-observation/`.
 
@@ -88,8 +100,9 @@ trusted HTTPS sessions, hosted macOS and full backup/restore remain unqualified.
 Platform 0.33.7 supplies the strict read-state reader requested by
 [Platform #167](https://github.com/dragginzgame/ic-platform/issues/167), now closed.
 Its raw-input bound is not a total work/allocation quota or consumer authentication.
-Implement separate durable signing/lookup spending, exact-path/signature/binding
-admission and observed-result retention, then qualify actual read-state ingress.
+Compose the local lookup/certificate authenticators with separate durable signing
+and lookup spending, live routing/time admission and observed-result retention,
+then qualify actual read-state ingress.
 Snapshot download and verified local completion remain subsequent work. Never
 repeat a take because its reply was lost.
 

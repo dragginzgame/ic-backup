@@ -32,8 +32,8 @@ The previous library release is 0.67.2. The user selected 0.100.0 for the
 incompatible rewrite, superseding the unpublished 0.68.0 draft. This separates
 the new implementation from legacy without implying maturity or compatibility.
 The GitHub-only 0.101.2 checkpoint includes the direct provider and durable snapshot
-capture. Compatible local work is recorded under pending 0.101.3; manifests remain
-0.101.2 until separately authorized version preparation.
+capture. The 0.101.3 GitHub checkpoint adds retained-reply recovery and local
+lookup/certificate authentication with the reviewed dependency refresh.
 The 0.101 minor accounts for Host 0.79 public Rust type identities. The pending
 patch opens compatible development; it does not claim a finished capture/restore
 product or pre-authorize a breaking API change.

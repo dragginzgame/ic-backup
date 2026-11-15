@@ -883,3 +883,42 @@ Backup still needs bounded signing, exact-path admission, independently spent
 network/observation allowances and retained observation settlement, followed by
 actual read-state ingress qualification with PocketIC. Supplier adoption alone
 implements none of those flows.
+
+## Strict signed recovery lookup admission
+
+`authenticate_capture_lookup` authenticates one externally signed read-state
+request for an original status/list/take. `CaptureLookupPolicy` supplies the exact
+nonzero lookup expiry and a complete-envelope cap no larger than 1 MiB. The cap
+is checked before decoding; it is not a total allocation/work quota. The original
+request still passes its existing admission, content, sender and signature checks.
+Platform's strict read-state decoder then admits only the known content fields.
+Backup requires the original sender, exactly the supplied expiry and exactly one
+path with two byte labels: `request_status` and the original 32-byte request ID.
+Prefix, extra, duplicate or substituted paths refuse even when correctly signed.
+
+The ordinary authentication projection must compute the same request ID as the
+strict projection. Both call and lookup use the same exact direct Ed25519/low-S
+secp256k1 key/signature verifier; no second crypto implementation or compatibility
+fallback is added. The helper returns Platform's lookup ID, not a receipt. Original
+and lookup envelope bytes stay untouched; neither expiry nor spending is renewed.
+Typed errors expose no key, envelope or signature bytes. Original certificate
+observation policy is not authenticated by this signature check.
+
+This is local historical authentication, not the live recovery workflow. Callers
+must separately persist original association, lookup policy/bytes and finite
+signing/network reservations before effects, admit route/root/provider and live
+time windows, and retain authenticated observation evidence. The helper reads no
+clock, journal or network and cannot prove pending submission or grant a retry.
+
+Focused review revisited the frozen legacy request/reservation owner, observation
+association, capture-settlement regressions and `94b94db8` qualification history
+linked above. Those preserve exact original authority and forbid inferred capture
+outcomes. The new path uses a cryptographically bound read-state request for one
+ingress ID rather than a separately attributed inventory observation. External
+signer output needs strict independent admission; legacy Agent signing and its
+observation graph are not copied. Newly authored
+[lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/lookup_tests.rs)
+carry exact original binding, unchanged bytes and refusal cases into the current
+implementation. They exercise real signatures for both keys and all three calls,
+including valid signatures over wrong paths/expiry/senders and ambiguous CBOR.
+These tests do not establish actual read-state ingress or durable observation.

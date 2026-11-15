@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.101.3] — pending
+## [0.101.3] — GitHub checkpoint (unpublished)
 
 ### 📝 Summary
 
@@ -17,6 +17,11 @@
   windows without widening original submission authority. Preserve distinct
   pending, done, absent and pruned outcomes. Live lookup still requires Backup's
   durable observation workflow.
+
+- Authenticate signed recovery lookups against the original call and sender,
+  explicit expiry and sole original request-status path. Reuse direct-key
+  signature verification; extra paths and ambiguous content refuse. This local
+  helper grants no signing, network, settlement or retry authority.
 
 ### 📦 Dependencies
 

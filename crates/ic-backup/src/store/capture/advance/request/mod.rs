@@ -5,7 +5,7 @@ use ic_platform::{
     Principal, ecdsa,
     ecdsa::PrehashVerifier,
     ed25519,
-    ic_protocol::{EnvelopeContent, decode_envelope},
+    ic_protocol::{Envelope, EnvelopeContent, decode_envelope},
 };
 use thiserror::Error;
 
@@ -98,7 +98,17 @@ pub(super) fn authenticate_call_request(
     else {
         return Err(StatusRequestError::Envelope);
     };
-    if envelope.sender_delegation.is_some() || sender_info.is_some() {
+    if sender_info.is_some() {
+        return Err(StatusRequestError::Identity);
+    }
+    authenticate_direct_envelope(&envelope, sender.as_slice())
+}
+
+fn authenticate_direct_envelope(
+    envelope: &Envelope<'_>,
+    sender: &[u8],
+) -> Result<(), StatusRequestError> {
+    if envelope.sender_delegation.is_some() {
         return Err(StatusRequestError::Identity);
     }
     let der = envelope
@@ -112,7 +122,7 @@ pub(super) fn authenticate_call_request(
         .ok_or(StatusRequestError::Signature)?;
     let message = envelope.content.to_request_id().signable();
     if let Some(raw) = der.strip_prefix(ED25519_DER).filter(|raw| raw.len() == 32) {
-        verify_sender(der, sender.as_slice())?;
+        verify_sender(der, sender)?;
         let raw = raw.try_into().map_err(|_| StatusRequestError::Identity)?;
         let key =
             ed25519::VerifyingKey::from_bytes(raw).map_err(|_| StatusRequestError::Signature)?;
@@ -122,7 +132,7 @@ pub(super) fn authenticate_call_request(
         .strip_prefix(SECP256K1_DER)
         .filter(|raw| raw.len() == 65 && raw[0] == 4)
     {
-        verify_sender(der, sender.as_slice())?;
+        verify_sender(der, sender)?;
         let key =
             ecdsa::VerifyingKey::from_sec1_bytes(raw).map_err(|_| StatusRequestError::Signature)?;
         let signature =
@@ -144,3 +154,6 @@ fn verify_sender(der: &[u8], sender: &[u8]) -> Result<(), StatusRequestError> {
         Err(StatusRequestError::Sender)
     }
 }
+
+mod lookup;
+pub use lookup::{CaptureLookupError, CaptureLookupPolicy, authenticate_capture_lookup};

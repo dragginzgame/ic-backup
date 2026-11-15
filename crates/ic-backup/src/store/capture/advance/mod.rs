@@ -35,7 +35,10 @@ pub use direct::{
     DirectCaptureError, DirectCaptureProvider,
 };
 pub use http::{StatusHttpError, StatusHttpTransport};
-pub use request::{StatusRequestError, authenticate_status_request};
+pub use request::{
+    CaptureLookupError, CaptureLookupPolicy, StatusRequestError, authenticate_capture_lookup,
+    authenticate_status_request,
+};
 pub use snapshots::{
     CaptureSnapshotPhase, CaptureSnapshotView, SnapshotAdmissionRecord, SnapshotAdvanceError,
     SnapshotProgress,

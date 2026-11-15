@@ -11,7 +11,7 @@ pub(super) enum Scheme {
     Secp256k1,
 }
 impl Scheme {
-    fn key(self) -> Vec<u8> {
+    pub(super) fn key(self) -> Vec<u8> {
         // Independently written standard SPKI prefixes; exact lengths/bytes are exercised.
         match self {
             Self::Ed25519 => [
