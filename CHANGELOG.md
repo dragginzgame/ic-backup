@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.101.7] — GitHub checkpoint (unpublished)
+
+### ➕ Added
+
+- Admit an exact completed capture after target ownership changes, retaining its
+  original manifest, evidence and spending. Unfinished or unpublished captures
+  still require their original claim. Explicit authenticated succession replaces
+  only the target owner and creates fresh bounded intent while preserving the
+  predecessor. Partial successor creation refuses without cleanup or reset.
+
 ## [0.101.6] — GitHub checkpoint (unpublished)
 
 ### ➕ Added

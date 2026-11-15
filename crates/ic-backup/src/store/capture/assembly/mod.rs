@@ -184,7 +184,7 @@ impl CaptureOperation {
         Ok(digest)
     }
 
-    pub(super) fn check_assembly(&self, state: &State) -> Result<(), CaptureError> {
+    pub(super) fn check_assembly(&self, state: &State) -> Result<bool, CaptureError> {
         let bundles = child(&self.store, "bundles", false)?;
         let bundle =
             bundles.open_directory(OsStr::new(&self.plan.request().operation_id), PRIVATE)?;
@@ -192,7 +192,7 @@ impl CaptureOperation {
             return if state.assembly_sha256.is_some() {
                 Err(CaptureError::Incomplete)
             } else {
-                Ok(())
+                Ok(false)
             };
         };
         if !state.assembly_started {
@@ -227,12 +227,10 @@ impl CaptureOperation {
         } else if state.assembly_sha256.is_some() {
             return Err(CaptureError::Incomplete);
         }
-        if state.completed_at_ns.is_some() {
-            self.check_manifest(state, &bundle)?;
-        }
+        let published = state.completed_at_ns.is_some() && self.check_manifest(state, &bundle)?;
         same_directory(&bundles, &self.plan.request().operation_id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
-        Ok(())
+        Ok(published)
     }
 }
 

@@ -266,3 +266,75 @@ fn publication_capacity_is_reserved_before_freezing_the_ledger_or_creating_manif
     assert!(!manifest(&f).with_file_name("manifest.pending").exists());
     assert_eq!(server.count(), 1);
 }
+
+fn replace_owner(f: &Fixture) -> (PathBuf, Vec<u8>) {
+    let path = f
+        .root
+        .join("targets")
+        .join(f.p.request().target.network.to_string())
+        .join(f.p.request().target.canister.to_text())
+        .join("owner.json");
+    let mut request = f.p.request().clone();
+    request.operation_id = "ef".repeat(16);
+    let plan = CapturePlan::new(request).unwrap();
+    let bytes = crate::store::capture::owner(&plan).unwrap();
+    // Synthetic successor image: creation/atomic claim replacement is separate work.
+    fs::write(&path, &bytes).unwrap();
+    (path, bytes)
+}
+
+#[test]
+fn published_receipt_replays_after_owner_change_without_touching_successor() {
+    let (mut f, server, mut p) = settled();
+    let summary = complete(&mut f, &mut p).unwrap();
+    let bytes = fs::read(manifest(&f)).unwrap();
+    let ledger = fs::read(f.ledger()).unwrap();
+    let (owner_path, successor) = replace_owner(&f);
+    let mut f = f.reopen();
+    assert_eq!(complete(&mut f, &mut p).unwrap(), summary);
+    assert_eq!(fs::read(manifest(&f)).unwrap(), bytes);
+    assert_eq!(fs::read(f.ledger()).unwrap(), ledger);
+    assert_eq!(fs::read(owner_path).unwrap(), successor);
+    assert_eq!(server.count(), 1);
+}
+
+#[test]
+fn changed_owner_never_authorizes_unfinished_or_missing_receipt_publication() {
+    for image in ["unfinished", "missing", "pending", "changed"] {
+        let (mut f, server, mut p) = settled();
+        if image != "unfinished" {
+            complete(&mut f, &mut p).unwrap();
+            let path = manifest(&f);
+            match image {
+                "missing" => fs::remove_file(path).unwrap(),
+                "pending" => fs::rename(&path, path.with_file_name("manifest.pending")).unwrap(),
+                "changed" => fs::write(path, b"changed").unwrap(),
+                _ => unreachable!(),
+            }
+        }
+        let ledger = fs::read(f.ledger()).unwrap();
+        let before = fs::read(manifest(&f)).ok();
+        let pending_path = manifest(&f).with_file_name("manifest.pending");
+        let pending = fs::read(&pending_path).ok();
+        let (owner_path, successor) = replace_owner(&f);
+        assert!(matches!(
+            complete(&mut f, &mut p),
+            Err(CaptureCompletionError::Capture(CaptureError::Changed))
+        ));
+        let ledger_path = f.ledger();
+        let manifest_path = manifest(&f);
+        drop(f.op);
+        assert!(matches!(
+            f.store
+                .open_capture(&f.p.request().operation_id, f.p.digest()),
+            Err(CaptureError::Changed)
+        ));
+        assert_eq!(fs::read(ledger_path).unwrap(), ledger);
+        assert_eq!(fs::read(manifest_path).ok(), before);
+        assert_eq!(fs::read(pending_path).ok(), pending);
+        assert_eq!(fs::read(owner_path).unwrap(), successor);
+        assert_eq!(server.count(), 1);
+    }
+}
+
+mod succession_tests;

@@ -134,19 +134,20 @@ impl CaptureOperation {
         &self,
         state: &State,
         bundle: &Directory,
-    ) -> Result<(), CaptureError> {
+    ) -> Result<bool, CaptureError> {
         let expected = self.manifest_bytes(state, bundle)?;
         let pending = open_optional(bundle, "manifest.pending")?;
         let published = open_optional(bundle, "manifest.json")?;
         if pending.is_some() && published.is_some() {
             return Err(CaptureError::Changed);
         }
+        let completed = published.is_some();
         for (name, file) in [("manifest.pending", pending), ("manifest.json", published)] {
             if let Some(file) = file {
                 verify_manifest_file(bundle, name, &file, &expected)?;
             }
         }
-        Ok(())
+        Ok(completed)
     }
 
     fn manifest_bytes(&self, state: &State, bundle: &Directory) -> Result<Vec<u8>, CaptureError> {

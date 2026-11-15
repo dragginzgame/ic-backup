@@ -2,12 +2,13 @@
 
 Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy remains read-only.
 
-The 0.101.6 GitHub-only checkpoint contains the small capture-to-manifest journey.
-Product manifests and both locks select 0.101.6; private qualification remains 0.1.0.
+The 0.101.7 GitHub-only checkpoint adds authenticated target succession.
+Product manifests and both locks select 0.101.7; private qualification remains 0.1.0.
 All packages remain `publish = false`; no tag or registry publication is selected.
-The previous remote checkpoint was `e4bd5fd` (0.101.5). Its scoped post-push review
-found no actionable drift. Delivery verification and the required review of this
-checkpoint precede the next increment; `AGENTS.md` owns that review requirement.
+GitHub `main` was verified at `84e9dad` (0.101.6). The required scoped post-push
+review covered data, assembly, final-status and completion callers, inventory and
+qualification claims. It found one stale development-version sentence, corrected
+locally; no other actionable drift was identified in that scope. Delivery of 0.101.7 and its required post-push review precede continuation.
 
 ## Implemented capture and recovery
 
@@ -61,9 +62,17 @@ Local reconciliation retains the exact receipt/timestamp, without remote work or
 new events. Partial, changed, aliased or duplicate manifest files refuse intact.
 List/latest and payload verification consume the same completed manifest.
 
-Completion does not release the target claim. A second capture of the same target,
-terminal owner succession, standalone complete-bundle admission, restore, CLI and
-Canic adapters remain unfinished. Local completion reconciliation can synchronize
+Completed-capture admission retains exact published receipts after ownership changes.
+`create_capture_after` takes target-then-predecessor locks, authenticates and syncs
+the already-published completion, atomically replaces only the owner pointer using
+Host FS, then shares ordinary new-intent creation. Initial journal capacity is
+admitted before writes. The old receipt, evidence and lock identities remain.
+New intent has zero reserved calls and requires its own bounded live authority.
+Readiness, staging, missing or changed receipts cannot release the original claim.
+Interrupted replacement/creation retains the owner and partial files; incomplete
+successors refuse without rollback, repair, blind retry or authority reset.
+
+Standalone complete-bundle admission, restore, CLI and Canic adapters remain unfinished. Local completion reconciliation can synchronize
 files; read-only inspection/inventory and settled remote-call replay are separate.
 Small fixtures are qualified; repeated proof/file checks have not established
 practical maximum-size throughput. No cache or generic recovery engine was added.
@@ -88,11 +97,19 @@ are unchanged. Earlier evidence and failed/successful fixture bundles are retain
 These checks do not qualify physical power loss, external signer processes,
 Canic fences, trusted HTTPS, hosted macOS, maximum-size throughput or restore.
 
+`target/evidence/succession/` records six succession and 16 initial-intent tests,
+strict product/private Clippy, Rustdoc and the real-IC completion fixture extended
+through offline succession and original-receipt replay. The fixture performs no
+second-capture IC effects. Native images cover partial successor creation; physical
+power loss remains unqualified. The existing initial-budget regression caught a
+refactor ordering mistake; admission was restored before writes and a successor
+regression added. Earlier failed evidence is retained.
+
 ## Next work
 
-Implement terminal target-owner succession under the existing lock order so a
-new backup can follow an admitted completed capture while preserving old receipts.
-Then implement bounded same-release restore to the same existing ID, left stopped.
+Implement standalone authenticated complete-bundle admission for restore, retaining
+original plan, journal, metadata and payload commitments. Then implement bounded
+same-release restore to the same existing ID, left stopped.
 Preserve original evidence and finite authority; do not add cleanup or reset paths.
 Canic owns membership, routing, concurrency, release identity and maintenance;
 [Canic #1](https://github.com/dragginzgame/canic/issues/1) tracks its adapter. Blob

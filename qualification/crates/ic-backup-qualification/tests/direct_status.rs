@@ -447,6 +447,41 @@ async fn status_fixture(
             evidence,
         )
         .await;
+        let predecessor = CapturePlan::new(reopened.inspect().unwrap().request().clone()).unwrap();
+        let mut next = predecessor.request().clone();
+        next.operation_id = "ab".repeat(16);
+        let next = CapturePlan::new(next).unwrap();
+        let approval = next.digest();
+        drop(reopened);
+        let successor = store
+            .create_capture_after(
+                next,
+                approval,
+                &predecessor,
+                &lookup_transport,
+                &mut provider,
+            )
+            .await
+            .unwrap();
+        assert_eq!(successor.inspect().unwrap().digest(), approval);
+        assert_eq!(
+            successor
+                .inspect_status()
+                .unwrap()
+                .network_requests_reserved,
+            0
+        );
+        let mut original = store
+            .open_capture(&predecessor.request().operation_id, predecessor.digest())
+            .unwrap();
+        metadata::replay(
+            &mut original,
+            &lookup_transport,
+            &metadata_admission,
+            &mut provider,
+            evidence,
+        )
+        .await;
     }
     assert_eq!(
         calls.load(Ordering::SeqCst),

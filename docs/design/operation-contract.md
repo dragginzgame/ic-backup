@@ -359,11 +359,10 @@ management declarations or controller-topology changes bypass that dependency.
 
 ## Implementation acceptance
 
-These decisions are ready to guide implementation; they are not qualification.
-The local-store contract now defines the proposed frame limits, completion
-publication, source references and terminal target-claim succession. Byte-exact
-record fields/commitments and independent vectors must accompany the first
-writer/reader. Do not claim compatibility from the semantic names in this draft.
+The local-store and capture contracts distinguish implemented frame limits,
+completion publication and authenticated target succession from proposed restore
+source admission. Their byte-exact records and evidence own implementation claims;
+semantic names in this design are not a compatibility or qualification guarantee.
 
 The first maintained consumer should exercise stopped capture through verified
 bundle publication, then the same public boundary through complete readback/load.

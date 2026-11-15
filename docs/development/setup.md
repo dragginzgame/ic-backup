@@ -19,7 +19,7 @@ suite for the earlier 0.77.3 adoption remain under
 `target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
 and error types must use the 0.79 line. This changes Rust identities, not stored
 formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
-Unpublished 0.101.5 development follows the 0.101.4 durable recovery checkpoint. The direct capture provider composes status, list and take through the existing helpers.
+The direct capture provider composes status, list and take through the existing helpers.
 Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
 dependency, new feature or sibling override is needed. Its verified archive and
@@ -362,3 +362,12 @@ Four final-status groups and six completion groups cover distinct request identi
 original budgets, refused policy, uncertain frames, exact receipt/hash/timestamp,
 full/partial staging and existing consumers. Physical power loss, target succession,
 large-transfer performance and restore are not qualified by this batch.
+
+Authenticated target succession uses the existing Host atomic writer and shared
+initial-intent persistence. `target/evidence/succession/` retains its focused native
+and actual-IC results, including failed checks and their corrections. Select native
+handoff cases with `cargo test -p ic-backup --lib succession_tests --locked --offline
+-- --test-threads=4`; retain `store::tests::capture` for initial-budget and custody
+regressions. The private `complete_capture_and_offline_replay` fixture now creates
+a successor after shutdown and replays the old completed receipt with no additional
+signatures. It does not perform another capture or qualify power loss.

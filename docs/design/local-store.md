@@ -8,7 +8,7 @@ Initialization, opening, bounded manifest inventory and payload byte checks are 
 The [capture-intent contract](../architecture/capture-intent.md) implements immutable
 plans, durable target claims and initial status advancement/inspection. Snapshot advancement and [artifact assembly](../architecture/capture-transfer.md#local-artifact-assembly)
 are implemented. Final status and local completion publication/reconciliation are implemented.
-Terminal claim succession and standalone full-bundle admission remain proposed. No legacy records or unfinished operations are imported.
+Explicit completed-capture succession is implemented; standalone full-bundle admission remains proposed. No legacy records or unfinished operations are imported.
 
 ## Small public surface
 
@@ -201,9 +201,9 @@ The small real IC journey now reaches manifest publication and existing inventor
 then reconciles after gateway shutdown and revoked live authority. Physical power
 loss, maximum-size throughput and hosted macOS remain unqualified.
 
-Target claims remain retained even after completion. Terminal claim succession is
-not implemented, so this API does not yet permit a second capture of the same
-target. Restore has no new bundle; its terminal state, source references and load
+Target claims remain retained after completion. Explicit `create_capture_after`
+authenticates the completed predecessor and replaces its claim to create a new
+capture of the same target. Restore has no new bundle; its terminal state, source references and load
 qualification remain proposed below. No pruning or remote deletion is implied.
 
 ## Concurrency and target ownership
@@ -217,13 +217,13 @@ then operation custody. Ordinary advancement holds only its admitted source and
 operation locks and checks its retained owner binding. Never acquire the target
 lock while holding an operation in the reverse order.
 
-The remaining succession rules are design requirements: the current writer keeps
-the original owner even after completion. The durable owner record remains after process death. An occupied unfinished or
-uncertain owner refuses new work. A new operation may replace that owner only under
-the target lock after admitting the prior exact terminal evidence and acquiring
-its operation lock nonblockingly. Preserve the prior operation and bundle. Never
+The durable owner remains after completion or process death. An occupied unfinished
+or uncertain owner refuses new work. Explicit succession takes the target lock
+then the predecessor operation lock nonblockingly, admits its exact published
+completion and reauthenticates its retained evidence before replacing the owner. Preserve the prior operation and bundle. Never
 remove/replace lock files: those names must continue to identify the same lock.
-Terminal replay does not need a current target claim and performs no effects.
+Read-only terminal admission does not need a current target claim. Explicit local
+completion reconciliation may synchronize original files, as described below.
 
 An authenticated failure is not automatically terminal: local closure must prove
 no unresolved call or dependent continuation remains. A new owner never refunds
@@ -242,3 +242,62 @@ in the operation contract; passing local-store tests cannot substitute for them.
 
 Blob upload/download, remote authentication, funding and retention remain v2
 integration work. Add no unused dependency or generic storage abstraction now.
+
+### Completed receipt admission
+
+The implemented admission path now distinguishes an exact published receipt from
+readiness or staged publication. Only the former can outlive its original owner
+binding. Original plan, closed ledger, retained evidence and payload still pass
+their existing checks. Missing, changed or staged-only manifests require the
+original owner; they cannot create a receipt under a successor's claim. Reopen
+is read-only. Explicit completion reconciliation can still synchronize original
+files, but cannot sign, submit, append events or alter the successor's owner.
+Explicit claim replacement is described below.
+
+The focused legacy review revisited frozen `4ae087fa`'s
+`model/attempt_journal::applied_receipt`, its
+`applied_receipt_identifies_direct_or_observation_evidence_after_replay` regression,
+and `a860d144`'s original-plan ownership consolidation. The retained lesson is
+that an original receipt does not grant new dispatch or release authority. The
+new store uses its existing manifest/closed-journal checks; it imports neither
+legacy observation graphs nor an independent terminal marker. New native cases
+exercise changed-owner replay and unfinished, missing, staged and changed receipt
+refusals. Synthetic owner replacement qualifies admission, not atomic succession
+or physical power loss. No legacy source was copied.
+
+### Explicit completed-capture succession
+
+`BackupStore::create_capture_after` takes a new plan/approval, the exact predecessor
+plan and its historical transport/provider. It requires the same target and a
+fresh operation ID. Initial journal capacity is admitted before writes. Under
+target-then-predecessor locks, it requires the current owner to match the original
+plan and an already-published exact receipt. It reuses `complete_capture` for
+historical authentication and durability reconciliation; it cannot finish an
+unpublished predecessor or issue a new remote call.
+
+Host FS's held-directory `write_at_validated_with` atomically replaces only the
+small owner pointer, with private permissions and parent synchronization. Host owns
+its temporary projection and before/after-publication errors; an interruption can
+retain staging, which normal strict directory admission refuses without cleanup.
+The validated callback checks the original owner and held directory custody while
+both locks remain held. The same initial-intent writer then creates the successor.
+Original operation, bundle, receipt and lock files are never removed or replaced.
+There is no new on-disk schema, handoff journal or generic transaction framework.
+
+This is not a multi-file transaction. A failure after owner publication may leave
+the successor absent or partially created. Preserve its claim and any files; only
+complete original intent can reopen. No automatic completion of partial creation,
+claim rollback or blind replacement retry is provided. A completed predecessor
+can still be admitted under the replacement claim. A new capture starts with its
+own finite plan, zero reserved calls and independently required live authority.
+
+Focused legacy review inspected frozen `4ae087fa`'s `ops/persistence/journal_lock`
+and its exclusion, retained-lock and unsafe-substitution regressions, plus the
+`a860d144` ownership consolidation history. Reuse nonblocking exclusion and stable
+lock identities; legacy pathname lock creation/cleanup does not own new store
+claims. Native regressions cover lock contention, original receipts, initial
+budget admission, changed/unfinished/staged predecessors and incomplete successor
+images. The real-IC completion fixture now succeeds through succession after
+server shutdown with revoked live permission, then replays the original receipt
+without extra signatures. This does not qualify physical power loss, maximum-size
+throughput or full second-capture effects. No legacy source was copied.

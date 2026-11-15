@@ -18,8 +18,8 @@ Durable metadata acquisition authenticates the retained take, reserves finite
 signing/network allowance and retains exact certified evidence for offline replay.
 Sequential payload acquisition and local artifact assembly are qualified for
 retained evidence and offline replay. Final status and exact local completion
-publication/reconciliation are qualified for the small IC fixture. Target succession,
-Canic process/maintenance adapters and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+publication/reconciliation and authenticated target succession are qualified for
+the small IC fixture. Canic process/maintenance adapters and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 

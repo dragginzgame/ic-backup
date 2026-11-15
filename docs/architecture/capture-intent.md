@@ -6,7 +6,7 @@ pure; `BackupStore::create_capture` writes intent; `open_capture` and
 reservation API for arbitrary calls. Initial direct-host status continuation is
 followed by durable snapshot list/take and local retained-result settlement below;
 bounded lookup, payload acquisition, final status and local completion now extend
-that journal. Target succession and restore remain unfinished. The
+that journal. Explicit completed-target succession is implemented; restore remains unfinished. The
 [operation design](../design/operation-contract.md) owns the proposed next steps.
 
 ## Exact declaration
@@ -99,7 +99,12 @@ operations/<operation-id>/
 Creation takes the target lock, durably retains the owner record, creates and
 locks the operation, then durably retains plan and initial ledger. Owner JSON
 contains `format = ic-backup/local-target-owner/1`, `operation_id` and
-`plan_sha256`. Its exact bytes must match the original plan, within 1 KiB.
+`plan_sha256`. Until an exact published completion is admitted, its bytes must match the original
+plan, within 1 KiB. A closed journal plus its exact published manifest and payload
+can be reopened after target ownership changes. Original plan, ledger, evidence,
+payload and lock custody remain mandatory. Readiness or staging alone does not
+relax ownership; a missing or changed receipt cannot be republished after losing
+the original claim. `create_capture_after` admits the completed predecessor before replacing its claim.
 The target lock is released after creation; the operation lock lives with the
 returned handle. Different targets have independent locks. Duplicate operation
 IDs refuse; a creation race can leave an incomplete second target claim, retained
@@ -263,9 +268,9 @@ or protection against rollback of all local files.
 Creation failures retain every partial file and may leave the target occupied.
 An existing target lock with a missing owner is incomplete, never a fresh target.
 Missing established locks are not recreated beside retained records. Reopen does
-not create, synchronize, repair or discard anything. No terminal succession is
-implemented: even a successfully created intent keeps its target occupied after
-the handle is dropped. There is no cancellation or cleanup escape hatch yet.
+not create, synchronize, repair or discard anything. Dropping a handle keeps the
+target occupied. Only explicit authenticated succession from a published completed
+capture can replace the claim; there is no cancellation or cleanup escape hatch.
 
 ## Append integration dependency
 

@@ -3,7 +3,9 @@
 mod advance;
 mod assembly;
 mod completion;
+mod succession;
 pub use completion::CaptureCompletionError;
+pub use succession::CaptureSuccessionError;
 mod ledger;
 pub use advance::{
     CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
@@ -61,7 +63,7 @@ use thiserror::Error;
 /// Direct-host status and snapshot continuation use durable attempt reservations.
 /// Retained original replies and terminal lookup evidence can settle pending calls.
 /// Payload acquisition, assembly and completion retain original evidence.
-/// Target-owner succession remains unimplemented.
+/// Explicit succession admits a completed predecessor under the target lock.
 #[derive(Debug)]
 pub struct CaptureOperation {
     store: Directory,
@@ -147,7 +149,6 @@ impl CaptureOperation {
                 }
             }
         }
-        exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
         for (ordinal, d) in state.data.iter().enumerate() {
             let names = ledger::data_names(ordinal as u32);
             for (name, reference) in [(&names.0, &d.request), (&names.1, &d.result)] {
@@ -163,7 +164,11 @@ impl CaptureOperation {
                 }
             }
         }
-        self.check_assembly(&state)?;
+        // Only an exact published receipt can outlive its original target claim.
+        // Readiness or retained staging alone must not authorize publication.
+        if !self.check_assembly(&state)? {
+            exact(&self.target, "owner.json", &owner(&self.plan)?, 1024)?;
+        }
         for entry in self.directory.entries(15 + 2 * state.data.len())? {
             let entry = entry?;
             let admitted = match entry.name.to_str() {
@@ -212,8 +217,8 @@ impl BackupStore {
     ///
     /// Target ownership is durable before operation creation. Any failure retains
     /// partial files and may leave the target occupied; it never resets that claim.
-    /// The original target cannot receive another operation until future qualified
-    /// terminal succession is implemented. Independent targets do not share a lock.
+    /// Use `Self::create_capture_after` for a completed predecessor. Independent
+    /// targets do not share a lock.
     ///
     /// # Errors
     /// Refuses wrong approval before writes, occupied IDs/targets, contention,
@@ -253,13 +258,25 @@ impl BackupStore {
             }
         }
         retain(&target, "owner.json", &owner_bytes)?;
+        self.create_claimed_capture(plan, target, target_lock, &ledger_bytes)
+    }
+
+    fn create_claimed_capture(
+        &self,
+        plan: CapturePlan,
+        target: Directory,
+        target_lock: ExclusiveFileLock,
+        ledger_bytes: &[u8],
+    ) -> Result<CaptureOperation, CaptureError> {
+        let operations = child(&self.root, "operations", false)?;
+        let id = &plan.request().operation_id;
         let directory = child(&operations, id, true)?;
         let parent = directory.open_syncable()?;
         let file = create_retained_at(parent.as_fd(), OsStr::new("lock"), 0o600)?;
         file.sync_all()?;
         let lock = acquire(file)?;
         retain(&directory, "plan.json", plan.encoded())?;
-        retain(&directory, "ledger.bin", &ledger_bytes)?;
+        retain(&directory, "ledger.bin", ledger_bytes)?;
         directory.sync()?;
         let target_lock_file = target_lock.file().try_clone()?;
         let ledger_file =
