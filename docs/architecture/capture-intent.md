@@ -192,6 +192,19 @@ status/snapshot/transfer/procedure tests. Removed fake-provider route cases supp
 no IC evidence; unsupported Canic configuration is removed rather than qualified.
 No legacy source was copied.
 
+The macOS fixture correction re-reviewed frozen `4ae087fa` Agent
+`tests/http_boundary/mod.rs` and `tests/http_capture/mod.rs`, plus histories
+`0d4671ed9bf7a5e217e06a67e3fba490871daff4` (retention/failure matrix),
+`7f6df93bfbf4d21844942dd3f4451df47c1f2460` (cancel only after captured ingress)
+and `1af7e219c3073395992c316ecaa5e83e74b1aecc` (bounded Host capture).
+Those cases protect original spending, zero-or-one requests and cancellation
+without retries. The replacement's fixture reads directly from `TcpStream`;
+accepted HTTP/TLS/proxy streams now explicitly select blocking IO before their
+existing timeouts, independently of listener-mode inheritance. Existing HTTP,
+lookup cancellation and runtime cases retain those guarantees; no production
+transport policy or legacy fixture framework is imported. Native macOS execution
+remains required separately from local Linux validation.
+
 The limits consolidation additionally reviewed frozen `4ae087fa`
 `model/operation_plan/{budget/mod.rs,tests/mod.rs}`: changed original budgets,
 overflow and assigned-allowance refusal. The same reviewed `a860d144` ownership

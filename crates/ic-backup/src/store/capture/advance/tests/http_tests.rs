@@ -506,6 +506,8 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
                 Err(error) => panic!("fixture accept: {error}"),
             }
         };
+        // The listener polls; the TLS peer uses bounded blocking IO.
+        stream.set_nonblocking(false).unwrap();
         stream
             .set_read_timeout(Some(Duration::from_secs(2)))
             .unwrap();

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.102.1] — Unreleased
+
+### 🧪 Testing
+
+- Explicitly select blocking IO for accepted HTTP/TLS fixture and IC proxy
+  connections, preserving timeouts when macOS inherits the listener's nonblocking mode.
+
 ## [0.102.0] - 2026-11-16
 
 Unpublished GitHub checkpoint.

@@ -59,6 +59,8 @@ impl Proxy {
                         }
                         Err(e) => panic!("proxy accept: {e}"),
                     };
+                    // Accepted sockets can inherit nonblocking mode on macOS.
+                    client.set_nonblocking(false).unwrap();
                     client
                         .set_read_timeout(Some(Duration::from_secs(60)))
                         .unwrap();

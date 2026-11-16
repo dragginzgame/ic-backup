@@ -1,14 +1,26 @@
 # Current handoff — 2026-11-16
 
-Work: `/home/adam/projects/ic-backup`, branch `main`. Version 0.102.0 is an
-unpublished GitHub checkpoint. The user authorized the version commit and push
-to `origin/main`; no tags, registry publication or deployment are selected.
-The previous remote checkpoint is `dc4bba68bbaeb0966ecefb8335c4ede85d95e125`
-(0.101.12), followed locally by the preserved 0.101.13 reader. The minor increment
-covers incompatible APIs/store formats: consumers adopt the fixed operation API;
-older operations retain their preserved reader and authority, without migration.
-Both locks select local Backup 0.102.0; the qualification lock also adds the
-test-only consumer. Supplier versions and the managed receipt remain unchanged.
+Work: `/home/adam/projects/ic-backup`, branch `main`, pushed
+`af240881239112b8a8a9250b4c37e3f00dc68b19` (0.102.0, unpublished).
+Both locks select Backup 0.102.0; suppliers and managed receipt are unchanged.
+The minor increment replaces APIs/store formats. Older operations retain their
+preserved readers and authority; no migration is provided. The pending 0.102.1
+patch repairs fixture socket modes without changing product APIs or stored data.
+GitHub delivery of this fixture correction is authorized; hosted CI is the next
+check. Package versions remain 0.102.0 and no registry upload is requested.
+
+## Publication audit — next work
+
+The [full comparison/readiness audit](../reports/audits/2026/11/16/publication-readiness/01/report.md)
+finds the small direct-controller workflow implemented but publication not ready.
+The pushed revision failed both macOS jobs (ARM: 10 tests, Intel: 21). Pending
+HTTP/TLS/proxy fixtures explicitly select blocking accepted sockets with the same
+timeouts; fresh hosted ARM/Intel results remain required. The maintainer revised
+the target to 20 MiB; qualify its complete journey and measured costs. This fits
+below the identified reservation ceiling for bounded shapes, not arbitrary chunks.
+Archive build/offline replay pass at the audited revision. Publication wiring,
+packaged README/migration guidance and coordinated Canic manager admission/replay
+remain unfinished.
 
 ## Legacy review corrections
 
@@ -22,11 +34,10 @@ New profiles allow 2 MiB request / 4 MiB result / 2 MiB certificate ceilings aro
 A separate normal-dependency consumer qualifies fresh-process continuation/replay;
 current source/restore documentation and shared API names are corrected.
 
-Fresh size: 8,098 product Rust LOC; 196 test-only consumer LOC; 12,583 test LOC;
-20,877 total, zero unclassified. Against frozen legacy, raw repository app/lib is
-46.99% smaller and total is 53.48% smaller. Product-only repository comparison is
-48.24% smaller; crate-only production is 40.36% smaller. Scope is narrower and
-Canic work remains external; these figures establish neither parity nor speed.
+Audited size: 8,098 product / 196 consumer / 12,583 test Rust LOC, zero unclassified.
+Against frozen legacy, app/lib is 46.99% smaller; total 53.48%, repository production
+48.24%, crate-only production 40.36%. Narrower scope establishes neither parity
+nor speed; the [assessment](../design/legacy-assessment.md) retains the comparison.
 
 ## Implemented Backup scope
 
@@ -36,29 +47,25 @@ original-call recovery, cold continuation and completed-target succession.
 Capture/restore leave the application stopped. One `BackupConnection`, signer,
 action guard and private sealed recorder serve both fixed procedures. Shared
 errors are `OperationStoreError`, `OperationAdvanceError` and `BackupHttpError`;
-transport is `BackupHttpTransport`. No compatibility aliases were added.
-
-The [operation contract](../design/operation-contract.md) owns immutable approval,
-ID-only reopening and capture/restore ordering. Complete metadata/byte checks
-precede loading. Pending calls never repeat; original signing/network spending
+transport is `BackupHttpTransport`.
+The [operation contract](../design/operation-contract.md) owns approvals, cold reopen and ordering.
+Complete metadata/byte checks precede load. Pending calls never repeat; spending
 survives interruption. Explicit observation retains separate original timing.
 Dependent effects require live permission. Completed replay uses original evidence
 without clock, guard, signing, HTTP or writes. Unknown tails/orphans/changed files
 refuse intact; uncertain writes invalidate the handle. No reset/refund/start occurs.
 [Capture](../architecture/capture-intent.md), [transfer](../architecture/capture-transfer.md)
-and [restore](../design/local-store.md#immutable-restore-approval-and-original-custody)
-own exact behavior; [restart](../design/restart.md) owns composition.
+and [restore](../design/local-store.md#immutable-restore-approval-and-original-custody) own behavior.
 
 ## Acceptance and preservation
 
-Current `target/evidence/review-fixes-*.log`: 232 native tests, ten actual-IC journeys,
-five public examples, strict Clippy for both workspaces, warning-denying Rustdoc,
-shared formatting/tooling admission, links and whitespace checks pass. Final
-comment/error-message/import cleanup changed no runtime behavior; Clippy/Rustdoc
-cover those edits. Earlier `target/evidence/backup-completion/` remains retained.
-Version preparation reuses those unchanged runtime checks; both locked metadata
-graphs, strict Clippy and formatting/links/tooling pass at 0.102.0, with evidence
-under `target/evidence/version-0.102.0-*`. Every package remains non-publishable.
+Fresh `target/evidence/macos-fixture-*`: 232 native tests, strict Clippy for both
+workspaces, formatting and documentation links pass on Linux. The actual-IC
+capture/restore/succession/offline-replay case passes through the repaired proxy
+(158 seconds). Hosted macOS still needs the repaired revision.
+Prior `review-fixes-*`: ten actual-IC/five public examples and strict Rustdoc pass.
+`publication-audit-*` covers the original archive; failed fixtures remain retained.
+Every package remains non-publishable.
 
 New IC cases qualify a full 1 MiB whole chunk through capture/restore, offline load
 settlement from an error-returned certificate after failed local writing, and a
@@ -91,8 +98,6 @@ retains exact ownership. Full integration needs the actual manager's authenticat
 receipt protocol/surviving ledger, bounded signer, continuous application/rewind
 fence and real consumer qualification. No substitute route is invented locally.
 
-The retained paired IO measurements in `target/evidence/reduction-followthrough/`
-do not measure complete restore or establish throughput. Historical replay still
-accumulates quadratic work. Full 1 GiB journeys, Canic maintenance/process adapters,
-production HTTPS, hosted macOS, physical power loss and registry/release consumers
-remain unqualified. Publication and deployment require separate authorization.
+Replay remains quadratic; 20 MiB journeys, Canic adapters, production HTTPS,
+hosted macOS, physical power loss and registry/release consumers remain unqualified.
+Publication and deployment require separate authorization.
