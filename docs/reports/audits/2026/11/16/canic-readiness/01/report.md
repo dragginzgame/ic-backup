@@ -11,8 +11,10 @@ request ceiling in lookup admission. A new native regression reproduces the old
 actual-IC interrupted-allocation case passes under the 2 MiB profile with exact
 one-observation spending and offline replay. Evidence is retained under
 `target/evidence/lookup-profile-fix/`. The correction is included in the
-maintainer-authorized GitHub delivery batch, but remains unpublished on crates.io;
-0.102.1 remains affected. Original findings and failed evidence below
+maintainer-authorized GitHub delivery batch and published in
+[0.103.0](https://crates.io/crates/ic-backup/0.103.0), release commit
+`34e268a866aed8d30ffbdb7d09283d768f36fc65`; 0.102.1 remains affected.
+Original findings and failed evidence below
 remain historical; no original reservation or approval was reset.
 
 ## Verdict

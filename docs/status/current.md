@@ -1,11 +1,26 @@
 # Current handoff — 2026-11-16
 
-Release **0.103.0** is prepared under the maintainer's explicit deploy/publish
-request. Product, both maintained locks and qualification's requirement select
-0.103.0; qualification stays private and supplier selections are unchanged.
-Git release delivery and the complete publication gate/upload are pending.
-Evidence belongs under `target/evidence/release-0.103.0/` and the existing
-`target/publication/` adapter directories. Hosted CI stays asynchronous.
+Release **[0.103.0](https://crates.io/crates/ic-backup/0.103.0) is published** under
+the maintainer's explicit deploy/publish request. Annotated
+[tag v0.103.0](https://github.com/dragginzgame/ic-backup/tree/v0.103.0) and `main`
+were pushed atomically at `34e268a866aed8d30ffbdb7d09283d768f36fc65` and independently
+read back from GitHub. Product, both locks and qualification select 0.103.0;
+qualification stays private and supplier selections are unchanged.
+Scoped post-push review found no additional issue in payload checks/release callers.
+Hosted CI stays asynchronous; no hosted result is claimed.
+
+The complete publication gate passed: 236 native tests, five documentation examples,
+all 11 actual-IC journeys (105.82 seconds), both Clippy checks, formatting, rustdoc,
+links, isolated archive consumer and publication-caller regression. The single upload
+in `target/publication/publish.selection.RkiVSN/` has Cargo/logger/final statuses 0.
+Official registry SHA-256 is
+`4269639bb9857e5079dcc71d2aaa689537976aa04212bc236eaa7b5a1b24f046`;
+the archive has clean release-commit provenance and all 94 tracked source files match.
+A fresh normal registry consumer resolves 0.103.0 without Testkit/PocketIC, builds
+offline and replays completed 20 MiB capture/restore in separate processes without
+a backend. Its graph, build and replay results remain beside the registry readback.
+Evidence remains under `target/evidence/release-0.103.0/`; package verification is
+in `target/package-consumer/check.g4L1ji/`.
 
 The previous published release is [0.102.1](https://crates.io/crates/ic-backup/0.102.1),
 tag `v0.102.1`, commit `1db82ba22ac15c761906af0935e0e918acf40801`.
@@ -32,7 +47,8 @@ is fixed using the shared 2 MiB request ceiling with original authentication,
 expiry and spent-observation checks. Six native lookup tests and actual-IC
 interrupted allocation/offline replay at 2 MiB pass. Evidence remains under
 `target/evidence/lookup-profile-fix/`; original failed audit journals remain under
-`target/evidence/canic-readiness-audit/`. Published 0.102.1 still has that defect.
+`target/evidence/canic-readiness-audit/`. Release 0.103.0 fixes the published
+0.102.1 defect.
 
 Replay reuses Host's read digest, authenticates each owned original request once,
 and indexes held evidence by canonical name. Read-only materialization removes an
