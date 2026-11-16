@@ -204,6 +204,13 @@ existing timeouts, independently of listener-mode inheritance. Existing HTTP,
 lookup cancellation and runtime cases retain those guarantees; no production
 transport policy or legacy fixture framework is imported. Native macOS execution
 remains required separately from local Linux validation.
+The first hosted repair run reduced ARM failures to only the peer-close assertion.
+The original cancellation review also covers `tests/http_boundary/recovery/mod.rs`
+at the same frozen revision: cancellation follows actual retained ingress and
+cannot dispatch again. The new fixture additionally requires peer closure and
+accepts either EOF or `ConnectionReset`; a timeout, extra byte or other IO error
+fails with its original result. This accommodates cancellation before response
+headers are consumed without weakening the no-detached-retry assertion.
 
 The limits consolidation additionally reviewed frozen `4ae087fa`
 `model/operation_plan/{budget/mod.rs,tests/mod.rs}`: changed original budgets,

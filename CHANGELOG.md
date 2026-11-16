@@ -6,6 +6,8 @@
 
 - Explicitly select blocking IO for accepted HTTP/TLS fixture and IC proxy
   connections, preserving timeouts when macOS inherits the listener's nonblocking mode.
+- Recognize peer reset as well as EOF when observing HTTP cancellation; timeouts,
+  other read failures and detached retries still fail the fixture.
 
 ## [0.102.0] - 2026-11-16
 

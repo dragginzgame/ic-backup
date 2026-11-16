@@ -1,21 +1,22 @@
 # Current handoff — 2026-11-16
 
 Work: `/home/adam/projects/ic-backup`, branch `main`, pushed
-`af240881239112b8a8a9250b4c37e3f00dc68b19` (0.102.0, unpublished).
+`3fae3b5545df3dfcd96f00276f0e48e69b779cbc` (0.102.0, unpublished).
 Both locks select Backup 0.102.0; suppliers and managed receipt are unchanged.
 The minor increment replaces APIs/store formats. Older operations retain their
 preserved readers and authority; no migration is provided. The pending 0.102.1
 patch repairs fixture socket modes without changing product APIs or stored data.
-GitHub delivery of this fixture correction is authorized; hosted CI is the next
-check. Package versions remain 0.102.0 and no registry upload is requested.
+The first fixture correction is pushed; its hosted ARM run passes 231/232 cases.
+The cancellation follow-up accepts peer reset/EOF and diagnoses other results.
+Package versions remain 0.102.0 and no registry upload is requested.
 
 ## Publication audit — next work
 
 The [full comparison/readiness audit](../reports/audits/2026/11/16/publication-readiness/01/report.md)
 finds the small direct-controller workflow implemented but publication not ready.
-The pushed revision failed both macOS jobs (ARM: 10 tests, Intel: 21). Pending
-HTTP/TLS/proxy fixtures explicitly select blocking accepted sockets with the same
-timeouts; fresh hosted ARM/Intel results remain required. The maintainer revised
+The original af24088 failed both macOS jobs (ARM: 10 tests, Intel: 21). The
+HTTP/TLS/proxy fixtures now explicitly select blocking sockets with the same
+timeouts; hosted ARM/Intel acceptance remains pending. The maintainer revised
 the target to 20 MiB; qualify its complete journey and measured costs. This fits
 below the identified reservation ceiling for bounded shapes, not arbitrary chunks.
 Archive build/offline replay pass at the audited revision. Publication wiring,
@@ -63,6 +64,10 @@ Fresh `target/evidence/macos-fixture-*`: 232 native tests, strict Clippy for bot
 workspaces, formatting and documentation links pass on Linux. The actual-IC
 capture/restore/succession/offline-replay case passes through the repaired proxy
 (158 seconds). Hosted macOS still needs the repaired revision.
+`macos-cancellation-*`: all 20 HTTP cases, strict Clippy, formatting and links pass.
+[First repair CI](https://github.com/dragginzgame/ic-backup/actions/runs/43834125069)
+leaves one ARM cancellation assertion; post-push review found no architectural
+drift in the three fixture mode changes or their directly affected callers.
 Prior `review-fixes-*`: ten actual-IC/five public examples and strict Rustdoc pass.
 `publication-audit-*` covers the original archive; failed fixtures remain retained.
 Every package remains non-publishable.

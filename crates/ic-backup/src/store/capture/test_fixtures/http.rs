@@ -164,7 +164,14 @@ impl Server {
                             stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 10\r\n\r\n").unwrap();
                             let mut byte = [0];
                             let result = stream.read(&mut byte);
-                            closed.store(matches!(result, Ok(0)), Ordering::SeqCst);
+                            // Cancellation can close before the peer consumes the headers,
+                            // yielding a reset instead of an orderly EOF.
+                            assert!(
+                                matches!(&result, Ok(0))
+                                    || matches!(&result, Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset),
+                                "expected peer closure after cancellation, got {result:?}"
+                            );
+                            closed.store(true, Ordering::SeqCst);
                         }
                         Response::HoldBody => {
                             stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 10\r\n\r\n").unwrap();
