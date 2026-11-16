@@ -1,22 +1,22 @@
 # Current handoff — 2026-11-16
 
 Work: `/home/adam/projects/ic-backup`, branch `main`, pushed
-`3fae3b5545df3dfcd96f00276f0e48e69b779cbc` (0.102.0, unpublished).
+`244ed63ce14f95eaa27edc0ef3137e481f0814b9` (0.102.0, unpublished).
 Both locks select Backup 0.102.0; suppliers and managed receipt are unchanged.
 The minor increment replaces APIs/store formats. Older operations retain their
 preserved readers and authority; no migration is provided. The pending 0.102.1
 patch repairs fixture socket modes without changing product APIs or stored data.
-The first fixture correction is pushed; its hosted ARM run passes 231/232 cases.
-The cancellation follow-up accepts peer reset/EOF and diagnoses other results.
-Package versions remain 0.102.0 and no registry upload is requested.
+Both fixture corrections are pushed. Cancellation accepts peer reset/EOF and
+diagnoses other results. Package versions remain 0.102.0; no registry upload.
 
 ## Publication audit — next work
 
 The [full comparison/readiness audit](../reports/audits/2026/11/16/publication-readiness/01/report.md)
 finds the small direct-controller workflow implemented but publication not ready.
-The original af24088 failed both macOS jobs (ARM: 10 tests, Intel: 21). The
-HTTP/TLS/proxy fixtures now explicitly select blocking sockets with the same
-timeouts; hosted ARM/Intel acceptance remains pending. The maintainer revised
+The original af24088 failed both macOS jobs (ARM: 10 tests, Intel: 21).
+HTTP/TLS/proxy fixtures now select blocking sockets with the same timeouts;
+current CI passes ARM/Linux/scaffold; Intel passed 231/232, exposing a 150 ms
+deadline fixture that dispatched zero requests. The maintainer revised
 the target to 20 MiB; qualify its complete journey and measured costs. This fits
 below the identified reservation ceiling for bounded shapes, not arbitrary chunks.
 Archive build/offline replay pass at the audited revision. Publication wiring,
@@ -63,11 +63,16 @@ and [restore](../design/local-store.md#immutable-restore-approval-and-original-c
 Fresh `target/evidence/macos-fixture-*`: 232 native tests, strict Clippy for both
 workspaces, formatting and documentation links pass on Linux. The actual-IC
 capture/restore/succession/offline-replay case passes through the repaired proxy
-(158 seconds). Hosted macOS still needs the repaired revision.
+(158 seconds). The qualification workspace has only local Linux evidence.
 `macos-cancellation-*`: all 20 HTTP cases, strict Clippy, formatting and links pass.
-[First repair CI](https://github.com/dragginzgame/ic-backup/actions/runs/43834125069)
-leaves one ARM cancellation assertion; post-push review found no architectural
-drift in the three fixture mode changes or their directly affected callers.
+[Current CI](https://github.com/dragginzgame/ic-backup/actions/runs/43834667442)
+passes ARM/Linux/scaffold; Intel fails only the narrow deadline fixture.
+`macos-deadline-*` passes 20 HTTP tests, strict Clippy, formatting and links after
+starting two-second bounds after setup, below a five-second watchdog and the
+30-second transport timeout. Exactly one request remains mandatory.
+ARM passes 232 native/five doc tests on the preceding revision.
+Post-push review of both commits and cancellation/TLS/proxy callers found no new
+actionable drift, duplicate policy, recovery paths or unused abstractions.
 Prior `review-fixes-*`: ten actual-IC/five public examples and strict Rustdoc pass.
 `publication-audit-*` covers the original archive; failed fixtures remain retained.
 Every package remains non-publishable.
@@ -104,5 +109,5 @@ receipt protocol/surviving ledger, bounded signer, continuous application/rewind
 fence and real consumer qualification. No substitute route is invented locally.
 
 Replay remains quadratic; 20 MiB journeys, Canic adapters, production HTTPS,
-hosted macOS, physical power loss and registry/release consumers remain unqualified.
+actual-IC on macOS, physical power loss and registry/release consumers remain unqualified.
 Publication and deployment require separate authorization.

@@ -240,19 +240,22 @@ fn cancelled_read_state_closes_the_connection_without_detached_retries() {
 #[test]
 fn lookup_deadline_and_lookup_expiry_each_bound_body_waiting() {
     let (p, r, a, _) = input();
+    let rt = runtime();
     for expiry in [false, true] {
         let s = Server::new(Response::HoldBody);
         let transport = s.client(&p, Duration::from_secs(30));
         let mut policy = policy();
+        // Allow dispatch on loaded hosts while keeping the watchdog below
+        // the transport timeout, so only the original lookup bound can pass.
         if expiry {
-            policy.request.expires_ns = now() + 500_000_000;
+            policy.request.expires_ns = now() + 2_000_000_000;
         } else {
-            policy.deadline_ns = now() + 500_000_000;
+            policy.deadline_ns = now() + 2_000_000_000;
         }
         let bytes = lookup(&p, &r, Scheme::Ed25519, policy.request.expires_ns);
-        let result = runtime().block_on(async {
+        let result = rt.block_on(async {
             tokio::time::timeout(
-                Duration::from_secs(3),
+                Duration::from_secs(5),
                 transport.lookup_once(&p, &a, &r, CaptureCall::Status, &bytes, policy),
             )
             .await

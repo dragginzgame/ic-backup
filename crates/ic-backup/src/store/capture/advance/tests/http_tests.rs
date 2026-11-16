@@ -326,16 +326,18 @@ fn original_submit_deadline_and_ingress_expiry_bound_body_waits() {
     let rt = runtime();
     for expiry in [false, true] {
         let (p, mut r, mut a, _) = input();
+        let server = Server::new(Response::HoldBody);
+        let transport = server.client(&p, Duration::from_secs(30));
+        // Start after setup and allow a loaded host to dispatch before expiry.
+        // The watchdog still precedes the transport's own timeout.
         if expiry {
-            set_expiry(&mut r, now() + 150_000_000, Scheme::Ed25519);
+            set_expiry(&mut r, now() + 2_000_000_000, Scheme::Ed25519);
         } else {
             a.prepare_deadline_ns = now();
-            a.submit_deadline_ns = a.prepare_deadline_ns + 150_000_000;
+            a.submit_deadline_ns = a.prepare_deadline_ns + 2_000_000_000;
         }
-        let server = Server::new(Response::HoldBody);
-        let transport = server.client(&p, Duration::from_secs(2));
         let result = rt.block_on(async {
-            tokio::time::timeout(Duration::from_secs(1), transport.submit_once(&p, &a, &r))
+            tokio::time::timeout(Duration::from_secs(5), transport.submit_once(&p, &a, &r))
                 .await
                 .expect("original deadline must precede fixture watchdog")
         });

@@ -211,6 +211,11 @@ cannot dispatch again. The new fixture additionally requires peer closure and
 accepts either EOF or `ConnectionReset`; a timeout, extra byte or other IO error
 fails with its original result. This accommodates cancellation before response
 headers are consumed without weakening the no-detached-retry assertion.
+Intel then exposed a 150 ms submit window expiring before any request arrived.
+The submit and lookup body-wait regressions now finish fixture/runtime setup
+before setting a two-second original bound, with a five-second watchdog below
+the 30-second transport timeout. They still require exactly one real request and
+termination before the transport timeout; no production deadline is changed.
 
 The limits consolidation additionally reviewed frozen `4ae087fa`
 `model/operation_plan/{budget/mod.rs,tests/mod.rs}`: changed original budgets,
