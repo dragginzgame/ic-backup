@@ -1,6 +1,6 @@
 # IC Backup
 
-For the pending Host 0.80 adoption, commitment arguments and results use
+In 0.103.0, commitment arguments and results use
 `ic_backup::store::BackupDigest`. Replace the former Host `Sha256Digest` import;
 `compute`, `from_bytes`, `as_bytes` and canonical lowercase parsing/display remain
 available on the new Backup type. Filesystem and byte errors now use Host 0.80
@@ -19,7 +19,7 @@ product and is still unfinished. A host controlling a manager canister does not
 thereby control that manager's children. No manager route is implemented here.
 
 This incompatible restart replaces legacy `ic-backup`/`ic-backup-agent` APIs.
-Version 0.102.1 is the experimental restart release. Rust 1.100 or later is
+Version 0.103.0 remains an experimental restart release. Rust 1.100 or later is
 required. Native checks target Linux x86-64 and macOS ARM64/x86-64;
 actual-IC qualification currently runs locally on Linux using PocketIC.
 

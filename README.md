@@ -3,7 +3,7 @@
 A standalone host-side Internet Computer backup library. Canic is a required
 integration and owns its adapter, membership, application maintenance and external
 obligations. Backup production depends on Platform and Host, without Canic runtime
-or control-plane crates. The 0.102.1 release is an experimental direct-controller
+or control-plane crates. The 0.103.0 release is an experimental direct-controller
 library; qualification packages remain private.
 
 The [packaged consumer guide](crates/ic-backup/README.md) explains required adapters,

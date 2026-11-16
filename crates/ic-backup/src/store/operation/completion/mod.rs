@@ -314,7 +314,9 @@ impl CaptureOperation {
                     for &n in &member.ordinals {
                         let bytes = self.payload(journal, &transfer, n)?;
                         hash.write_all(&bytes).map_err(OperationStoreError::from)?;
-                        if let Some(file) = &mut file {
+                        // Before creating anything, admit every existing member.
+                        // Read-only verification uses the complete closing tree hash below.
+                        if create && let Some(file) = &mut file {
                             let mut actual = vec![0; bytes.len()];
                             file.read_exact(&mut actual)
                                 .map_err(OperationStoreError::from)?;

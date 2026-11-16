@@ -1,13 +1,6 @@
 # Changelog
 
-## [0.103.0] - Unreleased
-
-### 🐛 Fixed
-
-- Admit original-result lookup under every supported request ceiling through
-  2 MiB using the shared request limit. Preserve exact sender/path/expiry checks
-  and spent observations; qualify interrupted allocation recovery at 2 MiB.
-- Correct lookup authentication and Host error documentation after API migration.
+## [0.103.0] - 2026-11-16
 
 ### ⚠️ Breaking
 
@@ -17,12 +10,22 @@
   intents, journals and manifests keep their existing formats.
 - Publish an exact retained manifest through Host's `admit_retained` API,
   preserving its original inode and create-only recovery authority
-  ([IC Tooling #2](https://github.com/dragginzgame/ic-tooling/issues/2)).
+  ([IC Tooling #2 — Publish original retained files after reopen](https://github.com/dragginzgame/ic-tooling/issues/2)).
   Use complete bounded producer hashing for materialization and direct SHA-256
   for the fixed capture module stream; remove obsolete qualification digest dependencies.
 
+### 🐛 Fixed
+
+- Admit original-result lookup under every supported request ceiling through
+  2 MiB using the shared request limit. Preserve exact sender/path/expiry checks
+  and spent observations; qualify interrupted allocation recovery at 2 MiB.
+- Correct lookup authentication and Host error documentation after API migration.
+
 ### 🔧 Changed
 
+- Verify read-only materialized payloads with the complete closing tree hash,
+  removing an earlier duplicate payload read. Keep admission of all existing
+  members before creating any missing file and preserve closing custody checks.
 - Reuse Host's digest when reading retained operation evidence, removing a second
   full SHA-256 pass while preserving exact length, digest and closing custody checks.
 - Authenticate each original request once within semantic replay, then bind its
@@ -33,7 +36,7 @@
   lists while retaining complete byte and directory admission.
 - Adopt Toko Tooling 0.44.5 in both workspaces and refresh the managed snapshot.
   The supplier fixes declaration checks for the required tooling pin and private
-  qualification versions ([Toko Tooling #386](https://github.com/dragginzgame/toko-tooling/issues/386)).
+  qualification versions ([Toko Tooling #386 — Align exact tooling pin and qualification checks](https://github.com/dragginzgame/toko-tooling/issues/386)).
 
 ## [0.102.1] - 2026-11-16
 

@@ -758,7 +758,7 @@ fn materialized_closed_tree_rejects_legacy_corruption_cases_on_new_replay() {
     // changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition.
     // Missing members may be materialized before final status in the new contract;
     // after that request is retained, replay must only verify the original tree.
-    for mutation in 0..8 {
+    for mutation in 0..9 {
         let (path, parent, mut recorder) = fixture();
         for step in [
             Step::InitialStatus,
@@ -775,7 +775,8 @@ fn materialized_closed_tree_rejects_legacy_corruption_cases_on_new_replay() {
             .append_fixture(FactRecord::MaterializationStarted, None)
             .unwrap();
         let journal = recorder.check().unwrap();
-        let flow = recorder.project(&journal, &recorder.intent).unwrap();
+        let intent = recorder.intent.clone();
+        let flow = recorder.project(&journal, &intent).unwrap();
         recorder.materialize(&journal, &flow, true).unwrap();
         append_call(&mut recorder, Step::FinalStatus, true);
         let dir = path
@@ -797,10 +798,19 @@ fn materialized_closed_tree_rejects_legacy_corruption_cases_on_new_replay() {
                 symlink(path.join("retained-module"), &module).unwrap();
             }
             6 => fs::hard_link(&module, path.join("retained-alias")).unwrap(),
-            _ => {
+            7 => {
                 fs::rename(&dir, path.join("retained-payload")).unwrap();
                 fs::DirBuilder::new().mode(0o700).create(&dir).unwrap();
             }
+            8 => {
+                fs::rename(&module, path.join("retained-module")).unwrap();
+                fs::write(dir.join("heap.bin"), b"wrong").unwrap();
+                // A later corrupt member must refuse before recreating an earlier missing one.
+                assert!(recorder.materialize(&journal, &flow, true).is_err());
+                assert!(!module.exists());
+                assert_eq!(fs::read(dir.join("heap.bin")).unwrap(), b"wrong");
+            }
+            _ => unreachable!(),
         }
         let journal_path = directory(&path, &recorder).join("journal.bin");
         let original = fs::read(&journal_path).unwrap();

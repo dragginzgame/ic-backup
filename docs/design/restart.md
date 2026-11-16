@@ -377,6 +377,20 @@ ownership and reduced lookup/allocation work without a throughput claim. Evidenc
 is in `target/evidence/replay-index-review/`; the preliminary timings collected
 alongside native tests are retained separately and excluded from those medians.
 
+The larger-payload follow-up removes the early byte comparison during read-only
+materialization; the full closing tree hash still compares every member against
+commitments derived from original evidence. Creation retains its admission pass
+before any missing file is written. On the retained 20 MiB capacity fixture,
+optimized offline open-plus-inspect reads 220 to 140 MiB of payload for capture
+and 500 to 380 MiB for restore, measured with `strace`. Original evidence, journal
+and other store-byte totals are identical. This saves 80 / 120 MiB, or 13.8% / 8.1%
+of all store bytes read by those commands. These are logical reads, not physical
+disk traffic. Three alternating-order paired runs without tracing measured median
+capture 963.43 to 959.29 ms and restore 2570.78 to 2562.18 ms: no meaningful speedup
+is established. Evidence replay remains the larger unchanged read cost; overall
+history replay is still quadratic. Sources, before/after consumers, exact original
+fixture selection, timings and traces remain in `target/evidence/replay-payload-review/`.
+
 ### Completed restore cut and remaining work
 
 The new [restore contract](local-store.md#immutable-restore-approval-and-original-custody)

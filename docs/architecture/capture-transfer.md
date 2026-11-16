@@ -82,6 +82,15 @@ evidence and journal. It is published create-only. Exact complete staging can
 reconcile locally; partial/changed staging refuses. Read-only published replay
 does no synchronization or publication.
 
+Read-only materialization derives expected member lengths/hashes from original
+retained evidence, then reads the actual payload once through the complete closing
+tree hash. It compares every expected member, length and digest and retains the
+original descriptor and parent/directory checks. An earlier byte-for-byte payload
+comparison is redundant on this effect-free path. When creating missing members,
+that early comparison remains mandatory: admit **all** existing members before
+creating any missing one, then independently hash the complete tree after writing.
+No expected commitments or authentication results are persisted as a cache.
+
 ## Restore source scheduling
 
 `open_capture_source` authenticates original completion and holds same-store
@@ -124,6 +133,26 @@ outside the selected round-trip profile; legacy could retain them as evidence.
 The old Canic configuration-only route is removed pending its actual executor
 contract. Original raw metadata/snapshot golden vectors and hashes remain beside
 their owning tests with provenance; no legacy implementation was copied.
+
+The read-only payload-pass reduction re-reviewed frozen artifact
+`verification/mod.rs::{checksum_child_with, checksum_exact_reader}`, its
+`callback_reads_reject_same_length_replacement_and_retain_both_files` regression,
+and artifact `tests/mod.rs::changed_unsafe_extra_and_missing_files_reject_before_any_journal_transition`.
+History `9f7b886a824eec67dda8f81792a560436419bb2a` consolidates an owning verification
+pass while retaining original record and closing namespace checks. Backup keeps
+its complete closing SHA-256 comparison and held identities; only the earlier
+read-only payload comparison is removed. The owning recorder's corruption matrix
+still covers changed/truncated/missing/extra/unsafe files and now also proves that
+a corrupt existing heap blocks creation of a missing module. Legacy arbitrary
+arrival order and metadata files are outside the fixed new layout; no source was
+copied and no historical pass is counted as new qualification.
+
+Fresh reduction evidence: all 15 recorder custody tests, the mutation-across-HTTP
+regression and actual-IC 20 MiB capture/restore/interrupted-transfer/offline replay
+pass; the latter completes in 90.10 seconds. Strict product Clippy also passes.
+Logs and retained failed compile preparation are under
+`target/evidence/replay-payload-review/`; before/after offline read counts and
+timing limits are recorded in [the restart measurements](../design/restart.md#size-maintained-surface-and-repeated-io).
 
 Repeated phase signing/submission/recovery matrices now live once at
 `operation/runtime/tests.rs`; phase-specific geometry, bounded parsing,
