@@ -8,6 +8,17 @@ atomically and independently read back from GitHub. Product, both locks and the
 qualification requirement select 0.102.1; qualification stays private.
 Hosted CI was left asynchronous, without polling, as requested.
 
+The [Canic-readiness code audit](../reports/audits/2026/11/16/canic-readiness/01/report.md)
+found one reproducible Backup defect: an admitted request ceiling above 1 MiB
+(including the documented 2 MiB restore profile) fails lookup authentication at
+the stale 1 MiB bound after reserving the observation. A focused actual-IC
+interrupted-allocation probe fails with `CapturePlan(Lookup(Bounds))`; original
+journal/evidence remain under `target/evidence/canic-readiness-audit/`.
+Fix and qualify this before Canic pins the dependency. No runtime fix, commit or
+publication occurred in the audit; the release passes below did not exercise
+this cross-profile recovery case. Canic integration can start as coordinated
+work on real signing, manager execution/admission/replay and fenced recovery.
+
 Release supplier review found the selected Host 0.79.0, Platform 0.33.7,
 Testkit 0.106.0 and Tooling 0.44.4 are the current stable non-yanked registry
 versions. No supplier changed; only Backup's entries changed in both locks.
