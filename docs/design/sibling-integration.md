@@ -88,13 +88,17 @@ worker. The current worker therefore cannot use Backup's direct-host profile.
 Do not add a controller, change visibility or substitute a proxy principal merely
 to make the standalone path pass.
 
-The public management API permits canister-originated snapshot operations; the
-[IC management specification](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
-is the protocol reference. However, Platform's current take/load/read/upload DTOs
-are exported only under `not(target_family = "wasm")`. A typed Canic manager
-executor needs a Platform-owned, Wasm-usable snapshot DTO/codec surface, qualified
-without native Agent dependencies. This is a concrete supplier gap to resolve
-before implementing that route, not permission to duplicate those DTOs in Canic.
+The public management API permits canister-originated snapshot operations.
+The earlier native-only DTO gap is resolved in the selected registry Platform
+0.33.7: `management_canister_types/snapshot/{mod.rs,codec/mod.rs}` and its parent
+export snapshot records/codecs on Wasm; only native client extensions remain
+target-gated. A temporary caller compiled take/load/read/upload DTOs and owned
+Candid encoding for `wasm32-unknown-unknown` with only the management feature.
+Its locked graph contains no Agent/transport dependency. Source is the same verified
+0.33.7 archive already selected by Backup; product/qualification locks did not change.
+Evidence: `target/evidence/reduction-followthrough/platform-wasm.log`.
+This proves that supplier target boundary, not a Canic executor or live IC calls
+from Canic. No local DTO copy or new maintained package was added.
 
 Propose two explicit, immutable execution bindings:
 
@@ -110,6 +114,25 @@ manager reply is not a raw management ingress certificate; it needs an authentic
 Canic receipt bound to the underlying retained effect. Source identity and
 management sender remain separate fields. Never silently fall back between routes,
 change a pending route, or infer execution authority from a principal's role label.
+
+### Replacement follow-up, 2026-11-15
+
+Read-only recheck of Canic at `fe3a73d297f268932d54e8109038f58198042582`
+with local changes found the same controller distinction in the newer managed
+starter. Its [system design](https://github.com/dragginzgame/canic/blob/fe3a73d297f268932d54e8109038f58198042582/docs/design/canic-system-design.md)
+(section 4, infrastructure roles) identifies Root as its application's sole
+controller and the external operator as Root's controller. Section 13 retains
+application-only checkpoint recovery with surviving control-plane authority;
+section 17 still describes the Backup adapter as future consumer-gated work.
+These are design/source observations, not fresh IC qualification. No sibling files
+were changed and this recheck does not requalify the earlier Platform DTO gap.
+
+Consequently the [replacement](restart.md) implements the direct route only where
+its signer is an actual target controller. The same host consumer loop is suitable
+for fleet coordination, but it is not yet a working Canic-managed application
+adapter. The existing [Canic issue](https://github.com/dragginzgame/canic/issues/1)
+remains the integration owner. Do not add an unused executor variant or change
+controllers to hide this missing authenticated management-result protocol.
 
 ### External signing and retry semantics
 
@@ -207,7 +230,7 @@ its fenced recovery entry, including restored timers and callbacks.
 2. Implement and qualify the native capture/verify and upload/readback/load paths
    using published Platform and Host APIs. Run both the independent Rust consumer
    and a directly controlled Canic test application through the same public API.
-3. Resolve the Platform Wasm DTO boundary and implement the Canic-owned executor
+3. Consume the verified Platform Wasm DTO boundary and implement the Canic-owned executor
    protocol for the actual manager-controlled worker. Exercise lost replies on
    both network hops, original-result lookup, authority changes and no redispatch.
 4. Qualify the Canic fence/stop/capture and load/start-fenced/accept/open journey,
@@ -221,6 +244,30 @@ and recovery protocol. These are concrete integration gaps, not already-supporte
 callbacks. No broad Canic, Blob or whole-Fleet recovery claim follows from a simple
 fixture round trip. Keep both consumer graphs in acceptance; do not wait until the
 library is finished to discover that its signer or authority model cannot fit Canic.
+
+### Reduction follow-through — 2026-11-16
+
+Read-only Canic review at `8412c1edca540e6f299ab1cf9fc2d3e9f2c3ed5a`
+(0.216.3; unrelated CLI edits present) revisited
+`canic-management/src/engine/mod.rs` controller creation/checks and
+`canic-host/src/signed/mod.rs`. Management still makes Root the actual controller;
+no Backup/checkpoint executor is implemented. Existing host signing/submission is
+an operation with its own custody and polling policy, not Backup's sign-only adapter.
+The adapter must use bounded process custody and produce the exact reserved
+envelope/expiry. Its selected signer admission requires ICP CLI 1.7.0; the ambient
+binary inspected here was 1.6.0, so no claim about a qualified 1.7.0 signing path is
+made. No sibling source, tool installation or controller was changed.
+
+Keep one Canic-owned host adapter, not a `canic-backup` wrapper crate, new key
+custodian or copied retry engine. The necessary two-hop executor state protects a
+different effect boundary and cannot be deleted as a duplicate of the host journal.
+Bind original Backup approval/step/arguments and finite liabilities to Root's
+surviving operation/generation; retain an exact authenticated result or unresolved
+outcome. Repeated host continuation must look up that join without issuing another
+management call. A Boolean executor success or direct-host certificate cannot
+substitute for this protocol. Continuous application fence/rewind acceptance stays
+with Canic outside the application's rollback set. These remain design obligations,
+not newly implemented behavior.
 
 ## Direct-provider continuation review — 2026-11-14
 
@@ -255,37 +302,27 @@ expiry or suppress a verification failure to manufacture historical acceptance.
 No cryptographic implementation, extra dependency or concrete transport was added
 in this review; no unsupported supplier API is assumed available.
 
-The adjacent local recovery gap is now closed by `inspect_status`: a restarted
-caller can recover original admission and conservative reserved counts from the
-complete original ledger. Re-authored native tests cover every cold stage, failed
-status/rejection without refunds, malformed evidence and continuation using the
-recovered admission. This retains legacy's progress-view guarantee and the
-[a860d144 separation](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0)
-between mandatory original admission and optional reporting. Views do not verify
-certificates or grant dispatch authority.
+The current capture replacement exposes one `BackupConnection`, bounded
+`BackupSigner` and action-aware `BackupApplicationGuard`. Exact original
+request/certificate/HTTP checks are private shared primitives. The public
+`advance` loop derives calls; `inspect` authenticates original progress without
+effects. Explicit reply import and one original-request observation preserve
+separate historical windows and spending. The
+[capture contract](../architecture/capture-intent.md) owns these guarantees.
 
-The direct-key continuation supplies `authenticate_status_request` and applies it
-before HTTP dispatch. Platform 0.33.4 already supplies the required Ed25519/K256
-primitives, request domains and self-authenticating Principal derivation; no
-supplier change or issue is needed for this initial profile. Exact standard
-Ed25519/secp256k1 keys are supported; delegated, canister and other identity forms
-refuse. This does not qualify the Canic sign-only process or application custody.
-`DirectCaptureProvider` now composes bounded sign-only invocation, retained time
-policy and live application admission with these helpers. The private PocketIC
-caller qualifies actual initial status and offline replay with fixture hooks.
-Canic still owns implementation and qualification of its process and maintenance
-adapters; Backup supplies no Canic executor or fresh maintenance authority. The [owning contract](../architecture/capture-intent.md#direct-key-status-request-authentication)
-records the focused legacy review, changed assumptions and native regressions.
-
-The direct provider now shares its bounded signing/HTTP path across status and
-snapshot list/take. Canic still supplies `CaptureSigner` and
-`CaptureApplicationGuard`, including exclusive snapshot custody and uninterrupted
-application maintenance. The [durable snapshot contract](../architecture/capture-intent.md#durable-snapshot-list-and-take)
-retains original per-call authority and cumulative costs. The fixture qualifies
-management effects with a direct controller key; it does not qualify Canic's
-manager-controlled executor, signer processes or fenced application recovery.
-[Canic #1](https://github.com/dragginzgame/canic/issues/1) remains the owning
-integration issue; no new supplier API gap was required for list/take.
+Actual PocketIC qualification covers the complete multi-extent capture, target
+succession, full older-source restore, capture after restore, interrupted
+allocation/upload/load and take/data recovery, plus offline
+replay with a direct controller fixture key. Canic still owns its actual signer
+process, manager-controlled execution, continuous maintenance and external
+settlement. [Canic #1](https://github.com/dragginzgame/canic/issues/1) remains the
+integration umbrella. Its implementation owners are
+[#5 signing](https://github.com/dragginzgame/canic/issues/5),
+[#6 manager execution and original-result lookup](https://github.com/dragginzgame/canic/issues/6)
+and [#7 fenced application recovery](https://github.com/dragginzgame/canic/issues/7).
+These issues distinguish completed supplier prerequisites and locally qualified
+Backup from Canic's actual implementation/qualification. No Canic execution enum
+promises an unsupported route.
 
 For live original-request recovery,
 [Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167)
@@ -295,5 +332,5 @@ preserves the existing envelope identities and nested path bytes, refusing unkno
 or duplicate content fields and malformed/oversized input. The bound is raw input,
 not a total work/allocation quota. Backup still owns exact request-status paths,
 signature/binding checks, finite observation accounting, timing, retention and
-settlement; that live workflow remains unimplemented. No supplier edits or local
+settlement; the direct-host workflow is now qualified with fixture authority. No supplier edits or local
 wire schema were added.

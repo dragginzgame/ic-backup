@@ -1,6 +1,4 @@
 //! Pure uploaded-state comparison; no authentication, persistence or load authority.
-mod data;
-pub use data::{ReadbackDataError, UploadedSnapshotReadback};
 
 use super::{CaptureTransfer, TransferMetadataError, metadata};
 use ic_platform::management_canister_types::{
@@ -27,18 +25,6 @@ impl CaptureTransfer<'_> {
     /// verification, independent restore intent/accounting and byte comparison
     /// remain required. No provider, journal or network is accessed.
     ///
-    /// ```
-    /// use ic_backup::store::{CaptureTransfer, ReadbackMetadataError};
-    ///
-    /// fn check_metadata(source: &CaptureTransfer<'_>, reply: &[u8])
-    ///     -> Result<(), ReadbackMetadataError>
-    /// {
-    ///     let destination = source.decode_uploaded_metadata(reply)?;
-    ///     // Retain destination provenance; full data readback is still required.
-    ///     let _destination_version = destination.canister_version;
-    ///     Ok(())
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses malformed/excessive input, wrong destination origin or any mismatch

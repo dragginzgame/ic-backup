@@ -1,1152 +1,230 @@
-# Implemented capture intent
+# Implemented capture intent and continuation
 
-This Unix-only slice persists local intent, not a backup. `CapturePlan::new` is
-pure; `BackupStore::create_capture` writes intent; `open_capture` and
-`CaptureOperation::inspect` admit original intent without repair. There is no
-reservation API for arbitrary calls. Initial direct-host status continuation is
-followed by durable snapshot list/take and local retained-result settlement below;
-bounded lookup, payload acquisition, final status and local completion now extend
-that journal. Explicit completed-target succession is implemented; restore remains unfinished. The
-[operation design](../design/operation-contract.md) owns the proposed next steps.
+The current public capture is one fixed direct-host operation. Construct a
+`BackupConnection` from `BackupHttpTransport`, `BackupSigner` and
+`BackupApplicationGuard`. Its `plan(request, options)` binds the actual
+connection before approval. `create_capture(plan, digest)` persists intent;
+`open_capture(id, digest)` and `inspect()` authenticate original progress.
+`advance(connection)` performs the next fixed work, at most one new management
+submission. It returns `Advanced`, `NeedsAttention(step)` or `Complete(receipt)`.
+Typed `OperationStoreError`, `OperationAdvanceError` and `BackupHttpError` errors
+retain authentication, policy and custody causes.
+
+This replaces the phase APIs and their persisted encodings. The store marker is
+`ic-backup/host-store/1\n`. Older/unknown stores refuse without writes; no dual
+reader, reset, migration or orphan adoption exists. Retained older operations
+remain under their preserved implementation and original authority.
 
 ## Exact declaration
 
-`CaptureRequest` selects the 32-character lowercase hexadecimal operation ID,
-network digest, canonical Platform canister Principal, trust-root digest,
-initiator, release, module hash, execution declaration and `CaptureLimitsRecord`.
-Direct execution binds the sender. Canic execution binds executor, protocol
-digest and authority generation; recording it does not qualify that route.
+`CaptureRequest` binds a 32-character lowercase hex operation ID, exact network/
+canister, trust-root digest, initiator, release, module hash, direct sender and
+operation-wide `OperationLimits`. Payload/evidence limits are 1..=1 GiB; extent is 1..=1 MiB
+and no larger than payload; network/signing are 1..=8192 and observations cannot
+exceed network allowance. These structural limits do not guarantee affordability.
 
-The strict JSON record uses format `ic-backup/local-capture-plan/1` and rejects
-unknown/duplicate fields, unsupported formats and noncanonical identities.
-The writer emits compact JSON in the field order frozen by
-[the golden plan](../../crates/ic-backup/src/store/tests/fixtures/capture-plan.json).
-Reopen retains the exact original bytes, rather than normalizing or re-encoding.
-Plan admission is bounded to 1 MiB. The approval commitment is:
+`OperationOptions` binds the original application witness, snapshot capacity
+1..=1024, signing/submission durations, certificate/delegation/skew policy,
+signing-service network cost and complete request/result ceilings. The profile
+also commits actual transport, signer/guard protocols and original root DER.
+Signing duration is positive and no longer than submission duration; submission
+is at most 300 seconds. Request/result ceilings are at most 2/4 MiB respectively. Certificate admission
+is capped at 2 MiB (delegation at 1 MiB), leaving protocol headroom for the 1 MiB
+data vector. Complete retained evidence includes both certificate and projected
+reply. Existing intents keep their original smaller request/result ceilings;
+reopening never enlarges their approval or reservation.
 
-```text
-SHA256(UTF8("ic-backup/local-capture-plan/1\0") || original_plan_bytes)
-```
-
-Each identity and limit is included. Limits declare payload and evidence bytes
-in `1..=1 GiB`, extent bytes in `1..=1 MiB` and no larger than payload, network
-and signing requests in `1..=8192`, and observations no greater than network
-requests. Observations are a subset, not additional authority. These are
-structural bounds, not proof that a transport, snapshot or evidence schedule fits.
-Provider deadlines, response limits, application admission and metadata-dependent
-cost admission are still required before effects. Changing a declaration requires
-a different approval; reopening cannot increase an original limit.
-
-## Status preconditions
-
-`CapturePlan::validate_status` checks an already-decoded Platform
-`CanisterStatusResult` without allocating, reordering or changing it. The selected
-capture profile requires stopped state, the exact approved 32-byte module hash,
-and a duplicate-free controller set of at most ten canonical Principals containing
-the original direct sender or Canic executor. Ten is this product profile's bound.
-An approving initiator, another controller or status viewer cannot substitute for
-that management caller. `CaptureStatusError` distinguishes these refusals.
-
-This pure method does not decode or authenticate evidence. The caller must bound
-raw decoding and associate the authenticated reply with the original network,
-target, request and observation timing; the DTO contains no target identity.
-Success does not establish continuous application custody, external settlement,
-reservation, dispatch or completion. Resource statistics, migration readiness and
-version continuity remain outside this check. No stop or other IC effect occurs.
-
-## Bounded status replies
-
-`CapturePlan::validate_status_reply` reads the required status, controllers and
-module hash from one exact Candid argument, then applies the same precondition
-policy as `validate_status`. It returns no synthesized full status DTO. Other
-fields, including unknown fields, are skipped with bounded traversal; their
-presence and semantics are not qualified. Settings/controllers and status must
-be present with the required types. An absent or wrongly typed optional module
-hash cannot satisfy capture; a present hash must contain exactly 32 bytes.
-
-Limits are 1 MiB raw input, 64 KiB header, 64 type entries, 2 MiB codec work and
-2 MiB codec allocation, with a separate cumulative 64 KiB skipped-work allowance.
-These are Platform codec counters, not upstream quotas or transport limits.
-Controllers are capped at ten before vector allocation. Hash length is checked
-before allocating its bytes. Trailing bytes, surplus arguments, unknown status
-variants and exhausted bounds refuse through `CaptureStatusReplyError`; policy
-failures retain `CaptureStatusError`. Original raw evidence remains caller-owned.
-
-The private argument projection reads labels from Platform's status/settings
-schemas. It introduces no replacement management wire declaration or encoder.
-Platform owns header parsing, traversal and allocation accounting; the existing
-pure policy owns state, module and caller checks. Decoding does not authenticate
-network/target/request association, record progress or grant effect authority.
+The strict canonical JSON domain is `ic-backup/capture-intent/1`; approval is
+`SHA256("ic-backup/capture-intent/1\0" || original_intent_bytes)`.
+Unknown/duplicate fields, noncanonical bytes or identities and invalid roots/
+arithmetic refuse. An independent literal wire/digest vector tests this contract.
+Reopen cannot replace trust, timing, profile or allowance.
 
 ## Files and ordering
 
-Journal replay derives cumulative signing/network/evidence reservations as each
-validated event is applied. Snapshot admission reserves both list and future take;
-lookup, transfer, data acceptance, assembly and publication retain their original
-complete allowances. Results never refund spending. These totals are private
-in-memory projections rebuilt from original frames, not new persisted authority.
-Budget accounting visits each event once instead of resumming prior admissions.
-Other custody/evidence scans remain unchanged; throughput remains unqualified.
-
-This adapts the frozen legacy attempt journal replay projection in
-`model/attempt_journal/{mod.rs,history/mod.rs}` at
-`4ae087fad8c23de712aa60bf569bde4b2b932651`. Its counters preserve spent attempts
-across observation and recovery. Backup retains its own phase/byte allowances
-and exact chained records; no legacy code was copied. An independent state-based
-accounting oracle checks every prefix of a completed native fixture; exhausted
-data allowances remain refused after reopening without changing original bytes.
-
-
-Retained state owns the evidence inventory consumed by integrity checks, directory
-membership admission and synchronization. Ordinal names must match their exact
-canonical spelling; an unreferenced file remains an orphan even if its phase or
-ordinal is otherwise recognizable. Event/file pairing is independently checked
-before persistence. This consolidation follows the frozen legacy submission and
-HTTP-boundary regression lesson: preserve original request/result custody and
-indeterminate spending while sharing mechanics. No record or effect policy changes.
-
-
-
-Creation requires the caller's exact plan commitment before any write. It uses
-Host private held directories, exclusive create-only files, bounded no-follow
-regular-file reads and nonblocking native locks. Directories/files use 0700/0600;
-hard-linked records refuse. It creates this subset of the proposed store:
-
 ```text
-targets/<network-digest>/<canonical-canister>/
+operations/<id>/
   lock
-  owner.json
-operations/<operation-id>/
-  lock
-  plan.json
-  ledger.bin
+  intent.json
+  journal.bin
+  <derived-step>-<derived-evidence-role>.bin
 ```
 
-Creation takes the target lock, durably retains the owner record, creates and
-locks the operation, then durably retains plan and initial ledger. Owner JSON
-contains `format = ic-backup/local-target-owner/1`, `operation_id` and
-`plan_sha256`. Until an exact published completion is admitted, its bytes must match the original
-plan, within 1 KiB. A closed journal plus its exact published manifest and payload
-can be reopened after target ownership changes. Original plan, ledger, evidence,
-payload and lock custody remain mandatory. Readiness or staging alone does not
-relax ownership; a missing or changed receipt cannot be republished after losing
-the original claim. `create_capture_after` admits the completed predecessor before replacing its claim.
-The target lock is released after creation; the operation lock lives with the
-returned handle. Different targets have independent locks. Duplicate operation
-IDs refuse; a creation race can leave an incomplete second target claim, retained
-for original recovery rather than silently removed.
+The private recorder owns one common lifecycle: CallReserved, CallPrepared,
+CallSubmitted, CallResult, and corresponding Observation facts. MaterializationStarted
+and PublishReady are capture-local transitions; restore has one LoadedStopped footer. The frame JSON is
+`{"sequence":N,"fact":{"kind":...}}`; bounded little-endian length/payload/SHA-256
+chaining starts from `ic-backup/operation-journal/1\0` plus original intent.
+Bounds remain 16 KiB/frame, 65,536 frames, 128 MiB/journal and the original smaller
+evidence ceiling. Evidence filenames derive from fixed steps and roles; references
+bind exact lengths/hashes. Signed envelopes are original bytes. Request IDs,
+absolute expiry and historical windows derive from those bytes and retained
+invocation time; no second persisted policy/schedule/digest is added.
 
-The initial ledger contains one frame, with JSON bytes exactly
-`{"sequence":0,"kind":"created"}`. Its encoding is:
+Reservation accounts for the complete signing/network/request/result/frame ceiling
+before invoking an external signer. Network allowance includes signing-service
+cost. Whole known remaining costs are admitted before take and first data read.
+No result refunds allowance. Capture and restore share the limits schema and
+validator; every intent still binds its own original values and journal spending. Prepared replay can submit only its exact original
+bytes under unexpired authority; reserved signing with missing output and already
+reserved submission return attention without another invocation.
 
-```text
-seed = SHA256(UTF8("ic-backup/local-ledger/1\0") || original_plan_bytes)
-length = little_endian_u32(json_byte_length)
-chain = SHA256(seed || length || json_bytes)
-frame = length || json_bytes || chain
-```
+Exact original files, identities, permissions, single links, closed directory
+membership and target ownership are rechecked around awaits and writes. Appends
+disable the handle before writing and sync before granting the live continuation.
+Uncertain write/sync/custody failure leaves the handle unusable. Complete uncertain
+frames stay spent; partial tails, replaced files and unreferenced evidence refuse
+intact. No truncation, cleanup or automatic retry is performed.
 
-The independent [golden frame](../../crates/ic-backup/src/store/tests/fixtures/capture-created.hex)
-uses raw 32-byte digests. The streaming reader admits at most 16 KiB per payload,
-65,536 frames and 128 MiB total, further bounded by the original plan's evidence
-allowance. Frame lengths and cumulative bytes are checked before allocating a
-payload. It retains one frame at a time, validates each chained digest and refuses
-any partial tail. Typed `LedgerError` variants distinguish these failures.
+The writer takes its caller's already-checked prefix and rechecks exact custody
+before writing. Closing admission must match the expected new length/head and
+returns that checked journal; callers do not immediately repeat the same scan.
+After awaits, original bytes are still checked independently. A live invocation
+extends its authenticated procedure with the newly retained response; the HTTP
+boundary authenticates its owned exact request/certificate once, and local reply
+import authenticates its supplied evidence before retention. Certified rejection
+and reply policy have one procedure owner. No cross-invocation or persistent
+authentication cache is added.
 
-Semantic admission requires the canonical initial record followed only by the
-ordered initial-status transitions below. A correctly hashed unknown event,
-duplicate creation or changed sequence refuses; no suffix is ignored or
-interpreted as unused authority. The original golden
-bytes are unchanged. This is an unpublished restart format, not a legacy import.
+## Status preconditions
 
-Creation checks that the initial ledger fits the original evidence allowance
-before claiming the target. Reopen does not increase that allowance. The first-status writer reserves aggregate evidence and remaining frame capacity
-before signing; individual files do not each receive the full allowance.
+The private bounded Platform-backed reader requires stopped state, the original
+module hash and actual direct sender in a duplicate-free controller set of at most
+ten. Initial and final status use distinct signed requests. An initiator or other
+controller cannot substitute for the management sender.
 
-## Durable initial status
-
-`CaptureOperation::advance_status` implements the initial direct-host status call
-through a `StatusProvider`. The supplied `DirectCaptureProvider` composes the
-helpers described below with integration-owned signer and application hooks; the
-trait remains a trusted integration contract, not proof of any adapter's qualification. Canic execution refuses before spending until its executor/receipt
-protocol is implemented. The initial-status method includes no snapshot or reconciliation call; the
-snapshot continuation below is separate. Completion and owner release remain absent.
-
-The workflow constructs Platform's `CanisterIdRecord` for `canister_status` and
-encodes its single argument within 256 bytes. A strict `StatusAdmissionRecord`
-binds provider and continuous-application commitments, absolute prepare/submit
-deadlines, separate preparation/submission network ceilings and evidence sizes.
-Deadlines must be nonzero and ordered; submission costs at least one request.
-Preparation may use zero network requests for local signing. The combined network
-ceiling must fit the original plan; exactly one signing invocation is reserved.
-Provider methods enforce actual time, traffic and response bounds while receiving.
-
-Before retaining prepared output, before reserving submission, and during settled
-replay or status inspection, Backup reads call content through Platform's
-`ic_protocol::decode_call_content_strict`. It requires replicated `canister_status`
-ingress addressed to the management canister, the original direct sender, exact
-Platform-encoded target arguments, matching declared expiry and the content's
-recomputed request ID. Unknown/duplicate content fields, malformed/trailing bytes,
-query/read-state envelopes and mismatches return `CaptureError::StatusAdmission`.
-Original envelopes are never re-encoded. Nonce and known sender-info metadata
-participate in the request ID; signature/delegation and sender-info authentication,
-effective HTTP routing, deadlines and observation binding remain provider-owned.
-
-The complete request-file cap is checked before content decoding. Platform's CBOR
-input cap is a byte bound, not the Candid codec's allocation/work counters. The
-check reads no clock and does not authenticate anything, so old settled evidence
-still requires historical proof verification by the provider. A mismatched new
-signer result leaves preparation spent without submission. Mismatched retained
-content refuses without rewriting records, refunds or another provider invocation.
-
-Request evidence is capped at 1 MiB; response/proof evidence at 2 MiB. Before any
-provider call that may sign, Backup reserves both entire file ceilings plus the
-initial ledger and four maximum frame sizes (`4 * (16384 + 36)`). This conservative
-headroom fits the original evidence ceiling; actual bytes replace reserved output
-without introducing another allowance. Structural admission alone does not prove
-provider cost or application safety. All admission/authentication predicates are
-local and effect-free; remote work belongs only to the reserved bounded methods.
-
-After the original created frame, the private writer supports exactly these
-compact JSON records. `kind` is first; fields follow the order shown. Unknown,
-duplicate or noncanonical fields and any other sequence refuse.
-
-| Kind / sequence | Following fields | Retained meaning |
-| --- | --- | --- |
-| `preparation_reserved` / 1 | `admission`, `arguments_sha256` | Original admission, exact argument hash, one spent signing slot and preparation network ceiling. |
-| `prepared` / 2 | `request` | Exact original signed request file length/hash. |
-| `submission_reserved` / 3 | None | Original submission network ceiling spent; only its live successful writer may submit once. |
-| `settled` / 4 | `result` | Exact authenticated response/proof file length/hash. |
-
-The plan-bound chain and closed sequence identify initial step zero, attempt one;
-there is no generic event or spending API. Digests are 32-byte JSON arrays.
-Evidence references contain `bytes`, then `sha256`. Admission fields follow the
-[public declaration](../../crates/ic-backup/src/store/capture/advance/mod.rs).
-All records remain under the original frame and cumulative ledger bounds.
-
-`status-request.bin` is request ID (32 bytes), expiry (u64 little endian), envelope
-length (u32 little endian), exact envelope, then observation-binding bytes.
-`status-result.bin` is outcome (one byte: 0 reply, 1 rejection), response length
-(u32 little endian), exact response, then authentication-proof bytes. Both variable
-components must be nonempty. Complete files are retained create-only and synced
-before their referencing event. Neither file is a standalone transferable receipt.
-Request bytes, proof and signed delegations are sensitive and have no derived Debug.
-
-Each commit re-admits the original operation, prepares its bounded candidate,
-opens the held original ledger for update and checks identity/link/permission
-custody. It invalidates the session before synchronization or writes, synchronizes
-the retained prefix and referenced request for cold continuation, then retains
-new evidence, seeks the original exact end, writes and syncs the frame. Closing
-admission must pass before the session can continue. Write, sync or closing failure
-leaves the handle unusable. Reopen stays read-only and never truncates or repairs.
-
-A replayed preparation/submission reservation returns pending without invoking
-any provider. A prepared request may proceed only through fresh local admission
-of its original bytes, authority and expiry; it cannot re-sign. Historical settled
-replay authenticates retained proof locally, checks bounded status policy and
-never invokes current admission, signing or submission. Rejections and failed
-status policy remain settled and spent. A visible complete frame after uncertain
-sync stays authoritative; any partial frame or unreferenced evidence file blocks
-continuation. No orphan adoption, retry, target release or cancellation is added.
-
-[Native workflow tests](../../crates/ic-backup/src/store/capture/advance/tests.rs)
-cover exact evidence, bounds, refusal, cancellation, uncertain writes, orphan and
-changed custody, held-root rename and cold replay. Acknowledged owner-death cases
-cover reserved/invoked preparation, prepared bytes, reserved/invoked submission
-and settlement, while another target retains independent progress. These tests
-adapt the focused legacy reservation lessons below; their injected provider is
-only a call-order fixture. Actual IC authentication, continuous application
-custody, provider deadlines/traffic, physical power loss and hosted macOS remain
-unqualified. This is not an independently usable backup product.
-
-## Read-only status inspection
-
-`CaptureOperation::inspect_status` returns a `CaptureStatusView` after complete
-original admission and a closing custody check. It exposes the retained stage,
-exact original `StatusAdmissionRecord`, conservative reserved signing/network
-counts and the original request ID when prepared evidence exists. The request
-framing and original call binding are admitted before projecting its ID. Signed envelopes and proof bytes
-remain private; the returned admission is a detached value and cannot mutate
-retained authority.
-
-Created intent reports zero spending. Preparation reserves one signing invocation
-and the original preparation network ceiling. Submission additionally consumes
-its original network ceiling; settlement and rejection never refund either.
-These are reservations, not observed traffic or remaining whole-backup capacity.
-`Settled` reports retained evidence, not authenticated status success or completion.
-Inspection calls no provider and never writes, synchronizes, repairs or retries.
-A restarted consumer can pass the recovered exact admission to `advance_status`,
-which still independently checks original custody and eligible transitions.
-
-## Recovery and custody
-
-Dropping a handle or killing its process releases the native lock, not the owner.
-A complete operation can reopen only with its original approval, plan, ledger,
-owner and lock files. The operation also holds the original ledger descriptor.
-Inspection checks held child-directory/lock identities, store format, exact record
-bytes and member sets. Ledger admission checks file identity before reading and
-rechecks the opened file's length and named file's identity/length afterward.
-Replacing the ledger with identical bytes therefore refuses a held inspection. Store root rename follows its
-held descriptor, consistently with inventory. These checks assume exclusive
-cooperating writers and private-store custody; they are not a hostile-writer fence
-or protection against rollback of all local files.
-
-Creation failures retain every partial file and may leave the target occupied.
-An existing target lock with a missing owner is incomplete, never a fresh target.
-Missing established locks are not recreated beside retained records. Reopen does
-not create, synchronize, repair or discard anything. Dropping a handle keeps the
-target occupied. Only explicit authenticated succession from a published completed
-capture can replace the claim; there is no cancellation or cleanup escape hatch.
-
-## Append integration dependency
-
-The original Host FS 0.77.2 selection's [capability implementation](https://github.com/dragginzgame/ic-tooling/blob/9d938d2814b637ea40d4ddbae110e87ab402c881/crates/ic-host-fs/src/capability/mod.rs)
-opens existing regular files read-only and creates new files read/write. Safe
-ledger continuation needs an existing-file writable opener relative to the held
-directory, without create/truncate, with no-follow regular-file admission. Backup
-must then verify original identity, link count and permissions before writing.
-Path-based lock openers are not this capability interface; using a remembered
-display path would change continuation behavior after a store-root rename.
-
-The explicitly authorized supplier contribution now implements
-`FileEntry::open_regular_file_for_update(forbidden_permissions)` in
-`ic-tooling` [c30c0f92](https://github.com/dragginzgame/ic-tooling/commit/c30c0f92c680c918970c9eb06559d1958de0d615). It shares the existing descriptor engine and retains permissions,
-no-follow/nonblocking/type admission and held-parent rename behavior. It neither
-creates nor truncates and returns a read/write descriptor at offset zero; caller
-identity, hard-link policy, locking and seek/write/sync remain explicit. Linux
-qualification passed 18 capability and 40 shared reader tests, strict Clippy with
-and without capability, and Rustdoc. No macOS or Backup append/recovery claim
-follows. The source was pushed to GitHub under the push-only scope recorded in
-[b9700c9d](https://github.com/dragginzgame/ic-tooling/commit/b9700c9d7c8a2375943181dbbc4dad22f23f5ad0).
-The user coordinates Tooling delivery. Backup first used the explicitly authorized
-local fix, then verified the published Host FS/Artifacts 0.77.3 archive checksums
-and qualified the registry selection. The temporary overrides are removed; the
-status writer now uses the published opener. [Tooling #358](https://github.com/dragginzgame/ic-tooling/issues/358)
-retains producer provenance. [Setup](../development/setup.md) describes the current
-registry-backed graph; previous local source evidence remains retained.
-
-The status writer uses this admitted Host boundary without replacing the ledger
-or recreating missing records. It adapts the reviewed legacy disable-before-write
-ordering, preserves partial frames and qualifies acknowledged owner death locally.
-The [operation design](../design/operation-contract.md#first-durable-call-initial-status)
-retains broader provider/IC acceptance requirements; the
-[pure transfer schedule](capture-transfer.md) remains independent.
-
-## Focused legacy review — 2026-11-14
-
-Reviewed frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`:
-
-- [Attempt persistence](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/attempt_journal/mod.rs)
-  binds reopened journals to exact original authority, reserves durably before
-  returning a slot, and invalidates a session after uncertain persistence.
-- [Regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/ops/persistence/attempt_journal/tests/mod.rs)
-  cover retained identity/limits, failed reservation, unsafe/replaced evidence and
-  acknowledged owner death. [The model](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/attempt_journal/mod.rs)
-  prevents missing evidence from replenishing attempt authority.
-- [Plan simplification history](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0)
-  separates complete-original admission from optional progress projection. Removing
-  duplicated projections does not justify omitting original-journal checks.
-
-Adapted the exact-original, no-reset, nonblocking exclusion, retained partials and
-acknowledged-death cases in [new native tests](../../crates/ic-backup/src/store/tests/capture.rs).
-The missing-owner case reproduced an incorrect new claim before the admission fix.
-Golden plan/chain bytes were independently generated with Node's SHA-256, then
-compared against the production writer. Tests also cover independent targets,
-concurrent claims, ambiguous records, unsafe files and changed custody.
-
-No legacy source was copied. One plan/ledger replaces legacy per-step journals;
-there is no generic workflow graph. The next focused review reused the same
-attempt persistence/model/tests and plan-ownership history: complete original
-admission is still required before any future spending transition. Legacy's
-bounded retained-event vector becomes a streaming, length-delimited frame reader.
-
-[Frame and custody regressions](../../crates/ic-backup/src/store/capture/ledger/tests.rs)
-cover every truncated initial prefix, chain/plan mismatch, correctly hashed
-unsupported events, bounds before body reads, exact frame/count boundaries,
-interrupted reads, original IO errors and closing file drift. A separate held
-inspection case reproduced same-byte ledger replacement acceptance before the fix.
-The frame-count fixture tests framing only; its arbitrary payloads do not qualify
-capture transitions. Sparse oversized files are retained as refusal evidence.
-
-The status precondition review also inspected frozen legacy
-[controller authority](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/control_authority/mod.rs),
-[its regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/control_authority/tests/mod.rs),
-[lifecycle observations](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_lifecycle_reply/mod.rs),
-[their tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_lifecycle_reply/tests/mod.rs)
-and [settlement](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_observation/settlement/mod.rs).
-These guard exact original caller membership, bounded controller sets and the
-separation between a reported state and authenticated effect attribution.
-[Codec history 1af7e219](https://github.com/dragginzgame/ic-backup-legacy/commit/1af7e219c3073395992c316ecaa5e83e74b1aecc)
-retained those cases while moving lifecycle wire tests to Platform-owned codecs.
-
-The new boundary already receives canonical Platform Principals and distinguishes
-initiator, sender and executor in the original plan. It needs no string-based
-controller wrapper or sorting. [Re-authored tests](../../crates/ic-backup/src/store/capture/status/tests.rs)
-exercise stopped/running/stopping states, canonical duplicates, empty/excessive
-sets and the exact ten-controller boundary, sender/executor confusion, visibility,
-module mismatch and input preservation. The selected profile adds the approved
-module-hash check. Observation wrappers and settlement transitions remain outside
-this policy; authenticated observation association and IC effects require their
-own work.
-
-The raw-status continuation reviewed the same lifecycle implementation, tests and
-codec history, plus its [bounded wire reader](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_lifecycle_reply/wire/mod.rs)
-and private field mappings. It retains separately metered skipped work and bounds
-before allocating controller elements. The new argument projection uses supplier
-schema labels and canonical Principals directly, adds the approved module hash,
-and calls the existing policy instead of building a second authority object.
-
-[Eight new wire tests](../../crates/ic-backup/src/store/capture/status/wire/tests.rs)
-cover complete supplier results, minimal projections, exact controller bounds,
-hostile lengths before payload reads, module option promotion/absence, required
-fields, state/caller refusals, cumulative nested skipping and malformed framing.
-[Three retained golden replies](../../crates/ic-backup/src/store/capture/status/wire/golden.json)
-come from [legacy lifecycle fixtures](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_lifecycle_reply/tests/golden.json);
-their exact bytes and SHA-256 values are preserved. Their missing module hashes
-cannot satisfy the new capture profile. No legacy implementation was copied.
-Acknowledgement, receipt-digest and mutation tests are excluded because this API
-performs only status validation, not stop/start/load or authenticated settlement.
-
-The status continuation re-authors reservation failures, lost returns, cancelled
-futures, retained results and acknowledged owner death against the append writer.
-These native tests prove filesystem/call ordering, not paid IC effects, provider
-authentication, power loss or Canic execution. Native Canic plan round-tripping
-proves declaration retention only; status continuation refuses that route.
-
-The request-binding continuation inspected frozen legacy's
-[single submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
-[reserved request owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/request/mod.rs)
-and [HTTP boundary cases](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs).
-Legacy constructs and signs the admitted call inside Agent. The new boundary accepts
-external prepared bytes, so immutable call inspection now also belongs at that
-boundary. It reuses Platform's published protocol decoder and request-ID owner;
-no Agent wrapper, CBOR parser, signing code or legacy implementation is copied.
-The existing a860d144 original-admission/projection separation remains intact.
-
-New native cases reject wrong caller/receiver/method/target/arguments, mismatched
-ID/expiry, query/read-state, unknown/duplicate fields and every truncated envelope
-prefix. Matching file hashes cannot authorize a mismatched prepared or settled call.
-Golden envelope/request hashes were independently recomputed with Node SHA-256.
-Retention and cold replay cases assert no extra provider calls or spending reset.
-The legacy HTTP retry/redirect/timeout cases still belong to the future concrete
-transport; these tests establish content admission and persistence ordering only.
-
-## Historical status authentication
-
-`authenticate_status_evidence` is a local helper for a direct provider's
-`authenticate` method. It supplies no signer or transport. It reuses original
-admission and complete request/result framing checks, then validates the exact
-prepared call. For this certificate protocol, `trust_root` is SHA-256 of the
-complete 133-byte IC DER public key, never a URL or a hash of raw key bytes.
-The integration provisions that root/network binding before approving the plan.
-
-`status_certificate_observation` encodes the provider's explicitly admitted time
-policy as `ic-backup/status-certificate/1\n`, followed by six little-endian u64s:
-certificate reference/maximum age/maximum future skew, then delegation
-reference/maximum age/maximum future skew. Exactly 79 bytes are accepted; both
-inclusive windows must have non-overflowing endpoints. Retain these bytes in the
-original prepared observation before submission. Never derive the policy from
-incoming certificates or replace it with current configuration during replay.
-Provider protocol/application admission and original file custody remain required;
-this helper cannot establish those facts from freely constructed arguments.
-
-`StatusEvidence.proof` contains the exact original certificate CBOR, and
-`response` the exact Candid reply or the rejection diagnostic frame defined below. Platform 0.33.4's `certification-verify` feature
-owns strict certificate decoding, BLS verification, delegated canister ranges and
-historical time authentication. Backup passes the original target as the effective
-canister. Product limits are 1 MiB each for outer/delegation certificates, 8192
-combined tree nodes, depth 64 and 1024 selected canister ranges. Original complete
-request/result limits apply first. Existing frame encoders bound temporary copies;
-byte and tree limits are not an allocation-quota claim.
-
-After authentication, Backup requires the exact original request ID under
-`/request_status/<id>/status`. For `replied`, the certified `reply` leaf must
-exactly match the retained response. For `rejected`, all retained diagnostics
-must match their certified leaves, including the distinction between an absent
-and present-empty optional error code. Pending, forgotten, missing and unknown
-outcomes refuse. These paths follow the
-[IC state-tree specification](https://docs.internetcomputer.org/references/ic-interface-spec/).
-No clock, transport, implicit retry or alternative digest proof participates.
-The workflow separately applies stopped/module/controller policy to successful
-replies. Certified rejection settles the original attempt without refunding it;
-even a transient code grants no retry or claim that an effect was rolled back.
-
-`status_certificate_evidence` authenticates an original certificate and builds
-bounded evidence for either outcome. The complete response/proof allowance is
-checked before copying projected bytes. Replay uses the same private projection
-through `authenticate_status_evidence`, comparing the outcome flag and every
-response byte; no second parser for the diagnostic record is needed. Both helpers
-retain original certificate bytes. The initial request, observation and outer
-result/ledger formats remain unchanged. The earlier uncommitted reply-only helper
-was renamed; no compatibility alias or old-record migration is added.
-
-A rejected response is `ic-backup/status-rejection/1\n`, one reject-code byte,
-message length (u32 little endian), exact UTF-8 message bytes, then one optional
-error-code tag. Tag 0 means certified absence, with no following bytes. Tag 1 is
-followed by error-code length (u32 little endian) and exact UTF-8 bytes. Empty
-messages and present-empty error codes are valid and distinct from absence.
-This is a Backup evidence projection, not an external IC response DTO. The
-original certificate retains its complete wire representation.
-
-The direct-ingress profile accepts only the single-byte canonical encodings of
-codes 1–5. Unknown/overlong encodings and code 6 refuse; the
-[HTTPS reject-code contract](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/)
-reserves code 6 for best-effort inter-canister calls. No general natural-number
-codec or duplicate external enum is introduced. Optional lookup must return a
-leaf or guaranteed absence; pruned/unknown or structurally invalid paths refuse.
-Diagnostics are never normalized or included in error messages. Uncertified HTTP
-rejections, disconnects and timeouts cannot become terminal evidence.
-
-Focused review used frozen legacy
-[submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
-[reply evidence](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/reply_evidence/mod.rs)
-and its [domain/attempt regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/reply_evidence/tests/mod.rs).
-The [94b94db8 history](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2)
-centralized application reply qualification around original stage, authority,
-attempt and exact reply. Preserve that binding lesson and one-shot submission;
-do not treat legacy's domain-separated reply digest as a retained certificate.
-The current initial-status ledger already fixes the step/attempt, so no parallel
-attempt envelope or copied legacy architecture is added. Original legacy records
-are not accepted under this protocol. The older digest golden bytes are excluded
-because the new authentication proof is the actual certificate, not a digest.
-
-[Consumer regressions](../../crates/ic-backup/src/store/capture/advance/tests/certificate_tests.rs)
-use newly authored synthetic trees with real Platform BLS signatures. They cover
-exact request/root/reply association, tampering, unavailable outcomes, strict
-retained policy, separate delegation time and effective canister, frame/certificate/
-tree bounds, unchanged cold replay and spent submission after authentication failure.
-The [rejection cases](../../crates/ic-backup/src/store/capture/advance/tests/certificate_tests/rejection_tests.rs)
-also cover fixed projection bytes, absent versus pruned/empty diagnostics, strict
-text/codes, complete result limits, tampering and effect-free rejected replay.
-The same frozen submission and HTTP-boundary review applies: legacy mapped Agent
-rejection errors to uncertainty because it did not retain their certificate.
-Only a fully authenticated original rejection changes that behavior here; all
-unproven outcomes keep the original pending reservation. No legacy or supplier
-implementation was copied. These tests qualify the local
-cryptographic composition and persistence boundary, not IC effects, a live provider,
-application safety or hosted macOS. HTTP/redirect/retry/timeout qualification stays
-with the future concrete provider.
-
-## Direct status HTTP helper
-
-`StatusHttpTransport` composes with the trusted provider's live `submit_once`
-invocation. It authenticates the direct-key request profile described below before
-HTTP. `DirectCaptureProvider` composes it with explicit timing, original provider
-bindings and integration-owned signing/application checks, under the workflow's
-durable submission reservation. Possessing this helper or a reconstructed request
-is not replay authority. No journal writer, signer, background worker or retry
-framework is added; local historical authentication remains separately usable.
-
-Construction binds one provisioned network commitment, IC DER root and written
-root origin. Origins are bounded to 2048 bytes: HTTPS or literal-loopback HTTP,
-with no credentials (including empty user-info), non-root paths, query, fragment,
-whitespace or controls. Written dot segments and backslashes refuse before URL
-normalization; HTTP DNS names and alternate numeric IP spellings refuse. The
-network commitment is not derived from the endpoint. IC trust is supplied out of
-band. Rustls uses Reqwest 0.13's platform certificate verifier, including native
-trust configuration, with certificate and hostname verification enabled. This
-replaces the earlier Reqwest 0.12 bundled WebPKI root selection; TLS trust remains
-separate from the explicitly provisioned IC certificate root.
-
-The native client uses `ic-host-http` 0.79.0's Reqwest 0.13.5 re-export with
-explicitly selected Rustls, HTTP/1 only, no proxies,
-redirects, automatic retry, idle connection reuse or content decompression. It
-has no Agent, IC identity or runtime construction. Caller futures need a Tokio
-runtime with IO/timers; public docs state the upstream panic precondition. Tokio
-1.54.1 is selected through HTTP and used directly only by the test runtime.
-Timeout must be positive and at most 300 seconds; short explicit deadlines are
-supported rather than retaining legacy's arbitrary one-second minimum.
-
-Before dispatch, the helper admits the original plan, complete request framing,
-exact call content, direct-key signature, network/root binding and live deadline. It routes the unchanged
-envelope to `/api/v3/canister/<original-target>/call`. The per-request monotonic
-HTTP timeout is the minimum of configured timeout, remaining original submission
-deadline and remaining ingress expiry. Absolute Unix time is checked again after
-body reading and certificate authentication. Timeouts/errors/cancellation never
-reset spending; an accepted request can execute after the caller stops waiting.
-DNS/TLS/socket mechanics remain supplier-owned; one HTTP submission is not a claim
-about the number of underlying packets or connection-establishment operations.
-
-Only HTTP 200 with CBOR media type and no Content-Encoding enters decoding.
-Host HTTP's `read_body` caps declared and accumulated body bytes by the original
-result allowance, using fallible bounded allocation before copying chunks. Its
-size failures map to `ResponseLimit`; transport and allocation failures remain
-redacted `Uncertain` outcomes. It returns no partial body on failure and adds no
-request, timeout or retry. Backup admits status/headers before passing the response
-to that reader and retains deadline checks after reading/authentication.
-Header/parser/internal-buffer bounds remain supplier-owned;
-the product body cap is not a total allocation quota. Platform decodes the bounded
-v3 envelope; only its certificate-bearing response enters the existing evidence
-builder. HTTP acceptance, non-replicated rejection, redirects, throttling and
-server errors remain uncertain, with no fallback to v2/read-state or polling.
-A certified rejection inside HTTP 200 produces rejected evidence, never success.
-The exact original certificate survives; the complete response/proof frame must
-still fit original admission. Raw HTTP error bodies are not promoted to evidence.
-
-The focused legacy review reused the frozen
-[transport configuration](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/lib.rs),
-[written-origin admission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/endpoint/mod.rs),
-[origin regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/endpoint/tests.rs)
-and [HTTP-boundary regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs).
-The previously reviewed 94b94db8 consolidation keeps original stage/attempt
-admission independent of transport results; that separation remains in the
-workflow. Re-authored cases retain no-repeat behavior for 202, redirects, 429/503,
-disconnect, timeout and cancellation, and exact signed bytes before dispatch.
-Agent construction/signing and its reply-only return path are deliberately omitted:
-Platform's codecs and historical verifier now let this helper retain actual proof.
-No legacy implementation was copied.
-
-[Native HTTP cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests.rs)
-use real loopback TCP, retained exact request files and synthetic BLS-signed
-certificate bodies. They also cover unknown media/encoding, declared/chunked bounds,
-truncated and tampered bodies, original deadline/expiry, and cold settled/pending
-workflow replay without further HTTP. These checks qualify the selected local HTTP
-composition, not actual canister management behavior, a complete signer/application
-provider, physical power loss or hosted macOS. The Host HTTP adoption adds exact
-body-limit/empty-body cases and an actual TLS ClientHello/plaintext-peer refusal
-through Backup's configured client. That checks TLS negotiation and refusal, not
-a completed trusted-certificate handshake or native trust-store behavior on all hosts.
-
-The shared-reader adoption uses verified registry archive
-`d33de424aa5afc596c0dace915e50c7b03057ff52cad64bd3451f9ee2380c3cc`,
-source [cd85d922](https://github.com/dragginzgame/ic-tooling/commit/cd85d922bcaba4d09727eb16d00b2e5a4c4f287b), supplying
-[Tooling #360](https://github.com/dragginzgame/ic-tooling/issues/360).
-The frozen legacy path used Reqwest/Agent directly; its no-repeat and original
-request cases remain applicable and were rerun at Backup's current boundary.
-The supplier now owns generic body storage/failure mechanics. Backup retains its
-stricter endpoint admission and IC semantics; no legacy transport or retired
-Host HTTP endpoint/partial-body API is reintroduced.
+Status raw input is at most 1 MiB; header 64 KiB; type entries 64; codec work and
+allocation 2 MiB each; skipped-work allowance 64 KiB. Required fields/types and
+single-argument/trailing-byte checks are independent of signature/certificate
+authentication. Resource statistics are skipped, never synthesized into a full DTO.
 
 ## Direct-key status request authentication
 
-`authenticate_status_request` verifies an external signer's original request
-without keys, a clock, storage or network effects. It admits the complete original
-request size before decoding, then applies the existing exact call/target/sender,
-expiry and request-ID checks. Platform owns both envelope decoders, request IDs,
-signable domain bytes, canonical self-authenticating Principals and cryptographic
-primitives. Its raw CBOR cap is a byte bound, not a separate allocation/work quota.
+Platform owns standard Ed25519/secp256k1 verification, IC domains, Principal
+identities and certificate primitives. Backup checks original sender, exact derived
+method/arguments, request ID, expiry and root/target/time bindings. Delegated,
+canister and unsupported identities refuse. Historical replay uses original
+certificate and delegation windows, independently of current time and permission.
 
-The selected profile admits exact 44-byte Ed25519 or 88-byte uncompressed
-secp256k1 SPKI keys and 64-byte signatures. Fixed SPKI prefixes admit only these
-standard encodings; no general ASN.1 parser, key normalization or alternate
-encoding fallback is added. The public key must derive the original direct sender.
-Ed25519 uses Platform/Dalek strict verification, including weak-key and scalar
-refusal. Secp256k1 uses Platform/K256 over SHA-256 of the domain-separated request
-ID and requires low-S without rewriting a signature. These checks implement the
-[IC signing contract](https://docs.internetcomputer.org/references/ic-interface-spec/#signatures)
-and [request authentication](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/#authentication),
-with the deliberate narrower low-S/direct-key profile.
-
-Delegations, including an explicit empty chain, sender-info, anonymous, P-256,
-WebAuthn and canister-signature identities refuse. This is the initial directly
-controlled host profile, not general IC identity support or qualification of a
-particular ICP CLI/Canic signer. The operation's generic provider boundary is
-unchanged; a different independently qualified provider can own a different profile.
-New identity support requires its own implementation and qualification.
-
-`StatusHttpTransport` calls this verifier before opening a connection. Typed
-request-authentication errors preserve zero dispatch; no failure refunds an
-already-reserved signing/submission allowance. Providers should also call the
-helper before retaining signer output and during settled replay. Historical
-verification deliberately accepts valid original signatures after expiry; current
-expiry, original observation freshness, provider/application commitments, trust
-and routing are separate live admission responsibilities. The observation bytes
-are size-admitted here, not authenticated by an ingress signature.
-
-Focused legacy review revisited the frozen
-[reserved request owner](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/request/mod.rs),
-[single submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
-[context/stale-reservation regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs)
-and [94b94db8 consolidation](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2).
-Legacy signs admitted content inside Agent and checks its sender before retaining
-it; external signer output now requires independent signature/key admission.
-The new implementation reuses Platform's published primitives, not legacy Agent
-construction, signing, polling or reply-only retention. No crypto implementation
-or legacy source was copied. Canic's sign-only adapter remains outside Backup.
-
-[Request cases](../../crates/ic-backup/src/store/capture/advance/tests/request_tests.rs)
-use real signatures and test wrong keys/senders/domains, changed content with a
-recomputed request ID, unsupported identity metadata, malformed keys/signatures,
-exact frame limits, old expiry and immutable bytes. A refused signer result stays
-preparation-pending across cold reopen with no submission or renewed signing.
-[HTTP cases](../../crates/ic-backup/src/store/capture/advance/tests/http_tests.rs)
-now use real signed ingress, test both key profiles against synthetic BLS reply
-certificates, and prove invalid signatures/keys/delegations make zero HTTP requests.
-These are native crypto/transport/persistence checks, not actual IC acceptance,
-external signer process custody, live application admission or full Canic support.
-
-## Direct status provider
-
-`DirectCaptureProvider<S, A>` composes the existing request, certificate and HTTP
-helpers under `advance_status` and `advance_snapshot`. It adds no separate ledger, retry machinery, private-key
-store, process launcher or runtime. Two trusted integration hooks remain explicit:
-
-- `CaptureSigner` performs at most one sign-only invocation. It receives the exact
-  approved plan/finite call/arguments, original preparation deadline, maximum ingress expiry,
-  envelope-byte allowance and total preparation network allowance. It must bound
-  output while receiving, own child/request custody on cancellation, remain
-  cooperative/nonblocking and never submit management ingress. Backup enforces a
-  Tokio timeout and independently checks returned size, content, identity and
-  signature. A returned `Vec` alone cannot prove the adapter's allocation or
-  network accounting; these are adapter qualification requirements.
-- `CaptureApplicationGuard` locally verifies the original application commitment
-  and uninterrupted maintenance/external-obligation authority for this exact plan.
-  It must not acquire new maintenance or perform remote work. It runs before
-  preparation, after signing and immediately before HTTP. A stopped status does
-  not substitute for application safety. These hooks belong to Canic's adapter
-  for a Canic fleet; Backup imports no Canic runtime.
-
-For a new operation, the integration puts `provider.commitment()` into original
-`StatusAdmissionRecord::provider` before the first reservation. The domain-bound
-SHA-256 includes normalized origin, network, root digest, timeout, signer protocol,
-guard protocol and all timing values. Reopen supplies the original admission and
-matching configuration; changing protocols or configuration does not create new
-spending. `submit_requests` must be exactly one. Preparation may have zero network
-requests, but still consumes its one signing reservation.
-
-`CaptureTiming` has no defaults: certificate age, delegation age and clock skew
-are explicit nanosecond allowances. Preparation samples host Unix time once for
-its retained reference. The original submit deadline must be within 300 seconds
-of that reference and the preparation deadline must remain future. Both certificate
-windows retain this reference; their future allowance is the remaining interval
-to the original submission deadline plus selected skew. Past allowances remain
-separate. All arithmetic is checked, including window underflow/overflow.
-The signer may select an expiry strictly after the reference and no later than
-the original submission deadline. Backup derives request ID/expiry from exact
-returned bytes; the signer cannot choose the observation window.
-
-The existing 79-byte certificate observation is retained with the exact envelope
-before submission. Envelope allowance subtracts observation and 44-byte request
-framing from original request bytes. Prepared admission rechecks the signature,
-original policy bytes, live expiry/deadline and application authority; a clock
-before the original reference refuses. Preparation checks completion time again
-after local validation. HTTP independently enforces its remaining deadline.
-Timeout/cancellation/error leaves the workflow's original reservation spent.
-Cold pending replay invokes neither hook nor HTTP. Settled authentication checks
-original provider/request/observation/root/certificate bindings locally, with no
-current clock or application guard; it grants no new effects or maintenance.
-Existing record formats and recovery custody are unchanged.
-
-The focused review reused frozen legacy
-[submission](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/src/submission/mod.rs),
-[boundary tests](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup-agent/tests/http_boundary/mod.rs)
-and [original request/admission consolidation](https://github.com/dragginzgame/ic-backup-legacy/commit/94b94db89f77968eb4b480ef6d0576d41f6472e2).
-Those checks prevent stale-context submission and retries after uncertain effects.
-Here signing is external, retained certificates support historical replay, and the
-existing workflow owns spending; legacy Agent identity ownership and live-only
-reply verification are not copied. No legacy source was imported.
-
-[Native provider regressions](../../crates/ic-backup/src/store/capture/advance/tests/http_direct_tests.rs)
-exercise changed commitments/arguments/costs, live time bounds, modified windows,
-invalid/oversized/over-expiry signed output, revoked authority, timeout/cancellation,
-spent cold replay and old-certificate authentication without live authority.
-The [private IC caller](../../qualification/ic-backup-qualification/tests/direct_status.rs)
-creates an isolated empty-module canister with the fixture signer as controller,
-stops it, and submits real signed ingress through PocketIC's literal-loopback
-HTTP gateway. It authenticates status, lists an existing fixture snapshot and takes
-one new snapshot, checking that the original snapshot and installed code remain
-unchanged and the canister stays stopped. It then
-reopens and verifies after shutting down the server and revoking its local guard.
-Its fixed fixture key and empty application's local guard do not qualify an
-external signer process, Canic fence, payment recovery, trusted HTTPS session,
-full backup/restore or hosted macOS. Native cancellation tests establish
-retained spending; they do not demonstrate cancellation of an accepted IC effect.
-
-## Durable snapshot list and take
-
-`advance_snapshot` requires settled, authenticated initial status. Its original
-`SnapshotAdmissionRecord` contains explicit capacity (1–1,024) and separate list/take
-call admissions. All three calls must share the original provider and application
-commitments. Before list signing, admission checks at least three signing slots,
-the sum of all preparation/submission network allowances, and enough evidence for
-all three request/result caps plus twelve bounded ledger frames. No allowance is
-renewed by reopening or changed deadlines.
-
-The original ledger adds ordered sequences 5–8 for list and 9–12 for take:
-preparation reservation, exact prepared request, submission reservation and
-retained authenticated result. Each reservation is durable before its invocation.
-The four snapshot evidence files use the existing bounded request/result framing;
-all referenced evidence participates in custody checks and synchronization before
-further appends. Old status-only records and APIs remain valid. Older readers
-refuse unknown new ledger suffixes; no reset, migration or compatibility decoder
-is introduced. `CaptureCallAdmissionRecord`, `PreparedCaptureCall` and
-`CaptureCallEvidence` re-export the existing representations without new wire formats.
-
-`CaptureProvider` extends the existing status boundary with finite `CaptureCall`
-values. Shared private request/certificate/HTTP helpers bind the selected exact
-method and canonical Platform arguments. The public status-only helpers continue
-to reject snapshot envelopes. Take arguments never replace a snapshot, uninstall
-code or set sender-canister version. The signer receives those exact bytes.
-
-The authenticated original list passes bounded decoding and capacity preflight
-before take reservation. The authenticated take reply must identify a new opaque
-snapshot ID absent from that list. Rejection or malformed authenticated data never
-grants another take. Integrations retain exclusive snapshot custody and continuous
-application maintenance across the calls; an earlier stopped status alone does
-not establish those properties.
-
-Prepared replay may submit the exact retained request once after fresh admission,
-without signing again. Pending preparation/submission returns its original pending
-stage without invoking the provider. Settled replay authenticates the retained
-status, list and take locally, without effects. A missing take reply is unresolved:
-a new list or inventory difference is never its receipt. `inspect_snapshot` reports
-stage, original admission, request IDs and cumulative reservations including status;
-inspection alone authenticates nothing. Captured means a remote snapshot exists,
-not that a complete local backup exists. Reconciliation, download, completion and
-owner release still need their own implemented contracts.
-
-The focused frozen-legacy review covered
-[capture ordering](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/workflow/ic_snapshot_capture/mod.rs),
-[its regression cases](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/workflow/ic_snapshot_capture/tests/mod.rs),
-[bounded reply policy](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_snapshot_reply/mod.rs)
-and [receipt qualification history](https://github.com/dragginzgame/ic-backup-legacy/commit/278016b369f4312b4311410bbb7a0ad770ba3de6).
-These prevent recapture after uncertain effects, mismatched receipts and layout or
-authority drift. The new flow preserves reservation-before-effect and exact-reply
-binding in one existing ledger, with retained certificates instead of treating a
-reply digest as authentication. It does not import legacy stage graphs, cleanup
-or source code. [New native regressions](../../crates/ic-backup/src/store/capture/advance/tests/snapshot_tests.rs)
-cover interrupted signing/submission, prepared reopen, changed authority/budgets,
-capacity, rejection/reused IDs, evidence corruption and illegal transitions.
-The actual IC fixture above qualifies the three management calls and offline replay;
-native fakes establish persistence behavior only.
+Host HTTP supplies the client/body reader. Backup disables redirects, environment
+proxies and retries, sends once, bounds status/body/deadline and retains exact
+terminal certificates before applying capture policy. Disconnect, acceptance,
+timeout, cancellation, oversized body and invalid proof stay uncertain.
+No polling loop or fallback transport exists. After bounded extraction, a
+certificate survives authentication, closing-deadline, source/custody and retention
+failures in a typed error. `received_certificate()` exposes its exact bytes and
+original update request ID; Debug omits both. These bytes are sensitive and may be
+unauthenticated. They grant neither success nor permission to repair changed files.
 
 ## Local settlement from surviving replies
 
-`CaptureOperation::settle_capture_result` records a surviving original result for
-status, list or take. It requires that call's existing submission reservation or
-an already-settled identical result. It loads admission and exact signed request
-from the held journal, checks the supplied evidence against the original result
-cap, and invokes only the provider's local historical authentication. No caller
-supplies a replacement admission, request ID, expiry or certificate window.
-
-A pending result uses the same create-only evidence file and settlement frame as
-the live return path; no new schema, event, observation budget or state machine is
-introduced. Exact settled replay authenticates without writes. Different settled
-bytes refuse even if they describe the same outcome. Authentication and closing
-custody checks precede persistence; existing uncertain-write, partial-tail and
-orphan refusal behavior remains mandatory. The caller must bound loading its
-surviving evidence by the original result-byte allowance before allocation.
-
-This method performs no remote work and grants no authority to acquire new proof.
-It accepts only evidence that authenticates under the original request and timing
-policy. It can record a rejection or an authenticated malformed application reply:
-success means durable authenticated evidence, not policy acceptance or backup
-completion. Subsequent `advance_status` or `advance_snapshot` evaluates the retained
-outcome and checks live authority before any dependent effect. Loss of the guard
-need not prevent recording an original result; it still prevents further live work.
-
-If no original proof survived, the call remains pending. Fetching a missing result
-needs a separately reserved finite observation with its own request, time policy
-and retained evidence. This local method implements none of that flow and never
-infers a take result from snapshot-list differences.
-
-The focused review inspected frozen legacy
-[observation binding](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/ic_observation/mod.rs),
-[capture settlement](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/policy/ic_observation/capture_settlement/mod.rs),
-[its regressions](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/policy/ic_observation/capture_settlement/tests/mod.rs)
-and [a860d144's shared settlement and original-journal admission changes](https://github.com/dragginzgame/ic-backup-legacy/commit/a860d14421b9ff1c61c1dce079cdc6a19316bfd0).
-Those prevent changed authority/evidence and inventory cardinality from becoming
-an attributed result. The new direct path reuses original journal admission and
-cryptographic request-result binding. Legacy external attribution claims, separate
-inventory-observation machinery and progress wrappers are unnecessary for a
-surviving certified reply and are not imported. No legacy source was copied.
-
-[Native recovery cases](../../crates/ic-backup/src/store/capture/advance/tests/snapshot_tests/settlement_tests.rs)
-cover all three calls, missing submission, wrong call, bounds, authentication,
-rejection, policy refusal, unchanged spending, exact replay and retained damage.
-Direct-provider tests reject altered response/proof/outcome, a different request
-and certificates outside the original window. The private IC interruption fixture
-retains the actual take reply, withholds it from the workflow, then reopens and
-settles after gateway shutdown and guard revocation. Native preservation tests and
-this provider-boundary interruption do not prove physical power-loss durability,
-recovery of a never-received reply or cancellation of an accepted IC effect.
-
-## Local original-request observation authentication
-
-`observe_capture_certificate` is a local certificate helper for a future separately
-reserved lookup. It authenticates the original signed status/list/take request,
-using the existing direct-key profile, then verifies the supplied certificate under
-the original root and effective target. It reads only the exact original request's
-status path. Reply/rejection projection shares the existing terminal decoder,
-including rejection framing and absence-versus-pruning rules for optional diagnostics.
-The [IC request-status specification](https://docs.internetcomputer.org/references/ic-interface-spec/https-interface/)
-provides the external request-state vocabulary; it supplies no Backup retry authority.
-
-`CaptureObservationPolicy` supplies explicit certificate/delegation windows and a
-combined certificate/projected-response/five-byte-framing cap no larger than the
-original result cap. Byte checks precede signature and certificate decoding. Existing
-1 MiB certificate/delegation, 8,192-node, depth-64 and 1,024-range caps still apply.
-The caller must admit and retain this separate observation policy before a remote
-lookup. The helper reads no clock or journal, performs no effects, and proves no
-reservation, current freshness or read-state request authority.
-
-`CaptureObservation` distinguishes replied, rejected, received, processing, done,
-certified status-path absence and an unknown/pruned path. Unsupported status bytes
-or malformed terminal fields refuse. Done is not a retained outcome; absence is not
-proof of non-execution. None grants a retry, refund, completion or fresh application
-authority. The return value is an ephemeral projection, not a persisted receipt;
-callers retain original certificate and policy bytes separately. Raw response and
-rejection bytes have no derived Debug output.
-
-Observation windows can authenticate a later certificate without changing the
-original envelope, request ID, expiry or submission-time policy. That does not
-make it acceptable to the original `settle_capture_result` path: its unchanged
-provider still requires the original timing. The durable single-lookup workflow below now retains the observation with its
-separate authority and evidence. The explicit settlement method below binds terminal evidence to the original
-call without changing its original timing policy.
-
-The focused observation/settlement legacy review above remains applicable: exact
-original association and explicit unresolved outcomes are retained; inventory-delta
-attribution and legacy observation graphs are not copied. New
-[observation regressions](../../crates/ic-backup/src/store/capture/advance/tests/observation_tests.rs)
-exercise actual Ed25519/secp256k1 and BLS verification over synthetic certificates,
-all three original calls, separate timing without original-policy widening,
-wrong signatures/roots/targets/request IDs, exact byte bounds, delegated ranges,
-rejection diagnostics, absent/pruned/pending/done outcomes and malformed paths.
-These are cryptographic/native checks, not live read-state qualification.
-
-Adopted Platform 0.33.7 supplies the strict read-state content reader requested in
-[Platform #167 — Add bounded strict read-state content decoding for signed recovery lookups](https://github.com/dragginzgame/ic-platform/issues/167).
-Its raw-input cap does not establish a work/allocation quota or authenticate
-signatures, exact request-status paths, sender, deadlines or trust roots.
-Backup owns bounded signing, exact-path admission and independently spent
-network/observation allowances in the durable workflow below. Original-call settlement below retains the distinct observation source; supplier
-adoption alone implements none of those flows.
-
-## Strict signed recovery lookup admission
-
-`authenticate_capture_lookup` authenticates one externally signed read-state
-request for an original status/list/take. `CaptureLookupPolicy` supplies the exact
-nonzero lookup expiry and a complete-envelope cap no larger than 1 MiB. The cap
-is checked before decoding; it is not a total allocation/work quota. The original
-request still passes its existing admission, content, sender and signature checks.
-Platform's strict read-state decoder then admits only the known content fields.
-Backup requires the original sender, exactly the supplied expiry and exactly one
-path with two byte labels: `request_status` and the original 32-byte request ID.
-Prefix, extra, duplicate or substituted paths refuse even when correctly signed.
-
-The ordinary authentication projection must compute the same request ID as the
-strict projection. Both call and lookup use the same exact direct Ed25519/low-S
-secp256k1 key/signature verifier; no second crypto implementation or compatibility
-fallback is added. The helper returns Platform's lookup ID, not a receipt. Original
-and lookup envelope bytes stay untouched; neither expiry nor spending is renewed.
-Typed errors expose no key, envelope or signature bytes. Original certificate
-observation policy is not authenticated by this signature check.
-
-This is local historical authentication, not the live recovery workflow. Callers
-must separately persist original association, lookup policy/bytes and finite
-signing/network reservations before effects, admit route/root/provider and live
-time windows, and retain authenticated observation evidence. The helper reads no
-clock, journal or network and cannot prove pending submission or grant a retry.
-
-Focused review revisited the frozen legacy request/reservation owner, observation
-association, capture-settlement regressions and `94b94db8` qualification history
-linked above. Those preserve exact original authority and forbid inferred capture
-outcomes. The new path uses a cryptographically bound read-state request for one
-ingress ID rather than a separately attributed inventory observation. External
-signer output needs strict independent admission; legacy Agent signing and its
-observation graph are not copied. Newly authored
-[lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/lookup_tests.rs)
-carry exact original binding, unchanged bytes and refusal cases into the current
-implementation. They exercise real signatures for both keys and all three calls,
-including valid signatures over wrong paths/expiry/senders and ambiguous CBOR.
-These tests do not establish actual read-state ingress or durable observation.
-
-## One-shot read-state transport
-
-`StatusHttpTransport::lookup_once` uses the existing configured HTTP client and
-shared bounded CBOR response reader. `CaptureLookupHttpPolicy` binds the exact
-lookup envelope/expiry, observation certificate/delegation windows and absolute
-deadline. Invalid windows/bounds, original or lookup signatures, network/root and
-elapsed deadlines refuse before connection. Effective routing is always the
-original target's `/api/v2/canister/<target>/read_state` endpoint. The connection
-and body timeout is bounded by the configured timeout, lookup expiry and deadline;
-absolute time is checked after body read and certificate authentication.
-
-The complete encoded response uses the observation evidence cap, no larger than
-the original result allowance. Platform decodes its certificate; the existing
-observer checks original root/target/request identity and combined proof/result
-bounds. `CaptureLookupEvidence` retains the exact certificate and distinct outcome.
-There is no management dispatch, signing, polling, redirect, retry, replacement
-request or journal mutation. An expired original call may be observed using a
-separately approved lookup; its original expiry remains unchanged.
-
-This helper is not the durable workflow. Before calling it, integrations must
-retain original association, policy and exact request bytes, reserve finite
-signing/network/observation authority and admit live read permission/freshness.
-The transport does not inspect or replenish reservations. Loss of its response
-stays spent. Returning a certificate does not settle the original call or permit
-dependent work, and does not bypass original settlement timing.
-
-Focused legacy review reread the frozen shared submission owner linked above:
-it admits original context before dispatch, retains signed ingress first, performs
-one send and leaves lost replies uncertain. The new path preserves these ordering
-requirements with external reservations, reuses Backup's existing client/reader
-and authenticates read-state proof directly. Legacy Agent signing and implicit
-polling are not imported; no legacy code was copied. Earlier original-association
-and reservation regressions/history remain the relevant recovery rationale.
-
-[Loopback cases](../../crates/ic-backup/src/store/capture/advance/tests/http_lookup_tests.rs)
-qualify exact route/body for both keys and all three calls, original expired
-requests, pre-connection refusals, single attempts after disconnect/redirect,
-response caps, compressed/malformed proof refusal, stalled bodies and processing
-without polling. Both actual IC fixtures additionally retrieve the real take reply,
-compare its full snapshot DTO, retain lookup request/policy/certificate and verify
-that the original journal remains byte-identical. Their extra signature/read is
-explicitly reserved by fixture-owned files within a four-signature/four-network/
-one-observation plan; product journal counters still report only three original
-calls. This is real read-state transport qualification, not production durable
-observation, crash recovery of the lookup or a completed backup.
-
-Lookup cancellation qualification waits until the loopback server has received
-one complete request before dropping the future. The server observes connection
-closure, then keeps accepting while the runtime stays active; no second request
-appears. Separate stalled-body cases make lookup expiry and explicit deadline each
-expire before the configured HTTP timeout. These establish transport cancellation
-and time bounds, not persistence of spent observation authority after process death.
+`reconcile_reply(certificate)` verifies one original terminal certificate locally
+and retains its result under the original pending call. It grants no new signing,
+network or observation allowance. Duplicate, wrong-request/trust/time and
+nonterminal evidence refuse. Certified rejection and policy-invalid replies remain
+settled and block dependent work; they cannot be replaced by a later success.
 
 ## Durable single lookup
 
-`CaptureOperation::advance_lookup` composes the authenticators and one-shot HTTP
-transport with the original ledger. `CaptureLookupAdmissionRecord` binds the
-pending status/list/take, transport and signer commitments, read-permission
-witness, exact deadlines/expiry, byte caps and observation time policy. The
-integration's `CaptureLookupSigner` checks live read permission locally and signs
-only the exact original request-status path. It owns external signer custody and
-must enforce its declared network/byte limits; the library bounds the signing
-future and requires a preparation deadline at most 300 seconds ahead.
+`reconcile_observation(connection)` explicitly reserves one read-state
+lookup for an original pending call, within the operation observation allowance
+and separately retained observation time policy.
+The signed request contains the exact original sender/request ID and single
+request-status path. Its request, submission and certificate remain in the same
+journal with separate spending. There is no automatic or repeated lookup of that call.
 
-The four new events preserve original transition ordinals and record bytes:
+Terminal retained observations resolve the original update during semantic replay,
+without a second result file or settlement event. Nonterminal or interrupted lookup
+stays spent and pending. A surviving independent original reply may still resolve
+the update. Dependent calls require fresh live action admission even after local
+settlement.
 
-| Event | Retained state and effect allowance |
-| --- | --- |
-| `LookupStarted` | Exact admission; consumes one signing invocation, its network allowance and one observation before signing. |
-| `LookupPrepared` | Create-only `lookup-request.bin` and its length/hash; no HTTP yet. |
-| `LookupSubmissionReserved` | Consumes one HTTP request before sending the retained bytes. |
-| `LookupObserved` | Create-only `lookup-certificate.bin` and its length/hash, authenticated before persistence and reporting. |
+`reconcile_observation_reply(certificate)` imports a surviving lookup certificate
+locally only when that original lookup was already submitted and has no retained
+result. It authenticates the original lookup request and its separate retained
+time policy, never the update window or current clock. Nonterminal observations
+stay pending; terminal observations settle by the same replay rule. Both local
+import methods require intact original custody; an orphan/partial tail still
+refuses. There is no new journal, automatic adoption, retry or allowance.
 
-One lookup is supported per operation, even when the plan permits more. Admission
-conservatively fits complete original-call allowances, four frames per original
-call/lookup and all request/result caps within immutable plan limits. Later
-snapshot admission cannot reuse lookup allowance. The result cap cannot exceed
-the original call's cap. `inspect_lookup` reports this lookup's separate spending;
-original status/snapshot views continue to report only their original calls.
+## Final capture status and completion
 
-Failed or cancelled signing remains `SigningPending`. A prepared lookup may
-continue with exactly its retained bytes and fresh read permission, without
-resigning. Lost HTTP replies remain `LookupPending`, with no second dispatch.
-Observed replay verifies the retained request and certificate against original
-trust and retained observation windows without a signer, live permission, clock
-or server. This also works after separate settlement of a surviving original
-reply. Exact admission changes refuse; neither an observed reply nor an absent,
-processing, done or unknown result settles the original call, grants new mutation
-authority or permits dependent effects.
+The [transfer contract](capture-transfer.md) owns exact payload coverage and
+materialization. A separate final status follows complete payload verification.
+PublishReady freezes the original host timestamp and closed journal hash.
+Create-only publication reconciles only exact complete original bytes.
+Published replay and `verify_completion(manifest_hash)` authenticate full original
+evidence and payload without sync, guard, clock, signing, HTTP or writes.
 
-All files use existing custody, create-only evidence and chained sync rules.
-Uncertain writes invalidate the handle. Complete uncertain frames remain spent
-after reopen; partial tails and orphan/damaged evidence refuse without repair.
-Old journals remain readable without rewriting; older readers refuse the new
-event variants. No storage reset or journal migration is introduced.
+A completed receipt may survive target succession. Structural custody checks
+require its exact published manifest to bind original intent, closed journal and
+actual closed payload tree; staged or missing receipts cannot excuse changed
+ownership. Public reopen/source/advance boundaries still authenticate the complete
+procedure. Held restore custody additionally pins its original trusted manifest and
+payload descriptors. This is no persistent authentication cache.
 
-The focused legacy review revisited the frozen
-[attempt journal](https://github.com/dragginzgame/ic-backup-legacy/blob/4ae087fad8c23de712aa60bf569bde4b2b932651/crates/ic-backup/src/model/attempt_journal/mod.rs)
-alongside the observation association, regression and history anchors above.
-It preserves finite spending, original evidence association and unresolved lost
-replies. The new library uses four events in its existing chain, without importing
-legacy observation graphs, retry machinery or Agent-owned signing. No code was copied.
+`create_capture_after(plan, approval, predecessor)` locks target then predecessor,
+authenticates/synchronizes its exact published receipt, then atomically changes
+ownership. `open_capture_source(operation, receipt, limit)` authenticates the exact
+same-store source and holds its capture lock plus bounded payload descriptors.
+Neither source admission nor restore create/open needs a signer/connection.
+The predecessor selector is a closed `OperationPlan::Capture/Restore` view; restore
+completion and its source dependencies are authenticated before succession.
+Unfinished operations still require their original owner.
 
-[Native durable lookup tests](../../crates/ic-backup/src/store/capture/advance/tests/durable_lookup_tests.rs)
-cover eight groups: offline replay, failed/cancelled/invalid signing, exact prepared
-continuation and lost HTTP, exhausted budgets, damaged evidence, complete/partial
-uncertain writes at all four boundaries, later admission respecting spent allowance,
-and pre-reservation binding/permission/time refusal. The third
-[actual IC fixture](../../qualification/ic-backup-qualification/tests/direct_status.rs)
-observes a real pending take through this workflow, checks its complete snapshot
-DTO and unchanged original call state, then settles from the retained lookup certificate after server shutdown and
-signer revocation, reopens again and replays without new effects. These checks do not establish physical
-power-loss behavior, external signer process custody or a complete local backup.
+## Focused legacy review — 2026-11-15
 
-## Settlement from retained lookup evidence
+Reviewed frozen `4ae087fad8c23de712aa60bf569bde4b2b932651`: Agent
+`submission/mod.rs`, `tests/http_boundary/{mod.rs,recovery/mod.rs}`,
+`ops/persistence/attempt_journal/{mod.rs,tests/mod.rs}`, snapshot coverage and
+artifact completion tests. History `d245b0f03a505ba5215d65c10bdebf1890c7dc37`
+binds retained results to the original request; `a860d14421b9ff1c61c1dce079cdc6a19316bfd0`
+separates observation from dependent-effect admission;
+`9f7b886a824eec67dda8f81792a560436419bb2a` preserves original pass ownership.
+Their no-retry, original-evidence and independent-authority guarantees remain.
 
-`settle_capture_lookup` requires the already observed lookup and its exact original
-transport commitment. It reauthenticates the original signed call, exact signed
-lookup and retained certificate under the lookup's retained time policy. Only a
-certified reply or rejection can settle. Received, processing, done, absent and
-unknown outcomes refuse without writes or new allowance. It reads no clock and
-invokes no signer, application guard or network.
+The new common recorder replaces phase catalogs, repeated lifecycle events and
+accepted/schedule/assembly digest records. Tests now live with
+`operation/{tests,procedure_tests}.rs`, custody/runtime/facade tests and the
+retained request/certificate/HTTP groups under `advance/tests/`.
+Repeated per-phase mechanics are covered once; phase policy stays in bounded
+status/snapshot/transfer/procedure tests. Removed fake-provider route cases supplied
+no IC evidence; unsupported Canic configuration is removed rather than qualified.
+No legacy source was copied.
 
-`LookupSettled` records the original plan-bound 133-byte root key and the result
-file's length/hash in the same journal. This event replaces the original call's
-settlement frame, retaining its existing status/list/take ordinal and result file;
-it does not add another attempt or increase the four-frame-per-call allowance.
-The result retains the exact certificate and projected response under the original
-result cap. The lookup's original policy, request and proof remain referenced.
-Admission checks root length/hash and the exact pending original call before any
-write; the existing evidence sync, uncertain-write and orphan refusal rules apply.
+The limits consolidation additionally reviewed frozen `4ae087fa`
+`model/operation_plan/{budget/mod.rs,tests/mod.rs}`: changed original budgets,
+overflow and assigned-allowance refusal. The same reviewed `a860d144` ownership
+history retains independent original operation authority. The new library shares
+only schema/range validation, not spending; it keeps its selected nonzero network/
+signing and payload/evidence bounds rather than legacy's graph-wide allocation or
+zero-attempt declaration rules. Existing capture/restore plan/golden/refusal tests
+exercise both callers without changing original bytes.
 
-Original-call replay recognizes this retained observation source, reauthenticates
-its certificate under the separate window, and compares exact response, proof and
-rejection fields. It never substitutes the new window into the original request.
-Ordinary original-reply settlement retains its original provider authentication.
-Repeated lookup settlement is local and byte-identical; it cannot replace a result
-from the ordinary path, even if both describe the same outcome. Settling a rejection
-or malformed application reply is not application success. Existing stopped-state,
-list/capacity and new-snapshot checks remain in continuation. A list recovered under
-revoked live permission cannot reserve or prepare a take.
+Native tests cover partial/complete uncertain frames, orphan/changed files,
+finite spending, cancellation, exact prepared replay, certified rejection,
+materialization/publication interruption, completed succession and original source
+custody. An acknowledged child is killed after durable signing reservation; cold
+reopen preserves intent, target claim and spending with zero further signing/HTTP.
+This process-death case is not physical-power-loss qualification.
 
-This reuses the frozen legacy observation/settlement identity and regression lessons
-linked above: bind the exact original authority and evidence, preserve spending,
-and never infer a result from inventory cardinality. Here an authenticated original
-request-status certificate supplies attribution directly; no legacy inventory claim
-or attribution graph is imported. No legacy code was copied.
+The public-API [IC fixture](../../qualification/ic-backup-qualification/tests/capture.rs)
+covers multi-extent module/heap/stable payloads, empty/nonempty chunks, exact
+publication, succession, an older-source complete restore, interrupted take
+observation, original payload-reply settlement after shutdown and offline replay.
+It also qualifies a full 1 MiB whole chunk and a load result whose local write
+fails: the returned error supplies the certificate for offline settlement, without
+a proxy recovery copy. The separate normal-dependency
+[consumer executable](../../qualification/consumer/src/main.rs) is built alone
+without Testkit/PocketIC in its graph and continues capture/restore in fresh
+processes, then replays completed operations after server shutdown. Fixture
+signing/authority does not qualify Canic process or maintenance adapters.
 
-Six new native groups exercise distinct original/observation windows, cold replay,
-policy-invalid replies, nonterminal refusal, complete/partial/orphan settlement
-writes, conflicting roots/results, recovered-list live admission and rejection.
-The actual IC pending-take fixture now settles from its retained lookup proof after
-server shutdown and guard revocation, then reopens again and returns the complete
-snapshot DTO without further signing or submission. The surviving-original-reply
-fixture remains separate. Physical power loss and external signer custody remain
-outside this qualification.
-
-The new public method/error are additive, while new `LookupSettlement` variants in
-status/snapshot errors require downstream exhaustive matches to be updated. Review
-that Rust API change before publication; the development workspace remains private.
-Older readers refuse the new event; existing journals need no rewrite or reset.
-
-## Final capture status
-
-`advance_final_status` requires retained verified assembly, authenticates the
-original capture and complete payload coverage, then reuses the initial-status
-workflow, provider and stopped/module/controller policy. Its finite admission must
-retain the original provider and continuous application witness. No arbitrary
-management method or second provider framework is introduced.
-
-The final lane has its own `FinalStatusStarted`, `FinalStatusPrepared`,
-`FinalStatusSubmissionReserved` and `FinalStatusSettled` events, and exact
-`final-status-request.bin` / `final-status-result.bin` evidence. Initial-status
-wire bytes and lookup-settlement behavior remain unchanged. The cumulative
-original budget reserves this call's request/result ceilings and all four frames
-before signing. A final request ID equal to the original initial-status ID refuses
-before retaining preparation or submitting: IC deduplication must not turn the
-initial result into the final check. The external signer supplies a fresh exact
-request within the original protocol, sender and expiry rules.
-
-Signing/submission failure remains spent. Cold pending stages never reinvoke a
-provider; prepared continuation uses only its retained bytes after live admission.
-Authenticated final replies are retained before the unchanged status policy is
-applied, so a running canister or changed module cannot be hidden by a retry.
-Final lookup/surviving-reply settlement is not implemented. Initial-call settlement
-APIs cannot settle this distinct final lane. `inspect_final_status` returns the
-existing status view with zero allowance before reservation; it grants no success
-or completion authority. Settled final replay is local and effect-free.
-
-Focused legacy review covered `policy/ic_observation/settlement` and its exact
-original-request/evidence association regressions at frozen
-`4ae087fad8c23de712aa60bf569bde4b2b932651`. History
-`c47b96b6f8d6be31e47a473d897fde31feea5d4a` removed a duplicated outcome projection.
-Retain exact request attribution and derive views from the original record;
-do not import lifecycle mutation attribution or a qualified-receipt framework
-for this direct read. New native regressions cover final identity, bad status,
-original bindings/budgets and all four uncertain frame boundaries. The real IC
-fixture adds the sixth reserved capture call and replays after shutdown.
+The post-reply repair re-reviewed frozen legacy
+`workflow/qualified_receipt::retain_reply` and the restore
+`failure_boundaries_retain_pending_or_applied_and_never_repeat_provider` regression,
+plus history `f332118eeed000e4615e48155c162a4e113076a8` and
+`36789d26768b7b2eac2f5d4e8c29cc11bf80bdde`. Its bounded acknowledgement retention
+guarantee is adapted to certificates and the original recorder; legacy stages
+and receipt storage are not copied. Native late-deadline, old-allowance and failed
+write/import cases exercise the new owner.

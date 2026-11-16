@@ -1,5 +1,9 @@
 //! Direct-key authentication of original status ingress; no signing, clock or effects.
-use super::{CaptureError, CapturePlan, PreparedStatus, StatusAdmissionRecord};
+use super::{OperationStoreError, PreparedStatus};
+#[cfg(test)]
+use crate::store::StatusAdmissionRecord;
+#[cfg(test)]
+use crate::store::capture::CapturePolicy;
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     Principal, ecdsa,
@@ -15,12 +19,14 @@ const ED25519_DER: &[u8] = b"\x30\x2a\x30\x05\x06\x03\x2b\x65\x70\x03\x21\x00";
 const SECP256K1_DER: &[u8] =
     b"\x30\x56\x30\x10\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x05\x2b\x81\x04\x00\x0a\x03\x42\x00";
 
+pub(in crate::store) use lookup::authenticate_lookup_envelope;
+
 /// Refusal to authenticate an original direct-key status request.
 #[derive(Debug, Error)]
 pub enum StatusRequestError {
     /// The original plan, call content or complete request bound differs.
     #[error("status request fails original admission")]
-    Admission(#[source] CaptureError),
+    Admission(#[source] OperationStoreError),
     /// Platform could not decode the bounded authentication envelope.
     #[error("invalid status authentication envelope")]
     Envelope,
@@ -49,31 +55,24 @@ pub enum StatusRequestError {
 /// network/root/routing, original observation policy, application continuity and
 /// its own binding/costs. Success grants no signing, submission or retry authority.
 /// Use before retaining signer output, before live dispatch and during local replay;
-/// it does not implement a signer or a complete [`super::StatusProvider`].
+/// signing and durable execution remain with the owning operation.
 ///
-/// ```no_run
-/// use ic_backup::store::{CapturePlan, PreparedStatus, StatusAdmissionRecord,
-///     StatusRequestError, authenticate_status_request};
-/// fn inspect_signer_output(
-///     plan: &CapturePlan, admission: &StatusAdmissionRecord, request: &PreparedStatus,
-/// ) -> Result<(), StatusRequestError> {
-///     authenticate_status_request(plan, admission, request)
-/// }
-/// ```
 ///
 /// # Errors
 /// Refuses mismatched original content, malformed/bounded input, unsupported
 /// identities and failed signatures. Errors contain no envelope, key or signature bytes.
+#[cfg(test)]
 pub fn authenticate_status_request(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
 ) -> Result<(), StatusRequestError> {
     authenticate_call_request(plan, admission, prepared, super::CaptureCall::Status)
 }
 
+#[cfg(test)]
 pub(super) fn authenticate_call_request(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     call: super::CaptureCall,
@@ -89,8 +88,9 @@ pub(super) fn authenticate_call_request(
     )
 }
 
-pub(in crate::store::capture) fn authenticate_expected_request(
-    plan: &CapturePlan,
+#[cfg(test)]
+pub(in crate::store) fn authenticate_expected_request(
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     method: &str,
@@ -99,9 +99,7 @@ pub(in crate::store::capture) fn authenticate_expected_request(
     admission
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
-    let super::CaptureExecution::Direct { sender } = plan.request().execution else {
-        return Err(StatusRequestError::Admission(CaptureError::StatusAdmission));
-    };
+    let sender = plan.request().sender;
     authenticate_direct_request(sender, admission.request_bytes, prepared, method, arguments)
 }
 
@@ -187,4 +185,13 @@ fn verify_sender(der: &[u8], sender: &[u8]) -> Result<(), StatusRequestError> {
 }
 
 mod lookup;
-pub use lookup::{CaptureLookupError, CaptureLookupPolicy, authenticate_capture_lookup};
+#[cfg(test)]
+pub use lookup::authenticate_capture_lookup;
+pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
+
+/// Exact direct management identity selected by an original intent or native protocol fixture.
+pub(in crate::store) struct DirectRequirements {
+    pub target: crate::store::BackupTarget,
+    pub sender: Principal,
+    pub trust_root: ic_host_artifacts::artifact::Sha256Digest,
+}

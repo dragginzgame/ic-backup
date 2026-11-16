@@ -1,11 +1,8 @@
 //! Exact restore transfer bounds over authenticated sources; no restore effects.
 use crate::store::{
-    BackupSummary, RestoreTransferError, RestoreTransferRequest, StatusProgress,
+    BackupSummary, RestoreTransferError, RestoreTransferRequest,
     capture::test_fixtures::{
-        completion::{complete, manifest, settled},
-        data::Fixture,
-        final_status::{advance, provider, request, result},
-        http::runtime,
+        completion::{complete, manifest, mixed, settled},
         source::{extent, maximum},
     },
 };
@@ -29,11 +26,9 @@ fn exact_region_schedule_uses_new_extent_and_preserves_original_authority() {
     let receipt = complete(&mut f, &mut p).unwrap();
     let path = f.ledger();
     let before = fs::read(&path).unwrap();
-    let mut source = runtime()
-        .block_on(
-            f.store
-                .open_capture_source(&mut f.op, &receipt, maximum(), &f.t, &mut p),
-        )
+    let mut source = f
+        .store
+        .open_capture_source(&mut f.op, &receipt, maximum())
         .unwrap();
     let schedule = source.plan_restore_transfer(&selection(&receipt)).unwrap();
     assert_eq!(schedule.source(), &receipt);
@@ -55,18 +50,16 @@ fn exact_region_schedule_uses_new_extent_and_preserves_original_authority() {
         .collect();
     assert_eq!(bytes, b"helloworld");
     assert_eq!(fs::read(path).unwrap(), before);
-    assert_eq!(server.count(), 1);
+    assert_eq!(server.count(), 0);
 }
 
 #[test]
 fn wrong_selection_and_exact_budget_boundaries_refuse_without_source_reads() {
     let (mut f, server, mut p) = settled();
     let receipt = complete(&mut f, &mut p).unwrap();
-    let source = runtime()
-        .block_on(
-            f.store
-                .open_capture_source(&mut f.op, &receipt, maximum(), &f.t, &mut p),
-        )
+    let source = f
+        .store
+        .open_capture_source(&mut f.op, &receipt, maximum())
         .unwrap();
     for field in [
         "target",
@@ -118,43 +111,16 @@ fn wrong_selection_and_exact_budget_boundaries_refuse_without_source_reads() {
             limit: 14
         }
     );
-    assert_eq!(server.count(), 1);
+    assert_eq!(server.count(), 0);
 }
 
 #[test]
 fn mixed_regions_and_empty_whole_chunks_use_actual_lengths_and_sorted_order() {
-    let mut f = Fixture::with_parts(
-        false,
-        false,
-        20,
-        32 * 1024 * 1024,
-        Sha256Digest::compute(b"helloworld"),
-        true,
-    );
-    for n in 0..7 {
-        f.advance(n).unwrap();
-    }
-    runtime()
-        .block_on(f.op.assemble_data(&f.t, &mut f.provider))
-        .unwrap();
-    let r = request(&f, false);
-    let e = result(&f, &r, false);
-    let (server, mut p) = provider(&f, r, &e);
-    let a = f.a.call.clone();
-    assert_eq!(
-        advance(&mut f, &a, &mut p).unwrap(),
-        StatusProgress::Verified
-    );
-    p.replay = true;
+    let (mut f, server, mut p) = mixed();
     let receipt = complete(&mut f, &mut p).unwrap();
-    let mut source = runtime()
-        .block_on(f.store.open_capture_source(
-            &mut f.op,
-            &receipt,
-            24.try_into().unwrap(),
-            &f.t,
-            &mut p,
-        ))
+    let mut source = f
+        .store
+        .open_capture_source(&mut f.op, &receipt, 24.try_into().unwrap())
         .unwrap();
     let mut selected = selection(&receipt);
     selected.extent_bytes = 6;
@@ -196,7 +162,7 @@ fn mixed_regions_and_empty_whole_chunks_use_actual_lengths_and_sorted_order() {
             extent: 4
         }
     );
-    assert_eq!(server.count(), 1);
+    assert_eq!(server.count(), 0);
 }
 
 #[test]
@@ -204,11 +170,9 @@ fn invalidated_payload_source_cannot_plan_fresh_restore_work() {
     let (mut f, _, mut p) = settled();
     let receipt = complete(&mut f, &mut p).unwrap();
     let path = manifest(&f).parent().unwrap().join("payload/module.wasm");
-    let mut source = runtime()
-        .block_on(
-            f.store
-                .open_capture_source(&mut f.op, &receipt, maximum(), &f.t, &mut p),
-        )
+    let mut source = f
+        .store
+        .open_capture_source(&mut f.op, &receipt, maximum())
         .unwrap();
     fs::write(path, b"HelloWorld").unwrap();
     assert!(source.read_data(&extent(&receipt)).is_err());

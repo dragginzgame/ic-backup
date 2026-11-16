@@ -164,7 +164,7 @@ fn valid_absence_is_unsupported_capture_instead_of_fabricated_state() {
 fn original_limits_and_invalid_snapshot_ids_are_not_bypassed_by_decoding() {
     let mut request = plan(8).request().clone();
     request.limits.payload_bytes = 8;
-    let p = CapturePlan::new(request).unwrap();
+    let p = CapturePolicy::new(request).unwrap();
     assert!(matches!(
         p.decode_metadata(&[1], &encode(&metadata(9, 0, 0))),
         Err(TransferMetadataError::Transfer(

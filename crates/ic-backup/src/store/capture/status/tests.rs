@@ -1,6 +1,5 @@
 //! Re-authored legacy controller/status cases against the current plan boundary.
 use super::*;
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     Principal,
     management_canister_types::{
@@ -8,16 +7,13 @@ use ic_platform::{
     },
 };
 
-pub(in crate::store::capture) fn plan() -> CapturePlan {
-    CapturePlan::decode(include_bytes!("../../tests/fixtures/capture-plan.json").to_vec()).unwrap()
+pub(in crate::store) fn plan() -> CapturePolicy {
+    CapturePolicy::decode(include_bytes!("../../tests/fixtures/capture-plan.json")).unwrap()
 }
-fn sender(plan: &CapturePlan) -> Principal {
-    match plan.request().execution {
-        CaptureExecution::Direct { sender } => sender,
-        CaptureExecution::Canic { executor, .. } => executor,
-    }
+fn sender(plan: &CapturePolicy) -> Principal {
+    plan.request().sender
 }
-pub(in crate::store::capture) fn status(plan: &CapturePlan) -> CanisterStatusResult {
+pub(in crate::store) fn status(plan: &CapturePolicy) -> CanisterStatusResult {
     CanisterStatusResult {
         status: CanisterStatusType::Stopped,
         ready_for_migration: false,
@@ -54,8 +50,6 @@ pub(in crate::store::capture) fn status(plan: &CapturePlan) -> CanisterStatusRes
 #[test]
 fn stopped_matching_status_preserves_input_order_and_original_plan() {
     let p = plan();
-    let bytes = p.encoded().to_vec();
-    let commitment = p.digest();
     let mut observed = status(&p);
     observed.settings.controllers = vec![
         p.request().initiator,
@@ -65,8 +59,6 @@ fn stopped_matching_status_preserves_input_order_and_original_plan() {
     let original = observed.clone();
     assert_eq!(p.validate_status(&observed), Ok(()));
     assert_eq!(observed, original);
-    assert_eq!(p.encoded(), bytes);
-    assert_eq!(p.digest(), commitment);
     observed.settings.controllers.reverse();
     assert_eq!(p.validate_status(&observed), Ok(()));
 }
@@ -129,12 +121,8 @@ fn canic_requires_executor_membership_not_host_sender_or_initiator() {
     let host = sender(&original);
     let mut request = original.request().clone();
     let executor = Principal::from_slice(&[17, 1]);
-    request.execution = CaptureExecution::Canic {
-        executor,
-        protocol: Sha256Digest::compute(b"protocol"),
-        generation: 7,
-    };
-    let p = CapturePlan::new(request).unwrap();
+    request.sender = executor;
+    let p = CapturePolicy::new(request).unwrap();
     let mut observed = status(&p);
     assert_eq!(p.validate_status(&observed), Ok(()));
     observed.settings.controllers = vec![host, p.request().initiator];

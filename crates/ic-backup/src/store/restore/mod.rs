@@ -1,46 +1,27 @@
-//! Immutable direct-host restore plans, original custody and bounded status submission.
+//! Source-bound same-canister restore through the common direct recorder.
 use super::{
-    BackupSummary, BackupTarget, CaptureSource, RestoreTransfer, RestoreTransferError,
+    BackupTarget, CaptureSource, OperationLimits, RestoreTransfer, RestoreTransferError,
     RestoreTransferRequest, manifest::lower_hex,
 };
-use ic_host_artifacts::artifact::{HashingWriter, Sha256Digest};
-use ic_platform::{Principal, candid_codec};
-use serde::{Deserialize, Serialize};
-use std::io::{Write, sink};
-use thiserror::Error;
-
-mod direct;
-pub use direct::{DirectRestoreStatus, DirectRestoreStatusError};
-mod persistence;
-mod status;
-pub use persistence::{
-    RestoreOperation, RestorePersistenceError, RestoreStatusPreparation,
-    RestoreStatusPreparationError, RestoreStatusSigner, RestoreStatusSubmissionError,
-    RestoreStatusView,
+use crate::store::{
+    OperationStoreError,
+    operation::{
+        Journal,
+        custody::Recorder,
+        intent::{Error as IntentError, Intent, Plan, ProfileRecord},
+    },
 };
-pub use status::RestoreStatusEvidenceError;
-
+use ic_host_artifacts::artifact::Sha256Digest;
+use ic_platform::Principal;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+pub(in crate::store) mod persistence;
+pub(in crate::store) mod procedure;
+pub use persistence::{RestoreOperation, RestorePersistenceError};
+pub use procedure::Error as RestorePolicyError;
 const PLAN_LIMIT: usize = 1024 * 1024;
-const FORMAT: &str = "ic-backup/local-restore-plan/1";
-const DOMAIN: &[u8] = b"ic-backup/local-restore-plan/1\0";
-
-/// Finite original restore ceilings; no defaults or inferred provider allowances.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct RestoreLimitsRecord {
-    /// Maximum actual payload bytes, 1..=1 GiB.
-    pub payload_bytes: u64,
-    /// Region/whole-chunk ceiling, 1..=1 MiB and no greater than payload allowance.
-    pub extent_bytes: u32,
-    /// Aggregate network allowance including proof traffic/observations, 1..=8192.
-    pub network_requests: u32,
-    /// Observation subset of network allowance, never additional requests.
-    pub observations: u32,
-    /// Signing allowance, 1..=8192; actual spending requires a durable journal.
-    pub signing_requests: u32,
-    /// Retained evidence ceiling, 1..=1 GiB; later creation must admit its initial frame.
-    pub evidence_bytes: u64,
-}
+const FORMAT: &str = "ic-backup/restore-intent/1";
+const DOMAIN: &[u8] = b"ic-backup/restore-intent/1\0";
 
 /// Exact same-target/release direct-host restore selection; not live authority.
 #[derive(Clone, Debug)]
@@ -58,25 +39,28 @@ pub struct RestoreRequest {
     /// Explicit direct-host management sender; may differ from the capture sender.
     pub sender: Principal,
     /// Independent finite restore limits, never reused capture spending.
-    pub limits: RestoreLimitsRecord,
+    pub limits: OperationLimits,
 }
 
-/// Exact encoded source-bound intent and approval commitment, not an executable restore.
-///
-/// Plan construction creates no files. Local create/reopen retain original intent; restore
-/// execution still requires original durable custody, provider/application admission
-/// and retained allocation/request evidence. Source custody must be re-admitted on use.
-#[derive(Debug)]
+/// Immutable restore approval bound to one authenticated source and direct profile.
+#[derive(Clone, Debug)]
 pub struct RestorePlan {
     request: RestoreRequest,
-    transfer: RestoreTransfer,
+    source: SourceRecord,
+    profile: ProfileRecord,
     bytes: Vec<u8>,
     digest: Sha256Digest,
 }
-
-#[derive(Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug)]
+struct SourceRecord {
+    operation_id: String,
+    capture_plan: Sha256Digest,
+    manifest: Sha256Digest,
+    module: Sha256Digest,
+}
+#[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RestorePlanRecord {
+struct PlanRecord {
     format: String,
     operation_id: String,
     network: String,
@@ -89,72 +73,73 @@ struct RestorePlanRecord {
     source_operation_id: String,
     source_plan_sha256: String,
     source_manifest_sha256: String,
-    limits: RestoreLimitsRecord,
-    data_calls: u32,
-    minimum_management_calls: u32,
-    source_requests_sha256: String,
+    limits: OperationLimits,
+    profile: ProfileRecord,
 }
-
-/// Restore declaration/refusal changes no file, effect or allowance.
+/// Restore declaration/profile/source refusal; no failure grants new effect authority.
 #[derive(Debug, Error)]
 pub enum RestorePlanError {
-    /// Invalid operation ID, format, canonical identity or finite ceiling.
-    #[error("invalid restore plan declaration")]
+    /// Invalid identity, schema or finite limits.
+    #[error("invalid restore intent")]
     InvalidPlan,
-    /// Trust, source receipt, schedule or derived fields differ from the admitted source.
-    #[error("restore plan differs from its original source binding")]
+    /// Selected source differs from the authenticated original.
+    #[error("restore source binding refused")]
     SourceBinding,
-    /// Source schedule, same-target/release selection or minimum network allowance refused.
+    /// Source geometry or finite base schedule refused.
     #[error(transparent)]
     Transfer(#[from] RestoreTransferError),
-    /// Base restore calls cannot fit the selected signing allowance.
-    #[error("restore requires at least {required} signatures, exceeding {limit}")]
+    /// Known restore calls exceed original signing allowance.
+    #[error("restore requires {required} signatures, exceeding {limit}")]
     SigningBudget {
-        /// Fixed lifecycle plus complete upload/readback count.
+        /// Known complete restore count.
         required: u32,
-        /// Original signing allowance.
+        /// Original finite ceiling.
         limit: u32,
     },
-    /// Strict record decode/encode failed.
-    #[error("invalid restore plan record")]
+    /// Strict original record refused.
+    #[error("invalid restore intent encoding")]
     Record(#[from] serde_json::Error),
-    /// Bounded source-request encoding/commitment failed.
-    #[error("restore source request encoding refused")]
-    Encoding,
+    /// Original direct profile refused.
+    #[error(transparent)]
+    Profile(#[from] IntentError),
+    /// Known metadata/payload cannot fit the approved complete signed-envelope ceiling.
+    #[error("restore arguments exceed original request capacity")]
+    RequestCapacity,
 }
-
 impl RestorePlan {
-    /// Bind a direct restore declaration to the authenticated source and exact schedule.
-    ///
-    /// Uses retained source facts only; no IO, provider, clock or persistence. The
-    /// source manifest commits original metadata/payload; ordered Platform source
-    /// request bytes commit the transfer template. Allocation-dependent destination
-    /// arguments must be bound later in the original journal before submission.
-    /// # Errors
-    /// Refuses wrong identity/source, invalid limits, inactive source or insufficient
-    /// base network/signing budgets. Provider overhead requires separate admission.
-    pub fn new(
+    pub(in crate::store) fn new(
         source: &CaptureSource<'_, '_>,
         request: RestoreRequest,
+        profile: ProfileRecord,
     ) -> Result<Self, RestorePlanError> {
-        validate(&request, &source.summary().bundle_id)?;
-        if request.trust_root != source.original_plan().request().trust_root {
-            return Err(RestorePlanError::SourceBinding);
+        let original = source.original_plan();
+        let summary = source.summary();
+        let plan = Self::from_parts(
+            request,
+            SourceRecord {
+                operation_id: summary.bundle_id.clone(),
+                capture_plan: original.digest(),
+                manifest: summary.manifest_sha256,
+                module: summary.module_sha256,
+            },
+            profile,
+        )?;
+        plan.validate_source(source)?;
+        Ok(plan)
+    }
+    fn from_parts(
+        request: RestoreRequest,
+        source: SourceRecord,
+        profile: ProfileRecord,
+    ) -> Result<Self, RestorePlanError> {
+        if !lower_hex(&request.operation_id, 32)
+            || !lower_hex(&source.operation_id, 32)
+            || request.operation_id == source.operation_id
+            || !request.limits.valid()
+        {
+            return Err(RestorePlanError::InvalidPlan);
         }
-        let transfer = source.plan_restore_transfer(&RestoreTransferRequest {
-            target: request.target,
-            release: request.release,
-            extent_bytes: request.limits.extent_bytes,
-            maximum_payload_bytes: request.limits.payload_bytes,
-            maximum_management_calls: request.limits.network_requests,
-        })?;
-        if transfer.minimum_management_calls() > request.limits.signing_requests {
-            return Err(RestorePlanError::SigningBudget {
-                required: transfer.minimum_management_calls(),
-                limit: request.limits.signing_requests,
-            });
-        }
-        let record = RestorePlanRecord {
+        let record = PlanRecord {
             format: FORMAT.into(),
             operation_id: request.operation_id.clone(),
             network: request.target.network.to_string(),
@@ -162,111 +147,176 @@ impl RestorePlan {
             trust_root: request.trust_root.to_string(),
             initiator: request.initiator.to_text(),
             release: request.release.to_string(),
-            module_sha256: source.summary().module_sha256.to_string(),
+            module_sha256: source.module.to_string(),
             sender: request.sender.to_text(),
-            source_operation_id: source.summary().bundle_id.clone(),
-            source_plan_sha256: source.original_plan().digest().to_string(),
-            source_manifest_sha256: source.summary().manifest_sha256.to_string(),
+            source_operation_id: source.operation_id.clone(),
+            source_plan_sha256: source.capture_plan.to_string(),
+            source_manifest_sha256: source.manifest.to_string(),
             limits: request.limits,
-            data_calls: transfer.data_calls(),
-            minimum_management_calls: transfer.minimum_management_calls(),
-            source_requests_sha256: schedule_digest(&transfer)?.to_string(),
+            profile: profile.clone(),
         };
         let bytes = serde_json::to_vec(&record)?;
         if bytes.len() > PLAN_LIMIT {
             return Err(RestorePlanError::InvalidPlan);
         }
-        let digest = plan_digest(&bytes);
-        Ok(Self {
+        let digest = Sha256Digest::compute(&[DOMAIN, &bytes].concat());
+        let plan = Self {
             request,
-            transfer,
+            source,
+            profile,
             bytes,
             digest,
-        })
+        };
+        plan.view().validate()?;
+        Ok(plan)
     }
-
-    /// Re-admit bounded original bytes against a currently authenticated held source.
-    ///
-    /// Unknown/duplicate fields and noncanonical identities refuse. Valid original
-    /// JSON whitespace/order is retained exactly and remains part of the approval
-    /// digest; decoding never substitutes regenerated bytes or grants authority.
-    /// # Errors
-    /// Refuses malformed/oversized records, invalid declarations and changed source,
-    /// counts or request commitments. No source reads, writes or provider calls occur.
-    pub fn decode(
-        source: &CaptureSource<'_, '_>,
-        bytes: Vec<u8>,
-    ) -> Result<Self, RestorePlanError> {
+    pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, RestorePlanError> {
         if bytes.len() > PLAN_LIMIT {
             return Err(RestorePlanError::InvalidPlan);
         }
-        let record: RestorePlanRecord = serde_json::from_slice(&bytes)?;
-        if record.format != FORMAT {
+        let r: PlanRecord = serde_json::from_slice(bytes)?;
+        if r.format != FORMAT {
             return Err(RestorePlanError::InvalidPlan);
         }
-        let request = RestoreRequest {
-            operation_id: record.operation_id.clone(),
-            target: BackupTarget {
-                network: hash(&record.network)?,
-                canister: principal(&record.canister)?,
+        let plan = Self::from_parts(
+            RestoreRequest {
+                operation_id: r.operation_id,
+                target: BackupTarget {
+                    network: hash(&r.network)?,
+                    canister: principal(&r.canister)?,
+                },
+                trust_root: hash(&r.trust_root)?,
+                initiator: principal(&r.initiator)?,
+                release: hash(&r.release)?,
+                sender: principal(&r.sender)?,
+                limits: r.limits,
             },
-            trust_root: hash(&record.trust_root)?,
-            initiator: principal(&record.initiator)?,
-            release: hash(&record.release)?,
-            sender: principal(&record.sender)?,
-            limits: record.limits,
-        };
-        let mut plan = Self::new(source, request)?;
-        let expected: RestorePlanRecord = serde_json::from_slice(plan.encoded())?;
-        if record != expected {
-            return Err(RestorePlanError::SourceBinding);
+            SourceRecord {
+                operation_id: r.source_operation_id,
+                capture_plan: hash(&r.source_plan_sha256)?,
+                manifest: hash(&r.source_manifest_sha256)?,
+                module: hash(&r.module_sha256)?,
+            },
+            r.profile,
+        )?;
+        if plan.bytes != bytes {
+            return Err(RestorePlanError::InvalidPlan);
         }
-        plan.digest = plan_digest(&bytes);
-        plan.bytes = bytes;
         Ok(plan)
     }
-    /// Original direct-host declaration; a changed clone cannot alter this plan.
+    pub(in crate::store) fn validate_source(
+        &self,
+        source: &CaptureSource<'_, '_>,
+    ) -> Result<RestoreTransfer, RestorePlanError> {
+        let summary = source.summary();
+        let original = source.original_plan();
+        if summary.bundle_id != self.source.operation_id
+            || summary.manifest_sha256 != self.source.manifest
+            || summary.module_sha256 != self.source.module
+            || original.digest() != self.source.capture_plan
+            || original.request().trust_root != self.request.trust_root
+            || summary.target != self.request.target
+            || summary.release != self.request.release
+        {
+            return Err(RestorePlanError::SourceBinding);
+        }
+        let transfer = source.plan_restore_transfer(&self.transfer_request())?;
+        if transfer.minimum_management_calls() > self.request.limits.signing_requests {
+            return Err(RestorePlanError::SigningBudget {
+                required: transfer.minimum_management_calls(),
+                limit: self.request.limits.signing_requests,
+            });
+        }
+        let room = self.profile.request_bytes.saturating_sub(4096) as u64;
+        if source
+            .maximum_member_bytes()
+            .min(u64::from(self.request.limits.extent_bytes))
+            > room
+            || procedure::upload_metadata_arguments(
+                self.request.target.canister,
+                source.metadata(),
+                room as usize,
+            )
+            .is_err()
+        {
+            return Err(RestorePlanError::RequestCapacity);
+        }
+        Ok(transfer)
+    }
+    pub(in crate::store) fn transfer_request(&self) -> RestoreTransferRequest {
+        RestoreTransferRequest {
+            target: self.request.target,
+            release: self.request.release,
+            extent_bytes: self.request.limits.extent_bytes,
+            maximum_payload_bytes: self.request.limits.payload_bytes,
+            maximum_management_calls: self.request.limits.network_requests,
+        }
+    }
+    /// Exact original declaration; editing a clone grants no authority.
     #[must_use]
     pub fn request(&self) -> &RestoreRequest {
         &self.request
     }
-    /// Exact authenticated source receipt required by this plan.
+    /// Original capture operation selected as source.
     #[must_use]
-    pub fn source(&self) -> &BackupSummary {
-        self.transfer.source()
+    pub fn source_operation_id(&self) -> &str {
+        &self.source.operation_id
     }
-    /// Original fixed-order transfer calculation; not upload/load authority.
+    /// Exact original capture approval.
     #[must_use]
-    pub fn transfer(&self) -> &RestoreTransfer {
-        &self.transfer
+    pub fn source_plan_sha256(&self) -> Sha256Digest {
+        self.source.capture_plan
     }
-    /// Exact original bytes used by the approval commitment.
+    /// Exact trusted source manifest.
+    #[must_use]
+    pub fn source_manifest_sha256(&self) -> Sha256Digest {
+        self.source.manifest
+    }
+    /// Original source module, required before and after load.
+    #[must_use]
+    pub fn module_sha256(&self) -> Sha256Digest {
+        self.source.module
+    }
+    /// Exact canonical original approval bytes.
     #[must_use]
     pub fn encoded(&self) -> &[u8] {
         &self.bytes
     }
-    /// Domain-separated commitment to every original plan byte.
+    /// Domain-separated original approval.
     #[must_use]
     pub fn digest(&self) -> Sha256Digest {
         self.digest
     }
-}
-
-fn validate(r: &RestoreRequest, source_id: &str) -> Result<(), RestorePlanError> {
-    let b = r.limits;
-    if !lower_hex(&r.operation_id, 32)
-        || r.operation_id == source_id
-        || !(1..=1_073_741_824).contains(&b.payload_bytes)
-        || !(1..=1_048_576).contains(&b.extent_bytes)
-        || u64::from(b.extent_bytes) > b.payload_bytes
-        || !(1..=8192).contains(&b.network_requests)
-        || b.observations > b.network_requests
-        || !(1..=8192).contains(&b.signing_requests)
-        || !(1..=1_073_741_824).contains(&b.evidence_bytes)
-    {
-        return Err(RestorePlanError::InvalidPlan);
+    pub(in crate::store) fn profile(&self) -> &ProfileRecord {
+        &self.profile
     }
-    Ok(())
+}
+impl Intent for RestorePlan {
+    fn view(&self) -> Plan<'_> {
+        Plan::Restore(self)
+    }
+    fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
+        Self::decode(bytes).map_err(|_| OperationStoreError::InvalidPlan)
+    }
+    fn check_layout(record: &Recorder<Self>, _: &Journal) -> Result<(), OperationStoreError> {
+        let bundles = crate::store::capture::child(&record.store, "bundles", false)?;
+        if bundles
+            .open_directory(
+                std::ffi::OsStr::new(&record.plan().request().operation_id),
+                crate::store::PRIVATE,
+            )?
+            .is_some()
+        {
+            return Err(OperationStoreError::Changed);
+        }
+        Ok(())
+    }
+    fn published_binding(
+        _: &Recorder<Self>,
+        journal: &Journal,
+    ) -> Result<bool, OperationStoreError> {
+        Ok(journal.completed_at_ns.is_some())
+    }
 }
 fn hash(text: &str) -> Result<Sha256Digest, RestorePlanError> {
     if !lower_hex(text, 64) {
@@ -281,29 +331,5 @@ fn principal(text: &str) -> Result<Principal, RestorePlanError> {
     }
     Ok(p)
 }
-fn plan_digest(bytes: &[u8]) -> Sha256Digest {
-    Sha256Digest::compute(&[DOMAIN, bytes].concat())
-}
-fn schedule_digest(transfer: &RestoreTransfer) -> Result<Sha256Digest, RestorePlanError> {
-    let mut writer = HashingWriter::new(sink(), 1024 * 1024);
-    writer
-        .write_all(b"ic-backup/restore-source-requests/1\0")
-        .map_err(|_| RestorePlanError::Encoding)?;
-    for (ordinal, request) in transfer.source_requests().enumerate() {
-        let bytes =
-            candid_codec::encode_one(&request, 4096).map_err(|_| RestorePlanError::Encoding)?;
-        writer
-            .write_all(&(ordinal as u32).to_le_bytes())
-            .map_err(|_| RestorePlanError::Encoding)?;
-        writer
-            .write_all(&(bytes.len() as u32).to_le_bytes())
-            .map_err(|_| RestorePlanError::Encoding)?;
-        writer
-            .write_all(Sha256Digest::compute(&bytes).as_bytes())
-            .map_err(|_| RestorePlanError::Encoding)?;
-    }
-    Ok(writer.identity().sha256)
-}
-
 #[cfg(test)]
-mod tests;
+pub(in crate::store::restore) mod tests;

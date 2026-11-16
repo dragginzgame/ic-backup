@@ -1,10 +1,9 @@
 //! Pure status preconditions; observation authentication stays with the caller.
-use super::{CaptureExecution, CapturePlan};
+use super::CapturePolicy;
 use ic_host_artifacts::artifact::Sha256Digest;
-use ic_platform::{
-    Principal,
-    management_canister_types::{CanisterStatusResult, CanisterStatusType},
-};
+#[cfg(test)]
+use ic_platform::management_canister_types::CanisterStatusResult;
+use ic_platform::{Principal, management_canister_types::CanisterStatusType};
 mod wire;
 use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
@@ -16,7 +15,7 @@ pub(in crate::store) struct StatusRequirements {
 
 const MAX_CONTROLLERS: usize = 10;
 
-impl CapturePlan {
+impl CapturePolicy {
     /// Check decoded status against the original capture's module and management sender.
     ///
     /// Requires stopped state, the exact approved 32-byte module hash, and the
@@ -32,20 +31,11 @@ impl CapturePlan {
     /// Resource statistics, migration readiness and canister-version continuity
     /// are not evaluated by this check. It never stops or changes a canister.
     ///
-    /// ```
-    /// use ic_backup::store::{CapturePlan, CaptureStatusError};
-    /// use ic_platform::management_canister_types::CanisterStatusResult;
-    ///
-    /// fn check_observed_status(plan: &CapturePlan, status: &CanisterStatusResult)
-    ///     -> Result<(), CaptureStatusError>
-    /// {
-    ///     plan.validate_status(status)
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses excessive/duplicate controllers, running/stopping state, an absent
     /// or different module hash, or a controller set lacking the original sender.
+    #[cfg(test)]
     pub fn validate_status(
         &self,
         observed: &CanisterStatusResult,
@@ -56,15 +46,13 @@ impl CapturePlan {
     fn status_requirements(&self) -> StatusRequirements {
         StatusRequirements {
             module_sha256: self.request().module_sha256,
-            sender: match self.request().execution {
-                CaptureExecution::Direct { sender } => sender,
-                CaptureExecution::Canic { executor, .. } => executor,
-            },
+            sender: self.request().sender,
         }
     }
 }
 
 impl StatusRequirements {
+    #[cfg(test)]
     pub(in crate::store) fn validate_status(
         &self,
         observed: &CanisterStatusResult,
@@ -124,4 +112,4 @@ pub enum CaptureStatusError {
 }
 
 #[cfg(test)]
-pub(super) mod tests;
+pub(in crate::store) mod tests;

@@ -1,4 +1,3 @@
-mod capture;
 mod payload;
 
 use super::manifest::{ManifestRecord, MemberRecord};

@@ -29,11 +29,11 @@ fn policy() -> CaptureObservationPolicy {
 fn original(
     call: CaptureCall,
     scheme: Scheme,
-) -> (CapturePlan, StatusAdmissionRecord, PreparedStatus) {
+) -> (CapturePolicy, StatusAdmissionRecord, PreparedStatus) {
     let (p, mut r) = signed_request(scheme);
     let mut fields = p.request().clone();
     fields.trust_root = Sha256Digest::compute(&der(1));
-    let p = CapturePlan::new(fields).unwrap();
+    let p = CapturePolicy::new(fields).unwrap();
     change(&mut r, |envelope| {
         if let EnvelopeContent::Call {
             method_name,
@@ -79,7 +79,7 @@ fn replied(id: &[u8; 32], reply: &[u8]) -> Vec<u8> {
     )
 }
 fn observe(
-    p: &CapturePlan,
+    p: &CapturePolicy,
     a: &StatusAdmissionRecord,
     r: &PreparedStatus,
     proof: &[u8],
@@ -198,7 +198,7 @@ fn original_request_signature_sender_method_and_content_remain_mandatory() {
     ));
     let mut fields = p.request().clone();
     fields.target.canister = ic_platform::Principal::from_slice(&[99]);
-    let other = CapturePlan::new(fields).unwrap();
+    let other = CapturePolicy::new(fields).unwrap();
     assert!(matches!(
         observe(&other, &a, &r, &proof, policy()),
         Err(CaptureObservationError::Request(_))

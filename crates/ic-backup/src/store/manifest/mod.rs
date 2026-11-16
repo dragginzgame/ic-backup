@@ -35,14 +35,14 @@ pub(super) struct ManifestRecord {
     pub members: Vec<MemberRecord>,
 }
 
-#[derive(Deserialize, serde::Serialize)]
+#[derive(Deserialize, serde::Serialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub(super) struct CommitmentRecord {
     pub bytes: u64,
     pub sha256: String,
 }
 
-#[derive(Deserialize, serde::Serialize)]
+#[derive(Deserialize, serde::Serialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub(super) struct MemberRecord {
     pub name: String,
@@ -53,6 +53,8 @@ pub(super) struct MemberRecord {
 pub(super) struct DecodedManifest {
     pub summary: BackupSummary,
     pub members: Vec<MemberRecord>,
+    pub plan: CommitmentRecord,
+    pub ledger: CommitmentRecord,
 }
 
 pub(super) fn lower_hex(value: &str, len: usize) -> bool {
@@ -154,6 +156,8 @@ pub(super) fn decode(id: &str, bytes: &[u8]) -> Result<DecodedManifest, Manifest
     Ok(DecodedManifest {
         summary,
         members: record.members,
+        plan: record.plan,
+        ledger: record.ledger,
     })
 }
 

@@ -1,16 +1,12 @@
 //! Pure bounded transfer planning over Platform metadata; no dispatch authority.
 
-mod binding;
-pub(super) use binding::TransferBindingRecord;
-pub use binding::{CaptureTransferBindError, CaptureTransferView};
-mod data;
+pub(in crate::store) mod data;
 mod metadata;
-mod readback;
+pub(in crate::store) mod readback;
 pub use data::{DataReadError, TransferDataError};
 pub use metadata::TransferMetadataError;
-pub use readback::{ReadbackDataError, ReadbackMetadataError, UploadedSnapshotReadback};
 
-use super::{CaptureExecution, CapturePlan};
+use super::CapturePolicy;
 use ic_platform::management_canister_types::{
     ReadCanisterSnapshotDataArgs, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
     SnapshotMetadataGlobal, SnapshotSource,
@@ -28,18 +24,17 @@ const MAX_GLOBALS: usize = 4096;
 /// Provider overhead, raw metadata decoding and durable schedule binding remain separate.
 /// [`Self::decode_data`] validates individual data replies without recording progress.
 pub struct CaptureTransfer<'a> {
-    plan: &'a CapturePlan,
+    plan: &'a CapturePolicy,
     metadata: &'a ReadCanisterSnapshotMetadataResult,
     snapshot_id: &'a [u8],
     chunks: Vec<[u8; 32]>,
     region_calls: [u64; 3],
     data_calls: u32,
     capture_calls: u32,
-    minimum_network_requests: u32,
     payload_ceiling: u64,
 }
 
-impl CapturePlan {
+impl CapturePolicy {
     /// Plan module, heap, stable-memory and whole-chunk reads in fixed order.
     ///
     /// Reads use ascending extents followed by chunks sorted by hash. Unknown
@@ -52,21 +47,6 @@ impl CapturePlan {
     /// authenticated target/snapshot association, original
     /// evidence, application admission and route-specific budgets before dispatch.
     ///
-    /// ```
-    /// use ic_backup::store::{CapturePlan, TransferError};
-    /// use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
-    ///
-    /// fn inspect_schedule(
-    ///     plan: &CapturePlan,
-    ///     snapshot: &[u8],
-    ///     metadata: &ReadCanisterSnapshotMetadataResult,
-    /// ) -> Result<(), TransferError> {
-    ///     let transfer = plan.plan_transfer(snapshot, metadata)?;
-    ///     assert_eq!(transfer.requests().len(), transfer.data_calls() as usize);
-    ///     // These DTOs still require retained evidence and admitted dispatch authority.
-    ///     Ok(())
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses unsupported metadata, malformed/duplicate chunks, overflow and
@@ -110,10 +90,7 @@ impl CapturePlan {
             .ok_or(TransferError::Overflow)?;
         // Initial status, list, take, metadata and final status surround data reads.
         let capture_calls = data_calls.checked_add(5).ok_or(TransferError::Overflow)?;
-        let hops = match self.request().execution {
-            CaptureExecution::Direct { .. } => 1,
-            CaptureExecution::Canic { .. } => 2,
-        };
+        let hops = 1;
         let minimum_network_requests = capture_calls
             .checked_mul(hops)
             .ok_or(TransferError::Overflow)?;
@@ -149,8 +126,6 @@ impl CapturePlan {
             region_calls,
             data_calls: u32::try_from(data_calls).map_err(|_| TransferError::Overflow)?,
             capture_calls: u32::try_from(capture_calls).map_err(|_| TransferError::Overflow)?,
-            minimum_network_requests: u32::try_from(minimum_network_requests)
-                .map_err(|_| TransferError::Overflow)?,
             payload_ceiling,
         })
     }
@@ -165,6 +140,7 @@ impl CaptureTransfer<'_> {
 
     /// Whole-capture management calls: data reads plus the five fixed lifecycle reads/effects.
     #[must_use]
+    #[cfg(test)]
     pub const fn capture_calls(&self) -> u32 {
         self.capture_calls
     }
@@ -174,12 +150,14 @@ impl CaptureTransfer<'_> {
     /// Authentication, status polling and executor receipt lookup may require more.
     /// This is a lower bound, not admission of a concrete provider or its costs.
     #[must_use]
+    #[cfg(test)]
     pub const fn minimum_network_requests(&self) -> u32 {
-        self.minimum_network_requests
+        self.capture_calls
     }
 
     /// Exact region bytes plus one full extent allowance per unknown-length chunk.
     #[must_use]
+    #[cfg(test)]
     pub const fn payload_ceiling(&self) -> u64 {
         self.payload_ceiling
     }

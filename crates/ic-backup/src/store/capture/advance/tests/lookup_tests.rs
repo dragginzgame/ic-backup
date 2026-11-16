@@ -9,7 +9,7 @@ fn policy() -> CaptureLookupPolicy {
         envelope_bytes: 4096,
     }
 }
-fn original(scheme: Scheme, call: CaptureCall) -> (CapturePlan, PreparedStatus) {
+fn original(scheme: Scheme, call: CaptureCall) -> (CapturePolicy, PreparedStatus) {
     let (p, mut r) = fixture(scheme);
     change(&mut r, |envelope| {
         if let EnvelopeContent::Call {
@@ -23,10 +23,8 @@ fn original(scheme: Scheme, call: CaptureCall) -> (CapturePlan, PreparedStatus) 
     });
     (p, r)
 }
-fn lookup(p: &CapturePlan, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
-    let CaptureExecution::Direct { sender } = p.request().execution else {
-        panic!("direct fixture")
-    };
+fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
+    let sender = p.request().sender;
     let content = EnvelopeContent::ReadState {
         ingress_expiry: 200,
         sender: sender.as_slice().try_into().unwrap(),
@@ -58,7 +56,7 @@ fn modify(bytes: &[u8], scheme: Scheme, action: impl FnOnce(&mut EnvelopeContent
     encode_envelope(&envelope, 4096).unwrap()
 }
 fn authenticate(
-    p: &CapturePlan,
+    p: &CapturePolicy,
     r: &PreparedStatus,
     bytes: &[u8],
 ) -> Result<[u8; 32], CaptureLookupError> {
@@ -190,7 +188,7 @@ fn lookup_sender_expiry_kind_and_original_authentication_remain_exact() {
         if wrong_plan.target.canister == p.request().target.canister {
             wrong_plan.target.canister = "ryjl3-tyaaa-aaaaa-aaaba-cai".parse().unwrap();
         }
-        let wrong_plan = CapturePlan::new(wrong_plan).unwrap();
+        let wrong_plan = CapturePolicy::new(wrong_plan).unwrap();
         assert!(matches!(
             authenticate(&wrong_plan, &r, &bytes),
             Err(CaptureLookupError::Original(StatusRequestError::Admission(

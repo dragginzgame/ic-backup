@@ -6,20 +6,9 @@ never edit that receipt or files under `vendor/toko-tooling/` by hand.
 
 Read [README.md](README.md), [the handoff](docs/status/current.md) and
 [the restart direction](docs/design/restart.md) at session start.
-Local inventory, payload integrity, capture intent, transfer planning, bounded reply
-decoding, direct-host status/list/take continuation and local settlement from
-surviving original reply evidence are implemented. Separate observation-certificate
-authentication and strict signed lookup admission are local helpers. One-shot
-read-state transport and one durable lookup per operation are qualified. Terminal
-retained observations can settle the original call locally; replay preserves
-the separate observation time policy and dependent effects require live admission. PocketIC
-qualifies these calls, interrupted reply settlement and offline replay with fixture signing and application authority.
-Durable metadata acquisition authenticates the retained take, reserves finite
-signing/network allowance and retains exact certified evidence for offline replay.
-Sequential payload acquisition and local artifact assembly are qualified for
-retained evidence and offline replay. Final status and exact local completion
-publication/reconciliation and authenticated target succession are qualified for
-the small IC fixture. Canic process/maintenance adapters and restore remain unqualified. Continue the selected capture/restore scope through the contracts below; distinguish proposals from implemented behavior.
+The handoff owns current implementation and qualification status. Read the
+affected contracts below before changing behavior; distinguish implemented
+Backup scope from unqualified Canic integration.
 The legacy checkout is read-only reference material; do not import its source,
 backlog, caches, build outputs, journals or release state wholesale.
 
@@ -116,13 +105,8 @@ after meaningful work. Preserve the legacy checkout and its recovery evidence.
 
 ## Post-push review focus
 
-After every successful push, apply the installed baseline's
-[post-push review](TOKO-TOOLING.md#post-push-review) to the delivered commits and
-directly affected callers before starting the next increment. In Backup, explicitly
-check architectural drift, creeping complexity and legacy sediment: duplicated
-policy or recovery paths, unnecessary stage APIs/authority inputs, extra journals
-or persisted representations, and mechanisms imported without a current consumer.
-Prefer reuse, deletion and simplification while preserving original evidence,
-finite spending and recovery guarantees. Report concrete findings and their
-smallest correction, or the reviewed scope with no actionable findings. This
-adds no separate report framework and does not authorize another push.
+Apply the baseline's [post-push review](TOKO-TOOLING.md#post-push-review).
+For Backup, check competing recovery paths, unnecessary stage APIs/authority
+inputs, extra journals or persisted representations and legacy mechanisms without
+a current consumer. Preserve original evidence, finite spending and recovery
+guarantees. Keep detailed qualification in its owning contract, not this overlay.

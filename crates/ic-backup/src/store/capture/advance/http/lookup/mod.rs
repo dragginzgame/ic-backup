@@ -1,18 +1,20 @@
 //! One externally reserved read-state dispatch through the existing HTTP owner.
-use super::{
-    CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusHttpError, StatusHttpTransport,
-    remaining,
-};
-use crate::store::{
+use super::{BackupHttpError, BackupHttpTransport, remaining};
+#[cfg(test)]
+use super::{CapturePolicy, PreparedStatus, StatusAdmissionRecord};
+#[cfg(test)]
+use crate::store::capture::advance::{
     CaptureCall, CaptureLookupError, CaptureLookupPolicy, CaptureObservation,
     CaptureObservationError, CaptureObservationPolicy, authenticate_capture_lookup,
     observe_capture_certificate, status_certificate_observation,
 };
 use ic_platform::ic_protocol::decode_read_state_response;
+#[cfg(test)]
 use thiserror::Error;
 
 /// Separately approved lookup bounds. These fields do not reserve any authority.
 #[derive(Clone, Copy, Debug)]
+#[cfg(test)]
 pub struct CaptureLookupHttpPolicy {
     /// Exact signed lookup expiry and raw envelope cap.
     pub request: CaptureLookupPolicy,
@@ -25,6 +27,7 @@ pub struct CaptureLookupHttpPolicy {
 
 /// Exact authenticated certificate and its original-request projection, not settlement.
 /// Contains sensitive bytes and deliberately has no Debug implementation.
+#[cfg(test)]
 pub struct CaptureLookupEvidence {
     /// Exact original certificate bytes, retained by the caller for historical replay.
     pub certificate: Vec<u8>,
@@ -34,6 +37,7 @@ pub struct CaptureLookupEvidence {
 
 /// Lookup refusal or uncertain observation; no variant grants another attempt.
 #[derive(Debug, Error)]
+#[cfg(test)]
 pub enum CaptureLookupHttpError {
     /// Invalid observation bounds or time policy, refused before dispatch.
     #[error("invalid capture lookup HTTP policy")]
@@ -43,13 +47,13 @@ pub enum CaptureLookupHttpError {
     Request(#[from] CaptureLookupError),
     /// Shared HTTP admission, deadline, response bound or uncertain transport failure.
     #[error(transparent)]
-    Http(#[from] StatusHttpError),
+    Http(#[from] BackupHttpError),
     /// Certificate or original-result association refused after dispatch.
     #[error(transparent)]
     Observation(#[from] CaptureObservationError),
 }
 
-impl StatusHttpTransport {
+impl BackupHttpTransport {
     /// Fetch one original request-status certificate using exact retained lookup bytes.
     ///
     /// Call only after the integrating workflow has durably reserved this observation
@@ -74,9 +78,10 @@ impl StatusHttpTransport {
     ///
     /// # Panics
     /// Polling requires a Tokio runtime with IO and timers enabled.
-    pub async fn lookup_once(
+    #[cfg(test)]
+    pub(in crate::store) async fn lookup_once(
         &self,
-        plan: &CapturePlan,
+        plan: &CapturePolicy,
         admission: &StatusAdmissionRecord,
         original: &PreparedStatus,
         call: CaptureCall,
@@ -93,18 +98,16 @@ impl StatusHttpTransport {
         self.admit_plan(plan)?;
         let deadline = policy.deadline_ns.min(policy.request.expires_ns);
         remaining(deadline)?;
-        let mut url = self.origin.clone();
-        url.set_path(&format!(
-            "/api/v2/canister/{}/read_state",
-            plan.request().target.canister.to_text()
-        ));
         let maximum = policy.observation.evidence_bytes as usize;
-        let bytes = self
-            .post_cbor(url, lookup.to_vec(), deadline, maximum)
+        let certificate = self
+            .read_state_certificate(
+                plan.request().target.canister,
+                lookup,
+                original.request_id,
+                deadline,
+                maximum,
+            )
             .await?;
-        let certificate = decode_read_state_response(&bytes, maximum)
-            .map_err(|_| StatusHttpError::Response)?
-            .certificate;
         let outcome = observe_capture_certificate(
             plan,
             admission,
@@ -119,5 +122,30 @@ impl StatusHttpTransport {
             certificate,
             outcome,
         })
+    }
+
+    // The owning operation admits the exact signed lookup and durable reservation.
+    pub(in crate::store) async fn read_state_certificate(
+        &self,
+        canister: ic_platform::Principal,
+        lookup: &[u8],
+        request_id: [u8; 32],
+        deadline: u64,
+        maximum: usize,
+    ) -> Result<Vec<u8>, BackupHttpError> {
+        let mut url = self.origin.clone();
+        url.set_path(&format!(
+            "/api/v2/canister/{}/read_state",
+            canister.to_text()
+        ));
+        let bytes = self
+            .post_cbor(url, lookup.to_vec(), deadline, maximum)
+            .await?;
+        let certificate = decode_read_state_response(&bytes, maximum)
+            .map_err(|_| BackupHttpError::Response)?
+            .certificate;
+        remaining(deadline)
+            .map_err(|error| error.after_response(request_id, certificate.clone()))?;
+        Ok(certificate)
     }
 }

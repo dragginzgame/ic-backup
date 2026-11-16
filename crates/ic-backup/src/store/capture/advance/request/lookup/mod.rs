@@ -1,6 +1,9 @@
 //! Exact signed read-state admission for original-request recovery. No effects.
-use super::{CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusRequestError};
-use crate::store::{CaptureCall, CaptureExecution};
+#[cfg(test)]
+use super::super::CaptureCall;
+use super::StatusRequestError;
+#[cfg(test)]
+use super::{CapturePolicy, PreparedStatus, StatusAdmissionRecord};
 use ic_platform::ic_protocol::{
     EnvelopeContent, decode_envelope, decode_read_state_content_strict,
 };
@@ -55,24 +58,13 @@ pub enum CaptureLookupError {
 /// Reply authentication remains with [`crate::store::observe_capture_certificate`];
 /// this function does not settle uncertainty or authorize another management call.
 ///
-/// ```no_run
-/// use ic_backup::store::{CapturePlan, CaptureCallAdmissionRecord, PreparedCaptureCall,
-///     CaptureCall, CaptureLookupPolicy, CaptureLookupError, authenticate_capture_lookup};
-/// fn check(plan: &CapturePlan, admission: &CaptureCallAdmissionRecord,
-///     original: &PreparedCaptureCall, signed_lookup: &[u8], approved_expiry: u64,
-/// ) -> Result<[u8; 32], CaptureLookupError> {
-///     authenticate_capture_lookup(plan, admission, original, CaptureCall::TakeSnapshot,
-///         signed_lookup, CaptureLookupPolicy {
-///             expires_ns: approved_expiry, envelope_bytes: 4096,
-///         })
-/// }
-/// ```
 ///
 /// # Errors
 /// Refuses bounds, invalid original requests, malformed/ambiguous read-state content,
 /// changed sender/expiry/paths, unsupported identity metadata and bad signatures.
+#[cfg(test)]
 pub fn authenticate_capture_lookup(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     original: &PreparedStatus,
     call: CaptureCall,
@@ -88,6 +80,25 @@ pub fn authenticate_capture_lookup(
     }
     super::authenticate_call_request(plan, admission, original, call)
         .map_err(CaptureLookupError::Original)?;
+    let sender = plan.request().sender;
+    authenticate_lookup_envelope(sender, original.request_id, bytes, policy)
+}
+
+// The operation owner has already authenticated the original derived call.
+pub(in crate::store) fn authenticate_lookup_envelope(
+    sender: ic_platform::Principal,
+    request_id: [u8; 32],
+    bytes: &[u8],
+    policy: CaptureLookupPolicy,
+) -> Result<[u8; 32], CaptureLookupError> {
+    if policy.expires_ns == 0
+        || !(1..=1024 * 1024).contains(&policy.envelope_bytes)
+        || bytes.is_empty()
+        || bytes.len() > policy.envelope_bytes as usize
+    {
+        return Err(CaptureLookupError::Bounds);
+    }
+    let expected = sender;
     let content = decode_read_state_content_strict(bytes, policy.envelope_bytes as usize)
         .map_err(|_| CaptureLookupError::Envelope)?;
     let EnvelopeContent::ReadState {
@@ -98,15 +109,12 @@ pub fn authenticate_capture_lookup(
     else {
         return Err(CaptureLookupError::Envelope);
     };
-    let CaptureExecution::Direct { sender: expected } = plan.request().execution else {
-        return Err(CaptureLookupError::Binding);
-    };
     if sender.as_slice() != expected.as_slice()
         || *ingress_expiry != policy.expires_ns
         || paths.len() != 1
         || paths[0].len() != 2
         || paths[0][0].as_bytes() != b"request_status"
-        || paths[0][1].as_bytes() != original.request_id
+        || paths[0][1].as_bytes() != request_id
     {
         return Err(CaptureLookupError::Binding);
     }

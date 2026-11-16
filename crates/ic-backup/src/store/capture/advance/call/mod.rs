@@ -1,10 +1,6 @@
 //! Finite capture calls; no arbitrary management dispatch.
-use super::{
-    CaptureError, CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusEvidence,
-    StatusProvider, arguments,
-};
+use super::{CapturePolicy, OperationStoreError, arguments};
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 
 /// The management calls currently implemented by the capture workflow.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,8 +26,8 @@ impl CaptureCall {
     }
     pub(in crate::store::capture) fn arguments(
         self,
-        plan: &CapturePlan,
-    ) -> Result<Vec<u8>, CaptureError> {
+        plan: &CapturePolicy,
+    ) -> Result<Vec<u8>, OperationStoreError> {
         match self {
             Self::Status | Self::ListSnapshots => arguments(plan),
             Self::TakeSnapshot => {
@@ -39,52 +35,10 @@ impl CaptureCall {
                 // its authenticated inventory and original capacity before reservation.
                 let args = plan
                     .take_snapshot_arguments(&[], 1)
-                    .map_err(|_| CaptureError::StatusAdmission)?;
+                    .map_err(|_| OperationStoreError::StatusAdmission)?;
                 ic_platform::candid_codec::encode_one(&args, 512)
-                    .map_err(|_| CaptureError::StatusAdmission)
+                    .map_err(|_| OperationStoreError::StatusAdmission)
             }
         }
     }
-}
-
-/// Trusted capture provider extending the original status boundary.
-///
-/// The same exact-byte, bounded-effect and historical-proof obligations as
-/// [`StatusProvider`] apply to each call. The workflow supplies only the canonical
-/// finite method/arguments and reserves each signing and submission separately.
-/// Admission/authentication remain local and effect-free. No method may retry,
-/// poll, replace a snapshot, uninstall code or infer a take result from list differences.
-pub trait CaptureProvider: StatusProvider {
-    /// Admit live original authority and optional exact retained request.
-    fn admit_call(
-        &self,
-        plan: &CapturePlan,
-        admission: &StatusAdmissionRecord,
-        call: CaptureCall,
-        prepared: Option<&PreparedStatus>,
-    ) -> Result<(), Self::Error>;
-    /// Prepare one exact call under its already-durable signing reservation.
-    fn prepare_call(
-        &mut self,
-        plan: &CapturePlan,
-        admission: &StatusAdmissionRecord,
-        call: CaptureCall,
-    ) -> impl Future<Output = Result<PreparedStatus, Self::Error>> + Send;
-    /// Submit the retained bytes once under their already-durable reservation.
-    fn submit_call(
-        &mut self,
-        plan: &CapturePlan,
-        admission: &StatusAdmissionRecord,
-        call: CaptureCall,
-        prepared: &PreparedStatus,
-    ) -> impl Future<Output = Result<StatusEvidence, Self::Error>> + Send;
-    /// Authenticate original request/result association locally, including cold replay.
-    fn authenticate_call(
-        &self,
-        plan: &CapturePlan,
-        admission: &StatusAdmissionRecord,
-        call: CaptureCall,
-        prepared: &PreparedStatus,
-        evidence: &StatusEvidence,
-    ) -> Result<(), Self::Error>;
 }

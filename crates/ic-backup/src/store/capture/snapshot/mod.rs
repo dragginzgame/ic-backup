@@ -1,5 +1,5 @@
 //! Bounded list/take replies and non-destructive capture arguments; no IC effects.
-use super::{CaptureExecution, CapturePlan};
+use super::CapturePolicy;
 use ic_platform::{
     candid_codec::{
         self, Encode, Type, Writer,
@@ -51,7 +51,7 @@ pub fn decode_taken_snapshot(
     Ok(snapshot)
 }
 
-impl CapturePlan {
+impl CapturePolicy {
     /// Build direct-host take arguments after a bounded capacity preflight.
     ///
     /// `capacity` is the integration's selected remote capacity (1..=1,024), not
@@ -65,17 +65,6 @@ impl CapturePlan {
     /// This pure helper checks neither status nor application safety and grants
     /// no signing, submission, deletion, funding or retry authority.
     ///
-    /// ```
-    /// use ic_backup::store::{CapturePlan, SnapshotReplyError, decode_snapshot_list};
-    /// use ic_platform::management_canister_types::TakeCanisterSnapshotArgs;
-    ///
-    /// fn preflight(plan: &CapturePlan, authenticated_list: &[u8], capacity: u32)
-    ///     -> Result<TakeCanisterSnapshotArgs, SnapshotReplyError>
-    /// {
-    ///     let inventory = decode_snapshot_list(authenticated_list)?;
-    ///     plan.take_snapshot_arguments(&inventory, capacity)
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses Canic routing, invalid inventory/capacity and an already full list.
@@ -84,9 +73,6 @@ impl CapturePlan {
         inventory: &[Snapshot],
         capacity: u32,
     ) -> Result<TakeCanisterSnapshotArgs, SnapshotReplyError> {
-        if !matches!(self.request().execution, CaptureExecution::Direct { .. }) {
-            return Err(SnapshotReplyError::UnsupportedRoute);
-        }
         if !(1..=MAX_SNAPSHOTS as u32).contains(&capacity) {
             return Err(SnapshotReplyError::CapacityLimit);
         }
@@ -220,9 +206,6 @@ pub enum SnapshotReplyError {
     /// The observed list already fills or exceeds the selected capacity.
     #[error("no capacity for a new snapshot")]
     NoCapacity,
-    /// The first take profile supports only direct-host execution.
-    #[error("snapshot take requires the direct-host route")]
-    UnsupportedRoute,
     /// The take response identifies a snapshot present in the prior inventory.
     #[error("returned snapshot already existed before capture")]
     AlreadyExisted,

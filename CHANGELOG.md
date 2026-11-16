@@ -1,6 +1,75 @@
 # Changelog
 
-## [0.101.13] - Unreleased
+## [0.102.0] - 2026-11-16
+
+Unpublished GitHub checkpoint.
+
+### ⚠️ Breaking
+
+- Replace public capture phase commands with one approved direct connection and
+  fixed advance loop. Common call/observation facts own signing, submission,
+  original certified evidence, finite spending and explicit pending reconciliation.
+- Use a distinct host-store/1 marker, capture intent and journal encoding. Older
+  stores refuse intact under the replacement reader; their original reader and
+  recovery evidence are preserved. No migration/reset is provided.
+- Remove superseded phase engines/events, transfer-binding and assembly stages.
+  Held source, authenticated succession and local restore create/open now consume
+  the public capture boundary without transport/provider parameters.
+
+Consumers must adopt the fixed capture/restore API. Retained older operations
+must continue with their preserved reader, original authority and evidence;
+there is no migration, reset or reinterpretation under the new formats.
+
+### 🔧 Changed
+
+- Reuse checked journal prefixes/results within a capture invocation, extend its
+  authenticated procedure after retaining a live result, and remove duplicate
+  authentication of the same owned reply. Cold replay and checks across awaits
+  remain independent. Remove the unused assembled-tree digest calculation.
+- Share capture/restore declaration bounds through `OperationLimits`, removing
+  their duplicate public records/validators. Serialized fields and independent
+  approved operation limits remain unchanged.
+
+- Replace restore's separate status signer/adapter/events with the common recorder.
+  One source-bound restore loop allocates/uploads, compares exact metadata and every
+  byte, loads and verifies stopped state with distinct original status requests.
+  Derive LoadedStopped from its closed journal; support fresh capture after restore.
+- Retire the obsolete test-only readback cursor; move its distinct coverage,
+  routing and corruption cases onto the actual restore policy.
+- Share the connection, signer, action guard, progress and typed view across both
+  purposes. Remove unused public proof/admission records and status-stage progress.
+  New restore-intent/1 refuses older restore records intact under their preserved reader.
+
+- Reopen restore from original operation ID and approval, reading its retained plan
+  without a signer, connection or caller-side plan copy. Re-admit exact selection
+  and held target lock before returning cold progress; preserve stored formats.
+
+- Preserve bounded received certificates and original request IDs in redacted
+  typed post-response errors. Import surviving observation replies locally under
+  their original submitted lookup and separate time policy, without new allowance.
+- Align new profiles at 2 MiB request / 4 MiB result / 2 MiB certificate maxima
+  for 1 MiB payload chunks. Existing intents retain their original smaller limits.
+- Name shared APIs `OperationStoreError`, `BackupHttpTransport` and
+  `BackupHttpError`, without compatibility aliases or retained-domain changes.
+
+### 🧪 Testing
+
+- Qualify multi-extent module/heap/stable capture and empty/nonempty chunks, exact
+  publication, succession, full older-source restore of changed actual IC state,
+  capture after restore and offline history/replay against PocketIC.
+- Recover interrupted take/data/allocation/mid-upload/load through an explicitly
+  accounted observation or surviving original certificate, without resubmission.
+- Retain shared protocol/corruption/custody/finite-spending/process-death cases;
+  restore-specific regressions cover allocation, exact readback, sender/status and
+  reused status-request refusal. Canic adapters and physical-power-loss qualification
+  remain unfinished.
+
+- Qualify full 1 MiB whole-chunk capture/restore and failed load-result retention
+  recovered from the returned error after shutdown, without a proxy recovery copy.
+- Build a separate normal-dependency consumer without Testkit/PocketIC and exercise
+  fresh-process capture/restore continuation and offline completion replay.
+
+## [0.101.13] — Preserved local checkpoint (unpublished)
 
 ### ➕ Added
 

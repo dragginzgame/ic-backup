@@ -1,105 +1,100 @@
-//! Explicit replacement of one completed capture's target pointer.
+//! Explicit target succession after exact authenticated local completion.
 use super::{
-    BackupStore, CaptureCompletionError, CaptureError, CaptureOperation, CapturePlan,
-    CaptureProvider, PRIVATE, StatusHttpTransport, child, exact, lock_target, owner,
-    same_directory, same_identity, target_directory,
+    BackupStore, CaptureOperation, CapturePlan, OperationReplayError, OperationStoreError, PRIVATE,
+    child, exact, lock_target, target_for,
 };
+use crate::store::operation::intent::{Intent, Plan};
 use ic_host_artifacts::artifact::Sha256Digest;
-use ic_host_fs::durable::{
-    NamedWriteError, PublicationMode, WriteOptions, write_at_validated_with,
-};
-use std::{ffi::OsStr, io::Write, os::fd::AsFd};
+use std::ffi::OsStr;
 use thiserror::Error;
-
-/// Succession never removes predecessor evidence or refunds its authority.
+/// Succession never removes predecessor evidence or refunds its original authority.
 #[derive(Debug, Error)]
-pub enum CaptureSuccessionError<E> {
-    /// Intent, exclusion or original custody refused.
+pub enum CaptureSuccessionError {
+    /// Original intent, exclusion or local custody refused.
     #[error(transparent)]
-    Capture(#[from] CaptureError),
-    /// Original completion authentication or durability reconciliation refused.
-    #[error("predecessor completion refused")]
-    Completion(Box<CaptureCompletionError<E>>),
-    /// Owner publication failed, preserving its before/after-publication distinction.
-    #[error("successor owner publication failed")]
-    Publication(Box<NamedWriteError<CaptureError>>),
+    Capture(#[from] OperationStoreError),
+    /// Original certified completion or payload refused.
+    #[error(transparent)]
+    Completion(#[from] OperationReplayError),
+    /// Restore predecessor or common owner publication refused.
+    #[error(transparent)]
+    Restore(Box<crate::store::RestorePersistenceError>),
 }
-
 impl BackupStore {
-    /// Create a fresh capture after an exact completed predecessor on the same target.
+    /// Create fresh capture intent after an exact published predecessor on the same target.
     ///
-    /// Drop any predecessor handle first. Takes the target lock, then nonblocking
-    /// predecessor custody; authenticates and synchronizes its already-published
-    /// completion without remote work. Atomically replaces only `owner.json`, then
-    /// creates the new intent through the ordinary creation path. Old plan, journal,
-    /// bundle and lock files remain intact. New calls need their own admission.
-    ///
+    /// Takes target then predecessor locks, verifies and synchronizes the original
+    /// published receipt, atomically replaces only the owner and creates new intent.
+    /// No signing, guard, clock, HTTP, pruning or old-operation mutation occurs.
     /// # Errors
-    /// Refuses wrong approval/target, occupied IDs, held locks, unfinished or changed
-    /// predecessor evidence. Failures after owner replacement may leave an occupied
-    /// incomplete successor. Reopen only complete original intent; never retry
-    /// replacement blindly or remove retained files to recover.
-    pub async fn create_capture_after<P: CaptureProvider>(
+    /// Refuses wrong approval/target, held locks, occupied IDs or unfinished/changed
+    /// completion. Failure may leave an occupied partial successor; never reset it.
+    pub fn create_capture_after(
         &self,
         plan: CapturePlan,
         approval: Sha256Digest,
-        predecessor: &CapturePlan,
-        transport: &StatusHttpTransport,
-        provider: &mut P,
-    ) -> Result<CaptureOperation, CaptureSuccessionError<P::Error>> {
+        predecessor: Plan<'_>,
+    ) -> Result<CaptureOperation, CaptureSuccessionError> {
         if plan.digest() != approval {
-            return Err(CaptureError::ApprovalMismatch.into());
+            return Err(OperationStoreError::ApprovalMismatch.into());
         }
-        if plan.request().target != predecessor.request().target
-            || plan.request().operation_id == predecessor.request().operation_id
+        if plan.request().target != predecessor.target()
+            || plan.request().operation_id == predecessor.operation_id()
         {
-            return Err(CaptureError::InvalidPlan.into());
+            return Err(OperationStoreError::InvalidPlan.into());
         }
-        let ledger_bytes = super::ledger::initial(&plan).map_err(CaptureError::from)?;
+        let initial =
+            crate::store::operation::Journal::create(&plan).map_err(OperationStoreError::from)?;
         exact(&self.root, "format", super::super::FORMAT, 128)?;
         let operations = child(&self.root, "operations", false)?;
         if operations
             .open_directory(OsStr::new(&plan.request().operation_id), PRIVATE)
-            .map_err(CaptureError::from)?
+            .map_err(OperationStoreError::from)?
             .is_some()
         {
-            return Err(CaptureError::Occupied.into());
+            return Err(OperationStoreError::Occupied.into());
         }
-        let target = target_directory(&self.root, predecessor, false)?;
+        let target = target_for(&self.root, predecessor.target(), false)?;
         let (target_lock, _) = lock_target(&target)?;
-        exact(&target, "owner.json", &owner(predecessor)?, 1024)?;
-        let mut previous =
-            self.open_capture(&predecessor.request().operation_id, predecessor.digest())?;
-        same_identity(&target, &previous.target)?;
-        previous.require_published()?;
-        previous
-            .complete_capture(transport, provider)
-            .await
-            .map_err(|e| CaptureSuccessionError::Completion(Box::new(e)))?;
-        let owner_bytes = owner(&plan)?;
-        let parent = target.open_syncable().map_err(CaptureError::from)?;
-        write_at_validated_with(
-            parent.as_fd(),
-            OsStr::new("owner.json"),
-            WriteOptions {
-                mode: PublicationMode::Replace,
-                permissions: 0o600,
-            },
-            |file| {
-                file.write_all(&owner_bytes)?;
-                Ok(())
-            },
-            |()| {
-                // Host owns a temporary sibling during this callback. Both locks
-                // retain the admitted predecessor; do not rescan that namespace.
-                exact(&target, "owner.json", &owner(predecessor)?, 1024)?;
-                same_directory(&self.root, "operations", &operations)?;
-                same_identity(&target_directory(&self.root, predecessor, false)?, &target)
-            },
-        )
-        .map_err(|e| CaptureSuccessionError::Publication(Box::new(e)))?;
-        exact(&target, "owner.json", &owner_bytes, 1024)?;
-        self.create_claimed_capture(plan, target, target_lock, &ledger_bytes)
-            .map_err(Into::into)
+        exact(
+            &target,
+            "owner.json",
+            &super::owner_bytes(predecessor.operation_id(), predecessor.digest())?,
+            1024,
+        )?;
+        let finish = |target_lock| {
+            crate::store::restore::persistence::replace_owner(
+                &self.root,
+                &target,
+                &operations,
+                predecessor,
+                plan.view(),
+            )
+            .map_err(|e| CaptureSuccessionError::Restore(Box::new(e)))?;
+            Ok(CaptureOperation::create_claimed(
+                &self.root,
+                plan,
+                target_lock,
+                &initial,
+            )?)
+        };
+        match predecessor {
+            Plan::Capture(p) => {
+                let mut previous = self.open_capture(&p.request().operation_id, p.digest())?;
+                previous.sync_published()?;
+                let result = finish(target_lock);
+                drop(previous);
+                result
+            }
+            Plan::Restore(p) => {
+                let mut previous = self
+                    .open_restore_locked(p, p.digest(), &target, &target_lock)
+                    .map_err(|e| CaptureSuccessionError::Restore(Box::new(e)))?;
+                previous.sync_completed()?;
+                let result = finish(target_lock);
+                drop(previous);
+                result
+            }
+        }
     }
 }

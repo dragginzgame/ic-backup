@@ -5,7 +5,7 @@ use super::{
 };
 use ic_platform::{Principal, ecdsa};
 
-fn authenticate(plan: &CapturePlan, prepared: &PreparedStatus) -> Result<(), StatusRequestError> {
+fn authenticate(plan: &CapturePolicy, prepared: &PreparedStatus) -> Result<(), StatusRequestError> {
     authenticate_status_request(plan, &admission(), prepared)
 }
 
@@ -71,8 +71,8 @@ fn valid_signature_cannot_substitute_a_different_original_sender() {
         let (plan, mut prepared) = fixture(scheme);
         let mut request = plan.request().clone();
         let sender = Principal::from_slice(&[9]);
-        request.execution = CaptureExecution::Direct { sender };
-        let changed = CapturePlan::new(request).unwrap();
+        request.sender = sender;
+        let changed = CapturePolicy::new(request).unwrap();
         change(&mut prepared, |envelope| {
             if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {
                 *caller = sender.as_slice().try_into().unwrap();
@@ -172,8 +172,8 @@ fn weak_ed25519_and_high_s_secp256k1_signatures_refuse() {
     weak_der[12] = 1; // Identity point.
     let mut request = plan().request().clone();
     let sender = Principal::self_authenticating(&weak_der);
-    request.execution = CaptureExecution::Direct { sender };
-    let plan = CapturePlan::new(request).unwrap();
+    request.sender = sender;
+    let plan = CapturePolicy::new(request).unwrap();
     change(&mut prepared, |envelope| {
         envelope.sender_pubkey = Some(weak_der);
         if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {
@@ -201,96 +201,6 @@ fn weak_ed25519_and_high_s_secp256k1_signatures_refuse() {
         authenticate(&plan, &prepared),
         Err(StatusRequestError::Signature)
     ));
-}
-
-struct CheckingProvider {
-    prepared: Option<PreparedStatus>,
-    signing_calls: u32,
-}
-impl StatusProvider for CheckingProvider {
-    type Error = StatusRequestError;
-    fn admit(
-        &self,
-        plan: &CapturePlan,
-        admission: &StatusAdmissionRecord,
-        _: &[u8],
-        prepared: Option<&PreparedStatus>,
-    ) -> Result<(), Self::Error> {
-        if let Some(prepared) = prepared {
-            authenticate_status_request(plan, admission, prepared)?;
-        }
-        Ok(())
-    }
-    async fn prepare(
-        &mut self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: &[u8],
-    ) -> Result<PreparedStatus, Self::Error> {
-        self.signing_calls += 1;
-        Ok(self.prepared.take().unwrap())
-    }
-    async fn submit_once(
-        &mut self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: &PreparedStatus,
-    ) -> Result<StatusEvidence, Self::Error> {
-        panic!("invalid signer output must not reach submission")
-    }
-    fn authenticate(
-        &self,
-        _: &CapturePlan,
-        _: &StatusAdmissionRecord,
-        _: &PreparedStatus,
-        _: &StatusEvidence,
-    ) -> Result<(), Self::Error> {
-        panic!("no result exists")
-    }
-}
-
-#[test]
-fn refused_signer_output_remains_spent_on_cold_replay_without_submission() {
-    let (plan, mut prepared) = fixture(Scheme::Ed25519);
-    change(&mut prepared, |envelope| {
-        envelope.sender_sig.as_mut().unwrap()[0] ^= 1
-    });
-    let root = root("status-request-signature-refusal");
-    let store = BackupStore::initialize(&root).unwrap();
-    let mut operation = store
-        .create_capture(
-            CapturePlan::new(plan.request().clone()).unwrap(),
-            plan.digest(),
-        )
-        .unwrap();
-    let mut provider = CheckingProvider {
-        prepared: Some(prepared),
-        signing_calls: 0,
-    };
-    assert!(matches!(
-        ready(operation.advance_status(&admission(), &mut provider)),
-        Err(StatusAdvanceError::Provider(StatusRequestError::Signature))
-    ));
-    let view = operation.inspect_status().unwrap();
-    assert_eq!(view.phase, CaptureStatusPhase::PreparationReserved);
-    assert_eq!(provider.signing_calls, 1);
-    drop(operation);
-    let mut operation = store
-        .open_capture(&plan.request().operation_id, plan.digest())
-        .unwrap();
-    assert_eq!(
-        ready(operation.advance_status(&admission(), &mut provider)).unwrap(),
-        StatusProgress::PreparationPending
-    );
-    assert_eq!(operation.inspect_status().unwrap(), view);
-    assert_eq!(provider.signing_calls, 1);
-    assert!(
-        !root
-            .join("operations")
-            .join(&plan.request().operation_id)
-            .join("status-request.bin")
-            .exists()
-    );
 }
 
 #[test]
@@ -329,8 +239,8 @@ fn malformed_signature_scalars_and_public_points_refuse() {
     let mut bad_der = Scheme::Secp256k1.key();
     bad_der[24..].fill(0); // Correct framing, off-curve uncompressed point (0, 0).
     let sender = Principal::self_authenticating(&bad_der);
-    request.execution = CaptureExecution::Direct { sender };
-    let plan = CapturePlan::new(request).unwrap();
+    request.sender = sender;
+    let plan = CapturePolicy::new(request).unwrap();
     change(&mut prepared, |envelope| {
         envelope.sender_pubkey = Some(bad_der);
         if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {

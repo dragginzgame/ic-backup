@@ -6,16 +6,15 @@ use ic_platform::{
     management_canister_types::{CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus},
 };
 
-pub(super) fn plan(extent: u32) -> CapturePlan {
+pub(super) fn plan(extent: u32) -> CapturePolicy {
     let original =
-        CapturePlan::decode(include_bytes!("../../tests/fixtures/capture-plan.json").to_vec())
-            .unwrap();
+        CapturePolicy::decode(include_bytes!("../../tests/fixtures/capture-plan.json")).unwrap();
     let mut request = original.request().clone();
     request.limits.extent_bytes = extent;
     request.limits.payload_bytes = 1 << 30;
     request.limits.network_requests = 8192;
     request.limits.signing_requests = 8192;
-    CapturePlan::new(request).unwrap()
+    CapturePolicy::new(request).unwrap()
 }
 pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> ReadCanisterSnapshotMetadataResult {
     ReadCanisterSnapshotMetadataResult {
@@ -137,7 +136,7 @@ fn chunk_order_is_canonical_without_rewriting_metadata_and_empty_chunk_counts() 
 fn conservative_chunk_payload_budget_is_not_reduced_for_known_empty_hash() {
     let mut r = plan(4).request().clone();
     r.limits.payload_bytes = 4;
-    let p = CapturePlan::new(r).unwrap();
+    let p = CapturePolicy::new(r).unwrap();
     let mut m = metadata(1, 0, 0);
     m.wasm_chunk_store.push(chunk(b""));
     assert!(matches!(
@@ -149,7 +148,7 @@ fn conservative_chunk_payload_budget_is_not_reduced_for_known_empty_hash() {
     ));
     let mut r = p.request().clone();
     r.limits.payload_bytes = 5;
-    let p = CapturePlan::new(r).unwrap();
+    let p = CapturePolicy::new(r).unwrap();
     assert_eq!(p.plan_transfer(&[1], &m).unwrap().payload_ceiling(), 5);
 }
 
@@ -195,32 +194,10 @@ fn exact_network_and_signing_limits_include_all_five_capture_calls() {
     let mut r = p.request().clone();
     r.limits.signing_requests = 8191;
     assert!(matches!(
-        CapturePlan::new(r).unwrap().plan_transfer(&[1], &m),
+        CapturePolicy::new(r).unwrap().plan_transfer(&[1], &m),
         Err(TransferError::SigningBudget {
             required: 8192,
             original: 8191
-        })
-    ));
-}
-
-#[test]
-fn canic_counts_both_hops_without_claiming_receipt_or_authentication_costs() {
-    let mut r = plan(1).request().clone();
-    r.execution = CaptureExecution::Canic {
-        executor: r.target.canister,
-        protocol: Sha256Digest::compute(b"protocol"),
-        generation: 7,
-    };
-    let p = CapturePlan::new(r).unwrap();
-    let m = metadata(4091, 0, 0);
-    let transfer = p.plan_transfer(&[1], &m).unwrap();
-    assert_eq!(transfer.capture_calls(), 4096);
-    assert_eq!(transfer.minimum_network_requests(), 8192);
-    assert!(matches!(
-        p.plan_transfer(&[1], &metadata(4092, 0, 0)),
-        Err(TransferError::NetworkBudget {
-            required: 8194,
-            original: 8192
         })
     ));
 }

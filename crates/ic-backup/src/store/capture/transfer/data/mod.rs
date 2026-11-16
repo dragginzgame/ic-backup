@@ -1,8 +1,40 @@
 //! Bounded Platform-schema data replies and exact scheduled byte admission.
-mod authentication;
 use super::CaptureTransfer;
-pub use authentication::DataReadError;
+/// Data ordinal or bounded request encoding refused.
+#[derive(Debug, thiserror::Error)]
+pub enum DataReadError {
+    /// Original argument allowance refused.
+    #[error(transparent)]
+    Admission(#[from] super::super::OperationStoreError),
+    /// The requested ordinal is outside the approved schedule.
+    #[error(transparent)]
+    Data(#[from] TransferDataError),
+}
+impl CaptureTransfer<'_> {
+    /// Encode one exact scheduled request without iterating preceding extents.
+    ///
+    /// Uses the plan target, original snapshot ID and zero-based data ordinal.
+    /// This pure helper grants no signing or dispatch authority.
+    /// # Errors
+    /// Refuses an ordinal outside the schedule or arguments exceeding 1 KiB.
+    pub fn data_arguments(&self, ordinal: u32) -> Result<Vec<u8>, DataReadError> {
+        if ordinal >= self.data_calls() {
+            return Err(TransferDataError::Ordinal.into());
+        }
+        candid_codec::encode_one(
+            &ReadCanisterSnapshotDataArgs {
+                canister_id: self.plan.request().target.canister,
+                snapshot_id: self.snapshot_id.to_vec(),
+                kind: self.kind(u64::from(ordinal)),
+            },
+            1024,
+        )
+        .map_err(|_| OperationStoreError::StatusAdmission.into())
+    }
+}
+use super::super::OperationStoreError;
 use ic_host_artifacts::artifact::Sha256Digest;
+use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
 use ic_platform::{
     candid_codec::{
         self, Encode, Type, Writer,
@@ -35,23 +67,9 @@ impl CaptureTransfer<'_> {
         if ordinal >= self.data_calls {
             return Err(TransferDataError::Ordinal);
         }
-        if reply.len() > MAX_REPLY_BYTES {
-            return Err(TransferDataError::ReplyTooLarge);
-        }
-        let BoundedData(result) = decode_one_with_skip_limit(
-            reply,
-            Limits {
-                bytes: MAX_REPLY_BYTES,
-                header: 4096,
-                types: 16,
-                work: 8 * 1024 * 1024,
-                allocation: 2 * 1024 * 1024,
-            },
-            0,
-        )
-        .map_err(TransferDataError::Decode)?;
-        self.validate_data_bytes(ordinal, &result.chunk)?;
-        Ok(result.chunk)
+        let chunk = decode_reply(reply)?;
+        self.validate_data_bytes(ordinal, &chunk)?;
+        Ok(chunk)
     }
 
     // Both captured source slices and decoded destination replies obey the same
@@ -90,6 +108,25 @@ impl CaptureTransfer<'_> {
         }
         Ok(())
     }
+}
+
+pub(in crate::store) fn decode_reply(reply: &[u8]) -> Result<Vec<u8>, TransferDataError> {
+    if reply.len() > MAX_REPLY_BYTES {
+        return Err(TransferDataError::ReplyTooLarge);
+    }
+    let BoundedData(result) = decode_one_with_skip_limit(
+        reply,
+        Limits {
+            bytes: MAX_REPLY_BYTES,
+            header: 4096,
+            types: 16,
+            work: 8 * 1024 * 1024,
+            allocation: 2 * 1024 * 1024,
+        },
+        0,
+    )
+    .map_err(TransferDataError::Decode)?;
+    Ok(result.chunk)
 }
 
 // Platform owns the DTO, schema, numeric field label and codec. This mapping

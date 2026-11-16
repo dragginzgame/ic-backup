@@ -60,10 +60,8 @@ fn full_supplier_dto_and_minimal_projection_apply_the_same_original_policy() {
     observed.version = u64::MAX;
     observed.cycles = u128::MAX.into();
     let raw = encode(&observed);
-    let original_plan = p.encoded().to_vec();
     assert_eq!(p.validate_status_reply(&raw), Ok(()));
     assert_eq!(encode(&observed), raw);
-    assert_eq!(p.encoded(), original_plan);
     assert_eq!(
         p.validate_status_reply(&encode(&minimal(observed.module_hash))),
         Ok(())
@@ -129,20 +127,16 @@ fn wire_admission_keeps_original_state_module_and_caller_checks() {
         );
     }
     let mut request = p.request().clone();
-    request.execution = super::super::CaptureExecution::Canic {
-        executor: Principal::from_slice(&[17, 1]),
-        protocol: Sha256Digest::compute(b"protocol"),
-        generation: 7,
-    };
-    let canic = CapturePlan::new(request).unwrap();
+    request.sender = Principal::from_slice(&[17, 1]);
+    let selected = CapturePolicy::new(request).unwrap();
     assert_eq!(
-        canic.validate_status_reply(&encode(&status(&p))),
+        selected.validate_status_reply(&encode(&status(&p))),
         Err(CaptureStatusReplyError::Status(
             CaptureStatusError::NotController
         ))
     );
     assert_eq!(
-        canic.validate_status_reply(&encode(&status(&canic))),
+        selected.validate_status_reply(&encode(&status(&selected))),
         Ok(())
     );
 }

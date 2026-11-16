@@ -101,7 +101,7 @@ fn read_state_refuses_policy_signature_binding_and_expiry_before_connection() {
         assert!(result.is_err(), "case {case}");
         assert!(s.requests.lock().unwrap().is_empty());
     }
-    let wrong = StatusHttpTransport::new(
+    let wrong = BackupHttpTransport::new(
         &s.endpoint,
         Sha256Digest::compute(b"wrong network"),
         der(1),
@@ -112,7 +112,7 @@ fn read_state_refuses_policy_signature_binding_and_expiry_before_connection() {
     let bytes = lookup(&p, &r, Scheme::Ed25519, policy.request.expires_ns);
     assert!(matches!(
         runtime().block_on(wrong.lookup_once(&p, &a, &r, CaptureCall::Status, &bytes, policy)),
-        Err(CaptureLookupHttpError::Http(StatusHttpError::Binding))
+        Err(CaptureLookupHttpError::Http(BackupHttpError::Binding))
     ));
     assert!(s.requests.lock().unwrap().is_empty());
 }
@@ -153,21 +153,21 @@ fn read_state_transport_failures_are_single_attempt_and_bounded() {
         match case {
             0 | 5 => assert!(matches!(
                 result,
-                Err(CaptureLookupHttpError::Http(StatusHttpError::Uncertain))
+                Err(CaptureLookupHttpError::Http(BackupHttpError::Uncertain))
             )),
             1 => assert!(matches!(
                 result,
-                Err(CaptureLookupHttpError::Http(StatusHttpError::HttpStatus(
+                Err(CaptureLookupHttpError::Http(BackupHttpError::HttpStatus(
                     307
                 )))
             )),
             2 => assert!(matches!(
                 result,
-                Err(CaptureLookupHttpError::Http(StatusHttpError::ResponseLimit))
+                Err(CaptureLookupHttpError::Http(BackupHttpError::ResponseLimit))
             )),
             3 | 4 => assert!(matches!(
                 result,
-                Err(CaptureLookupHttpError::Http(StatusHttpError::Response))
+                Err(CaptureLookupHttpError::Http(BackupHttpError::Response))
             )),
             6 => assert!(matches!(
                 result,
@@ -261,15 +261,15 @@ fn lookup_deadline_and_lookup_expiry_each_bound_body_waiting() {
         assert!(matches!(
             result,
             Err(CaptureLookupHttpError::Http(
-                StatusHttpError::Uncertain | StatusHttpError::Deadline
+                BackupHttpError::Uncertain | BackupHttpError::Deadline
             ))
         ));
         assert_eq!(s.finish().len(), 1);
     }
 }
 
-fn transport(s: &Server, p: &CapturePlan) -> StatusHttpTransport {
-    StatusHttpTransport::new(
+fn transport(s: &Server, p: &CapturePolicy) -> BackupHttpTransport {
+    BackupHttpTransport::new(
         &s.endpoint,
         p.request().target.network,
         der(1),

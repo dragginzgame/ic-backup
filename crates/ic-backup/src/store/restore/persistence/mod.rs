@@ -1,379 +1,518 @@
-//! Local restore intent and original bounded status journal.
-mod status;
-pub use status::{
-    RestoreStatusPreparation, RestoreStatusPreparationError, RestoreStatusSigner,
-    RestoreStatusSubmissionError, RestoreStatusView,
+//! Original restore approval/source custody over the shared recorder.
+use super::{RestorePlan, RestorePlanError, procedure::Procedure};
+use crate::store::operation::{
+    replay::{self, Error as ReplayError},
+    runtime::{Action, Connection, Error, Guard, Progress, Signer, now},
 };
-
-use super::{PLAN_LIMIT, RestorePlan, RestorePlanError, RestorePlanRecord, hash};
 use crate::store::{
-    BackupStore, CaptureCompletionError, CaptureError, CaptureOperation, CapturePlan,
-    CaptureProvider, CaptureSourceError, PRIVATE, PayloadSource, StatusHttpTransport,
+    BackupStore, CaptureOperation, CapturePlan, CaptureSourceError, OperationReplayError,
+    OperationStoreError, PRIVATE, PayloadSource, RestoreTransfer,
     capture::{
-        acquire, child, exact, ledger::initial_bytes, owner, owner_bytes, retain, same_directory,
-        same_identity, target_for,
+        child, exact, lock_target, owner, owner_bytes, same_directory, same_identity, target_for,
     },
     open_optional,
+    operation::{FactRecord, Journal, custody::Recorder, intent::Intent},
 };
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_fs::{
     capability::Directory,
-    durable::{
-        ExclusiveFileLock, NamedWriteError, PublicationMode, WriteOptions, create_retained_at,
-        write_at_validated_with,
-    },
-    identity::FileIdentity,
+    durable::{NamedWriteError, PublicationMode, WriteOptions, write_at_validated_with},
 };
-use std::{ffi::OsStr, fs::File, io::Write, os::fd::AsFd};
-use thiserror::Error;
+use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
+use std::{ffi::OsStr, io::Write, os::fd::AsFd};
 
-/// Local creation/reopen refusal; retained evidence is never repaired or removed.
-#[derive(Debug, Error)]
-pub enum RestorePersistenceError<E> {
-    /// Original intent, lock, filesystem or ownership refused.
+/// Original immutable approval, source custody or local publication refused.
+#[derive(Debug, thiserror::Error)]
+pub enum RestorePersistenceError {
+    /// Original local custody or finite declaration refused.
     #[error(transparent)]
-    Capture(#[from] CaptureError),
-    /// Original immutable declaration refused.
+    Capture(#[from] OperationStoreError),
+    /// Exact approved restore declaration refused.
     #[error(transparent)]
     Plan(#[from] RestorePlanError),
-    /// Exact source custody or authentication refused.
+    /// Selected original source refused.
     #[error("restore source refused")]
-    Source(Box<CaptureSourceError<E>>),
-    /// Published predecessor/source reconciliation refused.
-    #[error("restore predecessor completion refused")]
-    Completion(Box<CaptureCompletionError<E>>),
-    /// Owner replacement failed; may have published before the failure.
+    Source(Box<CaptureSourceError>),
+    /// Original completion or call evidence refused.
+    #[error(transparent)]
+    Completion(#[from] OperationReplayError),
+    /// Owner replacement may have published before failure.
     #[error("restore owner publication failed")]
-    Publication(Box<NamedWriteError<CaptureError>>),
+    Publication(Box<NamedWriteError<OperationStoreError>>),
 }
-
-/// Held original restore intent and source with bounded status preparation/submission.
-/// Dropping releases process locks, never the durable target claim or source binding.
+#[derive(Debug)]
+pub(in crate::store) struct Source<'store> {
+    pub capture: CaptureOperation,
+    pub payload: PayloadSource<'store>,
+    pub metadata: ReadCanisterSnapshotMetadataResult,
+}
+impl Source<'_> {
+    pub(in crate::store) fn check(&self) -> Result<(), OperationStoreError> {
+        self.capture.check_custody()?;
+        self.payload.check_files()?;
+        Ok(())
+    }
+    pub(in crate::store) fn transfer(
+        &self,
+        plan: &RestorePlan,
+    ) -> Result<RestoreTransfer, crate::store::RestoreTransferError> {
+        crate::store::capture::source::transfer::plan_payload(
+            &self.payload,
+            &plan.transfer_request(),
+        )
+    }
+}
+/// Held restore approval and original source; dropping never erases ownership or evidence.
 #[derive(Debug)]
 pub struct RestoreOperation<'store> {
-    store: &'store BackupStore,
-    directory: Directory,
-    target: Directory,
-    lock: ExclusiveFileLock,
-    target_lock_file: File,
-    ledger_file: File,
-    plan_file: File,
-    source: CaptureOperation,
-    payload: PayloadSource<'store>,
-    plan: RestorePlan,
-    usable: bool,
+    pub(in crate::store) record: Recorder<RestorePlan>,
+    source: Source<'store>,
+}
+/// Exact local outcome derived from the closed original restore journal.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LoadedStopped {
+    /// Original restore operation identity.
+    pub operation_id: String,
+    /// Exact restored network and canister.
+    pub target: crate::store::BackupTarget,
+    /// Original capture operation identity.
+    pub source_operation_id: String,
+    /// Exact authenticated original payload manifest.
+    pub source_manifest_sha256: Sha256Digest,
+    /// Newly allocated destination snapshot, retained by the IC.
+    pub snapshot_id: Vec<u8>,
+    /// Original local completion timestamp, never renewed on replay.
+    pub completed_at_ns: u64,
+    /// Exact immutable restore approval.
+    pub plan_sha256: Sha256Digest,
+    /// Closing hash-chain commitment to original calls and local completion.
+    pub journal_sha256: Sha256Digest,
 }
 impl RestoreOperation<'_> {
-    /// Recheck exact local intent, owner, source and held file identities.
-    /// This is inspection only; it does not sync, append or grant effect authority.
+    /// Exact immutable original restore approval.
+    #[must_use]
+    pub fn plan(&self) -> &RestorePlan {
+        self.record.plan()
+    }
+    fn project<'a>(
+        &mut self,
+        journal: &Journal,
+        plan: &'a RestorePlan,
+    ) -> Result<Procedure<'a>, ReplayError> {
+        self.source.check()?;
+        let mut flow = Procedure::new(plan, &self.source)?;
+        for (index, call) in journal.calls.iter().enumerate() {
+            if flow.next()? != Some(call.step) {
+                return Err(ReplayError::History);
+            }
+            let (method, arguments) = flow.request(&mut self.source)?;
+            let result =
+                replay::resolve_call(plan.view(), call, method, &arguments, &mut |step, role| {
+                    self.record.read_role(journal, step, role)
+                })?;
+            if let Some(result) = result {
+                flow.accept(
+                    call.step,
+                    result.rejected,
+                    result.request_id,
+                    &result.response,
+                    &mut self.source,
+                )?;
+            } else {
+                if index + 1 != journal.calls.len() || journal.completed_at_ns.is_some() {
+                    return Err(ReplayError::History);
+                }
+                return Ok(flow);
+            }
+        }
+        if journal.completed_at_ns.is_some() && flow.next()?.is_some() {
+            return Err(ReplayError::History);
+        }
+        self.source.check()?;
+        Ok(flow)
+    }
+    fn completion(
+        &self,
+        journal: &Journal,
+        flow: &Procedure<'_>,
+    ) -> Result<Option<LoadedStopped>, ReplayError> {
+        let Some(completed_at_ns) = journal.completed_at_ns else {
+            return Ok(None);
+        };
+        if flow.next()?.is_some() {
+            return Err(ReplayError::History);
+        }
+        let plan = self.plan();
+        Ok(Some(LoadedStopped {
+            operation_id: plan.request().operation_id.clone(),
+            target: plan.request().target,
+            source_operation_id: plan.source_operation_id().into(),
+            source_manifest_sha256: plan.source_manifest_sha256(),
+            snapshot_id: flow.destination()?.to_vec(),
+            completed_at_ns,
+            plan_sha256: plan.digest(),
+            journal_sha256: journal.head,
+        }))
+    }
+    /// Authenticate original progress and source bytes with no effects, clock or writes.
     /// # Errors
-    /// Refuses incomplete, changed or unsafe custody and every unknown ledger suffix.
-    pub fn inspect(&self) -> Result<&RestorePlan, CaptureError> {
-        self.check()?;
-        Ok(&self.plan)
+    /// Refuses changed custody, invalid original evidence or failed restore policy.
+    pub fn inspect(&mut self) -> Result<crate::store::OperationView<LoadedStopped>, ReplayError> {
+        let journal = self.record.check()?;
+        let plan = self.plan().clone();
+        let flow = self.project(&journal, &plan)?;
+        self.record
+            .view(&journal, flow.next()?, self.completion(&journal, &flow)?)
+    }
+    /// Advance the fixed restore with at most one original management submission.
+    /// Completion verifies original evidence offline and leaves the application stopped.
+    /// # Errors
+    /// Refuses changed source, live authority, exhausted allowance or failed readback/load policy.
+    pub async fn advance<S: Signer, G: Guard>(
+        &mut self,
+        connection: &mut Connection<S, G>,
+    ) -> Result<Progress<LoadedStopped>, Error<S::Error, G::Error>> {
+        let plan = self.plan().clone();
+        let journal = self.record.check()?;
+        let mut flow = self.project(&journal, &plan)?;
+        if let Some(receipt) = self.completion(&journal, &flow)? {
+            return Ok(Progress::Complete(Box::new(receipt)));
+        }
+        let Some(step) = flow.next()? else {
+            let completed_at_ns = now().ok_or(Error::Deadline)?;
+            self.source.check()?;
+            let closed = self.record.append(
+                &journal,
+                FactRecord::LoadedStopped { completed_at_ns },
+                None,
+            )?;
+            return Ok(Progress::Complete(Box::new(
+                self.completion(&closed, &flow)?
+                    .ok_or(OperationStoreError::Incomplete)?,
+            )));
+        };
+        // Admit the whole known upload/readback/load schedule before allocating anything.
+        if step == crate::store::OperationStep::AllocateSnapshot
+            && journal.calls.last().is_none_or(|c| c.step != step)
+        {
+            journal.remaining(
+                flow.data_calls()
+                    .checked_mul(2)
+                    .and_then(|n| n.checked_add(5))
+                    .ok_or(OperationStoreError::StatusAdmission)?,
+            )?;
+        }
+        let (method, arguments) = flow.request(&mut self.source)?;
+        let source = &self.source;
+        let result = self
+            .record
+            .run(
+                journal,
+                connection,
+                step,
+                action(step),
+                method,
+                &arguments,
+                || source.check(),
+            )
+            .await?;
+        let Some(result) = result else {
+            return Ok(Progress::NeedsAttention(step));
+        };
+        flow.accept(
+            step,
+            result.rejected,
+            result.request_id,
+            &result.response,
+            &mut self.source,
+        )?;
+        Ok(Progress::Advanced)
+    }
+    /// Settle the original pending call from surviving terminal certificate bytes.
+    /// # Errors
+    /// Refuses resolved or changed history; retained policy failures remain settled.
+    pub fn reconcile_reply(&mut self, certificate: &[u8]) -> Result<(), ReplayError> {
+        self.reconcile_certificate(certificate, false)
     }
 
-    fn check(&self) -> Result<status::State, CaptureError> {
-        if !self.usable {
-            return Err(CaptureError::Unusable);
+    /// Import the surviving certificate from the original submitted read-state lookup.
+    /// Uses its separate retained time policy without clock, signing or network work.
+    /// # Errors
+    /// Refuses missing/resolved lookup, changed source/custody or invalid evidence/policy.
+    pub fn reconcile_observation_reply(&mut self, certificate: &[u8]) -> Result<(), ReplayError> {
+        self.reconcile_certificate(certificate, true)
+    }
+
+    fn reconcile_certificate(
+        &mut self,
+        certificate: &[u8],
+        observation: bool,
+    ) -> Result<(), ReplayError> {
+        let plan = self.plan().clone();
+        let journal = self.record.check()?;
+        let mut flow = self.project(&journal, &plan)?;
+        let step = journal
+            .calls
+            .last()
+            .ok_or(OperationStoreError::Incomplete)?
+            .step;
+        if flow.next()? != Some(step) {
+            return Err(ReplayError::History);
         }
-        exact(&self.store.root, "format", crate::store::FORMAT, 128)?;
-        let operations = child(&self.store.root, "operations", false)?;
-        same_directory(
-            &operations,
-            &self.plan.request().operation_id,
-            &self.directory,
+        let (method, arguments) = flow.request(&mut self.source)?;
+        let result = if observation {
+            self.record.import_observation(&journal, certificate)?
+        } else {
+            Some(
+                self.record
+                    .import_reply(&journal, method, &arguments, certificate)?,
+            )
+        };
+        let Some(result) = result else {
+            return Ok(());
+        };
+        flow.accept(
+            step,
+            result.rejected,
+            result.request_id,
+            &result.response,
+            &mut self.source,
         )?;
-        same_identity(
-            &target_for(&self.store.root, self.plan.request().target, false)?,
-            &self.target,
-        )?;
-        for (dir, name, held) in [
-            (&self.target, "lock", &self.target_lock_file),
-            (&self.directory, "lock", self.lock.file()),
-            (&self.directory, "plan.json", &self.plan_file),
-            (&self.directory, "ledger.bin", &self.ledger_file),
-        ] {
-            let current = open_optional(dir, name)?.ok_or(CaptureError::Incomplete)?;
-            if FileIdentity::from_file(&current)? != FileIdentity::from_file(held)? {
-                return Err(CaptureError::Changed);
-            }
+        Ok(())
+    }
+    /// Make the sole budgeted observation of the original pending request.
+    /// # Errors
+    /// Refuses renewed attempts, changed custody, invalid proof or unavailable live authority.
+    pub async fn reconcile_observation<S: Signer, G: Guard>(
+        &mut self,
+        connection: &mut Connection<S, G>,
+    ) -> Result<Progress<LoadedStopped>, Error<S::Error, G::Error>> {
+        let plan = self.plan().clone();
+        let journal = self.record.check()?;
+        let mut flow = self.project(&journal, &plan)?;
+        let step = journal
+            .calls
+            .last()
+            .ok_or(OperationStoreError::Incomplete)?
+            .step;
+        if flow.next()? != Some(step) {
+            return Err(Error::Resolved);
         }
-        exact(&self.target, "lock", b"", 0)?;
-        exact(&self.directory, "lock", b"", 0)?;
-        exact(
-            &self.target,
-            "owner.json",
-            &restore_owner(&self.plan)?,
-            1024,
+        let source = &self.source;
+        let result = self
+            .record
+            .observe(journal, connection, || source.check())
+            .await?;
+        let Some(result) = result else {
+            return Ok(Progress::NeedsAttention(step));
+        };
+        flow.accept(
+            step,
+            result.rejected,
+            result.request_id,
+            &result.response,
+            &mut self.source,
         )?;
-        exact(
-            &self.directory,
-            "plan.json",
-            self.plan.encoded(),
-            PLAN_LIMIT,
-        )?;
-        let state = status::read(self)?;
-        for entry in self.target.entries(2)? {
-            if !matches!(entry?.name.to_str(), Some("lock" | "owner.json")) {
-                return Err(CaptureError::Changed);
-            }
+        Ok(Progress::Advanced)
+    }
+    pub(in crate::store) fn sync_completed(&mut self) -> Result<(), ReplayError> {
+        if self.inspect()?.completed.is_none() {
+            return Err(OperationStoreError::Incomplete.into());
         }
-        for entry in self.directory.entries(
-            3 + usize::from(state.request.is_some()) + usize::from(state.result.is_some()),
-        )? {
-            let entry = entry?;
-            if !matches!(
-                entry.name.to_str(),
-                Some("lock" | "plan.json" | "ledger.bin")
-            ) && !(state.request.is_some() && entry.name == OsStr::new("status-request.bin"))
-                && !(state.result.is_some() && entry.name == OsStr::new("status-result.bin"))
-            {
-                return Err(CaptureError::Changed);
-            }
-        }
-        self.source.inspect()?;
-        self.payload.check_files()?;
-        Ok(state)
+        self.record.sync_evidence()?;
+        self.source.capture.sync_published()?;
+        self.source.check()?;
+        self.inspect()?;
+        Ok(())
     }
 }
-
+fn action(step: crate::store::OperationStep) -> Action {
+    use crate::store::OperationStep::*;
+    match step {
+        AllocateSnapshot => Action::AllocateSnapshot,
+        Upload(_) => Action::UploadSnapshot,
+        LoadSnapshot => Action::LoadSnapshot,
+        ReadbackMetadata | Readback(_) => Action::ReadSnapshot,
+        _ => Action::Inspect,
+    }
+}
 impl BackupStore {
-    /// Persist approved restore intent after an explicitly selected completed capture owner.
-    ///
-    /// Drop held capture/source handles first. Target, predecessor, source and new
-    /// operation locks are acquired in that order. Source may be an older capture.
-    /// Original plan bytes retain the source dependency; no bundle/reference is added.
-    /// Only local IO and historical authentication occur. No signing or HTTP occurs.
+    fn restore_source<'s>(
+        &'s self,
+        plan: &RestorePlan,
+        mut capture: CaptureOperation,
+    ) -> Result<Source<'s>, RestorePersistenceError> {
+        let summary = capture
+            .inspect()?
+            .completed
+            .ok_or(OperationStoreError::Incomplete)?;
+        if summary.manifest_sha256 != plan.source_manifest_sha256() {
+            return Err(RestorePlanError::SourceBinding.into());
+        }
+        let admitted = self
+            .open_capture_source(
+                &mut capture,
+                &summary,
+                plan.request()
+                    .limits
+                    .payload_bytes
+                    .try_into()
+                    .map_err(|_| OperationStoreError::InvalidPlan)?,
+            )
+            .map_err(|e| RestorePersistenceError::Source(Box::new(e)))?;
+        plan.validate_source(&admitted)?;
+        let (payload, metadata) = admitted.into_parts();
+        Ok(Source {
+            capture,
+            payload,
+            metadata,
+        })
+    }
+    /// Persist the exact approved restore after a completed capture owner on the same target.
     /// # Errors
-    /// Refuses wrong approval, occupied IDs, incomplete predecessor/source or changed
-    /// custody. Failure can retain a new owner with partial intent; never retry blindly.
-    pub async fn create_restore<P: CaptureProvider>(
+    /// Refuses occupied IDs, wrong approval/source/owner or uncertain local publication.
+    pub fn create_restore(
         &self,
         plan: &RestorePlan,
         approval: Sha256Digest,
         predecessor: &CapturePlan,
-        transport: &StatusHttpTransport,
-        provider: &mut P,
-    ) -> Result<RestoreOperation<'_>, RestorePersistenceError<P::Error>> {
+    ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
         approve(plan, approval)?;
-        let initial = initial(plan)?;
         if plan.request().target != predecessor.request().target
             || plan.request().operation_id == predecessor.request().operation_id
         {
-            return Err(CaptureError::InvalidPlan.into());
+            return Err(OperationStoreError::InvalidPlan.into());
         }
+        let initial = Journal::create(plan).map_err(OperationStoreError::from)?;
         let operations = child(&self.root, "operations", false)?;
         if operations
             .open_directory(OsStr::new(&plan.request().operation_id), PRIVATE)
-            .map_err(CaptureError::from)?
+            .map_err(OperationStoreError::from)?
             .is_some()
         {
-            return Err(CaptureError::Occupied.into());
+            return Err(OperationStoreError::Occupied.into());
         }
         let target = target_for(&self.root, plan.request().target, false)?;
-        let target_lock = acquire(
-            open_optional(&target, "lock")
-                .map_err(CaptureError::from)?
-                .ok_or(CaptureError::Incomplete)?,
-        )?;
+        let (target_lock, _) = lock_target(&target)?;
         exact(&target, "owner.json", &owner(predecessor)?, 1024)?;
         let mut previous =
             self.open_capture(&predecessor.request().operation_id, predecessor.digest())?;
-        // Verify a published receipt before completion reconciliation: never finish
-        // a merely ready predecessor as an implicit part of claiming a target.
-        previous.require_published()?;
-        previous
-            .complete_capture(transport, provider)
-            .await
-            .map_err(|e| RestorePersistenceError::Completion(Box::new(e)))?;
-        let source_is_predecessor = plan.source().bundle_id == predecessor.request().operation_id;
-        let mut source = if source_is_predecessor {
+        previous.sync_published()?;
+        let same = plan.source_operation_id() == predecessor.request().operation_id;
+        let capture = if same {
             previous
         } else {
-            self.open_capture(&plan.source().bundle_id, source_digest(plan)?)?
+            self.open_capture(plan.source_operation_id(), plan.source_plan_sha256())?
         };
-        let admitted = self
-            .open_capture_source(
-                &mut source,
-                plan.source(),
-                plan.request()
-                    .limits
-                    .payload_bytes
-                    .try_into()
-                    .map_err(|_| CaptureError::InvalidPlan)?,
-                transport,
-                provider,
-            )
-            .await
-            .map_err(|e| RestorePersistenceError::Source(Box::new(e)))?;
-        let plan = RestorePlan::decode(&admitted, plan.encoded().to_vec())?;
-        let payload = admitted.into_payload();
-        // The predecessor was synchronized above under its retained lock. Only
-        // an older, distinct source needs a separate completion reconciliation.
-        if !source_is_predecessor {
-            source
-                .complete_capture(transport, provider)
-                .await
-                .map_err(|e| RestorePersistenceError::Completion(Box::new(e)))?;
+        let mut source = self.restore_source(plan, capture)?;
+        if !same {
+            source.capture.sync_published()?;
         }
-        payload.check_files().map_err(CaptureError::from)?;
-        let owner_bytes = restore_owner(&plan)?;
-        let parent = target.open_syncable().map_err(CaptureError::from)?;
-        write_at_validated_with(
-            parent.as_fd(),
-            OsStr::new("owner.json"),
-            WriteOptions {
-                mode: PublicationMode::Replace,
-                permissions: 0o600,
-            },
-            |file| {
-                file.write_all(&owner_bytes)?;
-                Ok(())
-            },
-            |()| {
-                exact(&target, "owner.json", &owner(predecessor)?, 1024)?;
-                same_directory(&self.root, "operations", &operations)?;
-                same_identity(
-                    &target_for(&self.root, plan.request().target, false)?,
-                    &target,
-                )
-            },
-        )
-        .map_err(|e| RestorePersistenceError::Publication(Box::new(e)))?;
-        let directory = child(&operations, &plan.request().operation_id, true)?;
-        let lock = create_lock(&directory)?;
-        retain(&directory, "plan.json", plan.encoded())?;
-        retain(&directory, "ledger.bin", &initial)?;
-        directory.sync().map_err(CaptureError::from)?;
-        operations.sync().map_err(CaptureError::from)?;
-        let operation = held(
-            self,
-            plan,
-            directory,
-            target,
-            lock,
-            &target_lock,
-            source,
-            payload,
+        source.check()?;
+        replace_owner(
+            &self.root,
+            &target,
+            &operations,
+            predecessor.view(),
+            plan.view(),
         )?;
-        operation.inspect()?;
-        Ok(operation)
+        let record = Recorder::create_claimed(&self.root, plan.clone(), target_lock, &initial)?;
+        Ok(RestoreOperation { record, source })
     }
-
-    /// Reopen complete original restore intent using the caller's exact approved plan.
+    /// Reopen by original operation ID and approval without a connection or reconstructed plan.
+    /// Selection reads bounded original intent; target/source/operation locks then
+    /// admit those same exact bytes and all retained evidence without writes or repair.
     ///
-    /// No file is created or synchronized. Re-admits the original source under
-    /// target-before-source-before-restore locks. The caller may retain the plan or
-    /// decode its original bytes against a source before dropping that source handle.
+    /// ```no_run
+    /// use ic_backup::store::{BackupStore, LoadedStopped, RestorePersistenceError};
+    /// use ic_host_artifacts::artifact::Sha256Digest;
+    ///
+    /// fn restored_outcome(
+    ///     store: &BackupStore, original_id: &str, original_approval: Sha256Digest,
+    /// ) -> Result<Option<LoadedStopped>, RestorePersistenceError> {
+    ///     let mut operation = store.open_restore(original_id, original_approval)?;
+    ///     // The store supplies the original plan; no signer or live guard is needed.
+    ///     Ok(operation.inspect()?.completed)
+    /// }
+    /// ```
+    ///
     /// # Errors
-    /// Refuses changed approval, files, source, owner, unknown tails or busy locks.
-    pub async fn open_restore<P: CaptureProvider>(
+    /// Refuses mismatched approval, missing original files or invalid retained evidence.
+    pub fn open_restore(
+        &self,
+        id: &str,
+        approval: Sha256Digest,
+    ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
+        let plan = Recorder::<RestorePlan>::select_intent(&self.root, id)?;
+        approve(&plan, approval)?;
+        let target = target_for(&self.root, plan.request().target, false)?;
+        let target_lock = crate::store::capture::acquire(
+            open_optional(&target, "lock")
+                .map_err(OperationStoreError::from)?
+                .ok_or(OperationStoreError::Incomplete)?,
+        )?;
+        self.open_restore_locked(&plan, approval, &target, &target_lock)
+    }
+    pub(in crate::store) fn open_restore_locked(
         &self,
         plan: &RestorePlan,
         approval: Sha256Digest,
-        transport: &StatusHttpTransport,
-        provider: &mut P,
-    ) -> Result<RestoreOperation<'_>, RestorePersistenceError<P::Error>> {
+        target: &Directory,
+        target_lock: &ic_host_fs::durable::ExclusiveFileLock,
+    ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
         approve(plan, approval)?;
-        let target = target_for(&self.root, plan.request().target, false)?;
-        // Opening must never create a missing established target lock.
-        let target_lock = acquire(
-            open_optional(&target, "lock")
-                .map_err(CaptureError::from)?
-                .ok_or(CaptureError::Incomplete)?,
-        )?;
-        exact(&target, "owner.json", &restore_owner(plan)?, 1024)?;
-        let mut source = self.open_capture(&plan.source().bundle_id, source_digest(plan)?)?;
-        let admitted = self
-            .open_capture_source(
-                &mut source,
-                plan.source(),
-                plan.request()
-                    .limits
-                    .payload_bytes
-                    .try_into()
-                    .map_err(|_| CaptureError::InvalidPlan)?,
-                transport,
-                provider,
-            )
-            .await
-            .map_err(|e| RestorePersistenceError::Source(Box::new(e)))?;
-        let plan = RestorePlan::decode(&admitted, plan.encoded().to_vec())?;
-        let payload = admitted.into_payload();
-        let operations = child(&self.root, "operations", false)?;
-        let directory = child(&operations, &plan.request().operation_id, false)?;
-        let lock = acquire(
-            open_optional(&directory, "lock")
-                .map_err(CaptureError::from)?
-                .ok_or(CaptureError::Incomplete)?,
-        )?;
-        let operation = held(
-            self,
+        let source = self.restore_source(
             plan,
-            directory,
-            target,
-            lock,
-            &target_lock,
-            source,
-            payload,
+            self.open_capture(plan.source_operation_id(), plan.source_plan_sha256())?,
         )?;
+        let record = Recorder::<RestorePlan>::open(&self.root, &plan.request().operation_id)?;
+        if record.plan().encoded() != plan.encoded() {
+            return Err(OperationStoreError::ApprovalMismatch.into());
+        }
+        same_identity(
+            target,
+            &target_for(&self.root, plan.request().target, false)?,
+        )?;
+        record.check_target_lock(target_lock)?;
+        let mut operation = RestoreOperation { record, source };
         operation.inspect()?;
         Ok(operation)
     }
 }
-fn approve(plan: &RestorePlan, approval: Sha256Digest) -> Result<(), CaptureError> {
+fn approve(plan: &RestorePlan, approval: Sha256Digest) -> Result<(), OperationStoreError> {
     if plan.digest() != approval {
-        return Err(CaptureError::ApprovalMismatch);
+        return Err(OperationStoreError::ApprovalMismatch);
     }
     Ok(())
 }
-fn source_digest(plan: &RestorePlan) -> Result<Sha256Digest, RestorePlanError> {
-    let record: RestorePlanRecord = serde_json::from_slice(plan.encoded())?;
-    hash(&record.source_plan_sha256)
-}
-fn initial(plan: &RestorePlan) -> Result<Vec<u8>, CaptureError> {
-    Ok(initial_bytes(
-        plan.encoded(),
-        plan.request().limits.evidence_bytes,
-    )?)
-}
-fn restore_owner(plan: &RestorePlan) -> Result<Vec<u8>, CaptureError> {
-    owner_bytes(&plan.request().operation_id, plan.digest())
-}
-fn create_lock(directory: &Directory) -> Result<ExclusiveFileLock, CaptureError> {
-    let parent = directory.open_syncable()?;
-    let file = create_retained_at(parent.as_fd(), OsStr::new("lock"), 0o600)?;
-    file.sync_all()?;
-    acquire(file)
-}
-#[expect(
-    clippy::too_many_arguments,
-    reason = "construct one held operation without a parallel persisted state"
-)]
-fn held<'s>(
-    store: &'s BackupStore,
-    plan: RestorePlan,
-    directory: Directory,
-    target: Directory,
-    lock: ExclusiveFileLock,
-    target_lock: &ExclusiveFileLock,
-    source: CaptureOperation,
-    payload: PayloadSource<'s>,
-) -> Result<RestoreOperation<'s>, CaptureError> {
-    let plan_file = open_optional(&directory, "plan.json")?.ok_or(CaptureError::Incomplete)?;
-    let ledger_file = open_optional(&directory, "ledger.bin")?.ok_or(CaptureError::Incomplete)?;
-    Ok(RestoreOperation {
-        store,
-        directory,
-        target,
-        lock,
-        target_lock_file: target_lock.file().try_clone()?,
-        ledger_file,
-        plan_file,
-        source,
-        payload,
-        plan,
-        usable: true,
-    })
+pub(in crate::store) fn replace_owner(
+    store: &Directory,
+    target: &Directory,
+    operations: &Directory,
+    previous: crate::store::operation::intent::Plan<'_>,
+    next: crate::store::operation::intent::Plan<'_>,
+) -> Result<(), RestorePersistenceError> {
+    let before = owner_bytes(previous.operation_id(), previous.digest())?;
+    let bytes = owner_bytes(next.operation_id(), next.digest())?;
+    let parent = target.open_syncable().map_err(OperationStoreError::from)?;
+    write_at_validated_with(
+        parent.as_fd(),
+        OsStr::new("owner.json"),
+        WriteOptions {
+            mode: PublicationMode::Replace,
+            permissions: 0o600,
+        },
+        |file| {
+            file.write_all(&bytes)?;
+            Ok(())
+        },
+        |()| {
+            exact(target, "owner.json", &before, 1024)?;
+            same_directory(store, "operations", operations)?;
+            same_identity(&target_for(store, previous.target(), false)?, target)
+        },
+    )
+    .map_err(|e| RestorePersistenceError::Publication(Box::new(e)))?;
+    exact(target, "owner.json", &bytes, 1024)?;
+    Ok(())
 }

@@ -1,0 +1,392 @@
+//! Fixed source-bound allocation/upload/readback/load policy, without call mechanics.
+use super::RestorePlan;
+use super::persistence::Source;
+use crate::store::{
+    CapturePlan, CaptureStatusReplyError, OperationStoreError, PayloadReadError, RestoreTransfer,
+    TransferDataError,
+    capture::{
+        SnapshotReplyError, decode_snapshot_list,
+        status::StatusRequirements,
+        transfer::{self, readback::ReadbackMetadataError},
+    },
+    operation::Step,
+};
+use ic_platform::{
+    Principal,
+    candid_codec::{
+        self, Encode, Type, Writer,
+        decoder::{
+            Arity, Decode, Error as DecodeError, Limits, Reader, decode_args_with_skip_limit,
+            decode_one_with_skip_limit,
+        },
+    },
+    management_canister_types::{
+        CanisterIdRecord, LoadCanisterSnapshotArgs, ReadCanisterSnapshotDataArgs,
+        ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult, Snapshot,
+        SnapshotDataKind, SnapshotDataOffset, UploadCanisterSnapshotDataArgs,
+        UploadCanisterSnapshotMetadataArgs, UploadCanisterSnapshotMetadataResult,
+    },
+};
+
+#[derive(Debug, thiserror::Error)]
+/// Original restore source, bounded reply or exact readback policy refused.
+pub enum Error {
+    /// The fixed restore sequence is incomplete or blocked.
+    #[error("restore sequence refused")]
+    Order,
+    /// The original certified call was rejected; spending remains consumed.
+    #[error("restore call was certified rejected")]
+    Rejected,
+    /// Each status boundary must have a distinct original signed request.
+    #[error("restore status request was reused")]
+    StatusRequest,
+    /// Initial/pre-load/post-load status refused.
+    #[error(transparent)]
+    Status(#[from] CaptureStatusReplyError),
+    /// Snapshot inventory/capacity or allocated ID refused.
+    #[error(transparent)]
+    Snapshot(#[from] SnapshotReplyError),
+    /// Bounded allocation or unit reply refused.
+    #[error("restore reply decode refused")]
+    Reply(DecodeError),
+    /// Source metadata cannot be represented without defaults.
+    #[error("source metadata is outside the restore profile")]
+    MetadataProfile,
+    /// Fixed argument encoding exceeded its original ceiling.
+    #[error("restore argument encoding refused")]
+    Encoding,
+    /// Original source geometry refused.
+    #[error(transparent)]
+    Transfer(#[from] crate::store::RestoreTransferError),
+    /// Original local payload/identity refused.
+    #[error(transparent)]
+    Source(#[from] PayloadReadError),
+    /// Destination metadata differs in restorable state.
+    #[error(transparent)]
+    Metadata(#[from] ReadbackMetadataError),
+    /// Bounded destination data reply refused.
+    #[error(transparent)]
+    Data(#[from] TransferDataError),
+    /// Destination bytes differ from the held original source.
+    #[error("restore readback differs from original source bytes")]
+    Readback,
+    /// Allocated destination is empty, excessive, reused or differs from original evidence.
+    #[error("restore allocated snapshot identity refused")]
+    Allocation,
+    /// Original source projection cannot reconstruct its capture profile.
+    #[error(transparent)]
+    Capture(#[from] OperationStoreError),
+}
+
+pub(in crate::store) struct Procedure<'a> {
+    plan: &'a RestorePlan,
+    next: Option<Step>,
+    failed: bool,
+    transfer: RestoreTransfer,
+    source_plan: CapturePlan,
+    metadata: ReadCanisterSnapshotMetadataResult,
+    inventory: Vec<Snapshot>,
+    status_requests: Vec<[u8; 32]>,
+    destination: Option<Vec<u8>>,
+}
+impl<'a> Procedure<'a> {
+    pub(in crate::store) fn new(plan: &'a RestorePlan, source: &Source<'_>) -> Result<Self, Error> {
+        Ok(Self {
+            plan,
+            next: Some(Step::RestoreInitialStatus),
+            failed: false,
+            transfer: source.transfer(plan)?,
+            source_plan: source.capture.plan().clone(),
+            metadata: source.metadata.clone(),
+            inventory: Vec::new(),
+            status_requests: Vec::new(),
+            destination: None,
+        })
+    }
+    pub(in crate::store) fn next(&self) -> Result<Option<Step>, Error> {
+        if self.failed {
+            Err(Error::Order)
+        } else {
+            Ok(self.next)
+        }
+    }
+    pub(in crate::store) fn destination(&self) -> Result<&[u8], Error> {
+        self.destination.as_deref().ok_or(Error::Order)
+    }
+    pub(in crate::store) fn data_calls(&self) -> u32 {
+        self.transfer.data_calls()
+    }
+    fn source_request(&self, n: u32) -> Result<ReadCanisterSnapshotDataArgs, Error> {
+        self.transfer
+            .source_requests()
+            .nth(n as usize)
+            .ok_or(Error::Order)
+    }
+    pub(in crate::store) fn request(
+        &self,
+        source: &mut Source<'_>,
+    ) -> Result<(&'static str, Vec<u8>), Error> {
+        let target = self.plan.request().target.canister;
+        let args = match self.next()?.ok_or(Error::Order)? {
+            Step::RestoreInitialStatus | Step::BeforeLoadStatus | Step::AfterLoadStatus => {
+                return Ok((
+                    "canister_status",
+                    encode(&CanisterIdRecord {
+                        canister_id: target,
+                    })?,
+                ));
+            }
+            Step::RestoreListSnapshots => {
+                return Ok((
+                    "list_canister_snapshots",
+                    encode(&CanisterIdRecord {
+                        canister_id: target,
+                    })?,
+                ));
+            }
+            Step::AllocateSnapshot => {
+                return Ok((
+                    "upload_canister_snapshot_metadata",
+                    upload_metadata_arguments(target, &self.metadata, 1024 * 1024)?,
+                ));
+            }
+            Step::Upload(n) => {
+                let request = self.source_request(n)?;
+                let chunk = source.payload.read_data(&request)?;
+                let kind = match request.kind {
+                    SnapshotDataKind::WasmModule { offset, .. } => {
+                        SnapshotDataOffset::WasmModule { offset }
+                    }
+                    SnapshotDataKind::WasmMemory { offset, .. } => {
+                        SnapshotDataOffset::WasmMemory { offset }
+                    }
+                    SnapshotDataKind::StableMemory { offset, .. } => {
+                        SnapshotDataOffset::StableMemory { offset }
+                    }
+                    SnapshotDataKind::WasmChunk { .. } => SnapshotDataOffset::WasmChunk,
+                };
+                (
+                    "upload_canister_snapshot_data",
+                    encode(&UploadCanisterSnapshotDataArgs {
+                        canister_id: target,
+                        snapshot_id: self.destination()?.to_vec(),
+                        kind,
+                        chunk,
+                    })?,
+                )
+            }
+            Step::ReadbackMetadata => (
+                "read_canister_snapshot_metadata",
+                encode(&ReadCanisterSnapshotMetadataArgs {
+                    canister_id: target,
+                    snapshot_id: self.destination()?.to_vec(),
+                })?,
+            ),
+            Step::Readback(n) => {
+                let mut request = self.source_request(n)?;
+                request.snapshot_id = self.destination()?.to_vec();
+                ("read_canister_snapshot_data", encode(&request)?)
+            }
+            Step::LoadSnapshot => (
+                "load_canister_snapshot",
+                encode(&LoadCanisterSnapshotArgs {
+                    canister_id: target,
+                    snapshot_id: self.destination()?.to_vec(),
+                    sender_canister_version: None,
+                })?,
+            ),
+            _ => return Err(Error::Order),
+        };
+        Ok(args)
+    }
+    pub(in crate::store) fn accept(
+        &mut self,
+        step: Step,
+        rejected: bool,
+        request_id: [u8; 32],
+        reply: &[u8],
+        source: &mut Source<'_>,
+    ) -> Result<(), Error> {
+        let result = self.accept_reply(step, rejected, request_id, reply, source);
+        if result.is_err() {
+            self.failed = true;
+        }
+        result
+    }
+    fn accept_reply(
+        &mut self,
+        step: Step,
+        rejected: bool,
+        request_id: [u8; 32],
+        reply: &[u8],
+        source: &mut Source<'_>,
+    ) -> Result<(), Error> {
+        if self.next()? != Some(step) {
+            return Err(Error::Order);
+        }
+        if rejected {
+            return Err(Error::Rejected);
+        }
+        self.next = match step {
+            Step::RestoreInitialStatus | Step::BeforeLoadStatus | Step::AfterLoadStatus => {
+                if self.status_requests.contains(&request_id) {
+                    return Err(Error::StatusRequest);
+                }
+                StatusRequirements {
+                    module_sha256: self.plan.module_sha256(),
+                    sender: self.plan.request().sender,
+                }
+                .validate_status_reply(reply)?;
+                self.status_requests.push(request_id);
+                match step {
+                    Step::RestoreInitialStatus => Some(Step::RestoreListSnapshots),
+                    Step::BeforeLoadStatus => Some(Step::LoadSnapshot),
+                    _ => None,
+                }
+            }
+            Step::RestoreListSnapshots => {
+                self.inventory = decode_snapshot_list(reply)?;
+                if self.inventory.len() >= self.plan.profile().snapshot_capacity as usize {
+                    return Err(SnapshotReplyError::NoCapacity.into());
+                }
+                Some(Step::AllocateSnapshot)
+            }
+            Step::AllocateSnapshot => {
+                let Allocation(value) = decode_one_with_skip_limit(reply, limits(), 0)?;
+                if !(1..=256).contains(&value.snapshot_id.len())
+                    || self.inventory.iter().any(|s| s.id == value.snapshot_id)
+                    || self
+                        .transfer
+                        .source_requests()
+                        .next()
+                        .is_some_and(|r| r.snapshot_id == value.snapshot_id)
+                {
+                    return Err(Error::Allocation);
+                }
+                self.destination = Some(value.snapshot_id);
+                Some(Step::Upload(0))
+            }
+            Step::Upload(n) => {
+                unit(reply)?;
+                Some(if n + 1 == self.transfer.data_calls() {
+                    Step::ReadbackMetadata
+                } else {
+                    Step::Upload(n.checked_add(1).ok_or(Error::Order)?)
+                })
+            }
+            Step::ReadbackMetadata => {
+                let source_id = self
+                    .transfer
+                    .source_requests()
+                    .next()
+                    .ok_or(Error::Order)?
+                    .snapshot_id;
+                let transfer = self
+                    .source_plan
+                    .plan()
+                    .plan_transfer(&source_id, &self.metadata)
+                    .map_err(|_| Error::MetadataProfile)?;
+                transfer.decode_uploaded_metadata(reply)?;
+                Some(Step::Readback(0))
+            }
+            Step::Readback(n) => {
+                let bytes = transfer::data::decode_reply(reply)?;
+                let original = source.payload.read_data(&self.source_request(n)?)?;
+                if bytes != original {
+                    return Err(Error::Readback);
+                }
+                Some(if n + 1 == self.transfer.data_calls() {
+                    Step::BeforeLoadStatus
+                } else {
+                    Step::Readback(n.checked_add(1).ok_or(Error::Order)?)
+                })
+            }
+            Step::LoadSnapshot => {
+                unit(reply)?;
+                Some(Step::AfterLoadStatus)
+            }
+            _ => return Err(Error::Order),
+        };
+        Ok(())
+    }
+}
+pub(in crate::store) fn upload_metadata_arguments(
+    canister_id: Principal,
+    metadata: &ReadCanisterSnapshotMetadataResult,
+    limit: usize,
+) -> Result<Vec<u8>, Error> {
+    let globals = metadata
+        .globals
+        .iter()
+        .cloned()
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::MetadataProfile)?;
+    candid_codec::encode_one(
+        &UploadCanisterSnapshotMetadataArgs {
+            canister_id,
+            replace_snapshot: None,
+            wasm_module_size: metadata.wasm_module_size,
+            globals,
+            wasm_memory_size: metadata.wasm_memory_size,
+            stable_memory_size: metadata.stable_memory_size,
+            certified_data: metadata.certified_data.clone(),
+            global_timer: metadata.global_timer.clone(),
+            on_low_wasm_memory_hook_status: metadata.on_low_wasm_memory_hook_status.clone(),
+        },
+        limit,
+    )
+    .map_err(|_| Error::Encoding)
+}
+fn encode(value: &impl Encode) -> Result<Vec<u8>, Error> {
+    candid_codec::encode_one(value, crate::store::limits::REQUEST_BYTES as usize)
+        .map_err(|_| Error::Encoding)
+}
+fn limits() -> Limits {
+    Limits {
+        bytes: 4096,
+        header: 2048,
+        types: 16,
+        work: 8192,
+        allocation: 4096,
+    }
+}
+fn unit(reply: &[u8]) -> Result<(), Error> {
+    decode_args_with_skip_limit::<()>(reply, limits(), Arity::Exact, 0).map_err(Error::from)
+}
+struct Allocation(UploadCanisterSnapshotMetadataResult);
+impl Encode for Allocation {
+    const TYPE: &'static Type = UploadCanisterSnapshotMetadataResult::TYPE;
+    fn write(&self, w: &mut Writer) -> Result<(), candid_codec::Error> {
+        self.0.write(w)
+    }
+}
+impl<'a> Decode<'a> for Allocation {
+    fn read(reader: &mut Reader<'a>, wire: i64) -> Result<Self, DecodeError> {
+        let Type::Record([(label, _)]) = Self::TYPE
+            .resolved()
+            .map_err(|_| DecodeError::Unsupported)?
+        else {
+            return Err(DecodeError::Unsupported);
+        };
+        let mut id = None;
+        reader.record(wire, false, |name, ty, r| {
+            if name != *label {
+                return Ok(false);
+            }
+            id = Some(r.bounded_vec::<u8>(ty, 256)?);
+            Ok(true)
+        })?;
+        Ok(Self(UploadCanisterSnapshotMetadataResult {
+            snapshot_id: id.ok_or(DecodeError::Type)?,
+        }))
+    }
+}
+
+impl From<DecodeError> for Error {
+    fn from(error: DecodeError) -> Self {
+        Self::Reply(error)
+    }
+}
+
+#[cfg(test)]
+mod tests;

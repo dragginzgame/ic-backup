@@ -3,11 +3,12 @@
 The Unix-only `ic_backup::store` API implements initialization, opening,
 `list_backups`, `latest_completed_backup`, `verify_payload` and `open_payload`. Its
 [public documentation and example](../../crates/ic-backup/src/store/mod.rs) are
-compiled with the library. [Capture intent and initial status](capture-intent.md)
+compiled with the library. [Capture and continuation](capture-intent.md)
 own operation ledgers and target claims. Capture now publishes completion through
 [the local completion contract](../design/local-store.md#completion-and-interrupted-publication).
-Restore and standalone full bundle-evidence admission remain unimplemented. The wider
-[local-store design](../design/local-store.md) remains their implementation input.
+Authenticated same-store source admission and complete stopped restore are
+implemented through the [local-store contract](../design/local-store.md).
+Standalone arbitrary-bundle import is outside the selected scope.
 
 ## Custody and initialization
 
@@ -17,7 +18,8 @@ symlinks; directories forbid group/other permissions. The initializer creates a
 0600 `format.pending` exclusively, writes and syncs the marker, creates private
 `bundles`, `operations` and `targets` directories, then publishes `format`
 create-only through Host's durable primitive. The exact marker is
-`ic-backup/local-store/1` followed by one LF. Failures retain partial work.
+`ic-backup/host-store/1` followed by one LF. Older stores refuse intact under the replacement reader;
+their preserved reader retains original authority. Failures retain partial work.
 There is no reset or automatic initialization recovery.
 
 Opening performs no writes and requires the marker and exactly those three child
@@ -140,8 +142,9 @@ Sequential checks cannot fence writers or prove a point-in-time immutable tree.
 Unread blocks are not freshly rehashed on each read; each returned slice is
 checked against the bytes originally admitted under the trusted manifest.
 Network/release, full source-metadata/schedule association and retained capture
-evidence still belong to full bundle admission, which remains unimplemented.
-This is a held payload reader, not `verify_bundle` or restore permission.
+evidence are checked by `open_capture_source`, before restore planning admits that
+original source. The held payload reader alone grants no restore permission;
+there is no standalone arbitrary-bundle `verify_bundle` API.
 
 ## Focused legacy review — 2026-11-14
 

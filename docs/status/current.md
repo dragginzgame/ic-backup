@@ -1,117 +1,98 @@
-# Current handoff — 2026-11-15
+# Current handoff — 2026-11-16
 
-Work lives at `/home/adam/projects/ic-backup`, branch `main`; legacy is read-only.
-GitHub `main` remains `dc4bba68bbaeb0966ecefb8335c4ede85d95e125` (0.101.12).
-Local 0.101.13 adds the direct restore profile and durable status submission.
-A local pre-replacement checkpoint is selected as
-`preserve/backup-0.101.13-before-replacement`; no push, release tag, publication or
-deployment is selected. All packages remain unpublished; qualification stays 0.1.0.
-The later broad audit found four structural maintenance problems that the focused
-post-push review did not establish; cleanup now precedes feature expansion.
-The checkpoint includes the tested local rand 0.10.4 locks for exact preservation;
-remote 0.101.12 uses 0.10.3. This is not dependency delivery authorization.
+Work: `/home/adam/projects/ic-backup`, branch `main`. Version 0.102.0 is an
+unpublished GitHub checkpoint. The user authorized the version commit and push
+to `origin/main`; no tags, registry publication or deployment are selected.
+The previous remote checkpoint is `dc4bba68bbaeb0966ecefb8335c4ede85d95e125`
+(0.101.12), followed locally by the preserved 0.101.13 reader. The minor increment
+covers incompatible APIs/store formats: consumers adopt the fixed operation API;
+older operations retain their preserved reader and authority, without migration.
+Both locks select local Backup 0.102.0; the qualification lock also adds the
+test-only consumer. Supplier versions and the managed receipt remain unchanged.
 
-## Implemented capture and source boundaries
+## Legacy review corrections
 
-The [inventory](../architecture/local-inventory.md),
-[capture](../architecture/capture-intent.md) and
-[transfer](../architecture/capture-transfer.md) contracts own capture behavior.
-Immutable intents, bounded journals and original authority/evidence remain mandatory.
-Uncertain writes invalidate handles; complete uncertain frames remain spent.
-Partial tails, orphan/changed evidence and custody failures refuse without repair.
-Prepared continuation never resigns; pending calls never repeat. Surviving original
-replies and one durable lookup can settle status/list/take. Dependent effects need
-live permission; historical replay reads no current clock, guard or signer.
-Only direct Ed25519/secp256k1 are qualified. Integrations own keys, continuous
-application maintenance, fleet membership, scheduling and external obligations.
+All four findings from the [comparison](../design/legacy-assessment.md#review-corrections--2026-11-16)
+are addressed. Typed post-response errors retain bounded sensitive certificates
+and original request IDs, with redacted Debug. `reconcile_observation_reply`
+imports only an original submitted unresolved lookup under its separate retained
+time policy. Failed custody stays closed; no repair, second journal or retry exists.
+New profiles allow 2 MiB request / 4 MiB result / 2 MiB certificate ceilings around
+1 MiB payload chunks. Existing approvals and smaller limits remain unchanged.
+A separate normal-dependency consumer qualifies fresh-process continuation/replay;
+current source/restore documentation and shared API names are corrected.
 
-Metadata/data acquisition retains exact requests, certified results and reservations.
-Invalid settled payload blocks progress; accepted payload replays offline. Full
-1 MiB extents exceed the 2 MiB result cap with proof/framing and refuse.
-Metadata/data and final-status reconciliation remain unfinished. Assembly retains
-partial/altered files without repair. Final status has distinct request/spending.
-Completion authenticates evidence, synchronizes assembly and closes the journal
-at readiness; exact create-only manifest publication can reconcile locally.
-Succession uses target-then-predecessor locks and Host atomic owner replacement,
-preserving old receipts and interrupted files. Held source reads bind completion,
-same-store capture lock and block-checked payload descriptors. Completed receipts
-outlive ownership changes; unfinished paths need their original owner.
+Fresh size: 8,098 product Rust LOC; 196 test-only consumer LOC; 12,583 test LOC;
+20,877 total, zero unclassified. Against frozen legacy, raw repository app/lib is
+46.99% smaller and total is 53.48% smaller. Product-only repository comparison is
+48.24% smaller; crate-only production is 40.36% smaller. Scope is narrower and
+Canic work remains external; these figures establish neither parity nor speed.
 
-## Current restore increment
+## Implemented Backup scope
 
-The [local-store contract](../design/local-store.md#restore-status-submission-and-replay)
-owns restore status preparation, original profile admission, submission and replay.
-Transfer planning binds same-target/release extents and `2*N + 7` base calls.
-Plans retain approved source, ordered requests, direct sender, trust and finite
-limits. Create/reopen authenticates original source and current completed-owner
-custody; an older source may differ from the current owner. No pruning exists.
+The direct-controller single-canister library implements capture, bounded history/
+latest, authenticated original source/payload, same-ID/network/release restore,
+original-call recovery, cold continuation and completed-target succession.
+Capture/restore leave the application stopped. One `BackupConnection`, signer,
+action guard and private sealed recorder serve both fixed procedures. Shared
+errors are `OperationStoreError`, `OperationAdvanceError` and `BackupHttpError`;
+transport is `BackupHttpTransport`. No compatibility aliases were added.
 
-`DirectRestoreStatus` wraps the existing signer/admission interface and commits
-transport/network/root/timeout, integration protocol and timing before reservation.
-It checks exact observation, invocation-time reference, expiry and live authority
-before retaining signer output. Capture and restore share timing arithmetic,
-prepared-frame capacity, transport binding and the one-shot Host HTTP call path.
-There is no second guard API, journal, evidence envelope or general provider engine.
+The [operation contract](../design/operation-contract.md) owns immutable approval,
+ID-only reopening and capture/restore ordering. Complete metadata/byte checks
+precede loading. Pending calls never repeat; original signing/network spending
+survives interruption. Explicit observation retains separate original timing.
+Dependent effects require live permission. Completed replay uses original evidence
+without clock, guard, signing, HTTP or writes. Unknown tails/orphans/changed files
+refuse intact; uncertain writes invalidate the handle. No reset/refund/start occurs.
+[Capture](../architecture/capture-intent.md), [transfer](../architecture/capture-transfer.md)
+and [restore](../design/local-store.md#immutable-restore-approval-and-original-custody)
+own exact behavior; [restart](../design/restart.md) owns composition.
 
-`submit_status` reads the original request/admission from the existing journal.
-Fresh work re-admits the direct profile and live application authority, synchronizes
-one submission reservation, then rechecks live admission before HTTP entry.
-Only a bounded authenticated terminal result is retained, create-only and synced
-before its journal reference. Stopped/module/controller policy runs afterwards.
-Certified rejection and policy-invalid replies remain settled. Lost replies,
-timeouts, cancellation, invalid proof and uncertain persistence never refund work.
-Cold pending replay returns attention without calling the provider; cold settled
-replay reauthenticates original evidence without clock, live guard, signer, HTTP
-or writes. Inspection reports reserved counts and evidence presence, not success.
-The existing journal owner is now `restore/persistence/status/`; original preparation
-wire names remain unchanged. Older readers refuse the extended history intact.
+## Acceptance and preservation
 
-Native HTTP groups check exact request/path, guard/profile refusal before spending,
-terminal replay, HTTP uncertainty, cancellation/timeout, damaged result and partial
-reservation bytes, plus an orphan result appearing after request capture.
-A new actual-IC case submits restore status from a completed capture source,
-independently checks stopped module/snapshot count, closes the server and revokes
-the guard before exact terminal replay. The original offline signing case remains.
-All 348 unit tests, 24 documentation tests and six IC journeys pass, together with
-strict product/private Clippy, warning-denying Rustdoc, formatting and link checks.
-Latest evidence: `target/evidence/restore-submission/` (including earlier failures).
+Current `target/evidence/review-fixes-*.log`: 232 native tests, ten actual-IC journeys,
+five public examples, strict Clippy for both workspaces, warning-denying Rustdoc,
+shared formatting/tooling admission, links and whitespace checks pass. Final
+comment/error-message/import cleanup changed no runtime behavior; Clippy/Rustdoc
+cover those edits. Earlier `target/evidence/backup-completion/` remains retained.
+Version preparation reuses those unchanged runtime checks; both locked metadata
+graphs, strict Clippy and formatting/links/tooling pass at 0.102.0, with evidence
+under `target/evidence/version-0.102.0-*`. Every package remains non-publishable.
 
-Next: review the [minimal replacement proposal](../design/restart.md), including its
-concrete retirement map, before more product edits. Incremental phase cleanup and
-allocation/upload expansion are paused. The proposal replaces phase APIs and their
-call-state duplication with fixed capture/restore procedures; no implementation yet.
-Original 0.101.13 source/build preservation is documented in
-[setup](../development/setup.md#pre-replacement-reference); no general recovery CLI exists.
-Canic manager execution remains an explicit unresolved integration dependency.
-Half of legacy is a rough size estimate, not a hard budget or acceptance gate.
-The first cleanup shares retained evidence membership across integrity checks, orphan
-detection and synchronization, removing 78 production LOC without changing record bytes.
-Budget replay now derives totals from validated events instead of scanning all prior
-admissions. A state-based oracle matches every completed-capture journal prefix;
-data budget refusal survives reopen without renewed signing/network work.
-Current Rust LOC: 10,259 production / 29,474 total (+8 production in this batch).
-All 349 unit and 24 doc tests pass with four workers; six IC journeys, product/private
-Clippy and Rustdoc pass. Evidence: target/evidence/replay-budget-cleanup/.
-The earlier default-concurrency fixture deadlines and successful four-worker run
-remain under target/evidence/evidence-inventory-cleanup/. Whole-evidence rereads
-and metadata/data lifecycle duplication remain unresolved; no throughput claim.
-Pending restore reply import/lookup reconciliation is absent. Upload/load, CLI and Canic adapters remain unfinished;
-restore must leave the original canister stopped. Do not claim end-to-end restore.
+New IC cases qualify a full 1 MiB whole chunk through capture/restore, offline load
+settlement from an error-returned certificate after failed local writing, and a
+separately built consumer whose normal graph excludes Testkit/PocketIC. Separate
+processes advance/continue capture and restore, then inspect completion after
+backend shutdown with only store/ID/approval. Existing multi-extent, empty-chunk,
+changed-stable-state, history, succession and lost-reply journeys still pass.
+Original wires, roots, journals, child outputs/graph and server logs remain under
+`qualification/target/fixtures/`, including failed runs. Native cases preserve
+original spending, late-deadline evidence, uncertain writes and changed custody.
 
-## Dependencies and retained evidence
+The original reader remains at `b7c2c6ae754a5ae2452e65b9be537b517614ebd2`,
+`preserve/backup-0.101.13-before-replacement`, with hashed source/build evidence
+under `.git/recovery/backup-0.101.13-before-replacement/`. The newer capture plus
+status-only restore reader remains under
+`.git/recovery/host-store-1-before-restore-20261116/`: 185 source files, both locks,
+six artifacts; archive SHA-256
+`6658a8963fe3d56cb5fe13ec210c9170f8d6b7b50f0de33583e627287a371b06`.
+[Setup](../development/setup.md#host-store1-reader-before-complete-restore) owns details.
+Old operations retain their matching reader/IDs/authority/evidence. This correction
+changes no stored encoding, migrates no records and touches no legacy/sibling data.
 
-Platform 0.33.7/Types 0.20.4, Host FS/Artifacts/HTTP 0.79.0, Tooling 0.44.4,
-Tokio 1.54.1 and Rust/Cargo 1.100.0 remain selected. Private qualification retains
-Testkit 0.106.0/PocketIC 16.1 and thiserror 2.0.18; product uses 2.0.21.
-Checks use the preserved local rand 0.10.4 graph. No sibling patches/shared targets.
-[Setup](../development/setup.md) owns commands. Qualification remains under
-`qualification/ic-backup-qualification/`, evidence under `qualification/target/fixtures/`.
-The delivered 0.101.12 graph passed 343 units, 24 examples and five IC journeys in
-`target/evidence/delivery-0.101.12/`; preparation profile checks remain in
-`target/evidence/restore-profile/`. Earlier source/recovery and failed fixtures
-remain under the original targets and owning contracts. Nothing was removed.
+## External integration and limits
 
-Physical power loss, external signer processes, Canic fences, trusted HTTPS,
-hosted macOS, maximum-size throughput and upload/load remain unqualified.
-[Canic #1](https://github.com/dragginzgame/canic/issues/1) owns integration work.
-Blob storage remains v2. Restoration cannot rewind payments or other obligations.
+Canic issues remain [#5 signing](https://github.com/dragginzgame/canic/issues/5),
+[#6 manager execution/original-result lookup](https://github.com/dragginzgame/canic/issues/6),
+[#7 fenced recovery](https://github.com/dragginzgame/canic/issues/7), linked from
+[#1](https://github.com/dragginzgame/canic/issues/1). The [sibling review](../design/sibling-integration.md)
+retains exact ownership. Full integration needs the actual manager's authenticated
+receipt protocol/surviving ledger, bounded signer, continuous application/rewind
+fence and real consumer qualification. No substitute route is invented locally.
+
+The retained paired IO measurements in `target/evidence/reduction-followthrough/`
+do not measure complete restore or establish throughput. Historical replay still
+accumulates quadratic work. Full 1 GiB journeys, Canic maintenance/process adapters,
+production HTTPS, hosted macOS, physical power loss and registry/release consumers
+remain unqualified. Publication and deployment require separate authorization.

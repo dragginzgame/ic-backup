@@ -1,5 +1,7 @@
 //! Local authentication of original status outcomes; no transport or clock.
-use super::{CaptureError, CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusEvidence};
+use super::{OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusEvidence};
+#[cfg(test)]
+use crate::store::capture::CapturePolicy;
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::certification::{
     HashTree, LookupResult,
@@ -9,19 +11,21 @@ use thiserror::Error;
 
 const OBSERVATION: &[u8] = b"ic-backup/status-certificate/1\n";
 const LIMITS: Limits = Limits {
-    certificate_bytes: 1024 * 1024,
+    certificate_bytes: crate::store::limits::CERTIFICATE_BYTES,
     delegation_bytes: 1024 * 1024,
     tree_nodes: 8192,
     tree_depth: 64,
     canister_ranges: 1024,
 };
 
+pub(in crate::store) use observation::observe_authenticated_request;
+
 /// Refused historical status authentication. No failure grants retry authority.
 #[derive(Debug, Error)]
 pub enum StatusCertificateError {
     /// Original plan, call or complete evidence framing failed admission.
     #[error("status certificate evidence fails original admission")]
-    Admission(#[source] CaptureError),
+    Admission(#[source] OperationStoreError),
     /// Missing, malformed or arithmetically invalid original time policy.
     #[error("invalid original status certificate observation")]
     Observation,
@@ -82,23 +86,13 @@ pub fn status_certificate_observation(time: TimePolicy) -> Result<Vec<u8>, Statu
 /// [`status_certificate_observation`]. Root/network admission, signed-envelope
 /// authentication, current authority and application continuity remain provider-owned.
 ///
-/// ```no_run
-/// use ic_backup::store::{CapturePlan, PreparedStatus, StatusAdmissionRecord,
-///     StatusEvidence, StatusCertificateError, status_certificate_evidence};
-///
-/// fn retainable_result(
-///     plan: &CapturePlan, admission: &StatusAdmissionRecord,
-///     request: &PreparedStatus, certificate: &[u8], root_der: &[u8],
-/// ) -> Result<StatusEvidence, StatusCertificateError> {
-///     status_certificate_evidence(plan, admission, request, certificate, root_der)
-/// }
-/// ```
 ///
 /// # Errors
 /// Refuses invalid original admission, failed authentication, unavailable outcomes
 /// and responses that cannot fit the original complete result/proof allowance.
+#[cfg(test)]
 pub fn status_certificate_evidence(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     certificate: &[u8],
@@ -114,8 +108,9 @@ pub fn status_certificate_evidence(
     )
 }
 
+#[cfg(test)]
 pub(super) fn call_certificate_evidence(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     certificate: &[u8],
@@ -142,7 +137,7 @@ pub(super) fn call_certificate_evidence(
 /// the approved plan's trust-root commitment. Platform authenticates signatures,
 /// delegated canister authority and both retained time windows. Backup binds the
 /// exact request-status path, reply or rejection diagnostics to the admitted call.
-/// This is a local helper for [`super::StatusProvider::authenticate`], not a provider.
+/// This is a local authentication primitive used by the owning operation.
 ///
 /// Original request/proof custody is required; freely constructed arguments do not
 /// establish it. Success grants no new effect, rollback claim or retry allowance.
@@ -151,27 +146,17 @@ pub(super) fn call_certificate_evidence(
 /// Missing/pruned evidence and pending/forgotten outcomes refuse. No clock, network,
 /// cache or alternative proof is used. Diagnostic bytes are never included in errors.
 ///
-/// Certificate/delegation caps are 1 MiB each, combined trees 8192 nodes, depth 64
+/// Certificate/delegation caps are 2 MiB / 1 MiB, combined trees 8192 nodes, depth 64
 /// and selected canister ranges 1024. Complete evidence obeys original admission;
 /// these limits are not allocation-quota units.
 ///
-/// ```no_run
-/// use ic_backup::store::{CapturePlan, PreparedStatus, StatusAdmissionRecord,
-///     StatusEvidence, StatusCertificateError, authenticate_status_evidence};
-///
-/// fn authenticate_retained(
-///     plan: &CapturePlan, admission: &StatusAdmissionRecord,
-///     request: &PreparedStatus, result: &StatusEvidence, root_der: &[u8],
-/// ) -> Result<(), StatusCertificateError> {
-///     authenticate_status_evidence(plan, admission, request, result, root_der)
-/// }
-/// ```
 ///
 /// # Errors
 /// Refuses changed bindings, invalid framing/time policy, failed Platform
 /// authentication, unsupported outcomes and unequal or unavailable responses.
+#[cfg(test)]
 pub fn authenticate_status_evidence(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     evidence: &StatusEvidence,
@@ -187,8 +172,9 @@ pub fn authenticate_status_evidence(
     )
 }
 
+#[cfg(test)]
 pub(super) fn authenticate_call_evidence(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     evidence: &StatusEvidence,
@@ -208,8 +194,9 @@ pub(super) fn authenticate_call_evidence(
     )
 }
 
-pub(in crate::store::capture) fn authenticate_expected_evidence(
-    plan: &CapturePlan,
+#[cfg(test)]
+pub(in crate::store) fn authenticate_expected_evidence(
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     evidence: &StatusEvidence,
@@ -231,8 +218,9 @@ pub(in crate::store::capture) fn authenticate_expected_evidence(
     .authenticate(admission, prepared, evidence, root_key_der)
 }
 
+#[cfg(test)]
 fn authenticated_response(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     certificate: &[u8],
@@ -252,8 +240,9 @@ fn authenticated_response(
     )
 }
 
+#[cfg(test)]
 pub(super) fn authenticated_expected_response(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     certificate: &[u8],
@@ -269,8 +258,9 @@ pub(super) fn authenticated_expected_response(
     .response(admission, prepared, certificate, root_key_der)
 }
 
+#[cfg(test)]
 fn validate_certificate_request(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     method: &str,
@@ -326,7 +316,7 @@ impl CertificateRequirements {
             .checked_sub(certificate.len())
             .and_then(|n| n.checked_sub(5))
             .ok_or(StatusCertificateError::Admission(
-                CaptureError::StatusAdmission,
+                OperationStoreError::StatusAdmission,
             ))?;
         let authenticated = historical::authenticate_certificate_at(
             certificate,
@@ -356,7 +346,7 @@ fn terminal_response(
                 .ok_or(StatusCertificateError::Response)?;
             if reply.is_empty() || reply.len() > maximum {
                 return Err(StatusCertificateError::Admission(
-                    CaptureError::StatusAdmission,
+                    OperationStoreError::StatusAdmission,
                 ));
             }
             Ok((false, reply.to_vec()))
@@ -401,12 +391,12 @@ fn rejection(
     {
         return Err(StatusCertificateError::Rejection);
     }
-    // All leaves come from a <=1 MiB admitted certificate. Check complete response
+    // All leaves come from a <=2 MiB admitted certificate. Check complete response
     // size before allocation; the optional tag preserves absent versus present-empty.
     let length = FORMAT.len() + 1 + 4 + message.len() + 1 + error.map_or(0, |s| 4 + s.len());
     if length > maximum {
         return Err(StatusCertificateError::Admission(
-            CaptureError::StatusAdmission,
+            OperationStoreError::StatusAdmission,
         ));
     }
     let mut bytes = Vec::with_capacity(length);
@@ -462,7 +452,6 @@ fn validate_window(window: TimeWindow) -> Result<(), StatusCertificateError> {
 }
 
 mod observation;
-pub use observation::{
-    CaptureObservation, CaptureObservationError, CaptureObservationPolicy,
-    observe_capture_certificate,
-};
+#[cfg(test)]
+pub use observation::observe_capture_certificate;
+pub use observation::{CaptureObservation, CaptureObservationError, CaptureObservationPolicy};

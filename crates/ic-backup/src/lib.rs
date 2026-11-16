@@ -1,14 +1,11 @@
-//! Local inventory, payload integrity and capture intent for Internet Computer backups.
+//! Host-side Internet Computer capture, same-canister restore and local inventory.
 //!
-//! The Unix [`store`] API initializes a private store and reads bounded completion
-//! metadata. It can check payload bytes against a caller-trusted manifest hash.
-//! It also persists approved capture intent and durable target ownership, with
-//! read-only reopening under an exclusive operation lock. Initial direct-host status
-//! continuation durably reserves effects and delegates authentication and application
-//! admission to a caller-qualified provider. A bounded one-shot HTTP helper handles
-//! retained status ingress and authenticates direct-key signatures and certificate evidence. No complete
-//! provider, snapshot capture,
-//! completion or restore implementation is supplied.
+//! The Unix [`store`] API binds immutable approvals to one direct connection and
+//! retains original signed/certified evidence with finite one-shot spending.
+//! Fixed capture and source-bound restore procedures share the same recorder,
+//! explicit recovery and historical replay. Integrations own continuous application
+//! fencing, external obligations and later acceptance/start. Canic adapters remain
+//! unqualified; production depends on published Platform and Host boundaries.
 
 #[cfg(unix)]
 pub mod store;

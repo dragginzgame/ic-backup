@@ -1,8 +1,10 @@
-//! One bounded HTTP dispatch of already-retained initial status ingress.
+//! One bounded HTTP dispatch of already-retained direct management ingress.
 use super::{
-    CaptureError, CapturePlan, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
+    OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
     StatusEvidence, StatusRequestError,
 };
+#[cfg(test)]
+use crate::store::capture::CapturePolicy;
 use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_http::{
     ReadError, read_body,
@@ -18,13 +20,40 @@ use std::{
 };
 use thiserror::Error;
 
+/// Bounded original certificate received before a later failure. Not proof of success.
+/// Retain these sensitive bytes under the integration's original custody; replay
+/// must authenticate them again. Debug deliberately omits identity and contents.
+pub struct ReceivedCertificate {
+    pub(in crate::store) request_id: [u8; 32],
+    pub(in crate::store) certificate: Vec<u8>,
+}
+impl ReceivedCertificate {
+    /// Original management request, including when the certificate came from read-state.
+    #[must_use]
+    pub fn request_id(&self) -> [u8; 32] {
+        self.request_id
+    }
+    /// Exact received certificate; it may have failed authentication or retention.
+    #[must_use]
+    pub fn certificate(&self) -> &[u8] {
+        &self.certificate
+    }
+}
+impl std::fmt::Debug for ReceivedCertificate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReceivedCertificate")
+            .field("bytes", &self.certificate.len())
+            .finish_non_exhaustive()
+    }
+}
+
 /// Fixed direct-host HTTP route and provisioned IC trust, with no mutable client escape.
 ///
-/// This helper composes with a trusted [`super::StatusProvider`]; it is not a full
-/// provider. It authenticates direct-key envelopes; the integration signs, admits current
-/// application authority and retains requests through the operation before dispatch.
+/// The fixed capture and restore operations use this transport
+/// after durable reservation. It authenticates exact retained direct-key envelopes;
+/// the integration supplies bounded signing and current application admission.
 /// No identity, root discovery, polling, retry or detached task is supplied here.
-pub struct StatusHttpTransport {
+pub struct BackupHttpTransport {
     client: Client,
     origin: Url,
     network: Sha256Digest,
@@ -34,50 +63,83 @@ pub struct StatusHttpTransport {
 
 /// Redacted transport refusal or uncertain dispatch. No variant grants a retry.
 #[derive(Debug, Error)]
-pub enum StatusHttpError {
+pub enum BackupHttpError {
+    /// A bounded certificate arrived, but authentication or closing admission failed.
+    #[error("received certificate was not admitted: {source}")]
+    AfterResponse {
+        /// Original typed refusal. No retry or success is inferred.
+        source: Box<BackupHttpError>,
+        /// Sensitive original bytes retained for explicit recovery/diagnosis.
+        received: ReceivedCertificate,
+    },
     /// Invalid origin, root-key framing or finite timeout selection.
-    #[error("invalid status HTTP configuration")]
+    #[error("invalid backup HTTP configuration")]
     Configuration,
     /// Original authority, call content or request framing refused before dispatch.
-    #[error("status HTTP request fails original admission")]
-    Admission(#[source] CaptureError),
+    #[error("backup HTTP request fails original admission")]
+    Admission(#[source] OperationStoreError),
     /// The retained direct-key envelope failed signature or identity authentication.
-    #[error("status HTTP request authentication failed")]
+    #[error("backup HTTP request authentication failed")]
     Request(#[source] StatusRequestError),
     /// The retained plan differs from the configured network or trust root.
-    #[error("status HTTP network or root binding mismatch")]
+    #[error("backup HTTP network or root binding mismatch")]
     Binding,
     /// Expiry/deadline elapsed or the host clock cannot supply Unix nanoseconds.
-    #[error("status HTTP deadline or clock refused")]
+    #[error("backup HTTP deadline or clock refused")]
     Deadline,
     /// Connection, body read, allocation or timeout failed; the request may have taken effect.
-    #[error("status HTTP dispatch outcome is uncertain")]
+    #[error("backup HTTP dispatch outcome is uncertain")]
     Uncertain,
     /// Non-200 status, including acceptance, redirects, throttling and server errors.
-    #[error("status HTTP response has status {0}; outcome is unresolved")]
+    #[error("backup HTTP response has status {0}; outcome is unresolved")]
     HttpStatus(u16),
     /// Encoded HTTP body exceeds the original result allowance.
-    #[error("status HTTP response exceeds original byte allowance")]
+    #[error("backup HTTP response exceeds original byte allowance")]
     ResponseLimit,
     /// Unsupported encoding/media type or malformed external response.
-    #[error("invalid status HTTP response")]
+    #[error("invalid backup HTTP response")]
     Response,
     /// Acceptance or a non-replicated rejection supplies no certified terminal result.
-    #[error("status HTTP response has no terminal certificate")]
+    #[error("backup HTTP response has no terminal certificate")]
     NoCertificate,
     /// Original certificate, result association or complete evidence bounds refused.
-    #[error("status HTTP certificate evidence refused")]
+    #[error("backup HTTP certificate evidence refused")]
     Authentication(#[source] StatusCertificateError),
 }
 
-impl StatusHttpTransport {
+impl BackupHttpError {
+    /// Received bytes available despite this refusal; never a terminal receipt.
+    #[must_use]
+    pub fn received_certificate(&self) -> Option<&ReceivedCertificate> {
+        match self {
+            Self::AfterResponse { received, .. } => Some(received),
+            _ => None,
+        }
+    }
+    pub(in crate::store) fn after_response(
+        self,
+        request_id: [u8; 32],
+        certificate: Vec<u8>,
+    ) -> Self {
+        Self::AfterResponse {
+            source: Box::new(self),
+            received: ReceivedCertificate {
+                request_id,
+                certificate,
+            },
+        }
+    }
+}
+
+impl BackupHttpTransport {
     /// Exact HTTP route/trust/timeout commitment to retain before lookup signing.
     #[must_use]
     pub fn lookup_commitment(&self) -> [u8; 32] {
         self.commitment()
     }
 
-    pub(super) fn admit_plan(&self, plan: &CapturePlan) -> Result<(), StatusHttpError> {
+    #[cfg(test)]
+    pub(super) fn admit_plan(&self, plan: &CapturePolicy) -> Result<(), BackupHttpError> {
         self.admit_binding(plan.request().target.network, plan.request().trust_root)
     }
 
@@ -85,9 +147,9 @@ impl StatusHttpTransport {
         &self,
         network: Sha256Digest,
         trust_root: Sha256Digest,
-    ) -> Result<(), StatusHttpError> {
+    ) -> Result<(), BackupHttpError> {
         if network != self.network || trust_root != Sha256Digest::compute(&self.root_key_der) {
-            return Err(StatusHttpError::Binding);
+            return Err(BackupHttpError::Binding);
         }
         Ok(())
     }
@@ -120,13 +182,13 @@ impl StatusHttpTransport {
         network: Sha256Digest,
         root_key_der: Vec<u8>,
         timeout: Duration,
-    ) -> Result<Self, StatusHttpError> {
+    ) -> Result<Self, BackupHttpError> {
         let origin = origin(endpoint)?;
         if timeout.is_zero()
             || timeout > Duration::from_secs(300)
             || extract_raw_root_pk_from_der(&root_key_der).is_err()
         {
-            return Err(StatusHttpError::Configuration);
+            return Err(BackupHttpError::Configuration);
         }
         let client = Client::builder()
             .tls_backend_rustls()
@@ -142,7 +204,7 @@ impl StatusHttpTransport {
             .no_zstd()
             .timeout(timeout)
             .build()
-            .map_err(|_| StatusHttpError::Configuration)?;
+            .map_err(|_| BackupHttpError::Configuration)?;
         Ok(Self {
             client,
             origin,
@@ -174,18 +236,6 @@ impl StatusHttpTransport {
     /// root fetching, re-signing or detached recovery occurs. Cancellation leaves
     /// original spending intact; the server may still execute an accepted request.
     ///
-    /// ```no_run
-    /// use ic_backup::store::{CapturePlan, PreparedStatus, StatusAdmissionRecord,
-    ///     StatusEvidence, StatusHttpError, StatusHttpTransport};
-    ///
-    /// async fn reserved_provider_submission(
-    ///     transport: &StatusHttpTransport, plan: &CapturePlan,
-    ///     admission: &StatusAdmissionRecord, prepared: &PreparedStatus,
-    /// ) -> Result<StatusEvidence, StatusHttpError> {
-    ///     // Invoked by a provider only after advance_status reserves submission.
-    ///     transport.submit_once(plan, admission, prepared).await
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses invalid bindings, exhausted time/bytes, nonterminal or malformed
@@ -194,65 +244,104 @@ impl StatusHttpTransport {
     /// # Panics
     /// The future requires a Tokio runtime with IO and timers enabled, as required
     /// by the selected HTTP client. Polling without that runtime can panic.
-    pub async fn submit_once(
+    #[cfg(test)]
+    pub(in crate::store) async fn submit_once(
         &self,
-        plan: &CapturePlan,
+        plan: &CapturePolicy,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
-    ) -> Result<StatusEvidence, StatusHttpError> {
+    ) -> Result<StatusEvidence, BackupHttpError> {
         self.submit_call(plan, admission, prepared, super::CaptureCall::Status)
             .await
     }
 
+    #[cfg(test)]
     pub(super) async fn submit_call(
         &self,
-        plan: &CapturePlan,
+        plan: &CapturePolicy,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
         call: super::CaptureCall,
-    ) -> Result<StatusEvidence, StatusHttpError> {
-        let arguments = call.arguments(plan).map_err(StatusHttpError::Admission)?;
-        self.submit_expected(plan, admission, prepared, call.method_name(), &arguments)
-            .await
+    ) -> Result<StatusEvidence, BackupHttpError> {
+        let arguments = call.arguments(plan).map_err(BackupHttpError::Admission)?;
+        self.submit_expected(
+            super::request::DirectRequirements {
+                target: plan.request().target,
+                sender: plan.request().sender,
+                trust_root: plan.request().trust_root,
+            },
+            admission,
+            prepared,
+            call.method_name(),
+            &arguments,
+        )
+        .await
     }
 
-    pub(super) async fn submit_expected(
+    pub(in crate::store) async fn submit_expected(
         &self,
-        plan: &CapturePlan,
+        requirements: super::request::DirectRequirements,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
         method: &str,
         arguments: &[u8],
-    ) -> Result<StatusEvidence, StatusHttpError> {
-        super::request::authenticate_expected_request(plan, admission, prepared, method, arguments)
-            .map_err(|error| match error {
-                StatusRequestError::Admission(error) => StatusHttpError::Admission(error),
-                error => StatusHttpError::Request(error),
-            })?;
-        self.admit_plan(plan)?;
-        let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
-        let certificate = self
-            .call_certificate(plan.request().target.canister, admission, prepared)
-            .await?;
-        let (rejected, response) = super::certificate::authenticated_expected_response(
-            plan,
-            admission,
+    ) -> Result<StatusEvidence, BackupHttpError> {
+        super::request::authenticate_direct_request(
+            requirements.sender,
+            admission.request_bytes,
             prepared,
-            &certificate,
-            &self.root_key_der,
             method,
             arguments,
         )
-        .map_err(StatusHttpError::Authentication)?;
+        .map_err(|error| match error {
+            StatusRequestError::Admission(error) => BackupHttpError::Admission(error),
+            error => BackupHttpError::Request(error),
+        })?;
+        self.admit_binding(requirements.target.network, requirements.trust_root)?;
+        let certificate = self
+            .call_certificate(requirements.target.canister, admission, prepared)
+            .await?;
+        self.admit_received_certificate(&requirements, admission, prepared, certificate)
+    }
+
+    // Keep received bytes on all failures after bounded HTTP extraction, including
+    // a deadline reached during authentication. This grants no new time window.
+    pub(in crate::store) fn admit_received_certificate(
+        &self,
+        requirements: &super::request::DirectRequirements,
+        admission: &StatusAdmissionRecord,
+        prepared: &PreparedStatus,
+        certificate: Vec<u8>,
+    ) -> Result<StatusEvidence, BackupHttpError> {
+        let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
+        let (rejected, response) = super::CertificateRequirements {
+            canister: requirements.target.canister,
+            trust_root: requirements.trust_root,
+        }
+        .response(admission, prepared, &certificate, &self.root_key_der)
+        .map_err(|error| {
+            BackupHttpError::Authentication(error)
+                .after_response(prepared.request_id, certificate.clone())
+        })?;
         let evidence = StatusEvidence {
             rejected,
             response,
             proof: certificate,
         };
-        evidence
-            .encode(admission.result_bytes)
-            .map_err(StatusHttpError::Admission)?;
-        remaining(deadline)?;
+        let result = (|| {
+            evidence
+                .encode(admission.result_bytes)
+                .map_err(BackupHttpError::Admission)?;
+            remaining(deadline)?;
+            Ok(())
+        })();
+        if let Err(error) = result {
+            return Err(BackupHttpError::after_response(
+                error,
+                prepared.request_id,
+                evidence.proof,
+            ));
+        }
         Ok(evidence)
     }
 
@@ -262,7 +351,7 @@ impl StatusHttpTransport {
         canister: ic_platform::Principal,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
-    ) -> Result<Vec<u8>, StatusHttpError> {
+    ) -> Result<Vec<u8>, BackupHttpError> {
         let mut url = self.origin.clone();
         url.set_path(&format!("/api/v3/canister/{}/call", canister.to_text()));
         let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
@@ -271,9 +360,9 @@ impl StatusHttpTransport {
             .post_cbor(url, prepared.envelope.clone(), deadline, maximum)
             .await?;
         let TransportCallResponse::Replied { certificate } =
-            decode_call_response(&bytes, maximum).map_err(|_| StatusHttpError::Response)?
+            decode_call_response(&bytes, maximum).map_err(|_| BackupHttpError::Response)?
         else {
-            return Err(StatusHttpError::NoCertificate);
+            return Err(BackupHttpError::NoCertificate);
         };
         Ok(certificate)
     }
@@ -284,7 +373,7 @@ impl StatusHttpTransport {
         body: Vec<u8>,
         deadline: u64,
         maximum: usize,
-    ) -> Result<Vec<u8>, StatusHttpError> {
+    ) -> Result<Vec<u8>, BackupHttpError> {
         let timeout = remaining(deadline)?.min(self.timeout);
         let response = self
             .client
@@ -295,9 +384,9 @@ impl StatusHttpTransport {
             .timeout(timeout)
             .send()
             .await
-            .map_err(|_| StatusHttpError::Uncertain)?;
+            .map_err(|_| BackupHttpError::Uncertain)?;
         if response.status().as_u16() != 200 {
-            return Err(StatusHttpError::HttpStatus(response.status().as_u16()));
+            return Err(BackupHttpError::HttpStatus(response.status().as_u16()));
         }
         if response.headers().contains_key(header::CONTENT_ENCODING)
             || !response
@@ -311,50 +400,49 @@ impl StatusHttpTransport {
                         .is_some_and(|media| media.trim().eq_ignore_ascii_case("application/cbor"))
                 })
         {
-            return Err(StatusHttpError::Response);
+            return Err(BackupHttpError::Response);
         }
         let bytes = read_body(response, maximum)
             .await
             .map_err(|error| match error {
                 ReadError::DeclaredLength { .. } | ReadError::Limit { .. } => {
-                    StatusHttpError::ResponseLimit
+                    BackupHttpError::ResponseLimit
                 }
-                ReadError::Transport(_) | ReadError::Allocation(_) => StatusHttpError::Uncertain,
+                ReadError::Transport(_) | ReadError::Allocation(_) => BackupHttpError::Uncertain,
             })?;
-        remaining(deadline)?;
         Ok(bytes)
     }
 }
 
-pub(super) fn remaining(deadline: u64) -> Result<Duration, StatusHttpError> {
+pub(super) fn remaining(deadline: u64) -> Result<Duration, BackupHttpError> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|_| StatusHttpError::Deadline)?;
-    let now = u64::try_from(now.as_nanos()).map_err(|_| StatusHttpError::Deadline)?;
+        .map_err(|_| BackupHttpError::Deadline)?;
+    let now = u64::try_from(now.as_nanos()).map_err(|_| BackupHttpError::Deadline)?;
     deadline
         .checked_sub(now)
         .filter(|value| *value > 0)
         .map(Duration::from_nanos)
-        .ok_or(StatusHttpError::Deadline)
+        .ok_or(BackupHttpError::Deadline)
 }
 
-fn origin(endpoint: &str) -> Result<Url, StatusHttpError> {
+fn origin(endpoint: &str) -> Result<Url, BackupHttpError> {
     if endpoint.len() > 2048
         || endpoint
             .chars()
             .any(|c| c.is_whitespace() || c.is_control())
     {
-        return Err(StatusHttpError::Configuration);
+        return Err(BackupHttpError::Configuration);
     }
     let written = endpoint
         .strip_prefix("https://")
         .or_else(|| endpoint.strip_prefix("http://"))
-        .ok_or(StatusHttpError::Configuration)?;
+        .ok_or(BackupHttpError::Configuration)?;
     let authority = written.strip_suffix('/').unwrap_or(written);
     if authority.contains(['/', '\\', '@', '?', '#']) {
-        return Err(StatusHttpError::Configuration);
+        return Err(BackupHttpError::Configuration);
     }
-    let url = Url::parse(endpoint).map_err(|_| StatusHttpError::Configuration)?;
+    let url = Url::parse(endpoint).map_err(|_| BackupHttpError::Configuration)?;
     if url.host_str().is_none()
         || !url.username().is_empty()
         || url.password().is_some()
@@ -362,25 +450,26 @@ fn origin(endpoint: &str) -> Result<Url, StatusHttpError> {
         || url.query().is_some()
         || url.fragment().is_some()
     {
-        return Err(StatusHttpError::Configuration);
+        return Err(BackupHttpError::Configuration);
     }
     if url.scheme() == "http" {
         let host = if let Some(ipv6) = authority.strip_prefix('[') {
             ipv6.split_once(']')
                 .map(|(host, _)| host)
-                .ok_or(StatusHttpError::Configuration)?
+                .ok_or(BackupHttpError::Configuration)?
         } else {
             authority
                 .split(':')
                 .next()
-                .ok_or(StatusHttpError::Configuration)?
+                .ok_or(BackupHttpError::Configuration)?
         };
         if !host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback()) {
-            return Err(StatusHttpError::Configuration);
+            return Err(BackupHttpError::Configuration);
         }
     }
     Ok(url)
 }
 
 mod lookup;
-pub use lookup::{CaptureLookupEvidence, CaptureLookupHttpError, CaptureLookupHttpPolicy};
+#[cfg(test)]
+pub use lookup::{CaptureLookupHttpError, CaptureLookupHttpPolicy};

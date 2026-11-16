@@ -81,17 +81,22 @@ Check for active commands using this workspace's target before compilation or
 source/lock edits. Test fixtures remain under `target/local-store-tests/`, including
 failed cases. The FIFO replacement regression uses the native Unix `mkfifo` utility (Linux/macOS).
 Use `store::tests::payload` for native payload verification and held-source reads;
-its `source_tests` selection covers block boundaries, retained custody and local
-source-to-readback composition. These synthetic bundles do not qualify capture evidence.
-Select capture intent tests with `cargo test --locked --offline -p ic-backup
-store::tests::capture`; select framed-ledger tests with the same command and
-`store::capture::ledger::tests` as its filter. Its acknowledged child-process death case verifies original
-intent and target-claim retention, not attempt spending or filesystem power loss.
+its `source_tests` selection covers block boundaries, retained custody and exact
+original-source schedule reads. These synthetic bundles do not qualify capture evidence.
+Select capture intent with `store::capture::intent`, common frame/reservation
+checks with `store::operation::tests` and `store::operation::framing::tests`, and
+custody/runtime with `store::operation::custody` / `store::operation::runtime`.
+The acknowledged runtime child-process death case verifies original intent,
+target claim and spent signing reservation with no repeat effect. It does not
+qualify filesystem power loss.
 Use `store::capture::transfer` for planning and bounded raw reply tests;
 `store::capture::transfer::metadata` selects the metadata decoder alone.
 Use `store::capture::transfer::readback` for uploaded-state comparison, including
-exact float bits, lifecycle state, destination provenance, complete chunk sets and
-ordered byte coverage. Its `data` submodule selects payload comparison cases alone.
+exact float bits, lifecycle state, destination provenance and complete chunk sets.
+Use `store::restore::procedure` for actual fixed restore coverage, routing and
+byte comparison; the obsolete separate test-only readback cursor was removed.
+`store::restore::tests::persistence_tests` selects cold restore reopening by ID /
+approval, exact selected bytes and original target/source/operation lock refusal.
 Use `store::capture::snapshot` for bounded list/take replies, frozen wire fixtures
 and non-destructive take preflight. These are pure decoding/policy tests.
 Use `store::capture::status` for decoded status preconditions and exact management
@@ -109,14 +114,14 @@ covers both. `make check` remains the core check; IC qualification is explicit.
 Future dependency adoption uses the root exact tooling pin, member inheritance,
 lockfile and `make toko-tooling-update`; never edit managed payloads manually.
 
-Use `store::capture::advance` for first-status persistence and recovery tests.
-Their injected provider checks ordering, not IC effects. The acknowledged child
-fixtures retain evidence at reservation, invocation, prepared-request and settlement
-boundaries; they do not qualify physical power loss or a concrete provider.
+Use `store::operation::runtime` for shared capture/restore one-shot reservation,
+submission and recovery tests. Synthetic certificate/native HTTP fixtures check
+ordering and authentication; actual IC effects belong to the private qualification
+consumer. These fixtures do not qualify physical power loss or Canic adapters.
 
 Use `store::capture::advance::tests::certificate_tests` for signed synthetic
-certificate and durable replay tests. The full `store::capture::advance` filter
-also covers the existing reservation/recovery cases. Evidence for the minimum
+certificate and durable replay tests. The common `store::operation` filter
+owns reservation/recovery; `capture::advance` retains protocol primitives. Evidence for the minimum
 Platform 0.33.4 certificate feature and six added crypto packages is retained under
 `target/evidence/status-certificates/`. These are offline cryptographic checks,
 not simulator or live-IC qualification. Select the nested `rejection_tests` module
@@ -153,14 +158,26 @@ packages; it removes the obsolete 0.12 Reqwest and unused old dependencies.
 
 ## Direct-provider and IC qualification
 
-`store::capture::advance::tests::http_direct_tests` selects concrete-provider
-native tests; the full advance selection also covers retained historical checks.
-The independent private package under `qualification/ic-backup-qualification`
-uses Testkit's native client boundary for real stopped-canister status, snapshot list/take and
-cold replay after gateway shutdown. A second case retains a real take reply,
-returns uncertainty before journal settlement, and settles after server shutdown
-and guard revocation. It uses fixture signing/maintenance authority;
-Canic process/fence qualification remains with its integration owner.
+The public capture uses one fixed operation loop. Select its native custody,
+replay, intent, protocol and directly affected restore consumers with
+`cargo test --locked --offline -p ic-backup --lib -- store:: --test-threads=4`.
+The common lifecycle failure matrix lives under `operation/`;
+exact request/certificate/HTTP and bounded codec checks remain with their owners.
+
+The public-API integration test under `qualification/ic-backup-qualification`
+drives actual PocketIC multi-extent capture/publication, authenticated succession,
+older-source full restore, capture after restore and offline history/replay.
+Separate cases lose original take/data/allocation/upload/load replies and recover
+via an accounted observation or surviving certificate.
+Its Backup/Platform/Testkit dependencies are test-only. The separate
+`qualification/consumer` executable uses Backup as a normal dependency and is
+built alone with `cargo build --locked --offline --manifest-path
+qualification/Cargo.toml -p ic-backup-consumer`. The isolated fixture saves its
+normal graph (excluding Testkit/PocketIC), runs separate capture/restore step and
+continuation processes, then inspects completed records in new processes after
+server shutdown using only store/ID/approval. No release or registry-consumer
+qualification is implied. Fixture keys and application authority do not qualify
+Canic adapters or power loss.
 
 ```bash
 make install-testkit-server
@@ -374,7 +391,8 @@ a successor after shutdown and replays the old completed receipt with no additio
 signatures. It does not perform another capture or qualify power loss.
 
 
-Capture workflow cases are flat modules under `store/capture/advance/tests/`;
+Capture lifecycle cases live under `store/operation/`;
+protocol primitives retain their tests under `store/capture/advance/tests/`;
 restore cases live under `store/restore/tests/`. Select the restore suite with
 `cargo test -p ic-backup --lib store::restore::tests --locked --offline`.
 Shared native helpers belong in named fixture modules, with explicit imports.
@@ -398,3 +416,48 @@ its root and private qualification locks and pinned compiler; do not use current
 replacement readers on old stores. Inspect or restore the reference in the normal
 checkout only after preserving current work. This does not authorize a second
 checkout, evidence cleanup, automatic migration or external effects.
+
+### Host-store/1 reader before complete restore
+
+The later exact uncommitted capture/status-only-restore reader is preserved under
+`.git/recovery/host-store-1-before-restore-20261116/`.
+`manifest.json` records all 185 source file hashes, both original locks and six
+rebuilt library/test artifacts, selected from Cargo's artifact records.
+The source archive SHA-256 is
+`6658a8963fe3d56cb5fe13ec210c9170f8d6b7b50f0de33583e627287a371b06`.
+The directory also retains toolchain output, build records and preservation inputs.
+No index, ref, commit, tag or delivery was changed.
+
+This reader understands the newer host-store/1 capture intents and its original
+local-restore-plan/1 status journal. The earlier b7c2c6a reader does not understand
+those newer sources. Keep retained operations under their matching reader and
+original authority; no migration/reset is selected. Extract only into an explicitly
+authorized location, never over retained records. This is reproducible source/build
+preservation, not a new recovery CLI or generalized bundle import.
+
+The rebuilt preserved `ic-capture-6996afc6891e5900` independently passed all three
+preceding IC journeys; evidence is `target/evidence/restore-replacement/preserved-ic.log`.
+Current replacement evidence is in `target/evidence/restore-replacement/`, with
+original actual-IC fixtures under `qualification/target/fixtures/`.
+
+Final Backup-owned cold recovery acceptance is retained under
+`target/evidence/backup-completion/`: pending and completed IC restores reopen from
+ID/approval after their in-memory plan is dropped, without a signer/connection.
+The current public example on `BackupStore::open_restore` compiles independently.
+Canic integration owners are linked from the sibling review and current handoff.
+
+The subsequent legacy-review corrections are qualified by
+`target/evidence/review-fixes-*.log`: 232 native tests, ten actual-IC journeys,
+five public examples, strict Clippy for both workspaces and warning-denying Rustdoc.
+The shared recorder changes justify the selected `store::` suite and all ten
+`--test capture` journeys. New cases are
+`full_mib_chunk_captures_and_restores_through_complete_envelopes_and_proofs`,
+`load_certificate_survives_local_write_failure_and_settles_offline`, and
+`isolated_normal_consumer_continues_capture_restore_and_replays_in_new_processes`.
+Native runtime/HTTP/certificate cases cover redacted received-proof errors,
+closing deadlines, offline submitted-lookup import and unchanged old allowances.
+The independent executable's graph/build and each child output are retained with
+its IC fixture. It shares the existing qualification lock, which adds only that
+local package; supplier versions and the root lock are unchanged. Final comment,
+error-message and import cleanup is checked by Clippy/Rustdoc without repeating
+unchanged runtime journeys. No release/support matrix or legacy test rerun is claimed.

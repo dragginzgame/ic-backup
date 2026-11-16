@@ -1,11 +1,10 @@
 //! Native held-source regressions; synthetic bytes do not qualify IC effects.
 use super::*;
 use ic_platform::{
-    candid_codec::{self, Reserved},
+    candid_codec::Reserved,
     management_canister_types::{
         CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotDataArgs,
-        ReadCanisterSnapshotDataResult, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
-        SnapshotSource,
+        ReadCanisterSnapshotMetadataResult, SnapshotDataKind, SnapshotSource,
     },
 };
 
@@ -29,12 +28,16 @@ impl Fixture {
 }
 
 #[test]
-fn source_reads_feed_complete_ordered_readback_without_reopening_by_absolute_path() {
+fn source_reads_follow_exact_original_schedule_without_reopening_by_absolute_path() {
     let fixture = Fixture::new("source-readback");
     let before = fs::read(fixture.folder.join("manifest.json")).unwrap();
     let mut source = fixture.source();
     assert_eq!(*source.summary(), fixture.verify().unwrap());
-    let mut request = super::super::capture::request(1);
+    let mut request =
+        crate::store::CapturePolicy::decode(include_bytes!("../fixtures/capture-plan.json"))
+            .unwrap()
+            .request()
+            .clone();
     request.target = source.summary().target;
     request.release = source.summary().release;
     request.module_sha256 = source.summary().module_sha256;
@@ -42,7 +45,7 @@ fn source_reads_feed_complete_ordered_readback_without_reopening_by_absolute_pat
     request.limits.payload_bytes = 1 << 30;
     request.limits.network_requests = 8192;
     request.limits.signing_requests = 8192;
-    let plan = CapturePlan::new(request).unwrap();
+    let plan = CapturePolicy::new(request).unwrap();
     let metadata = ReadCanisterSnapshotMetadataResult {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
         taken_at_timestamp: 100,
@@ -62,25 +65,11 @@ fn source_reads_feed_complete_ordered_readback_without_reopening_by_absolute_pat
             .collect(),
     };
     let transfer = plan.plan_transfer(&[1, 2], &metadata).unwrap();
-    let mut destination = metadata.clone();
-    destination.source = Some(SnapshotSource::MetadataUpload(Reserved));
-    let mut readback = transfer
-        .begin_readback(&[3], &candid_codec::encode_one(&destination, 4096).unwrap())
-        .unwrap();
-    for (ordinal, request) in transfer.requests().enumerate() {
-        let bytes = source.read_data(&request).unwrap();
-        let reply = candid_codec::encode_one(
-            &ReadCanisterSnapshotDataResult {
-                chunk: bytes.clone(),
-            },
-            2 * 1024 * 1024,
-        )
-        .unwrap();
-        readback
-            .compare_data(ordinal as u32, &bytes, &reply)
-            .unwrap();
+    let mut total = 0;
+    for request in transfer.requests() {
+        total += source.read_data(&request).unwrap().len() as u64;
     }
-    assert!(readback.finish().is_ok());
+    assert_eq!(total, source.summary().payload_bytes);
     assert_eq!(
         fs::read(fixture.folder.join("manifest.json")).unwrap(),
         before

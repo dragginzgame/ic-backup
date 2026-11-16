@@ -1,5 +1,5 @@
 //! Bounded metadata field mappings over Platform's schema and owned decoder.
-use super::{CapturePlan, MAX_CHUNKS, MAX_GLOBALS, TransferError};
+use super::{CapturePolicy, MAX_CHUNKS, MAX_GLOBALS, TransferError};
 use ic_platform::{
     candid_codec::{
         self, Encode, Reserved, Type, Writer,
@@ -13,7 +13,7 @@ use thiserror::Error;
 
 const MAX_REPLY_BYTES: usize = 1024 * 1024;
 
-impl CapturePlan {
+impl CapturePolicy {
     /// Decode bounded raw metadata and admit its transfer under this original plan.
     ///
     /// Preserves wire chunk order and exact global float bits. Collection caps
@@ -26,18 +26,6 @@ impl CapturePlan {
     /// the exact target, snapshot and request. Decoding supplies no authentication,
     /// durable schedule binding, spending, progress or dispatch authority.
     ///
-    /// ```
-    /// use ic_backup::store::{CapturePlan, TransferMetadataError};
-    ///
-    /// fn inspect_reply(plan: &CapturePlan, snapshot: &[u8], raw: &[u8])
-    ///     -> Result<u32, TransferMetadataError>
-    /// {
-    ///     let metadata = plan.decode_metadata(snapshot, raw)?;
-    ///     let transfer = plan.plan_transfer(snapshot, &metadata)?;
-    ///     // No requests have been dispatched or attempts spent.
-    ///     Ok(transfer.data_calls())
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses oversized/malformed replies, unsupported metadata and transfers

@@ -822,7 +822,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.101.13"
+version = "0.102.0"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",

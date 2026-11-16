@@ -40,7 +40,7 @@ fn rejection_proof(id: &[u8; 32], code: &[u8], message: &[u8], error: Option<&[u
     )
 }
 fn build(
-    p: &CapturePlan,
+    p: &CapturePolicy,
     r: &PreparedStatus,
     proof: &[u8],
 ) -> Result<StatusEvidence, StatusCertificateError> {
@@ -231,54 +231,4 @@ fn builder_checks_complete_result_size_and_rejects_http_errors_without_certifica
         build(&p, &r, unsigned),
         Err(StatusCertificateError::Certificate(_))
     ));
-}
-
-#[test]
-fn transient_certified_rejection_settles_and_replays_without_refunds_or_effects() {
-    let (p, r, _) = fixture();
-    let proof = rejection_proof(&r.request_id, &[2], b"transient", None);
-    let evidence = build(&p, &r, &proof).unwrap();
-    let root = root("certified-rejection-replay");
-    let store = BackupStore::initialize(&root).unwrap();
-    let mut operation = store
-        .create_capture(CapturePlan::new(p.request().clone()).unwrap(), p.digest())
-        .unwrap();
-    let mut provider = CertificateProvider {
-        request: Some(r),
-        evidence: Some(evidence),
-        root: der(1),
-        authentications: Cell::new(0),
-    };
-    assert_eq!(
-        ready(operation.advance_status(&admission(), &mut provider)).unwrap(),
-        StatusProgress::Rejected
-    );
-    let before = operation.inspect_status().unwrap();
-    assert_eq!(before.phase, CaptureStatusPhase::Settled);
-    assert_eq!(before.signing_requests_reserved, 1);
-    assert_eq!(before.network_requests_reserved, 2);
-    let directory = root.join("operations").join(&p.request().operation_id);
-    let files = [
-        "plan.json",
-        "ledger.bin",
-        "status-request.bin",
-        "status-result.bin",
-    ];
-    let bytes: Vec<_> = files
-        .iter()
-        .map(|f| fs::read(directory.join(f)).unwrap())
-        .collect();
-    drop(operation);
-    let mut operation = store
-        .open_capture(&p.request().operation_id, p.digest())
-        .unwrap();
-    assert_eq!(
-        ready(operation.advance_status(&admission(), &mut provider)).unwrap(),
-        StatusProgress::Rejected
-    );
-    assert_eq!(provider.authentications.get(), 3);
-    assert_eq!(operation.inspect_status().unwrap(), before);
-    for (file, original) in files.iter().zip(bytes) {
-        assert_eq!(fs::read(directory.join(file)).unwrap(), original);
-    }
 }

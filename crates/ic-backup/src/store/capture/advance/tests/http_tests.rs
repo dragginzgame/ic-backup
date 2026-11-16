@@ -1,15 +1,10 @@
-//! Real loopback HTTP with synthetic certificate bodies; no simulated IC management effects.
 use super::*;
 use crate::store::{
-    BackupStore,
     capture::{
         advance::tests::{
             fixtures::certificates::{der, signed},
             fixtures::{
-                http::{
-                    HttpProvider, Response, Server, http, input, input_for, now, runtime,
-                    set_expiry,
-                },
+                http::{Response, Server, http, input, input_for, now, runtime, set_expiry},
                 signatures::{Scheme, change},
             },
         },
@@ -18,7 +13,45 @@ use crate::store::{
     tests::root,
 };
 use ic_host_artifacts::artifact::Sha256Digest;
+use std::io::Write;
 use std::{fs, io::Read, net::TcpListener, thread, time::Duration};
+
+#[test]
+fn certificate_survives_closing_deadline_without_relaxing_original_admission() {
+    let (p, r, mut a, body) = input();
+    let transport = BackupHttpTransport::new(
+        "http://127.0.0.1:1",
+        p.request().target.network,
+        der(1),
+        Duration::from_secs(1),
+    )
+    .unwrap();
+    let ic_platform::ic_protocol::TransportCallResponse::Replied { certificate } =
+        ic_platform::ic_protocol::decode_call_response(&body, a.result_bytes as usize).unwrap()
+    else {
+        panic!("certificate")
+    };
+    a.submit_deadline_ns = 1;
+    let error = transport
+        .admit_received_certificate(
+            &super::super::request::DirectRequirements {
+                target: p.request().target,
+                sender: p.request().sender,
+                trust_root: p.request().trust_root,
+            },
+            &a,
+            &r,
+            certificate.clone(),
+        )
+        .err()
+        .unwrap();
+    assert!(
+        matches!(&error, BackupHttpError::AfterResponse { source, .. } if matches!(**source, BackupHttpError::Deadline))
+    );
+    let received = error.received_certificate().unwrap();
+    assert_eq!(received.request_id(), r.request_id);
+    assert_eq!(received.certificate(), certificate);
+}
 
 #[test]
 fn origin_admission_preserves_written_path_and_literal_loopback_rules() {
@@ -30,7 +63,7 @@ fn origin_admission_preserves_written_path_and_literal_loopback_rules() {
         "http://[::1]:8080/",
     ] {
         assert!(
-            StatusHttpTransport::new(
+            BackupHttpTransport::new(
                 endpoint,
                 p.request().target.network,
                 der(1),
@@ -59,36 +92,36 @@ fn origin_admission_preserves_written_path_and_literal_loopback_rules() {
     ] {
         assert!(
             matches!(
-                StatusHttpTransport::new(
+                BackupHttpTransport::new(
                     endpoint,
                     p.request().target.network,
                     der(1),
                     Duration::from_secs(1)
                 ),
-                Err(StatusHttpError::Configuration)
+                Err(BackupHttpError::Configuration)
             ),
             "{endpoint}"
         );
     }
     for timeout in [Duration::ZERO, Duration::from_secs(301)] {
         assert!(matches!(
-            StatusHttpTransport::new(
+            BackupHttpTransport::new(
                 "https://example.com",
                 p.request().target.network,
                 der(1),
                 timeout
             ),
-            Err(StatusHttpError::Configuration)
+            Err(BackupHttpError::Configuration)
         ));
     }
     assert!(matches!(
-        StatusHttpTransport::new(
+        BackupHttpTransport::new(
             "https://example.com",
             p.request().target.network,
             vec![],
             Duration::from_secs(1)
         ),
-        Err(StatusHttpError::Configuration)
+        Err(BackupHttpError::Configuration)
     ));
 }
 
@@ -132,7 +165,7 @@ fn redirects_throttling_acceptance_and_server_failures_never_retry() {
         )));
         let transport = server.client(&p, Duration::from_secs(1));
         assert!(
-            matches!(rt.block_on(transport.submit_once(&p,&a,&r)),Err(StatusHttpError::HttpStatus(code)) if code==status)
+            matches!(rt.block_on(transport.submit_once(&p,&a,&r)),Err(BackupHttpError::HttpStatus(code)) if code==status)
         );
         assert_eq!(server.finish().len(), 1);
     }
@@ -155,9 +188,9 @@ fn malformed_unproven_and_compressed_responses_remain_uncertain() {
                 .submit_once(&p, &a, &r),
         );
         if uncertified {
-            assert!(matches!(result, Err(StatusHttpError::NoCertificate)));
+            assert!(matches!(result, Err(BackupHttpError::NoCertificate)));
         } else {
-            assert!(matches!(result, Err(StatusHttpError::Response)));
+            assert!(matches!(result, Err(BackupHttpError::Response)));
         }
         assert_eq!(server.finish().len(), 1);
     }
@@ -169,7 +202,7 @@ fn malformed_unproven_and_compressed_responses_remain_uncertain() {
                 .client(&p, Duration::from_secs(1))
                 .submit_once(&p, &a, &r)
         ),
-        Err(StatusHttpError::Response)
+        Err(BackupHttpError::Response)
     ));
     assert_eq!(server.finish().len(), 1);
     let (p, r, a, body) = input();
@@ -184,7 +217,7 @@ fn malformed_unproven_and_compressed_responses_remain_uncertain() {
                 .client(&p, Duration::from_secs(1))
                 .submit_once(&p, &a, &r)
         ),
-        Err(StatusHttpError::Response)
+        Err(BackupHttpError::Response)
     ));
     assert_eq!(server.finish().len(), 1);
 }
@@ -207,7 +240,7 @@ fn declared_and_streamed_body_limits_refuse_before_decoding() {
                     .client(&p, Duration::from_secs(1))
                     .submit_once(&p, &a, &r)
             ),
-            Err(StatusHttpError::ResponseLimit)
+            Err(BackupHttpError::ResponseLimit)
         ));
         assert_eq!(server.finish().len(), 1);
     }
@@ -218,7 +251,7 @@ fn wrong_binding_changed_envelope_and_expired_admission_send_nothing() {
     let rt = runtime();
     let (p, mut r, mut a, _) = input();
     let server = Server::new(Response::Disconnect);
-    let wrong = StatusHttpTransport::new(
+    let wrong = BackupHttpTransport::new(
         &server.endpoint,
         Sha256Digest::compute(b"wrong network"),
         der(1),
@@ -227,9 +260,9 @@ fn wrong_binding_changed_envelope_and_expired_admission_send_nothing() {
     .unwrap();
     assert!(matches!(
         rt.block_on(wrong.submit_once(&p, &a, &r)),
-        Err(StatusHttpError::Binding)
+        Err(BackupHttpError::Binding)
     ));
-    let wrong = StatusHttpTransport::new(
+    let wrong = BackupHttpTransport::new(
         &server.endpoint,
         p.request().target.network,
         der(2),
@@ -238,20 +271,20 @@ fn wrong_binding_changed_envelope_and_expired_admission_send_nothing() {
     .unwrap();
     assert!(matches!(
         rt.block_on(wrong.submit_once(&p, &a, &r)),
-        Err(StatusHttpError::Binding)
+        Err(BackupHttpError::Binding)
     ));
     let transport = server.client(&p, Duration::from_secs(1));
     r.request_id[0] ^= 1;
     assert!(matches!(
         rt.block_on(transport.submit_once(&p, &a, &r)),
-        Err(StatusHttpError::Admission(_))
+        Err(BackupHttpError::Admission(_))
     ));
     r.request_id[0] ^= 1;
     a.prepare_deadline_ns = 1;
     a.submit_deadline_ns = 2;
     assert!(matches!(
         rt.block_on(transport.submit_once(&p, &a, &r)),
-        Err(StatusHttpError::Deadline)
+        Err(BackupHttpError::Deadline)
     ));
     assert_eq!(server.finish().len(), 0);
 }
@@ -268,7 +301,7 @@ fn disconnect_body_timeout_and_cancellation_never_retry() {
                     .client(&p, Duration::from_millis(100))
                     .submit_once(&p, &a, &r)
             ),
-            Err(StatusHttpError::Uncertain)
+            Err(BackupHttpError::Uncertain)
         ));
         assert_eq!(server.finish().len(), 1);
     }
@@ -286,64 +319,6 @@ fn disconnect_body_timeout_and_cancellation_never_retry() {
     });
     assert_eq!(server.count(), 1);
     assert_eq!(server.finish().len(), 1);
-}
-
-#[test]
-fn workflow_replay_preserves_settlement_or_pending_reservation_without_http() {
-    let rt = runtime();
-    for success in [false, true] {
-        let (p, r, a, body) = input();
-        let server = Server::new(Response::Bytes(http(
-            if success { 200 } else { 503 },
-            "",
-            &body,
-        )));
-        let root = root("status-http-operation");
-        let store = BackupStore::initialize(&root).unwrap();
-        let mut operation = store
-            .create_capture(CapturePlan::new(p.request().clone()).unwrap(), p.digest())
-            .unwrap();
-        let mut provider = HttpProvider {
-            transport: server.client(&p, Duration::from_secs(2)),
-            prepared: Some(r),
-            replay: false,
-        };
-        let result = rt.block_on(operation.advance_status(&a, &mut provider));
-        if success {
-            assert_eq!(result.unwrap(), StatusProgress::Verified);
-        } else {
-            assert!(matches!(
-                result,
-                Err(StatusAdvanceError::Provider(StatusHttpError::HttpStatus(
-                    503
-                )))
-            ));
-        }
-        let before = operation.inspect_status().unwrap();
-        assert_eq!(before.network_requests_reserved, 2);
-        let ledger = root
-            .join("operations")
-            .join(&p.request().operation_id)
-            .join("ledger.bin");
-        let original = fs::read(&ledger).unwrap();
-        drop(operation);
-        let mut operation = store
-            .open_capture(&p.request().operation_id, p.digest())
-            .unwrap();
-        provider.replay = true;
-        assert_eq!(
-            rt.block_on(operation.advance_status(&a, &mut provider))
-                .unwrap(),
-            if success {
-                StatusProgress::Verified
-            } else {
-                StatusProgress::SubmissionPending
-            }
-        );
-        assert_eq!(operation.inspect_status().unwrap(), before);
-        assert_eq!(fs::read(&ledger).unwrap(), original);
-        assert_eq!(server.finish().len(), 1);
-    }
 }
 
 #[test]
@@ -366,7 +341,7 @@ fn original_submit_deadline_and_ingress_expiry_bound_body_waits() {
         });
         assert!(matches!(
             result,
-            Err(StatusHttpError::Uncertain | StatusHttpError::Deadline)
+            Err(BackupHttpError::Uncertain | BackupHttpError::Deadline)
         ));
         assert_eq!(server.finish().len(), 1);
     }
@@ -396,7 +371,8 @@ fn chunked_certificate_authenticates_but_tampering_and_truncation_do_not() {
                 .client(&p, Duration::from_secs(1))
                 .submit_once(&p, &a, &r)
         ),
-        Err(StatusHttpError::Authentication(_))
+        Err(BackupHttpError::AfterResponse { source, received })
+            if matches!(*source, BackupHttpError::Authentication(_)) && !received.certificate().is_empty()
     ));
     assert_eq!(server.finish().len(), 1);
     let response=b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 100\r\nConnection: close\r\n\r\nx".to_vec();
@@ -407,7 +383,7 @@ fn chunked_certificate_authenticates_but_tampering_and_truncation_do_not() {
                 .client(&p, Duration::from_secs(1))
                 .submit_once(&p, &a, &r)
         ),
-        Err(StatusHttpError::Uncertain)
+        Err(BackupHttpError::Uncertain)
     ));
     assert_eq!(server.finish().len(), 1);
 }
@@ -476,9 +452,9 @@ fn signature_authentication_precedes_http_for_both_direct_key_profiles() {
             };
             assert!(matches!(
                 (case, error),
-                (0, StatusHttpError::Request(StatusRequestError::Signature))
-                    | (1, StatusHttpError::Request(StatusRequestError::Sender))
-                    | (2, StatusHttpError::Request(StatusRequestError::Identity))
+                (0, BackupHttpError::Request(StatusRequestError::Signature))
+                    | (1, BackupHttpError::Request(StatusRequestError::Sender))
+                    | (2, BackupHttpError::Request(StatusRequestError::Identity))
             ));
             assert!(server.finish().is_empty());
         }
@@ -498,10 +474,10 @@ fn shared_reader_preserves_exact_body_limit_and_empty_body_refusals() {
                 .submit_once(&p, &a, &r),
         );
         if size > a.result_bytes as usize {
-            assert!(matches!(result, Err(StatusHttpError::ResponseLimit)));
+            assert!(matches!(result, Err(BackupHttpError::ResponseLimit)));
         } else {
             // Exact/empty body admission reaches the protocol decoder, which refuses it.
-            assert!(matches!(result, Err(StatusHttpError::Response)));
+            assert!(matches!(result, Err(BackupHttpError::Response)));
         }
         assert_eq!(server.finish().len(), 1);
     }
@@ -545,7 +521,7 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
             .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
             .unwrap();
     });
-    let transport = StatusHttpTransport::new(
+    let transport = BackupHttpTransport::new(
         &endpoint,
         p.request().target.network,
         der(1),
@@ -554,7 +530,7 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
     .unwrap();
     assert!(matches!(
         rt.block_on(transport.submit_once(&p, &a, &r)),
-        Err(StatusHttpError::Uncertain)
+        Err(BackupHttpError::Uncertain)
     ));
     peer.join().unwrap();
 }

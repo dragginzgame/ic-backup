@@ -1,9 +1,12 @@
 //! Pure original-request certificate observation. No lookup, reservation or settlement.
-use super::{
-    CapturePlan, LIMITS, LookupResult, PreparedStatus, Sha256Digest, StatusAdmissionRecord,
-    StatusCertificateError, TimePolicy, historical,
-};
-use crate::store::{CaptureCall, StatusRequestError};
+#[cfg(test)]
+use super::super::CaptureCall;
+#[cfg(test)]
+use super::CapturePolicy;
+use super::{LIMITS, LookupResult, Sha256Digest, StatusCertificateError, TimePolicy, historical};
+#[cfg(test)]
+use super::{PreparedStatus, StatusAdmissionRecord};
+use crate::store::StatusRequestError;
 use thiserror::Error;
 
 /// Separately admitted observation limits, not replacement authority for the original call.
@@ -66,25 +69,14 @@ pub enum CaptureObservationError {
 /// new windows here cannot widen the original `settle_capture_result` acceptance.
 /// Neither a clock nor network, signer, application guard or journal is accessed.
 ///
-/// ```no_run
-/// use ic_backup::store::{CapturePlan, StatusAdmissionRecord, PreparedCaptureCall,
-///     CaptureCall, CaptureObservationPolicy, observe_capture_certificate};
-/// fn inspect_original_reply(plan: &CapturePlan, admission: &StatusAdmissionRecord,
-///     original: &PreparedCaptureCall, certificate: &[u8], root: &[u8],
-///     retained_policy: CaptureObservationPolicy) {
-///     let result = observe_capture_certificate(plan, admission, original,
-///         CaptureCall::TakeSnapshot, certificate, root, retained_policy);
-///     // This is a local projection, not permission to settle or retry.
-///     # let _ = result;
-/// }
-/// ```
 ///
 /// # Errors
 /// Refuses wrong call/sender/signature, malformed original policy, invalid observation
 /// bounds/windows, wrong root/delegation/target, malformed or unauthenticated certificates,
 /// unknown status labels and unavailable or oversized terminal fields.
+#[cfg(test)]
 pub fn observe_capture_certificate(
-    plan: &CapturePlan,
+    plan: &CapturePolicy,
     admission: &StatusAdmissionRecord,
     prepared: &PreparedStatus,
     call: CaptureCall,
@@ -98,38 +90,56 @@ pub fn observe_capture_certificate(
         || policy.evidence_bytes > admission.result_bytes
         || certificate.len().checked_add(5).is_none_or(|n| n > maximum)
     {
-        return Err(StatusCertificateError::Admission(super::CaptureError::StatusAdmission).into());
+        return Err(
+            StatusCertificateError::Admission(super::OperationStoreError::StatusAdmission).into(),
+        );
     }
     super::super::request::authenticate_call_request(plan, admission, prepared, call)?;
     // Retain original policy validity, but never replace it with observation time.
     super::observation(&prepared.observation)?;
+    observe_authenticated_request(
+        &super::CertificateRequirements {
+            canister: plan.request().target.canister,
+            trust_root: plan.request().trust_root,
+        },
+        prepared.request_id,
+        certificate,
+        root_key_der,
+        policy,
+    )
+}
+
+// Signature and exact derived call admission remain with the original request owner.
+pub(in crate::store) fn observe_authenticated_request(
+    authority: &super::CertificateRequirements,
+    request_id: [u8; 32],
+    certificate: &[u8],
+    root_key_der: &[u8],
+    policy: CaptureObservationPolicy,
+) -> Result<CaptureObservation, CaptureObservationError> {
+    let maximum = policy.evidence_bytes as usize;
+    if maximum < 5 || certificate.len().checked_add(5).is_none_or(|n| n > maximum) {
+        return Err(StatusCertificateError::Outcome.into());
+    }
     super::validate_window(policy.time.certificate)?;
     super::validate_window(policy.time.delegation)?;
-    if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != plan.request().trust_root
-    {
+    if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != authority.trust_root {
         return Err(StatusCertificateError::TrustRoot.into());
     }
     let authenticated = historical::authenticate_certificate_at(
         certificate,
         root_key_der,
-        plan.request().target.canister,
+        authority.canister,
         policy.time,
         LIMITS,
     )
     .map_err(StatusCertificateError::Certificate)?;
     let tree = &authenticated.certificate.tree;
-    let path = [
-        b"request_status".as_slice(),
-        &prepared.request_id,
-        b"status",
-    ];
+    let path = [b"request_status".as_slice(), &request_id, b"status"];
     Ok(match tree.lookup_path(path) {
         LookupResult::Found(b"replied" | b"rejected") => {
-            let (rejected, response) = super::terminal_response(
-                tree,
-                &prepared.request_id,
-                maximum - certificate.len() - 5,
-            )?;
+            let (rejected, response) =
+                super::terminal_response(tree, &request_id, maximum - certificate.len() - 5)?;
             if rejected {
                 CaptureObservation::Rejected(response)
             } else {

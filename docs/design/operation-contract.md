@@ -1,6 +1,6 @@
 # Single-canister operation contract
 
-The [minimal replacement proposal](restart.md) now owns the proposed composition
+The [replacement direction](restart.md) owns the implemented composition
 and deletion boundary. This document retains semantic requirements and historical
 API sketches; those sketches do not mandate preserving the current phase APIs.
 
@@ -8,13 +8,12 @@ This design describes the selected capture/restore direction. The implemented
 [local inventory](../architecture/local-inventory.md),
 [capture contract](../architecture/capture-intent.md) and
 [transfer contract](../architecture/capture-transfer.md) own exact maintained
-behavior. Small direct-host captures reach authenticated local completion and
-target succession with actual-IC qualification. Read-only completion verification
-and authenticated held capture sources are implemented. Exact restore transfer
-scheduling and source-bound restore plan encoding/decoding are implemented local
-calculations; local restore creation/reopen and status preparation/submission are
-implemented. Upload/readback/load remain proposed. The immutable restore plan
-retains the source binding; no separate reference catalog is selected.
+behavior. Small direct-host capture and same-canister restore now reach authenticated
+local completion and target succession with actual-IC qualification. The shared
+connection/recorder owns finite one-shot signing, submission, original-reply import
+and observation. Restore source intent, full upload/readback/load and LoadedStopped
+are implemented under the [local-store contract](local-store.md#immutable-restore-approval-and-original-custody).
+Canic manager/fence execution remains proposed and unqualified.
 This refines the [library design](library-design.md) and its
 [Canic integration](sibling-integration.md). It owns the proposed operation,
 transport and transfer semantics below. The library design retains storage
@@ -33,27 +32,31 @@ The same host engine serves an independent Rust program and a Canic-owned host
 adapter. Consumers provide exact selection and application authority; Backup
 owns the ordered snapshot workflow, durable attempt accounting and local bundle.
 Public requests do not expose arbitrary management methods or writable journals.
-The following are semantic signatures, not compiling Rust declarations:
+The selected direct-controller Rust boundary is:
 
 | Operation | Required inputs | Result and allowed effects |
 | --- | --- | --- |
-| `plan_capture` | Network/trust binding, initiator, execution binding, target, release, profile limits. | Immutable plan and approval commitment; pure, no providers. |
-| `plan_restore` | Held verified source, target/release/execution binding, profile limits. | Independent plan committing to source manifest and complete upload/readback schedule; pure over admitted inputs. |
-| `create_capture` / `create_restore` | Private store, unused operation ID, plan, exact approval commitment. | Durable intent and target claim; restore retains its source binding in that plan. Local IO only. |
-| `open` / `inspect` | Existing operation location and bounded local replay. | Held operation or read-only diagnosis; no provider calls or implicit repair. |
-| `advance` | Held operation, transport, application admission provider, finite step allowance. | Progress, attention or stored terminal receipt. Only the next eligible original step may dispatch. |
-| `reconcile` | Held operation, exact pending attempt, transport, finite observation allowance. | Original result settlement or retained uncertainty; never resubmits the original request. |
-| `list_backups` / `latest_completed_backup` | Local store, optional exact target filter and finite scan limits. | Completion summaries without network or payload hashing; no fresh integrity or complete-fleet claim. |
-| `verify_bundle` | Private bundle and trusted original manifest commitment. | Held freshly verified source or typed refusal; no network and no trust-on-first-use import. |
+| `connection.plan` | Capture request and original timing/byte/application options | Immutable capture approval bound to this actual connection; no effects |
+| `connection.plan_restore` | Held authenticated source, restore request and independent options | Source-bound original restore approval; no effects |
+| `create_capture` / `create_restore` | Exact plan/approval; restore also selects its completed capture predecessor | Retained intent and target ownership before effects |
+| `open_capture` / `open_restore` | Original operation ID and approval digest | Read-only admission of original intent, source and history; no new connection/profile |
+| `inspect` | Held original operation | Typed progress, pending request, spent ceilings and any exact completed receipt |
+| `advance` | Held original operation and its admitted connection | Local work or at most one new original management submission |
+| `reconcile_reply` | Surviving original terminal certificate | Local authentication/retention and policy; no new signing/network spending |
+| `reconcile_observation` | Original pending call and admitted connection | One explicit separately accounted original-request observation |
+| `list_backups` / `latest_completed_backup` | Optional target filter and scan limits | Completion declarations without fresh payload/provenance verification |
+| `verify_completion` / `open_capture_source` | Exact manifest/receipt and source byte limit | Authenticate original completion and complete payload locally |
+| `create_capture_after` | New approval and explicit completed capture/restore predecessor | Authenticate/synchronize original completion before replacing only target ownership |
 
-`advance` never implicitly polls. A submission that does not supply an authenticated
-outcome returns a pending attempt for explicit `reconcile`. One invocation may
-perform multiple settled steps within its caller allowance, but never dispatches
-concurrently. The allowance controls scheduling, not original spending authority.
-An async runtime belongs to the caller; neither the engine nor a dropped future
-spawns detached continuation. Inspecting terminal work is local and effect-free.
-Different targets can have independent operations in flight; Canic owns their concurrency limit. An occupied
-target claim excludes another operation for the same network/canister.
+`advance` never implicitly polls. An uncertain submission retains its original
+reservation and returns a typed refusal; subsequent inspection/advance exposes the
+pending original. Canic must explicitly reconcile that original request. It never
+recreates or re-signs it. A caller-owned async runtime supplies IO/timers; dropping
+a future does not spawn detached continuation. Completed replay is local and
+independent of current live permission/clock. Different targets can run independently;
+Canic owns their concurrency limit. An occupied target still excludes new work.
+The manager executor route below remains a future concrete protocol/consumer;
+these direct-controller methods do not advertise it as implemented.
 
 Caller-visible results distinguish invalid input, occupied custody, unsupported
 profile, exhausted budget, provider refusal, authenticated remote rejection,
@@ -138,13 +141,13 @@ accounted authenticated update response. Lookup never causes management dispatch
 
 ## First durable call: initial status
 
-The initial status slice is implemented through `advance_status`:
+Initial status is the first derived call of the public `CaptureOperation::advance` loop:
 original admission, preparation, one submission and retained authenticated result.
 It must include cold replay and interruption cases. A public append or reservation
 API alone is not that unit. Keep one operation ledger, one sequential workflow and
 the existing Platform status policy; do not expose its internal events or add
 per-step journals. The following states now have a private writer/replayer. The implemented contract
-owns exact encodings and limits; concrete provider and IC qualification remain open.
+owns exact encodings and limits; the public direct connection and actual IC capture are now qualified with fixture authority.
 
 Before spending, admit the held original plan, target owner, locks, ledger and
 referenced evidence. The application provider must establish continuous maintenance
@@ -199,8 +202,8 @@ live-only permission to invoke a signer or submitter.
 | --- | --- |
 | Preparation reservation persisted, signer output missing | Retain uncertain preparation and consumed signing allowance; no automatic second signer invocation. |
 | Request/evidence file visible without its ledger reference | Preserve it and stop for original recovery; no implicit orphan adoption or new allowance. |
-| `Prepared` replayed with no submission reservation | Submission may be reserved only for the original retained bytes, within their original expiry and fresh custody. Expiry returns attention, not automatic re-signing. |
-| Submission reserved, packet not sent or response lost | Both replay as pending. Only an independently reserved original-request observation can resolve them. |
+| `Prepared` replayed with no submission reservation | Submission may be reserved only for the original retained bytes, within their original expiry and fresh custody. Expiry refuses without automatic re-signing. |
+| Submission reserved, packet not sent or response lost | Both replay as pending. Only authenticated original-reply import or an explicitly reserved original-request observation can resolve them. |
 | Authenticated result retained, settlement append incomplete | Preserve all bytes; a partial ledger blocks continuation. Visibility alone is not permission to settle or dispatch. |
 | Settlement durable, return lost | Replay the original evidence and result locally. A failed status predicate or remote rejection stays a consumed refusal; it never authorizes the dependent snapshot call. |
 
@@ -259,13 +262,11 @@ state, not a completed failure that frees the target claim.
 
 ## Metadata comparison and representability
 
-The pure uploaded-metadata comparison is now implemented by
-[`CaptureTransfer::decode_uploaded_metadata`](../architecture/capture-transfer.md#uploaded-metadata-readback).
-It reuses bounded metadata decoding and compares source state without effects.
-[`CaptureTransfer::begin_readback`](../architecture/capture-transfer.md#ordered-payload-comparison)
-now checks complete ordered payload equality against caller-held source slices.
-Remote readback, held verified-bundle integration, durable progress, authenticated
-association and load admission remain proposed.
+The selected restore consumes the production bounded uploaded-metadata comparison
+and data decoder, with original certified destination association and exact held
+source-byte comparison. Its fixed cursor owns coverage; the obsolete standalone
+readback accumulator and duplicate test model are removed. The [restore contract](local-store.md#fixed-restore-through-the-shared-recorder)
+owns exact implemented limits and effect evidence.
 
 Use the selected published Platform snapshot DTOs and codec at the management
 boundary. The inspected [native DTO surface](https://github.com/dragginzgame/ic-platform/blob/c90ce9fce0948da0c05e6f5ac333c520fa46d801/crates/ic-platform/src/management_canister_types/native/mod.rs)
@@ -275,10 +276,10 @@ into JSON and assume that preserves NaNs, signed zero or all bit patterns.
 
 The [management protocol](https://docs.internetcomputer.org/references/ic-interface-spec/management-canister/)
 creates fresh metadata when a snapshot is uploaded. Omitted timer/hook fields do
-not update those states on load. Backup therefore proposes the following narrow
+not update those states on load. Backup therefore selects the following narrow
 round-trip profile; these are product restrictions, not new protocol requirements.
 
-| Data | Proposed admission/comparison rule |
+| Data | Selected admission/comparison rule |
 | --- | --- |
 | Module/heap/stable lengths | Exact source/upload/readback equality, checked arithmetic, then full byte equality. |
 | Globals | Preserve order, variant and integer value; floating values compare raw IEEE bits. Every source entry must be present. `v128` must fit 128 bits. |
@@ -301,7 +302,7 @@ and the selected supported metadata schema govern admission.
 
 ## Deterministic transfer and budgeting
 
-Select an extent ceiling `E` in the original plan, no greater than the proposed
+Select an extent ceiling `E` in the original plan, no greater than the implemented
 1 MiB product ceiling and the qualified provider envelope limits. It is immutable
 for that operation. Region order is module, heap, stable. For a region of length
 `L`, emit ascending `(offset, min(E, L - offset))` extents until exactly covered.
@@ -317,9 +318,8 @@ fabricate a partial-chunk protocol or silently change `E`.
 Metadata supplies region sizes and chunk hashes, not chunk lengths. Before data
 reads reserve `C * E` bytes for `C` stored chunks, plus exact region lengths. The
 conservative sum must fit the original payload ceiling. Record actual chunk
-lengths after bounded reads and verify their SHA-256 identities. The derived
-schedule and its commitment are durably recorded before data transfer, bound to the original plan and metadata evidence. This refines
-the plan's conditional schedule without replacing the plan or its approval.
+lengths after bounded reads and verify their SHA-256 identities. The schedule is reconstructed from original intent and authenticated metadata;
+no extra schedule/acceptance record is persisted.
 Unused capacity does not authorize extra calls. This can reject a snapshot whose
 actual small chunks would fit; relaxing that rule requires a separately designed admission
 profile. Restore has exact lengths from the verified source.
@@ -333,7 +333,7 @@ a successful upload response alone never authorizes load.
 
 A route profile supplies the finite per-step outer submissions, management calls,
 status/receipt lookups and authentication requests. Sum these over the schedule
-with separate purpose limits inside the proposed 8,192 total request ceiling.
+with separate purpose limits inside the implemented 8,192 total request ceiling.
 For direct execution, a management submission and its underlying host request
 are one request, not two. For a Canic executor they are two distinct network
 hops and both count. Signing invocations have a separate local budget. No routine
@@ -365,20 +365,22 @@ must include enough original evidence for Backup to settle its exact request.
 This ledger remains outside the target rollback set. Generation changes do not
 refresh old attempt authority. A new provider cannot reinterpret a pending old
 protocol receipt. Backup refuses the route until Canic supplies this protocol
-and Platform publishes a qualified Wasm snapshot DTO/codec surface. No local
+and its actual management/fence consumer is qualified. The locked Platform snapshot
+DTOs/codecs already compile on Wasm; supplier availability alone is not Canic qualification. No local
 management declarations or controller-topology changes bypass that dependency.
 
 ## Implementation acceptance
 
-The local-store and capture contracts distinguish implemented frame limits,
-completion publication and authenticated target succession from proposed restore
-source admission. Their byte-exact records and evidence own implementation claims;
+The local-store and capture contracts own implemented frame limits, completion
+publication, authenticated target succession, original-source admission and
+complete stopped restore. Their byte-exact records and evidence own implementation claims;
 semantic names in this design are not a compatibility or qualification guarantee.
 
-The first maintained consumer should exercise stopped capture through verified
-bundle publication, then the same public boundary through complete readback/load.
-Use published Platform and Host dependencies at implementation time. Keep Testkit
-private and add its workspace only with the real fixtures. Acceptance must cover:
+The maintained fixtures exercise stopped capture through verified bundle publication
+and complete readback/load using published Platform and Host dependencies. Testkit
+stays private; a separately built normal-dependency executable additionally checks
+fresh-process capture/restore continuation and offline completion. The acceptance
+requirements below also include unqualified Canic integration:
 
 - Loss of signing output and replies, cancellation at each durability boundary,
   process death after reservation, expired status and effect-free terminal replay.
@@ -399,33 +401,24 @@ claims. No actionable defect or duplicate policy owner was found in that deliver
 scope. The missing durable workflow is an explicit limitation, not an implemented
 capability inferred from the two local authentication helpers.
 
-The implemented [single-lookup workflow](../architecture/capture-intent.md#durable-single-lookup)
-retains one ledger owner. Existing status/list/take
-events use fixed transition ordinals (1–12); inserting observations must preserve
-those original bytes and distinguish mutation ordinals from observation attempts.
-Do not renumber existing records, append public arbitrary events or add a second
-journal. Observation allowance already belongs to the original plan; signing,
-network requests and retained proof must also fit its cumulative limits. A pending
-lookup cannot be retried merely because its response was lost. The new event encoding and replay admission have native interruption tests and
-a real pending-take read-state fixture. Explicit original-call settlement from retained terminal evidence now records
-its observation source and preserves historical authentication. An observation
-alone still authorizes no dependent effect.
+The current [single-lookup workflow](../architecture/capture-intent.md#durable-single-lookup)
+uses common observation facts under the distinct capture journal domain.
+Preserved old encodings keep their original reader; they are never renumbered or
+interpreted as the new facts. One operation journal owns signing/network/evidence
+and separate observation allowance. A lost lookup never permits another lookup;
+terminal retained observations resolve the original call during authenticated
+projection, without a copied result or settlement event. An original surviving
+reply can resolve interrupted/nonterminal lookup history. Dependent effects still
+require live admission. Native and actual-IC interruption cases qualify this
+direct profile with fixture authority.
 
 ## Payload acquisition and completion
 
-Sequential payload acquisition is now implemented under the
-[transfer contract](../architecture/capture-transfer.md#durable-sequential-payload-acquisition).
-It uses the retained schedule, original journal, one-shot HTTP and exact data
-reply authenticator. Certified evidence retains the payload bytes; acceptance
-records their length/hash without another mutable progress store. `verify_data`
-authenticates complete retained coverage and the combined original module hash
-offline; its byte count is not a completion receipt.
-
-[Artifact assembly](../architecture/capture-transfer.md#local-artifact-assembly)
-now writes and verifies exact unpublished bundle files under the original journal.
-[Final status](../architecture/capture-intent.md#final-capture-status) and
-[local completion](local-store.md#completion-and-interrupted-publication) now
-retain the distinct final call and publish the exact original manifest.
-Neither a full set of accepted read markers nor matching decoded bytes alone
-completes the backup or releases its target claim. Recovery and uncertain writes
-must preserve the original evidence and authority through each implemented step.
+The selected public capture loop now derives the full schedule from authenticated
+metadata and retains exact original signed/certified results in common call facts.
+The [transfer contract](../architecture/capture-transfer.md) owns bounded geometry,
+coverage, complete module hash, materialization and exact create-only publication.
+No transfer-binding, data-accepted or assembly-verified events remain.
+Final status is distinct; only exact published completion yields a receipt.
+The [capture contract](../architecture/capture-intent.md) owns pending recovery,
+observation, succession and older-source admission. The source-bound same-canister restore is implemented under the local-store contract.

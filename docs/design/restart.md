@@ -1,11 +1,8 @@
 # Minimal Backup replacement design
 
-Status: proposal for review, 2026-11-15. The maintainer requested a deletion-led
-redesign after incremental cleanup failed to address the size of the rewrite.
-This document replaces the previous helper-by-helper cleanup plan. It does not
-change implemented record contracts, authorize artifact deletion, or claim a new
-implementation. The [current handoff](../status/current.md) owns existing behavior;
-the [audit](../reports/audits/2026/11/15/complexity/01/report.md) supplies findings.
+Status: capture and same-canister restore replacement implemented and qualified
+locally, 2026-11-16. Canic process/manager/fence integration remains unqualified.
+The [handoff](../status/current.md) owns current evidence and next work.
 
 ## Cleanup before feature expansion
 
@@ -13,7 +10,7 @@ Stop extending the current phase APIs. Design the complete selected product firs
 then replace a coherent flow and remove its superseded owners in the same change.
 The current implementation is a source of algorithms and regression cases, not a
 required internal architecture. A facade over all its existing machinery is not
-this replacement. No new product code is part of this design review.
+this replacement. The public capture now uses the replacement; the preserved checkpoint remains the reader for its older records.
 
 The product remains a host library for one already-stopped canister: capture a
 complete local snapshot bundle, inspect backup history, and restore that bundle
@@ -23,7 +20,7 @@ concurrency limits, application maintenance and settlement of external obligatio
 No CLI, cloud storage, pruning, controller changes, canister creation, automatic
 restart, cross-release restore or generalized workflow framework is added.
 
-Half of legacy was a rough estimate, not a size requirement. Current code is
+Half of legacy was a rough estimate, not a size requirement. Pre-replacement checkpoint code is
 10,259 production / 29,474 total Rust LOC; frozen legacy was 15,646 / 44,877.
 The design must remove responsibilities and duplicated decisions from the library,
 not achieve a percentage by dropping tests, compressing code or moving it into a
@@ -31,7 +28,7 @@ supplier. No final LOC prediction is established by this proposal.
 
 ## The complete user-facing contract
 
-Names below are semantic sketches, not new Rust declarations. Retain existing
+The capture and restore operations below are implemented. Retain existing
 names where they already express these operations; expose no arbitrary journal
 writes, management dispatch, phase selection or per-call budget constructors.
 
@@ -92,7 +89,7 @@ Restore:
 
 These are two ordinary private procedures. Sharing the call mechanics must not
 turn their semantic ordering into configurable stage graphs, callback registries
-or an extensible execution engine. Restore upload/load remain unimplemented today.
+or an extensible execution engine. The shared recorder now serves the complete selected restore.
 
 ## Small internal ownership model
 
@@ -108,57 +105,263 @@ traits. Keep one product crate and the existing private qualification workspace.
 Platform owns IC DTOs/codecs/crypto; Host owns filesystem/artifact/HTTP primitives.
 Do not relocate Backup protocol/persistence complexity into those suppliers.
 
-The journal records facts that cannot be safely reconstructed: original authority,
-reserved invocations, exact signed requests, submission reservations, authenticated
-results, and local publication intent. Use one private call-state representation
-for update calls. A closed step identity distinguishes initial/final status and
-transfer ordinals; fixed procedures derive the permitted method and arguments.
-Retained evidence binds that identity. No method strings supplied by ordinary
-callers and no plugin dispatch registry.
+### Consumer and direct connection
 
-Use the same finite call lifecycle for capture and restore, but keep separate
-operation authority and journals. Read-state observation retains its different
-request/proof semantics; it must not be disguised as another update submission.
-Every pending call gets one original-request reconciliation path, subject to its
-original bounded allowance. Do not infer take/upload/load success from plausible
-state or invent an unqualified manager receipt. Missing signer output remains
-spent and may remain unrecoverable; no second signing attempt is implied.
+The public capture consumer follows this loop (pseudocode):
 
-Eliminate independently persisted facts that can be deterministically derived
-from the plan and authenticated results: transfer-binding stage, accepted-data
-stage and separate externally visible assembly-verification stage. Derive schedule,
-coverage, next step and budgets on bounded reopen; retain those derived facts
-within the admitted live operation. An invalid retained result blocks progress;
-its presence alone never establishes policy success. A format/algorithm version
-binds these derivations. This is a proposed new encoding, not reinterpretation of
-old events under changed semantics.
+```text
+connection = direct(transport, signer, application_guard, limits_and_timing)
+plan = plan_capture(target, release, application_witness, connection.profile())
+operation = store.create_capture(plan, approved_plan_digest)
+loop:
+    match operation.advance(connection):
+        Progress(view): continue
+        NeedsAttention(pending): retain pending; stop
+        Complete(receipt): return receipt
+```
 
-Materialization is a private part of capture completion, not a consumer API. Keep
-explicit local write intent before creating payload files, retained partial files,
-exact existing-file comparison and closing custody. Freeze original completion
-facts/timestamp before manifest publication so a lost return can reconcile exactly.
-Derive the manifest from those frozen facts without circular manifest/journal
-hashes. Do not delete raw proof merely because payload bytes have been assembled.
-The exact replacement event encoding requires review before implementation.
+Reopen takes the store and operation ID, not new authority. Inspection and local
+completion verification need no signer object; the latter returns an existing exact
+receipt after authenticating its original evidence and payload. Reconciliation is explicit: import an original reply,
+or request one bounded read-state observation. It never calls `advance` recursively.
+A consumer cannot select a data ordinal, sign a different method, or replenish an
+allowance. A fleet runs this same loop independently for its selected targets;
+Backup has no fleet scheduler. A typed refusal stops the loop; it is not `Progress`.
 
-Full evidence admission belongs at reopen and independent trust/custody boundaries.
-A live operation may retain already validated state under its held exclusive
-custody; this is not permission to trust mtime or assume descriptors make bytes
-immutable. Post-await checks and source reads must still detect changed authority
-and substituted/corrupt files. Measure growing multi-extent fixtures before
-claiming an amortized or throughput improvement. No persistent validation cache.
+The approved intent retains the original public trust-root bytes and binds their
+digest. Its direct profile contains transport/network/root commitments, signer
+and application protocol commitments, per-invocation
+signer/network/byte ceilings, timing durations and snapshot capacity. Existing
+operation-wide limits remain cumulative. Backup derives absolute deadlines, exact
+ingress expiry and historical certificate windows from a retained invocation time.
+A later invocation can use a later time within the same finite approved policy;
+resuming an already reserved invocation cannot replace its time or expiry. Profile
+mismatch refuses before spending. The application guard receives the fixed action
+and original witness; capture inspection, snapshot mutation and snapshot reading
+are distinct permissions. Signer input contains exact derived method/arguments and
+limits; there is one sign-only interface, not a provider trait per phase.
+
+### Replacement journal facts
+
+This is the current capture encoding, not a decoder for preserved older records.
+Use a distinct store marker `ic-backup/host-store/1\n`, intent domain
+`ic-backup/capture-intent/1` and journal seed domain
+`ic-backup/operation-journal/1\0`. Retain strict canonical JSON and the existing
+bounded length/payload/hash frame algorithm. Do not reuse `local-store/1`,
+`local-capture-plan/1` or `local-ledger/1` for the changed layouts. Opening an old
+store refuses before writing. There is one current reader, no dual-format dispatch.
+The capture intent encoder commits the direct profile above; an
+independently constructed golden vector remains part of the complete capture change.
+
+A private closed step identity is `InitialStatus`, `ListSnapshots`, `TakeSnapshot`,
+`Metadata`, `Data(ordinal)` or `FinalStatus`. It identifies evidence, not a public
+command or configurable transition graph. The fixed capture procedure derives the
+only legal next step, target, method and arguments from the intent and authenticated
+prior results. One unresolved update blocks later steps. Ordinals are contiguous;
+there is no retry-attempt counter or arbitrary management method in journal records.
+
+| Fact | Retained fields beyond the common sequence/kind | Admission and recovery |
+| --- | --- | --- |
+| Created | None | Exact immutable intent seeds the chain. |
+| CallReserved | Step, invocation time | Before signing, reserve one signer invocation, its network ceiling, one update dispatch, request/result byte ceilings and all four call frames. Timing and costs derive from the committed profile; overflow refuses. |
+| CallPrepared | Step, request length/hash | The exact authenticated signed envelope is durable before this reference. Derive request ID from its bytes; do not persist a second authoritative ID. |
+| CallSubmitted | Step | Sync before HTTP entry. Presence means the original dispatch allowance is consumed, even if no packet was sent. Never submit again. |
+| CallResult | Step, result length/hash | Retain authenticated original terminal reply/rejection before the reference. Decode and apply phase policy afterwards; invalid policy does not undo settlement. |
+| ObservationReserved | Step, invocation time | Explicit reconciliation only, after CallSubmitted with no terminal outcome. Reserve a separate signer invocation, its network ceiling, one read-state dispatch, byte ceilings and four observation frames. At most one observation per call and within the original operation-wide observation ceiling. |
+| ObservationPrepared | Step, request length/hash | Exact signed read-state bytes bind the original sender and sole request-status path. Its expiry/windows are distinct from the update's. |
+| ObservationSubmitted | Step | Sync before the one read-state HTTP entry; uncertainty never reissues it. |
+| ObservationResult | Step, certificate length/hash | Retain the exact authenticated observation, including unknown/nonterminal outcomes. A terminal outcome resolves the original call by derivation, without copying reply bytes or another settlement event. |
+| MaterializationStarted | None | After every payload result passes policy, reserve local completion frames and manifest allowance before creating bundle members. |
+| PublishReady | Completion time | After exact payload verification and the distinct final status, freeze completion time and close the journal. Reconstruct one exact manifest from this closed prefix and payload. |
+
+Each evidence reference determines one private canonical filename from step and
+role. No caller-supplied paths or independent persisted evidence catalog. Bounds
+remain 16 KiB/frame, 65,536 frames and 128 MiB journal, additionally constrained by
+original evidence limits. Reserved evidence includes framing and proof bytes, not
+only decoded payload. No successful result refunds the reserved maximum. Before
+snapshot take, admit the fixed remaining capture overhead; after metadata, admit
+the full derived data schedule before its first request. An unexpectedly large
+snapshot may therefore stop after metadata; it never grants more authority or
+permission to delete that snapshot. A real-IC full 1 MiB whole-chunk round trip now qualifies an explicitly
+approved 2 MiB request / 4 MiB result profile with a 2 MiB certificate ceiling.
+Old intents retain their original smaller limits; no authority is enlarged.
+
+A call has one terminal result source: its original reply or a terminal observation.
+Once resolved, a second import cannot replace it. Unknown/nonterminal observations
+leave the update pending; an original authenticated terminal reply may still settle
+it. An interrupted observation reservation stays spent, including after a later
+reply settles the update. There is no requirement to invent a successful lookup
+or a new signature before using that independent original reply.
+
+### Crash boundaries and removed states
+
+A durable signing reservation without retained signer output is not permission to
+sign again. A complete prepared request with no submission reservation can submit
+once after current admission and original deadline checks. A submitted call without
+a terminal result returns `NeedsAttention`; `advance` never polls or retransmits.
+Read-state uses the same custody discipline but its own proof/time semantics.
+
+Retain each evidence file create-only, sync it and its directory, then append/sync
+its reference. An uncertain write invalidates the live handle. Missing referenced
+files, partial frames, changed bytes and unreferenced files refuse on reopen; no
+automatic orphan adoption, truncation, cleanup or refunded allowance. A surviving
+reply supplied for reconciliation must bind the original request and authority;
+it does not authorize overwriting an orphan file or repairing the journal.
+
+Delete transfer-binding, data-accepted and assembly-verified events. Schedule,
+coverage and semantic validity derive from original authenticated results under
+the intent's algorithm domain. A retained malformed/invalid result blocks the
+next step even though its call is settled. Materialization starts only after those
+checks; partial files stay retained, exact complete files may be reused, and missing
+members may be created under the original intent. Reverify the assembled payload
+before final status and publication. No separate persisted assembly digest is needed.
+
+`PublishReady` freezes the manifest inputs before publication; the manifest may
+commit the closed journal hash, but the journal cannot commit that manifest hash.
+Exact create-only publication can reconcile without a new timestamp, signature,
+guard or network request. Read-only completed replay also performs no publication
+or synchronization. Target succession requires the exact published completion,
+not just PublishReady. Old unfinished operations retain their original owner.
+
+Keep independent full admission on reopen and at source/custody boundaries. Any
+live-state reuse must still detect changed bytes/authority after awaits; held locks
+and descriptors do not make files immutable. No persistent cache or throughput
+claim. The replacement must measure multi-extent IO before claiming improvement.
+
+Restore uses these same facts with source-bound intent and its fixed allocation,
+upload/readback/load/status steps. Readback and load policy remain separate from
+the shared recorder's spending/custody mechanics. LoadedStopped is the sole restore
+local completion footer; no separate receipt or restored payload tree is persisted.
+
+### Capture replacement qualification
+
+The [common recorder](../../crates/ic-backup/src/store/operation/mod.rs),
+[fixed procedure](../../crates/ic-backup/src/store/capture/procedure/mod.rs) and
+[immutable intent](../../crates/ic-backup/src/store/capture/intent/mod.rs) are now
+the selected public capture. The [capture contract](../architecture/capture-intent.md)
+owns exact formats, original evidence/spending, custody, observation and completion.
+
+The public store facade creates/reopens the approved intent. One advance loop
+derives all calls and local work. Original reply import takes raw certificates;
+explicit observation has separate original timing and finite allowance.
+Inspection/completed replay need no signer, guard, current time or transport.
+Completed receipts survive authenticated target succession; missing/staged
+receipts cannot excuse a changed owner. Older held sources and local restore
+create/open now consume this public boundary synchronously.
+
+The superseded phase orchestration, phase event families, transfer-binding and
+data-acceptance records, assembly workflow, settlement routers and old consumer
+fixtures are deleted. Existing Platform codecs, signatures/certificates, Host
+one-shot HTTP, closed payload hashing and manifest publication remain owners.
+Test-only call wrappers retain exact existing protocol regressions, not a second
+production lifecycle. Restore status-only persistence and its signer/adapter/event
+families are deleted; the actual restore consumer uses the same recorder.
+
+Native coverage includes complete/pending/prepared recovery, partial/orphan/changed
+files, exact materialization/publication, finite limits and certified policy
+failure/rejection. An acknowledged process is killed after a durable signing
+reservation; reopening preserves original intent/claim/spending without effects.
+Shared framing boundaries, strict request/certificate/HTTP tests and bounded
+metadata/data/readback algorithms remain tested with their owning code.
+
+The public-API IC fixture drives multi-extent module, heap, stable memory
+and empty/nonempty chunks through publication, succession, older-source restore
+through full upload/readback/load, capture after restore, local history and offline replay. Separate actual-IC cases recover an
+interrupted take via one observation and a payload call via surviving original
+certificate after shutdown. Fixture keys/permissions qualify no Canic process,
+production maintenance or physical power loss. The current Linux run establishes
+no hosted macOS or throughput improvement. A separate normal-dependency executable
+is built alone without Testkit/PocketIC and continues capture/restore in new
+processes, then replays completion after backend shutdown.
+
+Focused legacy anchors remain frozen at
+`4ae087fad8c23de712aa60bf569bde4b2b932651`: submission/HTTP recovery,
+attempt journal, snapshot coverage and artifact completion. History
+`d245b0f03a505ba5215d65c10bdebf1890c7dc37` preserves original-request binding,
+`a860d14421b9ff1c61c1dce079cdc6a19316bfd0` separates observation/effect
+admission, and `9f7b886a824eec67dda8f81792a560436419bb2a` preserves original
+verification-pass ownership. Provenance, changed assumptions and exclusions are
+recorded in the capture/transfer contracts. No legacy implementation was copied.
+
+### Size, maintained surface and repeated IO
+
+The preserved pre-replacement checkpoint measured 10,259 production / 29,474 total
+Rust LOC. At the restore-reduction checkpoint before ID-only cold reopening, the tree measured 7,795 production /
+19,891 total: 2,464 fewer production lines (24.0%) and 9,583 fewer total (32.5%).
+Toko's classifier includes product and qualification workspaces, excludes comments/
+blanks and reports no unclassified code. The reduction comes from retiring phase
+owners and repeated fixtures. Compared with frozen legacy's 15,646 / 44,877, the
+current counts are 49.8% / 44.3%; functionality differs because Canic manager/fence
+integration remains unfinished. These are not equivalent-feature costs.
+Public stage families are retired. Capture and restore share one connection,
+sign-only adapter, action guard, progress and typed view; original proof/admission
+records and unused status-stage progress are private or removed. No compatibility
+engine or public phase commands remain. The restore cut adds 154 net production
+lines while removing 1,711 total lines from the immediately preserved 7,641 /
+21,602 tree, and implements the complete actual-IC restore consumer.
+
+Linux strace of the successful full IC consumer (two 24-call captures, succession,
+older source, restore status and offline replay) measured host-store regular-file
+IO only: 346,761,555 certified-result bytes read from 1,107,724 retained bytes;
+36,771,333 payload bytes read from 524,368 retained bytes; 11,070,177 journal
+bytes read from 36,147 final capture-journal bytes. This includes all admission,
+source, completion and replay checks in that consumer, not one isolated advance.
+Raw trace and per-file summary remain in `target/evidence/capture-replacement-runtime/`.
+No baseline trace or throughput comparison exists; strace adds timing overhead.
+
+The follow-through removes immediate duplicate append scans and full historical
+projection after retaining a new live result. Each append re-admits its exact
+original prefix before writing, verifies expected new length/head on closing and
+returns that checked journal. A live invocation extends its already-authenticated
+procedure using owned evidence authenticated at its network/import boundary.
+Certified rejection has one procedure owner. No validation survives an invocation
+as a cache; original bytes/authority remain rechecked across awaits and cold
+open/source boundaries authenticate independently.
+
+The preserved equivalent two-capture/status-only-restore IO trace after that reduction reads 227,756,038 certified-result
+bytes, 7,429,093 capture-journal bytes and 34,936,045 payload bytes: approximately
+34%, 33% and 5% fewer respectively. Sync counts remain unchanged. Same-length
+prior-evidence/payload mutations during HTTP and stale/false-write prefix tests
+refuse. Evidence is under `target/evidence/reduction-followthrough/`.
+Source/payload scans remain substantial; this is IO reduction, not a throughput
+claim. Further reuse must preserve independent source admission and closing custody.
+
+### Completed restore cut and remaining work
+
+The new [restore contract](local-store.md#immutable-restore-approval-and-original-custody)
+owns exact implemented intent, fixed ordering, source custody, finite allowance,
+readback/load, LoadedStopped and capture-after-restore behavior. The real consumer
+switched in the same batch that deleted old restore status signing/submission,
+adapters and event encodings. `store/operation/` physically owns the shared
+recorder; there is no forwarding recorder under capture. One private sealed intent
+view serves two concrete procedures, without a public provider registry or graph.
+
+The exact source/lock/build reader immediately before this cut is preserved under
+`.git/recovery/host-store-1-before-restore-20261116/`, with independent actual-IC
+rerun, before its restore encoding changed. The earlier b7c2c6a reader alone cannot
+read these newer capture sources. Preservation grants no commit, push, migration
+or cleanup authority.
+
+The completed Backup-owned public boundary also reopens restore from retained ID
+and approval, re-admitting exact intent/source and held target lock without new
+credentials. Fresh native/IC evidence and remaining qualification limits are in the handoff.
+Further cuts must preserve original source authentication and closing custody.
+The remaining product dependency is Canic's original-result executor join and
+continuous application/rewind fence, then its actual consumer qualification.
+Root's two-hop effect journal protects a separate boundary and cannot be removed
+as a duplicate of Backup's host recorder. No sibling changes were made here.
 
 ## Concrete retirement map
 
 Paths below are relative to `crates/ic-backup/src/store/`. Replace and remove means
-the current orchestration/API owner goes away after its replacement is qualified;
+the superseded orchestration/API owner has been removed with its qualified replacement;
 it does not mean every decoder or safety predicate in that directory is discarded.
 
 | Current code / surface | Decision | Replacement and evidence to retain |
 | --- | --- | --- |
 | `capture/advance/mod.rs`, `snapshots/`, `metadata/workflow/`, `data/`, `final_status/` phase orchestration | Replace and remove duplicated lifecycle bodies and public advance/inspect families | Fixed capture procedure plus call recorder; pending, prepared continuation, policy rejection and cold replay cases |
 | `capture/advance/direct/`, `call/` and `restore/direct/` integration composition | Replace phase-specific provider/signer contracts | One direct signing boundary and action-aware application admission; exact key identity, timing and revoked-permission cases |
-| `restore/persistence/status/` status-only lifecycle | Replace, not extend for each upload phase | Restore uses the same private call recorder; separate restore authority and source custody remain |
+| `restore/persistence/status/` status-only lifecycle | Replaced and removed | Restore uses the same private call recorder; separate restore authority and source custody remain |
 | `capture/ledger/{metadata,data,final_status}/` phase-specific call states and repeated event families | Replace their call-state encodings | Common call facts plus fixed step identity; finite reservations, no refund and full/partial frame cases |
 | `capture/transfer/binding/` and public bind/inspect transfer surface | Remove independent binding stage | Schedule derives from approved plan and retained authenticated metadata; preserve geometry and source-association tests |
 | `capture/assembly/` public orchestration and assembly progress states | Remove public workflow; retain materialization checks internally | Completion owns bounded writing, exact comparison and interrupted-file refusal |
@@ -214,18 +417,22 @@ workflow behind. No source was copied for this proposal.
 
 ## Review and implementation exit criteria
 
-Review this complete shape before writing replacement code. Resolve the public
-consumer sketch, exact new journal facts, original-operation preservation and
-Canic route dependency explicitly. Do not resume incremental phase additions.
+The maintainer accepted this direction and authorized preservation and replacement.
+Preservation is complete at local reference `preserve/backup-0.101.13-before-replacement`
+(commit `b7c2c6ae754a5ae2452e65b9be537b517614ebd2`); see
+[the retained build reference](../development/setup.md#pre-replacement-reference).
+The consumer loop and replacement journal facts above now specify the capture
+cut, now implemented with the complete restore consumer. The Canic route dependency remains explicit. Do not resume
+incremental phase additions or request the same design approval again.
 
 The first implementation unit must replace a complete capture path and switch its
 consumer, with the corresponding retirement-map deletions. Do not land a new
 abstraction underneath all the old paths and call that the replacement. Keep
 necessary shared safety primitives rather than rewriting them for aesthetic purity.
 
-Then complete same-ID upload/readback/load through that same call recorder. Accept
-only with an independent consumer demonstrating capture, cold pending/terminal
-handling, restore and local history, plus real-IC multi-extent and failure cases.
+Same-ID upload/readback/load now uses that recorder, with an independent actual-IC
+consumer demonstrating capture, cold pending/terminal handling, restored bytes and
+local history. Canic must still demonstrate its actual manager/fence consumer.
 Compare maintained public surface, production and total LOC, duplicate lifecycle
 owners and measured repeated IO. Report any required obligation that remains
 unproved. A smaller capture-only tree is not a finished smaller backup product.

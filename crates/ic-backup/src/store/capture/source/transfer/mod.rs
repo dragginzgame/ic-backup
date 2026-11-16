@@ -91,89 +91,95 @@ impl CaptureSource<'_, '_> {
         &self,
         request: &RestoreTransferRequest,
     ) -> Result<RestoreTransfer, RestoreTransferError> {
-        if request.target != self.summary().target || request.release != self.summary().release {
-            return Err(RestoreTransferError::Selection);
-        }
-        if !(1..=1_048_576).contains(&request.extent_bytes)
-            || !(1..=1_073_741_824).contains(&request.maximum_payload_bytes)
-            || !(1..=8192).contains(&request.maximum_management_calls)
-        {
-            return Err(RestoreTransferError::Limits);
-        }
-        let source = self.summary();
-        if source.payload_bytes > request.maximum_payload_bytes {
-            return Err(RestoreTransferError::Payload {
-                required: source.payload_bytes,
-                limit: request.maximum_payload_bytes,
-            });
-        }
-        let mut sizes = [0; 3];
-        let mut chunks = Vec::new();
-        for (name, bytes) in self
-            .payload
-            .member_lengths()
-            .ok_or(RestoreTransferError::Source)?
-        {
-            match name {
-                "module.wasm" => sizes[0] = bytes,
-                "heap.bin" => sizes[1] = bytes,
-                "stable.bin" => sizes[2] = bytes,
-                _ => {
-                    if bytes > u64::from(request.extent_bytes) {
-                        return Err(RestoreTransferError::Chunk {
-                            bytes,
-                            extent: request.extent_bytes,
-                        });
-                    }
-                    let hash: Sha256Digest = name
-                        .strip_prefix("chunk-")
-                        .and_then(|s| s.strip_suffix(".bin"))
-                        .ok_or(RestoreTransferError::Source)?
-                        .parse()
-                        .map_err(|_| RestoreTransferError::Source)?;
-                    chunks.push(*hash.as_bytes());
-                }
-            }
-        }
-        chunks.sort_unstable();
-        // Source admission already bounds three regions to 1 GiB total and 1024 chunks.
-        let extent = u64::from(request.extent_bytes);
-        let region_calls = sizes.map(|size| size.div_ceil(extent));
-        let data_calls = region_calls.into_iter().sum::<u64>() + chunks.len() as u64;
-        let management_calls = 2 * data_calls + 7;
-        if management_calls > u64::from(request.maximum_management_calls) {
-            return Err(RestoreTransferError::Calls {
-                required: management_calls,
-                limit: request.maximum_management_calls,
-            });
-        }
-        let snapshot_id = source
-            .snapshot_id_hex
-            .as_bytes()
-            .as_chunks::<2>()
-            .0
-            .iter()
-            .map(|hex| {
-                u8::from_str_radix(
-                    std::str::from_utf8(hex).map_err(|_| RestoreTransferError::Source)?,
-                    16,
-                )
-                .map_err(|_| RestoreTransferError::Source)
-            })
-            .collect::<Result<_, _>>()?;
-        Ok(RestoreTransfer {
-            source: source.clone(),
-            snapshot_id,
-            sizes,
-            region_calls,
-            chunks,
-            extent,
-            data_calls: u32::try_from(data_calls).map_err(|_| RestoreTransferError::Source)?,
-            management_calls: u32::try_from(management_calls)
-                .map_err(|_| RestoreTransferError::Source)?,
-        })
+        plan_payload(&self.payload, request)
     }
 }
+pub(in crate::store) fn plan_payload(
+    payload: &crate::store::PayloadSource<'_>,
+    request: &RestoreTransferRequest,
+) -> Result<RestoreTransfer, RestoreTransferError> {
+    if request.target != payload.summary().target || request.release != payload.summary().release {
+        return Err(RestoreTransferError::Selection);
+    }
+    if !(1..=1_048_576).contains(&request.extent_bytes)
+        || !(1..=1_073_741_824).contains(&request.maximum_payload_bytes)
+        || !(1..=8192).contains(&request.maximum_management_calls)
+    {
+        return Err(RestoreTransferError::Limits);
+    }
+    let source = payload.summary();
+    if source.payload_bytes > request.maximum_payload_bytes {
+        return Err(RestoreTransferError::Payload {
+            required: source.payload_bytes,
+            limit: request.maximum_payload_bytes,
+        });
+    }
+    let mut sizes = [0; 3];
+    let mut chunks = Vec::new();
+    for (name, bytes) in payload
+        .member_lengths()
+        .ok_or(RestoreTransferError::Source)?
+    {
+        match name {
+            "module.wasm" => sizes[0] = bytes,
+            "heap.bin" => sizes[1] = bytes,
+            "stable.bin" => sizes[2] = bytes,
+            _ => {
+                if bytes > u64::from(request.extent_bytes) {
+                    return Err(RestoreTransferError::Chunk {
+                        bytes,
+                        extent: request.extent_bytes,
+                    });
+                }
+                let hash: Sha256Digest = name
+                    .strip_prefix("chunk-")
+                    .and_then(|s| s.strip_suffix(".bin"))
+                    .ok_or(RestoreTransferError::Source)?
+                    .parse()
+                    .map_err(|_| RestoreTransferError::Source)?;
+                chunks.push(*hash.as_bytes());
+            }
+        }
+    }
+    chunks.sort_unstable();
+    // Source admission already bounds three regions to 1 GiB total and 1024 chunks.
+    let extent = u64::from(request.extent_bytes);
+    let region_calls = sizes.map(|size| size.div_ceil(extent));
+    let data_calls = region_calls.into_iter().sum::<u64>() + chunks.len() as u64;
+    let management_calls = 2 * data_calls + 7;
+    if management_calls > u64::from(request.maximum_management_calls) {
+        return Err(RestoreTransferError::Calls {
+            required: management_calls,
+            limit: request.maximum_management_calls,
+        });
+    }
+    let snapshot_id = source
+        .snapshot_id_hex
+        .as_bytes()
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|hex| {
+            u8::from_str_radix(
+                std::str::from_utf8(hex).map_err(|_| RestoreTransferError::Source)?,
+                16,
+            )
+            .map_err(|_| RestoreTransferError::Source)
+        })
+        .collect::<Result<_, _>>()?;
+    Ok(RestoreTransfer {
+        source: source.clone(),
+        snapshot_id,
+        sizes,
+        region_calls,
+        chunks,
+        extent,
+        data_calls: u32::try_from(data_calls).map_err(|_| RestoreTransferError::Source)?,
+        management_calls: u32::try_from(management_calls)
+            .map_err(|_| RestoreTransferError::Source)?,
+    })
+}
+
 impl RestoreTransfer {
     /// Exact authenticated receipt underlying the calculation, not restore permission.
     #[must_use]

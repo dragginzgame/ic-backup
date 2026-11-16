@@ -43,7 +43,6 @@ fn fresh_provenance_and_chunk_order_are_preserved_without_mutating_the_source() 
     source.global_timer = Some(CanisterTimer::Active(u64::MAX));
     source.on_low_wasm_memory_hook_status = Some(OnLowWasmMemoryHookStatus::Executed);
     let before = encode(&source);
-    let plan_before = p.encoded().to_vec();
     let transfer = p.plan_transfer(&[0, 255, 17], &source).unwrap();
     let mut destination = uploaded(&source);
     destination.wasm_chunk_store.reverse();
@@ -51,7 +50,6 @@ fn fresh_provenance_and_chunk_order_are_preserved_without_mutating_the_source() 
     let admitted = transfer.decode_uploaded_metadata(&raw).unwrap();
     assert_eq!(encode(&admitted), raw);
     assert_eq!(encode(transfer.metadata()), before);
-    assert_eq!(p.encoded(), plan_before);
     assert_eq!(admitted.taken_at_timestamp, 0);
     assert_eq!(admitted.canister_version, u64::MAX);
     assert!(

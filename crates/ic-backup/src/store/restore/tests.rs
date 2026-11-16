@@ -1,25 +1,18 @@
-//! Independent encoding/approval vectors; these passive records grant no source authority.
+//! Restore-specific source/approval/geometry regressions; call mechanics have one shared test owner.
 use super::*;
-
-#[test]
-fn canonical_plan_record_and_domain_commitment_are_frozen() {
-    let bytes = include_bytes!("restore-plan.json");
-    let record: RestorePlanRecord = serde_json::from_slice(bytes).unwrap();
-    assert_eq!(serde_json::to_vec(&record).unwrap(), bytes);
-    assert_eq!(
-        plan_digest(bytes).to_string(),
-        include_str!("restore-plan.sha256").trim()
-    );
-    assert_ne!(plan_digest(bytes), Sha256Digest::compute(bytes));
-}
-
-mod certificate_tests;
-mod direct_tests;
-mod fixtures;
+pub(in crate::store::restore) mod fixtures;
 mod persistence_tests;
 mod plan_tests;
-mod preparation_tests;
-mod request_tests;
-mod status_tests;
-mod submission_tests;
 mod transfer_tests;
+
+#[test]
+fn original_restore_intent_has_an_independent_encoding_and_domain_vector() {
+    let bytes = include_bytes!("restore-intent.json");
+    let plan = RestorePlan::decode(bytes).unwrap();
+    assert_eq!(plan.encoded(), bytes);
+    assert_eq!(
+        plan.digest().to_string(),
+        include_str!("restore-intent.sha256").trim()
+    );
+    assert_ne!(plan.digest(), Sha256Digest::compute(bytes));
+}

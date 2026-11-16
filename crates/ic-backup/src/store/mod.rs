@@ -28,44 +28,34 @@
 //! # }
 //! ```
 
+mod limits;
+pub use limits::OperationLimits;
 mod capture;
 mod manifest;
+mod operation;
 mod payload;
 mod restore;
+pub use operation::intent::Plan as OperationPlan;
+pub use restore::persistence::LoadedStopped;
 pub use restore::{
-    DirectRestoreStatus, DirectRestoreStatusError, RestoreLimitsRecord, RestoreOperation,
-    RestorePersistenceError, RestorePlan, RestorePlanError, RestoreRequest,
-    RestoreStatusEvidenceError, RestoreStatusPreparation, RestoreStatusPreparationError,
-    RestoreStatusSigner, RestoreStatusSubmissionError, RestoreStatusView,
+    RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError, RestorePolicyError,
+    RestoreRequest,
 };
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+pub(in crate::store) use capture::CapturePolicy;
 pub use capture::{
-    CaptureApplicationGuard, CaptureCall, CaptureCallAdmissionRecord, CaptureCallEvidence,
-    CaptureCompletionError, CaptureDataAdmissionRecord, CaptureDataAdvanceError, CaptureDataPhase,
-    CaptureDataProgress, CaptureDataSigner, CaptureDataView, CaptureError, CaptureExecution,
-    CaptureFinalStatusError, CaptureLimitsRecord, CaptureLookupAdmissionRecord,
-    CaptureLookupAdvanceError, CaptureLookupError, CaptureLookupEvidence, CaptureLookupHttpError,
-    CaptureLookupHttpPolicy, CaptureLookupPhase, CaptureLookupPolicy, CaptureLookupProgress,
-    CaptureLookupSettlementError, CaptureLookupSigner, CaptureLookupView,
-    CaptureMetadataAdmissionRecord, CaptureMetadataAdvanceError, CaptureMetadataPhase,
-    CaptureMetadataProgress, CaptureMetadataSigner, CaptureMetadataView, CaptureObservation,
-    CaptureObservationError, CaptureObservationPolicy, CaptureOperation, CapturePlan,
-    CaptureProvider, CaptureRequest, CaptureSettlementError, CaptureSigner, CaptureSigningRequest,
-    CaptureSnapshotPhase, CaptureSnapshotView, CaptureSource, CaptureSourceError,
-    CaptureStatusError, CaptureStatusPhase, CaptureStatusReplyError, CaptureStatusView,
-    CaptureSuccessionError, CaptureTiming, CaptureTransfer, CaptureTransferBindError,
-    CaptureTransferView, DataReadError, DirectCaptureError, DirectCaptureProvider, LedgerError,
-    MetadataReadError, PreparedCaptureCall, PreparedStatus, ReadbackDataError,
-    ReadbackMetadataError, RestoreTransfer, RestoreTransferError, RestoreTransferRequest,
-    SnapshotAdmissionRecord, SnapshotAdvanceError, SnapshotProgress, SnapshotReplyError,
-    StatusAdmissionRecord, StatusAdvanceError, StatusCertificateError, StatusEvidence,
-    StatusHttpError, StatusHttpTransport, StatusProgress, StatusProvider, StatusRequestError,
-    TransferDataError, TransferError, TransferMetadataError, UploadedSnapshotReadback,
-    authenticate_capture_lookup, authenticate_metadata_reply, authenticate_status_evidence,
-    authenticate_status_request, decode_snapshot_list, decode_taken_snapshot,
-    observe_capture_certificate, status_certificate_evidence, status_certificate_observation,
+    BackupApplicationGuard, BackupConnection, BackupHttpError, BackupHttpTransport, BackupSigner,
+    CaptureLookupError, CaptureObservationError, CaptureOperation, CapturePlan, CapturePolicyError,
+    CaptureRequest, CaptureSource, CaptureSourceError, CaptureStatusError, CaptureStatusReplyError,
+    CaptureSuccessionError, CaptureTiming, DataReadError, LedgerError, MetadataReadError,
+    OperationAction, OperationAdvanceError, OperationOptions, OperationPlanError,
+    OperationProgress, OperationReplayError, OperationSigningContent, OperationSigningRequest,
+    OperationStep, OperationStoreError, OperationView, ReceivedCertificate, RestoreTransfer,
+    RestoreTransferError, RestoreTransferRequest, SnapshotReplyError, StatusCertificateError,
+    StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
 };
 pub use manifest::ManifestError;
 pub use payload::{PayloadReadError, PayloadSource};
@@ -88,7 +78,7 @@ use std::{
 };
 use thiserror::Error;
 
-const FORMAT: &[u8] = b"ic-backup/local-store/1\n";
+const FORMAT: &[u8] = b"ic-backup/host-store/1\n";
 const PRIVATE: DirectoryOptions = DirectoryOptions {
     create_permissions: None,
     forbidden_permissions: 0o077,
@@ -408,3 +398,6 @@ pub enum StoreError {
     #[error(transparent)]
     Publication(#[from] NamedWriteError<Infallible>),
 }
+
+pub use capture::transfer::readback::ReadbackMetadataError;
+pub(in crate::store) use capture::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};

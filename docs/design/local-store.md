@@ -1,373 +1,107 @@
 # Local storage and fleet inventory
 
-Selected v1 scope: local-host bundles, single-canister operations, independent
-concurrent targets and read-only backup history. Blob Storage integration is v2.
-This is the persistence design for the [operation design](operation-contract.md).
-Initialization, opening, bounded manifest inventory and payload byte checks are implemented;
-[the inventory contract](../architecture/local-inventory.md) owns their exact bounds.
-The [capture-intent contract](../architecture/capture-intent.md) implements immutable
-plans, durable target claims and initial status advancement/inspection. Snapshot advancement and [artifact assembly](../architecture/capture-transfer.md#local-artifact-assembly)
-are implemented. Final status and local completion publication/reconciliation are implemented.
-Explicit completed-capture succession is implemented; standalone full-bundle admission remains proposed. No legacy records or unfinished operations are imported.
+Selected scope: local-host bundles, independent single-canister operations and
+read-only history. No legacy records or unfinished obligations are imported.
+The [capture contract](../architecture/capture-intent.md) owns the current fixed
+capture loop, formats, common journal and exact completion; the
+[inventory contract](../architecture/local-inventory.md) owns scan/payload bounds.
+The source-bound same-canister restore below uses the same recorder and direct
+connection. Canic manager/fence integration remains unqualified.
 
 ## Small public surface
 
-Keep one concrete local store in the existing library. No database, persistent
-catalog index, storage-provider trait, background worker or scheduler is required.
-Canic calls capture/restore and supplies the execution/application providers.
-
 | Operation | Meaning |
 | --- | --- |
-| `list_backups(filter, limits)` | Read completion metadata for matching local bundles. No payload hashing or network calls. |
-| `latest_completed_backup(network, canister, limits)` | Select the most recently captured completed bundle in this store. |
-| `verify_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Check exact local payload bytes against a trusted manifest; no evidence replay or restore authority. |
-| `open_payload(bundle_id, expected_manifest, maximum_payload_bytes)` | Verify and hold original payload files for bounded source reads; complete capture-evidence admission remains separate. |
-| `inspect(operation)` | Read retained progress, failure or uncertainty separately from completed backups. |
-| `verify_completion(expected_manifest, transport, provider)` | Authenticate an already-published completion and exact source bytes without writes; returns passive evidence. |
+| `list_backups` / `latest_completed_backup` | Bounded completion declarations, without payload authentication |
+| `verify_payload` / `open_payload` | Exact payload under caller-trusted manifest and byte limit |
+| `create_capture` / `open_capture` | Approved immutable intent and original custody |
+| `CaptureOperation::inspect` | Authenticated retained progress and conservative spending |
+| `CaptureOperation::advance` | Fixed next work; at most one new management submission |
+| `reconcile_reply` / `reconcile_observation` | Explicit original-call recovery; never resubmission |
+| `verify_completion(expected_manifest)` | Exact already-published receipt/evidence/payload, without writes |
+| `open_capture_source(operation, receipt, limit)` | Authenticate and hold same-store original source |
+| `create_capture_after(plan, approval, predecessor)` | Authenticated completed-target succession |
 
-List/latest, payload checking and held payload reads exist on `BackupStore`. `CaptureOperation::inspect`
-reads original intent; `inspect_status` additionally reads initial status progress,
-original admission and reserved attempt counts. Authenticated held capture sources,
-immutable restore plans and local creation/reopen are implemented below.
-Prefer `latest_completed_backup` over the earlier sketch `latest_verified_backup`:
-a cheap inventory cannot establish that files remain intact today. A manifest
-declares completion; the reader does not authenticate capture verification or
-inspect its ledger. Restore will require fresh complete verification and trusted
-source provenance. A local read never establishes application rewind safety.
-
-## Bundle summary and last-backup meaning
-
-A completion manifest contains the following inventory fields alongside its
-content and original-operation commitments:
-
-- Bundle/capture-operation identity; canonical network instance and canister ID.
-- Source snapshot identity and capture timestamp from authenticated metadata.
-- Local verification-completion timestamp, explicitly an operator-host clock.
-- Release binding and module hash; exact payload byte total.
-- Exact payload member lengths/hashes, original metadata evidence and final
-  capture-ledger commitment. Paths are product-generated relative names.
-
-For one network/canister, rank by capture timestamp, then completion timestamp,
-then opaque bundle ID for deterministic ties. Report both timestamps; they answer
-when the state was captured and when its local backup finished. Host clock
-rollback must not alter original values or replenish authority. Timestamp ordering
-is descriptive and supplies no management-call attribution.
-
-Return no backup only after a successful bounded scan finds no matching completion.
-Never turn corrupt records, unsupported formats, unreadable entries or exceeded
-scan limits into “never backed up”, or silently fall back to an older backup.
-Other canisters' malformed metadata also prevents a claimed complete store scan.
-Keep incomplete/failed operations in inspection results; they do not compete for
-latest successful backup. No stable-memory content is read for listing.
-
-Inventory is a scan of immutable published manifests, not a transactional snapshot
-of the whole fleet. Completion published during a scan may appear on the next
-refresh. A bundle handle must be admitted again before use. Canic owns display
-names and joins rows with its live fleet selection; Backup never discovers fleet
-membership. Results cover this store only, not other hosts or remote snapshots.
-
-Callers supply positive entry, cumulative-byte and returned-row limits. The scanner
-bounds work while traversing, before allocating a complete file or collecting the
-entire store. A limit refusal returns no authoritative latest/absence answer.
-The current API requires explicit limits and has no defaults. Latest-only scans
-retain one candidate; list scans also enforce the requested row count. No paging
-protocol or persistent index is introduced for an unmeasured scale requirement.
+No database, index, storage-provider trait, background worker or fleet scheduler is
+introduced. Inventory is not an immutable fleet snapshot. Latest means capture
+timestamp, then completion timestamp, then bundle ID. Corruption or exhausted scan
+limits never becomes authoritative absence or fallback to an older good row.
 
 ## One layout, one spending authority
 
 ```text
 store/
   format
-  targets/<network-key>/<canister>/
-    lock
-    owner.json
-  operations/<operation-id>/
-    lock
-    plan.json
-    ledger.bin
-    evidence/
-  bundles/<capture-operation-id>/
-    manifest.json
-    payload/
+  targets/<network>/<canister>/{lock,owner.json}
+  operations/<capture-or-restore-id>/{lock,intent.json,journal.bin,<derived-evidence>.bin}
+  bundles/<capture-id>/{manifest.json,payload/}
 ```
 
-`format` identifies the restart store, not legacy v1. Operation IDs are validated
-opaque names; network keys are domain-separated commitments to the exact network
-binding. Read retained bindings as well as the path key. No remote value becomes
-an arbitrary path. Unknown entries or unsafe file kinds at owned boundaries
-refuse; this is a private product store, not a directory import feature.
+The marker is `ic-backup/host-store/1\n`. Earlier stores refuse intact and remain
+under the preserved reader; no dual-format migration/reset exists. Initialization
+is explicit into an empty private directory; partial format publication remains
+occupied evidence. Directories/files are 0700/0600; Host owns no-follow descriptors,
+locks and durable publication. Backup owns record meaning and effect authority.
 
-Use Host's held directories, no-follow regular files, nonblocking locks and durable
-create-only publication. Private directories/files use 0700/0600. Host primitives
-own OS mechanics; Backup owns record meaning, ordering and recovery. Initialization
-is explicit local IO into an existing empty private directory. The implemented
-initializer retains `format.pending` before publishing `format`. Interrupted
-initialization remains occupied evidence and must not be silently treated as a
-new empty store. Reading never initializes it.
-
-The plan is immutable. Only the ledger consumes attempts and settles their results.
-Large arguments, envelopes, certificates and replies are create-only evidence
-files referenced by length and hash. The manifest closes the payload member set. The restore plan itself binds its
-source operation, original plan and exact manifest; no reverse-reference catalog
-is selected. All source bundles and original operations remain retained.
-No separate stage journals, learned-edge files or settlement catalog are added.
-
-Use versioned typed JSON records with unknown/duplicate-field refusal and bounded
-collections. Store float bits as fixed-width hexadecimal values, never JSON floats.
-Normalize identities before encoding, serialize each record once and retain/hash
-those exact bytes with a distinct restart domain. Public plan approval commits to
-that original encoding. Reopen verifies original bytes; it never pretty-prints or
-regenerates identities. Exact field lists and golden vectors belong with the first
-writer/reader implementation, before it can authorize remote effects.
-
-For the ledger, select length-delimited frames: a little-endian u32 payload length,
-a bounded JSON transition, and a 32-byte SHA-256 chain digest. The initial digest
-binds the original plan bytes under the restart domain; subsequent digests bind
-the previous digest, encoded length and exact payload. Each transition has a
-monotonic sequence and closed event kind. No general event-bus framework is needed.
-The implemented framing reader enforces 16 KiB per frame, 65,536 frames and
-128 MiB total, with the original plan's evidence allowance as a further byte cap.
-All apply independently; plans and manifests remain separately byte-bounded.
-Created and initial status reservation/preparation/submission/settlement transitions
-are admitted. These are format limits, not measured product capacity claims.
-
-The initial status workflow validates the full bounded ledger on reopen. A held
-session admits its own append prefix; it does not repeatedly scan peer operations.
-Partial frames, bad hashes, sequence gaps and invalid transitions block effects.
-Keep the original bytes; no truncate-and-retry recovery or log compaction in v1.
-Hashes detect corruption but do not defeat a malicious host owner or rollback of
-all local evidence. The integration must maintain the stated private-store custody.
+Each purpose has one immutable intent and one journal of common call/observation facts. No separate source catalog, transfer-binding file, accepted-data
+record, assembly digest or mutable spending file exists. No pruning is implemented.
+Source dependencies remain in original restore plans and retained files.
 
 ## Completion and interrupted publication
 
-`CaptureOperation::complete_capture` is implemented local completion and
-reconciliation. It requires an already-settled successful final status; it cannot
-sign, submit, poll or settle a missing remote result. It reauthenticates original
-capture/payload/final evidence and synchronizes the verified assembly. A retained
-lookup must have recorded original-call settlement; unresolved or unused lookup
-lanes currently refuse completion. Canic still owns continuous maintenance and
-external-effect safety; completion does not rewind obligations.
+Capture advance authenticates all original results, materializes exact payload,
+rechecks the original module and performs distinct final status. PublishReady
+freezes completion time and closed journal hash. The exact manifest commits original
+intent, metadata evidence, journal and closed payload member set. The journal never
+commits its future manifest hash.
 
-`PublishReady` is the final ledger event. Its canonical body is
-`{"kind":"publish_ready","completed_at_ns":N}` with positive u64 host Unix
-nanoseconds, selected once. The existing prefix already binds the immutable plan,
-source metadata, exact accepted payloads, verified assembly and final status.
-No summary duplicate or separate completion journal is persisted. The original
-evidence budget reserves one maximum-size frame and the 1 MiB manifest ceiling
-before this event. Every subsequent ledger event refuses, including a second
-`PublishReady`. Reopening never invents a new timestamp or allowance.
-
-The existing `ic-backup/local-manifest/1` schema owns serialization and validation.
-The writer uses ASCII-sorted members, the original metadata snapshot ID/timestamp,
-plan release/module identity and actual payload lengths/hashes. Plan, closed
-ledger, metadata arguments and metadata reply commitments are raw SHA-256 of
-those exact original bytes, with exact lengths. Metadata arguments come from the
-retained signed envelope and the reply from retained certified evidence; neither
-is re-encoded. The manifest binds the entire closed ledger, including
-`PublishReady`. There is no circular hash or post-publication journal event.
-The existing golden schema and exact original-byte regressions cover the writer.
-
-The fixed bundle already holds `payload/`. Create `manifest.pending` exclusively
-with private permissions, write/synchronize it, verify its exact bytes and held
-identity, then use Host's no-replace publisher to rename it to `manifest.json`
-and synchronize the directory. The manifest is the sole completion receipt;
-no catalog row, extra completion marker, second payload copy or cleanup is added.
-All fallible publication invalidates the live handle until closing custody and
-original-record admission succeed. A failure preserves every named file.
-
-On local reconciliation, reauthenticate the original evidence and derive only the
-same v1 manifest from the frozen prefix. Missing manifest/staging after readiness
-can be created; exact complete staging can be published; an exact visible manifest
-can be synchronized and returned. Partial, changed, unsafe, aliased, semantically
-equivalent-but-differently-encoded, or simultaneously staged/published files refuse
-without replacement or cleanup. A partial ledger tail still refuses reopen.
-Local reconciliation may synchronize or publish retained local files; it performs
-no remote effect and appends no new event after readiness. Read-only inventory
-and inspection remain separate from durability reconciliation.
-
-Inventory may observe a manifest whose publisher lost its return; visibility alone
-is not proof of that earlier invocation's success. `complete_capture` returns the
-original `BackupSummary`, including its exact manifest hash, after local admission
-and synchronization. Existing list/latest and payload verification consume that
-same manifest. Standalone complete-bundle admission for restore is still separate.
-
-Legacy review revisited frozen artifact-writer finish/publication and tests for
-changed closing custody and acknowledged process death at
-`4ae087fad8c23de712aa60bf569bde4b2b932651`. The
-`29bf7a51044e72c4bd8cf6dc5cd6cb24d3711b4d` history removed an unnecessary downloaded
-stage. Reuse exact retained-byte checks, fail-closed partial recovery and the Host
-publisher; do not import the old layout or add another persisted lifecycle stage.
-Native tests exercise full/partial readiness frames and publication crash images.
-The small real IC journey now reaches manifest publication and existing inventory,
-then reconciles after gateway shutdown and revoked live authority. Physical power
-loss, maximum-size throughput and hosted macOS remain unqualified.
-
-Target claims remain retained after completion. Explicit `create_capture_after`
-authenticates the completed predecessor and replaces its claim to create a new
-capture of the same target. Restore has no new bundle. Durable source binding in its plan is implemented;
-terminal restore state and load qualification remain proposed. No pruning or remote deletion is implied.
-
-## Concurrency and target ownership
-
-Canic owns the bounded task pool. Each Backup operation is sequential; distinct
-network/canister targets can progress concurrently without a store-wide effect
-lock. There is no Backup batch plan or claim of consistent fleet capture.
-
-Creation takes the target lock first, then source-bundle custody for restore,
-then operation custody. Ordinary advancement holds only its admitted source and
-operation locks and checks its retained owner binding. Never acquire the target
-lock while holding an operation in the reverse order.
-
-The durable owner remains after completion or process death. An occupied unfinished
-or uncertain owner refuses new work. Explicit succession takes the target lock
-then the predecessor operation lock nonblockingly, admits its exact published
-completion and reauthenticates its retained evidence before replacing the owner. Preserve the prior operation and bundle. Never
-remove/replace lock files: those names must continue to identify the same lock.
-Read-only terminal admission does not need a current target claim. Explicit local
-completion reconciliation may synchronize original files, as described below.
-
-An authenticated failure is not automatically terminal: local closure must prove
-no unresolved call or dependent continuation remains. A new owner never refunds
-or resets an old operation's authority. Separate stores/hosts remain coordinated
-by application maintenance custody, not these local locks.
-
-## Implementation checks
-
-Further local-store implementation must exercise interrupted manifest publication,
-corrupt/truncated records, changed paths, target contention and stale owner records.
-Inventory cases cover multiple networks/targets, clock ties, unfinished work,
-unsupported records, bounded scans and completions appearing during enumeration.
-Exact golden bytes and independent digest vectors accompany the format writer.
-Real capture/restore still requires the production transport and Testkit journeys
-in the operation contract; passing local-store tests cannot substitute for them.
-
-Blob upload/download, remote authentication, funding and retention remain v2
-integration work. Add no unused dependency or generic storage abstraction now.
+Missing payload members can be created from original certified evidence; exact
+complete members can be reused. Partial/altered/unknown files remain and refuse.
+Complete exact manifest staging can reconcile create-only; partial/changed staging
+refuses. No automatic rollback, truncation or cleanup is authorized. Read-only
+published replay performs no sync or publication.
 
 ### Completed receipt admission
 
-The implemented admission path now distinguishes an exact published receipt from
-readiness or staged publication. Only the former can outlive its original owner
-binding. Original plan, closed ledger, retained evidence and payload still pass
-their existing checks. Missing, changed or staged-only manifests require the
-original owner; they cannot create a receipt under a successor's claim. Reopen
-is read-only. Explicit completion reconciliation can still synchronize original
-files, but cannot sign, submit, append events or alter the successor's owner.
-Explicit claim replacement is described below.
-
-The focused legacy review revisited frozen `4ae087fa`'s
-`model/attempt_journal::applied_receipt`, its
-`applied_receipt_identifies_direct_or_observation_evidence_after_replay` regression,
-and `a860d144`'s original-plan ownership consolidation. The retained lesson is
-that an original receipt does not grant new dispatch or release authority. The
-new store uses its existing manifest/closed-journal checks; it imports neither
-legacy observation graphs nor an independent terminal marker. New native cases
-exercise changed-owner replay and unfinished, missing, staged and changed receipt
-refusals. Synthetic owner replacement qualifies admission, not atomic succession
-or physical power loss. No legacy source was copied.
+Published capture evidence remains admissible after authenticated target ownership
+changes. Structural custody requires the actual published receipt to bind original
+intent, closed journal and payload tree. A staged/missing receipt cannot excuse
+a changed owner. Public open/inspect/source/advance still authenticate full original
+semantic history. Held restore custody pins the trusted manifest/payload separately.
+There is no persistent authentication cache.
 
 ### Explicit completed-capture succession
 
-`BackupStore::create_capture_after` takes a new plan/approval, the exact predecessor
-plan and its historical transport/provider. It requires the same target and a
-fresh operation ID. Initial journal capacity is admitted before writes. Under
-target-then-predecessor locks, it requires the current owner to match the original
-plan and an already-published exact receipt. It reuses `complete_capture` for
-historical authentication and durability reconciliation; it cannot finish an
-unpublished predecessor or issue a new remote call.
-
-Host FS's held-directory `write_at_validated_with` atomically replaces only the
-small owner pointer, with private permissions and parent synchronization. Host owns
-its temporary projection and before/after-publication errors; an interruption can
-retain staging, which normal strict directory admission refuses without cleanup.
-The validated callback checks the original owner and held directory custody while
-both locks remain held. The same initial-intent writer then creates the successor.
-Original operation, bundle, receipt and lock files are never removed or replaced.
-There is no new on-disk schema, handoff journal or generic transaction framework.
-
-This is not a multi-file transaction. A failure after owner publication may leave
-the successor absent or partially created. Preserve its claim and any files; only
-complete original intent can reopen. No automatic completion of partial creation,
-claim rollback or blind replacement retry is provided. A completed predecessor
-can still be admitted under the replacement claim. A new capture starts with its
-own finite plan, zero reserved calls and independently required live authority.
-
-Focused legacy review inspected frozen `4ae087fa`'s `ops/persistence/journal_lock`
-and its exclusion, retained-lock and unsafe-substitution regressions, plus the
-`a860d144` ownership consolidation history. Reuse nonblocking exclusion and stable
-lock identities; legacy pathname lock creation/cleanup does not own new store
-claims. Native regressions cover lock contention, original receipts, initial
-budget admission, changed/unfinished/staged predecessors and incomplete successor
-images. The real-IC completion fixture now succeeds through succession after
-server shutdown with revoked live permission, then replays the original receipt
-without extra signatures. This does not qualify physical power loss, maximum-size
-throughput or full second-capture effects. No legacy source was copied.
+`create_capture_after` requires exact approval and same target. It acquires target
+then predecessor lock, verifies/synchronizes its published completion, atomically
+replaces ownership through Host, then retains the new immutable intent. New operation
+allowance is separate; predecessor evidence/receipt is unchanged. Unfinished
+predecessors, occupied IDs, ambiguous owner publication and held locks refuse.
+Failed creation preserves any new claim/partial original records without rollback.
 
 ### Read-only completion verification
 
-`CaptureOperation::verify_completion(expected_manifest, transport, provider)`
-requires original operation custody and an already-published exact manifest. It
-checks the selected hash before reauthenticating original capture, metadata,
-accepted data and final-status evidence. The shared assembly reader compares every
-member with its certified source bytes and rechecks the tree commitment; its
-private verification branch returns before creation, synchronization or publication.
-The operation's plan bounds still cap evidence, payload and individual reads.
-
-Completion publication and verification share authentication and manifest decoding.
-The verifier cannot finish staging, choose a timestamp or append an event. The
-returned `BackupSummary` is passive evidence: a future restore still needs an exact
-same-release/target plan, held payload/source custody and the exact durable source binding in its plan.
-A previous verification does not make future reads safe or create live permission.
-
-The focused review inspected frozen `4ae087fa`'s
-`ops/persistence/download_journal/ic_snapshot_artifact/verification`, its exact
-length/hash and replaced-file regressions, and `9f7b886a824eec67dda8f81792a560436419bb2a`'s
-shared verification/upload-reader change. Reuse one owner for exact original-byte
-checks and retain admission/closing custody; do not import legacy artifact layouts
-or upload authority. Native cases cover expected-hash mismatch, changed member
-bytes/length, staged/missing publication, and replay after owner change. The real-IC
-fixture verifies before and after succession with the gateway stopped and live
-permission revoked. No legacy source was copied; physical power loss and practical
-maximum-size throughput remain unqualified.
+`verify_completion(expected_manifest)` authenticates original intent, requests,
+certificates, complete payload and exact published receipt. It takes no transport,
+signer or live application authority and performs no writes/sync. Staged publication
+is not a completed receipt. Completion supplies passive evidence, not rewind safety.
 
 ### Authenticated held capture sources
 
-`BackupStore::open_capture_source(operation, expected_receipt, maximum_payload_bytes,
-transport, provider)` composes completion verification with the existing held
-payload reader. The selected exact `BackupSummary` binds the original operation,
-network, canister, release, module, snapshot, timestamps and manifest. The operation
-must belong to the same held store; identical names in another store are insufficient.
-Payload admission applies the caller's total byte limit before certificate replay.
-Closing checks retain the original payload descriptors through authentication.
+`open_capture_source` requires the same held store and exact caller-selected receipt
+plus a positive payload ceiling. It holds capture exclusion and original verified
+payload descriptors. Bounded reads check exact target/snapshot/geometry against
+ephemeral source block hashes and closing custody. Wrong store/receipt, changed
+source/lock/member or exhausted bounds refuse; no file repair occurs.
 
-`CaptureSource` borrows the capture operation and store: the original operation
-lock cannot be dropped and its workflow cannot advance while the source is used.
-It exposes only the selected summary and existing bounded `read_data` behavior.
-Reads verify at most two original 1 MiB blocks and return at most 1 MiB, with the
-existing manifest/directory/file checks. They do not rescan the whole journal or
-reauthenticate certificates per extent. Invalid requests leave the reader usable;
-IO, integrity or custody refusal invalidates reads. External namespace/content
-writers remain excluded by the caller throughout the handle's lifetime.
-
-This is ephemeral source custody, not a restore plan, target claim or durable
-source reference. Original capture evidence is authenticated at admission; no
-future restore permission, immutable-host guarantee or upload schedule is inferred.
-The eventual restore workflow must acquire target custody before source-operation
-custody and persist its exact source reference and bounded intent before effects.
-No new stored record, hash scheme, block cache, reader or dependency is introduced.
-
-The focused legacy review inspected frozen `4ae087fa`'s
-`ops/persistence/download_journal/ic_snapshot_artifact/upload/plan/source`, its
-`streaming_bindings_hash_exact_consumed_bytes_once_and_reject_short_or_excess_input`
-regression and `9f7b886a824eec67dda8f81792a560436419bb2a`'s shared reader consolidation.
-The reused lesson is to retain original custody and derive reads from the same
-verified bytes. The existing payload block reader owns that behavior here; legacy
-upload plans and destination bindings are not copied ahead of restore planning.
-Native source tests cover original-lock retention, wrong selections/stores/budgets,
-invalid requests and changed bytes. Existing bounded/cross-block reader regressions
-are rerun. The real-IC fixture reads the authenticated source offline before and
-after target succession. This does not qualify restore effects or physical power
-loss. No legacy source was copied.
+Focused frozen-legacy review is recorded in the capture/transfer/inventory contracts:
+`4ae087fad8c23de712aa60bf569bde4b2b932651` attempt-journal, artifact verification/
+completion and original source readers; fixes `d245b0f03a505ba5215d65c10bdebf1890c7dc37`,
+`a860d14421b9ff1c61c1dce079cdc6a19316bfd0` and
+`9f7b886a824eec67dda8f81792a560436419bb2a`. Original-evidence/ownership guarantees
+are retained without legacy stage catalogs or mutable reference-release journals.
+Native custody/death/publication tests and actual IC succession/older-source cases
+now exercise the replacement public consumer. No legacy implementation was copied.
 
 ### Exact restore transfer calculation
 
@@ -392,9 +126,9 @@ admission: executor hops, proofs, observations and provider-specific envelope li
 remain separate. Source DTOs identify the original snapshot, not a new destination.
 
 This calculation is not the durable `RestorePlan`: it has no approval commitment,
-destination allocation, request digests, spending or source reference. Future
-restore intent must bind this receipt and schedule alongside execution/application
-authority before any effect. An owned calculation does not keep source files alive;
+destination allocation, request digests, spending or source reference. The restore
+intent binds this source and the versioned schedule algorithm alongside the actual
+connection/application witness before effects. An owned calculation does not keep source files alive;
 retain/re-admit the matching `CaptureSource` before consuming its reads.
 
 Focused legacy review inspected frozen `4ae087fa`'s `model/data_stage_plan`,
@@ -405,391 +139,153 @@ coverage and admission before data-stage work. Do not copy the legacy child-plan
 workflow graph, allocation association or retries ahead of a durable restore
 contract. Native tests exercise exact region boundaries, zero-length regions and
 chunks, sorted chunks, selection/budget refusal and invalidated sources. Existing
-capture/readback regressions exercise the shared mapper; the real-IC fixture reads
-all source bytes through a newly sized restore schedule offline. No restore effect
+capture/readback regressions exercise the shared mapper; the actual-IC fixture reads the original module through the public older source. No restore effect
 or physical power-loss qualification is implied; no legacy source was copied.
 
-### Immutable restore plan and approval
+### Immutable restore approval and original custody
 
-`RestorePlan::new` consumes an authenticated held `CaptureSource` and an explicit
-`RestoreRequest`. Construction encodes intent in memory; separate create/reopen methods below
-retain the original plan, target owner and initial journal.
-The profile is direct-host only. Canic can own host signing/application admission;
-executor-route restore is not declared by this request.
+`connection.plan_restore(source, request, options)` binds the actual direct profile
+and the authenticated held capture source before approval. `RestoreRequest` retains
+independent limits and the same network/canister/release/trust, an explicit sender,
+initiator and new operation ID. The original capture may be older than the current
+completed owner. No current controller can substitute for the approved restore sender.
 
-The request selects a fresh 32-character lowercase operation ID, same source
-network/canister/release and trust-root commitment, approving initiator, direct
-sender and `RestoreLimitsRecord`. The sender/initiator may differ from capture;
-this declaration does not prove current controller or rewind authority. Payload
-and evidence ceilings are 1..=1 GiB, extent 1..=1 MiB and at most payload allowance,
-network/signing ceilings 1..=8192, with observations a subset of network allowance.
-Base `2*N + 7` calls must fit both network and signing ceilings. Provider overhead
-and initial-journal capacity still require admission before creation/effects.
+The canonical `ic-backup/restore-intent/1` JSON contains format, operation ID,
+network/canister/trust, initiator/release/module/sender, source operation ID,
+capture approval, trusted manifest, independent limits and direct profile, in that
+order. It shares capture's profile/schema bounds and strict canonical decoder.
+The source metadata and float bits remain in original certified evidence. Derived
+counts and source-request digests are not persisted. The versioned source algorithm
+reconstructs the schedule from exact authenticated member lengths.
+Approval is `SHA256("ic-backup/restore-intent/1\0" || original_intent_bytes)`.
+The independent [JSON vector](../../crates/ic-backup/src/store/restore/restore-intent.json)
+and [digest](../../crates/ic-backup/src/store/restore/restore-intent.sha256)
+are passive encoding fixtures, not restore authority. The old local-restore-plan/1
+reader and exact source/build artifacts are preserved under the
+[host-store checkpoint](../development/setup.md#host-store1-reader-before-complete-restore).
+No old plan, ledger or status evidence is rewritten under this format.
 
-The closed `ic-backup/local-restore-plan/1` record has fixed writer field order:
-`format`, `operation_id`, `network`, `canister`, `trust_root`, `initiator`, `release`,
-`module_sha256`, `sender`, `source_operation_id`, `source_plan_sha256`,
-`source_manifest_sha256`, `limits`, `data_calls`, `minimum_management_calls`,
-`source_requests_sha256`. Limits use the documented payload/extent/network/
-observations/signing/evidence field order. Exact record bytes are capped at 1 MiB.
-The source manifest commits the original metadata and payload; raw float state is
-not copied into plan JSON. Source module and derived counts are not caller overrides.
+`create_restore(plan, approval, completed_capture_predecessor)` acquires target,
+predecessor, distinct source and new operation locks in that order. The current
+owner must be a completed capture; reuse its held source handle when they coincide.
+Original source/approval/manifest/bytes and predecessor completion are authenticated
+and synchronized before atomic owner replacement. Identical predecessor/source
+custody reuses its completed synchronization; initial journal capacity is admitted
+before changing ownership. The common recorder then retains
+`intent.json`, `journal.bin`, lock and only evidence referenced by original facts.
+It creates no bundle, payload copy, dependency index or separate status journal.
+Unknown/partial files and occupied IDs remain intact; uncertain publication may
+leave an occupied partial operation. No rollback, missing-file completion or reset
+is attempted. Future retention must account for original restore source obligations.
 
-Approval is `SHA256(UTF8("ic-backup/local-restore-plan/1\0") || original_json_bytes)`.
-The independent encoding vector is
-[restore-plan.json](../../crates/ic-backup/src/store/restore/restore-plan.json), with
-[its SHA-256](../../crates/ic-backup/src/store/restore/restore-plan.sha256) calculated
-using the separate system SHA-256 utility. That passive record is an encoding
-vector, not a real authenticated capture or permission to restore.
+`open_restore(id, approval)` is read-only and requires neither a reconstructed
+plan nor a signer/connection. A bounded original intent read selects the target
+and source; it grants no custody or effect authority. After target/source/operation
+locks are acquired, the recorder re-decodes and compares those exact intent bytes,
+checks the held target directory/lock identities and authenticates original source
+and journal. A different independently valid plan cannot replace the selected
+approval. Original spending remains unchanged; unknown/missing/unsafe/oversized
+files refuse intact. The recovered `operation.plan()` supplies the retained plan.
+Held source descriptors and capture evidence are also rechecked around live
+signing/submission awaits; payload reads verify original bounded blocks.
 
-The ordered-source commitment hashes `UTF8("ic-backup/restore-source-requests/1\0")`
-followed, for every source DTO, by its u32 little-endian ordinal, u32 little-endian
-encoded length and raw 32-byte SHA-256 of Platform's owned Candid argument bytes.
-Each encoding is bounded to 4 KiB; hashing streams into a 1 MiB bounded sink.
-At most 4092 requests fit the admitted management ceiling. Destination-specific
-metadata/data/load arguments cannot be selected until allocation is authenticated;
-those exact requests must later be bound in the original restore journal before
-submission. The plan commitment is not a replacement for that evidence.
+### Fixed restore through the shared recorder
 
-`RestorePlan::decode` bounds raw input before parsing, refuses unknown/duplicate
-fields and noncanonical identities, re-admits the declaration against the currently
-held authenticated source, and recomputes every derived binding. Valid original
-JSON whitespace/order remains unchanged and therefore affects approval. It never
-pretty-prints a recovered plan or infers unused spending from a missing journal.
-No file, source reference, clock or provider is touched by construction/decoding.
+`RestoreOperation::advance` derives exactly initial status, snapshot list,
+metadata allocation, N uploads, metadata readback, N byte readbacks, pre-load
+status, load and post-load status: `2*N + 7` management calls. Each advance makes
+at most one management submission. Pending signing/submission never repeats.
+Reply import and explicit observation have the same original-request/time/finite
+accounting owner as capture; there is no restore signer/provider family.
+[Capture's recorder contract](../architecture/capture-intent.md#files-and-ordering)
+owns all call/observation facts, uncertainty, exact evidence, HTTP and authentication.
 
-Focused legacy review inspected frozen `4ae087fa`'s `model/operation_plan`, its
-canonical commitment, changed-owner/budget and closed-schema regressions, plus
-`a860d14421b9ff1c61c1dce079cdc6a19316bfd0`'s ownership consolidation. Reuse exact
-source/authority binding and bounded schema admission; do not import inventory
-selection graphs, child-plan journals or recursive intent. Unlike legacy's alias
-normalization test, persisted identities here must already be canonical and replay
-retains original bytes. Native tests cover source/count substitutions, each mutable
-declaration field, bounds, duplicate/unknown/partial records and exact replay.
-The real-IC fixture builds and decodes this plan against an offline authenticated
-source without creating a restore operation or adding signatures. No legacy code
-was copied; upload/load remain unqualified. Local persistence qualification follows below.
+The source must fit the new approved extent, payload, signing and base network
+ceilings. Known payload arguments plus conservative envelope headroom and metadata
+encoding must fit the original request ceiling. The complete remaining call,
+signing/network/frame/evidence ceiling is checked before allocation. Capacity list
+is a refusal aid, not a reservation of remote capacity. Allocation uses
+`replace_snapshot = None`; its bounded original reply must yield a fresh nonempty
+ID of at most 256 bytes, distinct from inventory and the original source snapshot.
+A lost allocation is never inferred from list differences or repeated.
 
-### Restore creation and interrupted intent
+Upload metadata preserves all globals and raw floating bits, explicit timer/hook
+and certified data; absent required values refuse without defaults. Ordered uploads
+reuse source geometry, including each empty whole chunk. Destination metadata must
+identify metadata upload and match all restorable fields and complete chunk hashes;
+new timestamp/version are provenance. Every destination byte ordinal must equal
+its held original source bytes. A unit upload response alone grants no load authority.
+The bounded metadata/data decoders and exact comparison have one shared owner.
 
-`BackupStore::create_restore` persists the approved `RestorePlan` as the sole
-source-dependency declaration. It accepts the plan and exact approval, an explicit
-completed predecessor plan and the historical transport/provider. Both captures
-must be admissible under that supplied transport/provider; there is no route fallback.
-Its existing source operation, source-plan digest and manifest digest identify
-what must remain available. No `bundles/*/references/` files, second dependency
-journal or reference-release API are needed while every operation and bundle is
-retained and deletion is unsupported. This does not authorize external cleanup:
-missing source custody refuses restore. Any future retention feature must first
-account for original plans and unfinished operations; absence of a reverse index
-is never evidence that a source is unused. Completed bundle admission stays strict.
+Initial, pre-load and post-load status use pairwise distinct original signed
+request IDs and require the source module, stopped state
+and actual restore sender in a bounded duplicate-free controller set. Guard actions
+distinguish allocation, upload, read and load. The integration must maintain the
+original continuous witness and admit rewind immediately before loading. It owns
+application fencing, external-effect settlement, later acceptance and start.
+No stop/start, funding, uninstall, replacement or cleanup fallback exists.
 
-The source may be an older completed capture of the same target and release;
-it need not be the current target owner. Creation must independently authenticate
-the current owner's completed capture before replacing its claim. An unfinished,
-uncertain, unsupported or missing owner refuses. The writer does not infer
-terminal restore ownership or add a generic terminal-operation abstraction.
+An original confirmed load with missing final status remains completion pending;
+load never repeats. After authenticated post-load status, a local `LoadedStopped`
+footer freezes completion time and closes this same journal. First restore-call
+reservation already includes footer capacity. The returned `LoadedStopped` receipt
+is derived from source/approval/destination/time and the closing journal head.
+There is no extra receipt file. Cold complete replay authenticates original history
+and source without current clock, guard, signer, HTTP or writes. Rejection or
+readback/status failure stays durably settled and blocks dependent work.
 
-Creation uses the existing nonblocking locks in this order: target, current-owner capture,
-source capture when distinct, then new restore operation. When source and owner
-are the same capture, retain one handle instead of reacquiring its lock. These are acquired
-internally; a caller-held source operation must be released before creation
-so that the API cannot invert target/source ordering. The resulting `RestoreOperation` holds source operation and
-payload custody; historical receipt admission
-continues to work after its target claim changes. Independent targets remain
-independent; no store-wide lock or scheduler is introduced.
+`create_capture_after(..., OperationPlan::Capture/Restore(predecessor))` admits
+either exact completed purpose under target-before-predecessor/source locks.
+A completed restore can survive that changed owner only through full original
+source/evidence authentication. Missing terminal completion cannot excuse changed
+ownership. Restore directly after another restore is not a selected consumer;
+new capture after a completed restore is supported.
 
-Before replacing the claim, check exact approval, unused operation ID, source
-identity/bytes, current-owner completion and capacity for the initial journal.
-Re-admit the plan against that held source; an earlier in-memory calculation is
-not fresh file custody. Synchronize admitted completed source/predecessor evidence
-through the existing completion path, once per distinct capture. When source and
-predecessor are the same held operation, reuse its completed synchronization;
-exact source admission and closing payload checks still run. Historical authentication must not sign,
-read a current clock or dispatch network requests. Do not weaken original
-provider/root/route bindings to make a predecessor fit a new restore selection.
+### Focused restore review and qualification
 
-Then use Host's existing atomic owner replacement and shared private create-only
-file mechanics: retain the new operation lock, exact approved `plan.json` and
-`ledger.bin`, synchronize files/directories, and check closing custody before
-returning. Reuse the existing length/digest framing for the sole `Created` frame,
-seeded with original restore-plan bytes. Admit it against the original evidence
-ceiling before any claim change. No new completion marker, staging journal,
-implicit retry or allocation record is required for this local creation step.
+Reviewed frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`,
+`workflow/ic_snapshot_restore/{mod.rs,source/mod.rs,tests/mod.rs}` (`failure_boundaries_retain_pending_or_applied_and_never_repeat_provider`,
+`independently_valid_load_plan_cannot_rebind_the_admitted_snapshot_source`),
+plus original request/result history `d245b0f03a505ba5215d65c10bdebf1890c7dc37`
+and observation/effect split `a860d14421b9ff1c61c1dce079cdc6a19316bfd0`.
+Cold reopen additionally re-reviewed legacy source/ancestor re-admission and the
+independently-valid-source rebind regression at those exact anchors, plus
+`9f7b886a824eec67dda8f81792a560436419bb2a` verification-pass ownership. The new
+store selects bounded original intent before locking only to establish lock order,
+then re-admits exact bytes/source under the original approval. Native regressions
+cover valid replacement plans and lock identities; no legacy stages are copied.
+Retain source-before-effect admission, exact allocated identity/readback, retained
+result before policy, stopped completion and no repeated uncertain load. Replace
+legacy stage/checkpoint orchestration with the two concrete fixed procedures and
+one original-evidence recorder. No legacy implementation was copied.
 
-| Retained interruption image | Required admission |
-| --- | --- |
-| Original owner unchanged, no new operation | Original owner still governs; no restore exists. |
-| Host owner-publication staging or uncertain replacement | Preserve all names; strict target admission refuses ambiguous custody. |
-| New owner with missing/partial operation, plan or journal | Preserve the occupied claim and every byte; refuse without rollback or completing missing files. |
-| Complete exact owner, plan and initial journal; return lost | Explicit reopen can validate the original intent and source without creating anything or replenishing allowance. |
-| Changed source, approval, owner, lock identity, extra files or ledger tail | Refuse intact; never regenerate records or infer zero spending. |
+Restore-only request/signature/certificate/HTTP/preparation/submission tests no
+longer duplicate the shared direct/runtime failure matrix. Their original-request,
+finite reservation, cancellation, orphan, rejection and offline-replay guarantees
+are exercised at `store/operation/` and `capture/advance/tests/`. Restore keeps
+strict plan/source/custody/transfer cases and fixed-policy allocation, unit-arity,
+capacity, metadata-origin, byte mismatch, status/sender, reused status request, rejection and order cases.
+Historical status-only encodings remain with their preserved reader. Fake native
+calls do not qualify management effects. The retired test-only readback cursor
+adds no parallel model: its partial-prefix, source/destination routing, mixed-region
+and empty/nonempty-chunk corruption cases now exercise the real fixed procedure.
+Original source shape/hash faults stay with the held payload reader, and maximum
+wire/data bounds stay with the shared decoder. Unlike the old correctable local
+accumulator inputs, a policy-invalid retained original reply permanently blocks
+that procedure projection; another reply cannot replace settled evidence.
 
-`open_restore` accepts the exact original plan and approval; it is read-only.
-Callers may retain that plan, or decode its bounded original bytes against an
-authenticated source and release the temporary source handle before reopening.
-No API bootstraps a plan from an arbitrary operation ID yet. `inspect` checks
-original owner, plan/journal bytes, held file identities and source custody.
-Only the signing-preparation events below are admitted after the initial frame;
-unknown suffixes refuse. Reopening itself performs no signing or management call.
-Before later effect APIs exist, qualify synchronization after uncertain returns,
-original source custody, bounded reservations and exact allocation-dependent
-requests. No create/reopen path may create an upload snapshot, sign or load state.
-
-Focused review used frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`'s
-`ops/persistence/immutable_record`, `journal_lock`, `layout_lifetime` and
-`restore_reference_release`, their private/create-only, changed-binding, lock
-substitution and incomplete-terminal regressions, and the `a860d144` ownership
-consolidation history. Retain original-byte checks, stable exclusion and refusal
-of unresolved custody. The old mutable reference-release catalog and external
-command sidecars solve lifetime responsibilities absent from this selected writer;
-copying them would add another persisted owner without a consumer. No code was copied.
-
-Six native groups cover exact creation/reopen, private files and stable locks,
-initial budget/approval/contention refusal, partial/changed/extra retained records,
-source corruption, held file replacement and older-source selection with complete
-or unfinished current owners. The distinct completed-owner case uses explicitly
-synthetic call evidence rebound to its own plan; it does not qualify two real IC
-captures. The actual-IC fixture creates and reopens restore intent after gateway
-shutdown and revoked live permission, with byte-identical journals and no additional
-signatures. These tests qualify local intent, not upload/load, physical power loss
-or every Host publication failure boundary. Capture succession regressions continue
-to cover shared predecessor admission and the existing Host replacement path.
-
-### Restore status prerequisites
-
-`RestorePlan::validate_status` and `validate_status_reply` apply the existing
-stopped/module/controller policy to the source module and the restore plan's
-approved direct sender. Capture's sender and the approving initiator cannot
-substitute for that sender. Capture and restore share one private requirements
-projection and one Platform wire reader; no synthetic capture plan or alternative
-management DTO is constructed. Existing `CaptureStatusError` and
-`CaptureStatusReplyError` types are reused without an alias or changed variants.
-
-The wire path retains exact single-argument framing, the 1 MiB reply ceiling,
-ten-controller bound, fixed module hash and the existing allocation/header/work
-limits with separate cumulative skipped-work accounting. Other fields are skipped,
-not semantically admitted. Typed and wire validation are pure: they preserve input,
-plan and journal bytes and do not authenticate the request, network, target or time.
-A matching status does not prove a load outcome, continuous maintenance or safe
-rewinding of external obligations. Durable restore reservations and status dispatch
-are not implemented by these methods.
-
-Focused legacy review revisited `policy/ic_observation/settlement` at frozen
-`4ae087fad8c23de712aa60bf569bde4b2b932651`, especially
-`statuses_never_infer_original_outcomes_or_change_spending`. History `c47b96b6`
-removed a duplicate outcome projection. Retain that separation between observed
-status and effect attribution; import neither a settlement graph nor a cached
-success flag. No legacy code was copied. Two new authenticated-source native groups
-exercise the restore sender, source module, controller and raw-wire bounds with
-unchanged journals; all shared capture status regressions pass. This qualifies
-pure policy, not restore signing, submission, recovery or IC effects.
-
-### Restore signed status request admission
-
-`RestorePlan::authenticate_status_request` locally checks one exact direct-host
-`canister_status` request using the existing `StatusAdmissionRecord` and
-`PreparedStatus` representations. It admits the original per-call request/result
-caps, network ceiling and evidence allowance including the initial journal and
-four maximum-size frames. It bounds the complete retained request before protocol
-decoding, then checks the management destination, restore sender, exact Platform
-canister arguments, original expiry/request ID and strict Ed25519 or low-S
-secp256k1 signature. Delegation and sender-info remain unsupported. Capture and
-restore share content/signature and limit checks; no capture plan is manufactured.
-
-The check preserves original bytes and reads no clock. It grants no reservation,
-remaining cumulative allowance, dispatch or retry permission. Provider/application
-bindings, live timing, original network/root/route, observation contents and certified
-results need their separate admission. Historical signature validity is not fresh
-send authority. This pure method performs no signer, transport or journal effect.
-
-Focused review revisited the frozen `4ae087fa` attempt-journal implementation and
-changed-authority/pending-attempt regressions, plus `a860d144`'s original-plan
-ownership consolidation. Preserve original authority and spending independently of
-signature validity; do not import the legacy workflow graph or refund pending work.
-Two new native groups use real signatures for both keys, signed wrong content,
-identity/framing changes and finite limits against authenticated capture sources.
-Shared request and initial-admission regressions cover unchanged capture callers.
-No legacy code was copied; these checks do not qualify restore dispatch or recovery.
-
-
-### Durable restore status signing preparation
-
-`RestoreOperation::prepare_status` admits one original `StatusAdmissionRecord`,
-checks the exact signer protocol and live application/sender custody, then retains
-`status_signing_reserved` before invoking `RestoreStatusSigner` once. Preparation
-must have a positive remaining deadline of at most 300 seconds. Tokio bounds the
-signer future; integrations must enforce output and preparation-traffic ceilings,
-stop on cancellation and never retry or detach work. External signer traffic is
-part of `prepare_requests`; no management ingress is submitted by this API.
-
-The preparation prefix of the original-plan-seeded ledger contains Created followed by at most one
-canonical JSON `status_signing_reserved` event with `admission`, then one
-`status_prepared` event with `request` (the shared byte-length/SHA-256 reference).
-The same bounded frame reader and hash chain serve capture and restore. No second
-journal, persisted phase projection or generic workflow graph is introduced.
-Initial journals remain readable; older readers refuse extended journals intact.
-
-Reservation synchronizes original intent and directory custody before append/sync.
-Preparation authenticates exact call/signature bytes and requires expiry to cover
-the original submission deadline. It creates `status-request.bin` exclusively,
-synchronizes that evidence before its journal reference, then appends/syncs the
-prepared frame. Uncertain persistence invalidates the handle. Reopening validates
-original custody, canonical transitions, request hash, length and signature.
-Partial frames, orphan evidence and unknown suffixes refuse without repair.
-
-`inspect_status` projects original admission, zero/one signer reservation,
-reserved preparation/submission network totals and the retained request ID, with
-submission-reserved and result-retained flags. These are reservations and custody
-projections, not measured usage or authenticated success. Prepared replay reads no clock or live signer;
-pending signing returns `SigningPending` without refund or another invocation.
-Changed admission refuses. Signer failure, invalid output, timeout or cancellation
-after reservation stays spent. No pending-signature import/recovery API exists yet.
-Provider-owned observation bytes are retained and bounded but remain opaque here.
-Signing does not admit HTTP routes or certified results; the separate local verifier
-below checks certificate evidence without changing the prepared journal.
-
-Focused review used frozen legacy `4ae087fa`'s `ops/persistence/attempt_journal`,
-including `failed_reservation_never_returns_a_slot_and_forces_exact_recovery`
-and changed-authority/pending cases, plus ownership history `a860d144`. Retain
-spend-before-entry, original authority and unresolved-attempt refusal; omit the
-legacy command sidecars and workflow graph. No legacy code was copied.
-Four native groups qualify ordering, exact replay, refusal before spending,
-failed/cancelled/invalid signer outcomes and retained partial/orphan images.
-The actual-IC completed-source fixture adds local fixture signing and cold replay
-with revoked signing permission, unchanged request/journal bytes and no additional
-capture signatures. Its opaque observation placeholder grants no HTTP authority.
-These checks do not qualify physical power loss, every filesystem failure boundary,
-external signer processes, status dispatch or restore upload/load.
-
-
-### Restore status certificate authentication
-
-`RestorePlan::authenticate_status_evidence` authenticates the exact direct-key
-request and bounded evidence using the source-bound trust root, effective canister,
-original request ID and retained certificate/delegation time windows. It reuses
-capture's bounded Platform certificate verifier through a private authority
-projection, with no fabricated capture plan or second provider framework.
-The observation profile remains the exact 79-byte capture certificate policy;
-unsupported or malformed profiles and excessive records refuse without rewriting
-supplied bytes. Original policy custody remains the caller’s responsibility.
-No current clock, file, signer, transport or journal is accessed.
-
-Successful authentication establishes certified response bytes and outcome only.
-Callers must establish original custody separately. A certified rejection is
-valid evidence, not a successful status result; stopped/module/controller policy
-still uses `validate_status_reply`. Neither method grants submission, settlement,
-retry or application authority. Signing-only fixtures with opaque observation
-placeholders remain unsuitable for this certificate profile or dispatch.
-
-Focused legacy review used frozen `4ae087fad8c23de712aa60bf569bde4b2b932651`'s
-`crates/ic-backup-agent/src/reply_evidence` and its
-`original_adapter_domains_and_chronological_attempt_framing_match_fixed_goldens`
-regression, plus consolidation history `94b94db89f77968eb4b480ef6d0576d41f6472e2`
-(`standalone/application` reply authority). Preserve original authority, request
-and reply association. Legacy's domain-separated digest was not certificate proof;
-reuse the new capture verifier rather than copying that envelope or workflow graph.
-No legacy code was copied. Native real-signature cases exercise both direct keys,
-wrong roots/results/outcomes/request IDs, malformed proofs, original time windows,
-exact frame limits and delegation target binding. Existing capture rejection and
-certificate cases cover the shared decoder. These are local crypto checks, not
-qualification of restore IC effects.
-
-### Direct restore preparation profile
-
-`DirectRestoreStatus<S>` implements the existing `RestoreStatusSigner` interface
-for `RestoreOperation::prepare_status`. Its domain-separated commitment binds the
-fixed HTTP origin, network, root and timeout; the integration signer/admission
-protocol; and the explicit certificate/delegation ages and clock skew. The wrapped
-integration owns continuous application admission and commits its guard configuration
-in its protocol. It receives the original composite admission unchanged. There is
-no second guard trait, provider framework, journal or prepared-record format.
-
-Before reservation, the operation admits original budgets and the composite
-protocol. The direct adapter checks plan/network/root, one-call allowance, live
-bounded timing, observation arithmetic and minimum complete request capacity,
-then calls the integration's effect-free admission. The operation synchronizes its
-existing signing reservation before adapter entry. The adapter signs once through
-the integration and verifies the returned signature, original profile and expiry;
-it checks application authority again before returning. The operation retains the
-exact output bytes under the existing create-only rules. It never rewrites an
-opaque observation into an admitted one.
-
-The signer samples one reference during its reserved invocation for both windows.
-Ages match the committed timing. Future allowance equals original submit deadline
-minus reference plus skew; expiry equals that deadline. The reference must fall
-between invocation and completion, and both original deadlines must remain live.
-Capture and restore share the bounded window arithmetic and transport-binding check.
-`CaptureTiming` remains the existing shared timing configuration; no alias is added.
-
-Failure or cancellation after reservation stays spent. Cold prepared/pending replay
-uses the original operation semantics and never reacquires live authority, signs or
-writes replacement evidence. Preparation itself neither reserves submission nor
-calls HTTP; the operation’s separate submission method below owns that step.
-Old generic preparations gain no new effect authority. Native groups exercise both direct keys, changed configuration before
-spending, unchanged retained bytes and failed/cancelled outputs across reopen.
-They adapt the legacy context-before-network and retained-spending cases cited below;
-no legacy code was copied. These native preparation checks do not prove management
-effects; the separate restore submission fixture below supplies that qualification.
-
-### Restore status submission and replay
-
-`RestoreOperation::submit_status(&direct)` consumes the original prepared request
-and admission from the existing journal. Callers cannot supply another request,
-reservation or result. A never-prepared intent refuses; unresolved signing returns
-`PreparationPending`. For fresh submission, the direct profile rechecks exact
-request/signature, network/root/route/timing commitment and live original application
-authority before one synchronized `StatusSubmissionReserved` frame. It rechecks
-live admission again before entering the shared Host HTTP call path. The original
-submit deadline and ingress expiry bound transport; preparation need not still be live.
-
-Capture and restore use one private v3 call/certificate transport implementation,
-with the existing no-retry client, strict origin rules, bounded body reader and
-certificate decoder. Only an authenticated terminal result can be retained. HTTP
-acceptance, redirects, throttling, server errors, disconnects, timeouts, cancellation
-and unauthenticated proofs leave the original submission pending. Even a reservation
-whose process might have stopped before sending is spent. No automatic resend,
-re-signing, polling, fallback endpoint or restoration of allowance exists.
-
-The original closed journal now permits Created, signing reservation, prepared
-request, submission reservation and settled result in that order. Preparation wire
-names and evidence bytes are unchanged. Its module is named `persistence/status`
-to reflect the complete owner; no second journal or generic workflow engine is added.
-The original admission already reserves the request/result caps and four maximum
-transition frames. Directory admission permits only the evidence actually referenced
-by that history. Partial frames, orphan files, changed bytes/identities and unknown
-suffixes remain intact and refuse; uncertain writes invalidate the held handle.
-
-A valid result is retained create-only as `status-result.bin` and synchronized
-before `StatusSettled` references its exact length/hash. Stopped/module/controller
-policy runs afterwards. A certified rejection returns `Rejected`; a policy-invalid
-reply returns a typed error but remains settled. Cold pending replay returns
-`SubmissionPending` without calling the provider. Cold settled replay reauthenticates
-the original profile and proof, applies policy and performs no clock, guard, signer,
-network or persistence effects. Inspection exposes submission/result presence and
-reserved network totals, not authenticated success or measured requests.
-
-Native HTTP cases cover original envelope/path, refusal before spending, success,
-rejection and invalid status policy; acceptance/redirect/throttle/server failure,
-lost connection, timeout, cancellation and invalid proof; changed results, partial
-reservation frames and an orphan result created after request capture. They preserve
-original records and check zero/one requests without claiming IC management effects.
-The separate `restore_status_submission_and_offline_terminal_replay` IC fixture
-uses a completed real capture source, performs the signed status call, independently
-checks stopped module and snapshot count, then closes the server and revokes the
-guard before exact terminal replay. The previous offline signing fixture remains.
-
-Pending reply import/lookup reconciliation and physical power-loss qualification
-remain unfinished. Upload allocation, data/readback and load are the next restore
-work; this status step does not restore canister state or settle external obligations.
-
-Focused review revisited frozen legacy `4ae087fa`'s Agent `submission/mod.rs`,
-transport constructor and `tests/http_boundary/mod.rs`, especially
-`retention_and_http_failures_preserve_spending_with_zero_or_one_request` and
-`context_and_stale_reservations_reject_before_network`. The `94b94db8`
-consolidation of `standalone/restore` keeps reply authority on the actual original
-request. Carry forward exact association, retain-before-send and uncertain
-post-dispatch retention; omit Agent-owned keys, v4 routing and the legacy stage
-engine. Current capture already owns the replacement v3/Host HTTP behavior.
-No legacy code was copied. The native and actual-IC cases above rerun the applicable
-original-association, finite-spending and effect-free replay guarantees.
+The public-API actual-IC fixture captures independent module/heap/stable
+and empty/nonempty chunks, changes real stable memory, allocates/uploads/readbacks/
+loads the old source, checks stopped module and restored stable bytes independently,
+then starts a fresh capture after restore. Interrupted allocation, mid-upload and
+load retain original certificates; cold local settlement after shutdown/revocation
+never signs or submits again. A separate allocation case resolves through one
+accounted live observation and then replays offline. Existing take-observation and payload-reply recovery,
+source/history and offline terminal replay remain covered. Evidence and failed
+fixtures are retained under the repository targets. Full 1 MiB whole chunks use
+an explicitly approved 2 MiB request / 4 MiB result profile; original smaller
+profiles stay unchanged. Failed load-result writes return the original certificate
+for offline import. A separate normal-dependency executable, built without
+Testkit/PocketIC, continues capture and restore across processes and replays both
+completed operations after backend shutdown. Fixture keys/guards do not
+qualify Canic process/maintenance, production HTTPS, hosted macOS or physical power loss.

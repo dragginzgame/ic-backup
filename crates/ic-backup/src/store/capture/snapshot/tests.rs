@@ -217,7 +217,6 @@ fn unknown_missing_and_wrong_typed_fields_refuse() {
 #[test]
 fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
     let p = plan();
-    let before = p.encoded().to_vec();
     let inventory = vec![snapshot(vec![0, 255])];
     let expected = TakeCanisterSnapshotArgs {
         canister_id: p.request().target.canister,
@@ -232,7 +231,6 @@ fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
         decode::<TakeCanisterSnapshotArgs>(&encoded).unwrap(),
         expected
     );
-    assert_eq!(p.encoded(), before);
     assert_eq!(inventory, [snapshot(vec![0, 255])]);
     assert_eq!(
         p.take_snapshot_arguments(&inventory, 1).unwrap_err(),
@@ -244,19 +242,6 @@ fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
             SnapshotReplyError::CapacityLimit
         );
     }
-    let mut request = p.request().clone();
-    request.execution = CaptureExecution::Canic {
-        executor: request.target.canister,
-        protocol: Sha256Digest::compute(b"executor protocol"),
-        generation: 1,
-    };
-    assert_eq!(
-        CapturePlan::new(request)
-            .unwrap()
-            .take_snapshot_arguments(&[], 1)
-            .unwrap_err(),
-        SnapshotReplyError::UnsupportedRoute
-    );
 }
 
 #[test]

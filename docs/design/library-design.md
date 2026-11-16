@@ -4,10 +4,14 @@ The [minimal replacement proposal](restart.md) now owns the proposed composition
 and deletion boundary. This document retains semantic requirements and historical
 API sketches; those sketches do not mandate preserving the current phase APIs.
 
-Status: design proposal, 2026-11-14. The user selected **single-canister library
-first**: back up one already-stopped canister and restore to the same existing
-ID. Capture/restore APIs, records and limits below remain proposed. The narrow
-[local inventory contract](../architecture/local-inventory.md) records implemented behavior.
+Status: historical design rationale, with the selected direct-controller,
+single-canister library implemented and locally qualified as of 2026-11-16.
+The [capture contract](../architecture/capture-intent.md),
+[transfer contract](../architecture/capture-transfer.md) and
+[local-store contract](local-store.md) own current APIs, encodings and limits.
+The broad architecture, Agent-package and provider sketches below are historical
+proposals; they do not require restoring removed phase APIs or new packages.
+Canic's actual manager/application integration remains tracked at its owner.
 The [operation contract](operation-contract.md) refines consumer, transport,
 metadata comparison and transfer-budget semantics; it takes precedence over the
 broad sketches below for those details. The [restart direction](restart.md) owns

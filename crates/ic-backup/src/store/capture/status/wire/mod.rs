@@ -1,5 +1,5 @@
 //! Bounded projection; Platform owns wire traversal and management field labels.
-use super::{CapturePlan, CaptureStatusError, MAX_CONTROLLERS, StatusRequirements};
+use super::{CapturePolicy, CaptureStatusError, MAX_CONTROLLERS, StatusRequirements};
 use ic_platform::{
     Principal,
     candid_codec::{
@@ -16,7 +16,7 @@ use thiserror::Error;
 const MAX_REPLY_BYTES: usize = 1024 * 1024;
 const MAX_SKIPPED_WORK: usize = 64 * 1024;
 
-impl CapturePlan {
+impl CapturePolicy {
     /// Validate a raw status reply against the original capture preconditions.
     ///
     /// Reads only status, controllers and module hash through Platform's codec.
@@ -29,13 +29,6 @@ impl CapturePlan {
     /// network, target and observation timing. Success authorizes no dispatch,
     /// progress, reservation or settlement and does not authenticate a reply.
     ///
-    /// ```
-    /// use ic_backup::store::{CapturePlan, CaptureStatusReplyError};
-    ///
-    /// fn inspect_status(plan: &CapturePlan, raw: &[u8]) -> Result<(), CaptureStatusReplyError> {
-    ///     plan.validate_status_reply(raw)
-    /// }
-    /// ```
     ///
     /// # Errors
     /// Refuses excessive or malformed wire input, missing required fields,
