@@ -5,7 +5,7 @@ use super::{
     CapturePolicy, CaptureRequest, CaptureTiming, OperationAction, OperationOptions,
     OperationSigningRequest, PreparedStatus, StatusAdmissionRecord,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::{candid_codec, ic_protocol::EnvelopeContent};
 use std::borrow::Cow;
 pub(in crate::store) mod certificates;
@@ -56,7 +56,7 @@ pub(in crate::store) fn reply(
             [b"".as_slice(), b"chunk"]
                 .into_iter()
                 .map(|bytes| ChunkHash {
-                    hash: Sha256Digest::compute(bytes).as_bytes().to_vec(),
+                    hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
                 })
                 .collect()
         } else {
@@ -85,7 +85,7 @@ pub(in crate::store) fn reply(
                 SnapshotDataKind::WasmMemory { .. } => b"f",
                 SnapshotDataKind::StableMemory { .. } => b"xyz",
                 SnapshotDataKind::WasmChunk { hash } => {
-                    if hash == Sha256Digest::compute(b"").as_bytes() {
+                    if hash == BackupDigest::compute(b"").as_bytes() {
                         b"".as_slice()
                     } else {
                         b"chunk".as_slice()

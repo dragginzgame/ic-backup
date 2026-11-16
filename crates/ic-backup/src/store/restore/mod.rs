@@ -3,6 +3,7 @@ use super::{
     BackupTarget, CaptureSource, OperationLimits, RestoreTransfer, RestoreTransferError,
     RestoreTransferRequest, manifest::lower_hex,
 };
+use crate::store::BackupDigest;
 use crate::store::{
     OperationStoreError,
     operation::{
@@ -11,7 +12,6 @@ use crate::store::{
         intent::{Error as IntentError, Intent, Plan, ProfileRecord},
     },
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::Principal;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -31,11 +31,11 @@ pub struct RestoreRequest {
     /// Must equal the authenticated source network and existing canister.
     pub target: BackupTarget,
     /// Must equal the original provisioned capture trust binding.
-    pub trust_root: Sha256Digest,
+    pub trust_root: BackupDigest,
     /// Approving initiator, independent of the management sender.
     pub initiator: Principal,
     /// Must equal the authenticated source release.
-    pub release: Sha256Digest,
+    pub release: BackupDigest,
     /// Explicit direct-host management sender; may differ from the capture sender.
     pub sender: Principal,
     /// Independent finite restore limits, never reused capture spending.
@@ -49,14 +49,14 @@ pub struct RestorePlan {
     source: SourceRecord,
     profile: ProfileRecord,
     bytes: Vec<u8>,
-    digest: Sha256Digest,
+    digest: BackupDigest,
 }
 #[derive(Clone, Debug)]
 struct SourceRecord {
     operation_id: String,
-    capture_plan: Sha256Digest,
-    manifest: Sha256Digest,
-    module: Sha256Digest,
+    capture_plan: BackupDigest,
+    manifest: BackupDigest,
+    module: BackupDigest,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -159,7 +159,7 @@ impl RestorePlan {
         if bytes.len() > PLAN_LIMIT {
             return Err(RestorePlanError::InvalidPlan);
         }
-        let digest = Sha256Digest::compute(&[DOMAIN, &bytes].concat());
+        let digest = BackupDigest::compute(&[DOMAIN, &bytes].concat());
         let plan = Self {
             request,
             source,
@@ -264,17 +264,17 @@ impl RestorePlan {
     }
     /// Exact original capture approval.
     #[must_use]
-    pub fn source_plan_sha256(&self) -> Sha256Digest {
+    pub fn source_plan_sha256(&self) -> BackupDigest {
         self.source.capture_plan
     }
     /// Exact trusted source manifest.
     #[must_use]
-    pub fn source_manifest_sha256(&self) -> Sha256Digest {
+    pub fn source_manifest_sha256(&self) -> BackupDigest {
         self.source.manifest
     }
     /// Original source module, required before and after load.
     #[must_use]
-    pub fn module_sha256(&self) -> Sha256Digest {
+    pub fn module_sha256(&self) -> BackupDigest {
         self.source.module
     }
     /// Exact canonical original approval bytes.
@@ -284,7 +284,7 @@ impl RestorePlan {
     }
     /// Domain-separated original approval.
     #[must_use]
-    pub fn digest(&self) -> Sha256Digest {
+    pub fn digest(&self) -> BackupDigest {
         self.digest
     }
     pub(in crate::store) fn profile(&self) -> &ProfileRecord {
@@ -318,7 +318,7 @@ impl Intent for RestorePlan {
         Ok(journal.completed_at_ns.is_some())
     }
 }
-fn hash(text: &str) -> Result<Sha256Digest, RestorePlanError> {
+fn hash(text: &str) -> Result<BackupDigest, RestorePlanError> {
     if !lower_hex(text, 64) {
         return Err(RestorePlanError::InvalidPlan);
     }

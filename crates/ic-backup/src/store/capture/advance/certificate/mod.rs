@@ -1,8 +1,8 @@
 //! Local authentication of original status outcomes; no transport or clock.
 use super::{OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusEvidence};
+use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::certification::{
     HashTree, LookupResult,
     historical::{self, Limits, TimePolicy, TimeWindow},
@@ -282,7 +282,7 @@ fn validate_certificate_request(
 /// Original certificate authority only; callers admit request identity and full frame bounds.
 pub(in crate::store) struct CertificateRequirements {
     pub canister: ic_platform::Principal,
-    pub trust_root: Sha256Digest,
+    pub trust_root: BackupDigest,
 }
 impl CertificateRequirements {
     pub(in crate::store) fn authenticate(
@@ -309,7 +309,7 @@ impl CertificateRequirements {
         certificate: &[u8],
         root_key_der: &[u8],
     ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
-        if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != self.trust_root {
+        if root_key_der.len() != 133 || BackupDigest::compute(root_key_der) != self.trust_root {
             return Err(StatusCertificateError::TrustRoot);
         }
         let maximum = (admission.result_bytes as usize)

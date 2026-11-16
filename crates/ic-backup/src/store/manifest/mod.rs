@@ -1,7 +1,7 @@
 //! Bounded completion declarations. Decoding grants no restore authority.
 
 use super::{BackupSummary, BackupTarget};
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::Principal;
 use serde::{
     Deserialize, Deserializer,
@@ -64,7 +64,7 @@ pub(super) fn lower_hex(value: &str, len: usize) -> bool {
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
-fn digest(value: &str) -> Result<Sha256Digest, ManifestError> {
+fn digest(value: &str) -> Result<BackupDigest, ManifestError> {
     if !lower_hex(value, 64) {
         return Err(ManifestError::Invalid("digest"));
     }
@@ -151,7 +151,7 @@ pub(super) fn decode(id: &str, bytes: &[u8]) -> Result<DecodedManifest, Manifest
         release: digest(&record.release)?,
         module_sha256: module_hash,
         payload_bytes: total,
-        manifest_sha256: Sha256Digest::compute(bytes),
+        manifest_sha256: BackupDigest::compute(bytes),
     };
     Ok(DecodedManifest {
         summary,

@@ -2,9 +2,10 @@ mod payload;
 
 use super::manifest::{ManifestRecord, MemberRecord};
 use super::*;
+use std::io::Write;
 use std::{
     fs::{self, DirBuilder, OpenOptions},
-    os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt, symlink},
+    os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt, symlink},
     path::PathBuf,
     sync::{
         Arc, Barrier,
@@ -252,13 +253,13 @@ fn entry_and_byte_budgets_include_nonmatching_and_unfinished_entries() {
     tiny.entries = NonZeroUsize::new(1).unwrap();
     assert!(matches!(
         store.latest_completed_backup(&target(), tiny),
-        Err(StoreError::Filesystem(CapabilityError::EntryLimit { .. }))
+        Err(StoreError::Filesystem(ic_host_fs::Error::EntryLimit))
     ));
     tiny = limits();
     tiny.bytes = NonZeroUsize::new(1).unwrap();
     assert!(matches!(
         store.latest_completed_backup(&target(), tiny),
-        Err(StoreError::Read(ArtifactError::LimitExceeded { .. }))
+        Err(StoreError::Read(ArtifactError::Limit { .. }))
     ));
     tiny.bytes = NonZeroUsize::new(serde_json::to_vec(&other).unwrap().len()).unwrap();
     assert!(
@@ -278,7 +279,7 @@ fn unsafe_root_bundle_and_manifest_links_are_refused() {
     symlink(&path, &alias).unwrap();
     assert!(matches!(
         BackupStore::open(&alias),
-        Err(StoreError::Filesystem(CapabilityError::Refused { .. }))
+        Err(StoreError::Filesystem(ic_host_fs::Error::Refused(..)))
     ));
     let outside = root("outside");
     symlink(
@@ -300,7 +301,7 @@ fn unsafe_root_bundle_and_manifest_links_are_refused() {
     symlink(&source, folder.join("manifest.json")).unwrap();
     assert!(matches!(
         store.list_backups(None, limits()),
-        Err(StoreError::Filesystem(CapabilityError::Refused { .. }))
+        Err(StoreError::Filesystem(ic_host_fs::Error::Refused(..)))
     ));
     assert_eq!(fs::read(source).unwrap(), GOLDEN);
 }
@@ -311,7 +312,9 @@ fn nonprivate_and_unexpected_store_structure_are_refused() {
     fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
     assert!(matches!(
         BackupStore::initialize(&path),
-        Err(StoreError::Filesystem(CapabilityError::Permissions { .. }))
+        Err(StoreError::Filesystem(
+            ic_host_fs::Error::Permissions { .. }
+        ))
     ));
     let path = root("layout");
     BackupStore::initialize(&path).unwrap();
@@ -431,7 +434,7 @@ fn cumulative_and_individual_manifest_byte_limits_refuse_without_partial_rows() 
     budget.bytes = NonZeroUsize::new(total - 1).unwrap();
     assert!(matches!(
         store.list_backups(None, budget),
-        Err(StoreError::Read(ArtifactError::LimitExceeded { .. }))
+        Err(StoreError::Read(ArtifactError::Limit { .. }))
     ));
 
     let path = root("oversized-manifest");
@@ -443,7 +446,7 @@ fn cumulative_and_individual_manifest_byte_limits_refuse_without_partial_rows() 
     write_file(&folder.join("manifest.json"), &bytes);
     assert!(matches!(
         store.list_backups(None, limits()),
-        Err(StoreError::Read(ArtifactError::LimitExceeded { .. }))
+        Err(StoreError::Read(ArtifactError::Limit { .. }))
     ));
 }
 
@@ -456,7 +459,7 @@ fn aliased_manifest_is_refused_and_retained() {
     fs::hard_link(&original, folder.join("alias")).unwrap();
     assert!(matches!(
         store.list_backups(None, limits()),
-        Err(StoreError::InvalidLayout)
+        Err(StoreError::Filesystem(ic_host_fs::Error::Aliased))
     ));
     assert_eq!(fs::metadata(original).unwrap().nlink(), 2);
 }

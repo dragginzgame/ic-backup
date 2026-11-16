@@ -69,7 +69,8 @@ legacy recovery material read-only and under its original authority.
 
 ## Dependency selection
 
-Host FS/Artifacts 0.79.0 are selected from verified registry archives. The
+Host FS/Artifacts 0.80.2 are selected from verified registry archives. HTTP remains
+0.79.0; Testkit's independent native graph retains its own older Host dependencies. The
 maintainer-authorized temporary sibling overrides have been removed after
 consumer qualification. Keep dependencies registry-backed and builds in this
 repository's target directory; do not add sibling patches or shared targets.

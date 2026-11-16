@@ -60,7 +60,7 @@ fn source_reads_follow_exact_original_schedule_without_reopening_by_absolute_pat
         wasm_chunk_store: [b"".as_slice(), b"stored chunk"]
             .into_iter()
             .map(|bytes| ChunkHash {
-                hash: Sha256Digest::compute(bytes).as_bytes().to_vec(),
+                hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
             })
             .collect(),
     };
@@ -115,7 +115,7 @@ fn arbitrary_bounded_ranges_cross_blocks_and_preserve_exact_bytes() {
     assert_eq!(
         source
             .read_data(&fixture.request(SnapshotDataKind::WasmChunk {
-                hash: Sha256Digest::compute(&chunk).as_bytes().to_vec()
+                hash: BackupDigest::compute(&chunk).as_bytes().to_vec()
             }))
             .unwrap(),
         chunk
@@ -165,7 +165,7 @@ fn invalid_identity_range_and_chunk_requests_leave_the_source_usable() {
     assert!(
         source
             .read_data(&fixture.request(SnapshotDataKind::WasmChunk {
-                hash: Sha256Digest::compute(b"").as_bytes().to_vec()
+                hash: BackupDigest::compute(b"").as_bytes().to_vec()
             }))
             .unwrap()
             .is_empty()
@@ -177,20 +177,16 @@ fn same_inode_same_length_corruption_is_caught_and_handle_stays_invalidated() {
     let fixture = Fixture::new("source-inplace-corruption");
     let mut source = fixture.source();
     let path = fixture.folder.join("payload/module.wasm");
-    let original_identity =
-        ic_host_fs::identity::FileIdentity::from_metadata(&fs::metadata(&path).unwrap());
+    let original_identity = ic_host_fs::FileId::from_metadata(&fs::metadata(&path).unwrap());
     fs::write(&path, b"bad wasm").unwrap();
     assert_eq!(
         original_identity,
-        ic_host_fs::identity::FileIdentity::from_metadata(&fs::metadata(&path).unwrap())
+        ic_host_fs::FileId::from_metadata(&fs::metadata(&path).unwrap())
     );
     let request = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 });
     assert!(matches!(
         source.read_data(&request),
-        Err(PayloadReadError::Store(StoreError::Payload {
-            source: ArtifactError::DigestMismatch { .. },
-            ..
-        }))
+        Err(PayloadReadError::Store(StoreError::PayloadDigest { .. }))
     ));
     fs::write(&path, b"\0asm\x01\0\0\0").unwrap();
     assert!(matches!(
@@ -255,7 +251,7 @@ fn changed_member_length_manifest_or_tree_cannot_return_source_bytes() {
             "empty-chunk" => fs::write(
                 fixture
                     .folder
-                    .join(format!("payload/chunk-{}.bin", Sha256Digest::compute(b""))),
+                    .join(format!("payload/chunk-{}.bin", BackupDigest::compute(b""))),
                 b"x",
             )
             .unwrap(),
@@ -304,10 +300,10 @@ fn opening_checks_trusted_manifest_budget_and_complete_payload_before_returning_
     assert!(matches!(
         fixture.store.open_payload(
             &fixture.record.operation_id,
-            Sha256Digest::compute(b"wrong"),
+            BackupDigest::compute(b"wrong"),
             NonZeroU64::new(1).unwrap()
         ),
-        Err(StoreError::Read(ArtifactError::DigestMismatch { .. }))
+        Err(StoreError::DigestMismatch { .. })
     ));
     assert!(matches!(
         fixture.store.open_payload(
@@ -328,9 +324,6 @@ fn opening_checks_trusted_manifest_budget_and_complete_payload_before_returning_
             fixture.commitment,
             NonZeroU64::new(fixture.record.payload_bytes).unwrap()
         ),
-        Err(StoreError::Payload {
-            source: ArtifactError::DigestMismatch { .. },
-            ..
-        })
+        Err(StoreError::PayloadDigest { .. })
     ));
 }

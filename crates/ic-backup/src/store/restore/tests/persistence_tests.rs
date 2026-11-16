@@ -24,7 +24,7 @@ fn restore_custody_preserves_source_and_refuses_changed_intent_and_unknown_tail(
     drop(f.op);
     assert!(
         f.store
-            .create_restore(&plan, Sha256Digest::compute(b"wrong"), &predecessor)
+            .create_restore(&plan, BackupDigest::compute(b"wrong"), &predecessor)
             .is_err()
     );
     let mut operation = f
@@ -149,7 +149,7 @@ fn cold_restore_selection_refuses_wrong_approval_identity_and_bounded_original_b
         assert!(store.open_restore(&wrong, plan.digest()).is_err());
     }
     assert!(matches!(
-        store.open_restore(id, Sha256Digest::compute(b"wrong approval")),
+        store.open_restore(id, BackupDigest::compute(b"wrong approval")),
         Err(crate::store::RestorePersistenceError::Capture(
             crate::store::OperationStoreError::ApprovalMismatch
         ))

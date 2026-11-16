@@ -32,7 +32,7 @@ fn original(
 ) -> (CapturePolicy, StatusAdmissionRecord, PreparedStatus) {
     let (p, mut r) = signed_request(scheme);
     let mut fields = p.request().clone();
-    fields.trust_root = Sha256Digest::compute(&der(1));
+    fields.trust_root = BackupDigest::compute(&der(1));
     let p = CapturePolicy::new(fields).unwrap();
     change(&mut r, |envelope| {
         if let EnvelopeContent::Call {

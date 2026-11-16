@@ -1,5 +1,5 @@
 //! Build and run the isolated fixture consumer through its normal dependency graph.
-use ic_host_artifacts::artifact::Sha256Digest;
+use ic_backup::store::BackupDigest;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -11,10 +11,10 @@ pub struct Consumer {
     binary: PathBuf,
     evidence: PathBuf,
     endpoint: String,
-    network: Sha256Digest,
+    network: BackupDigest,
 }
 impl Consumer {
-    pub fn build(workspace: &Path, evidence: &Path, endpoint: &str, network: Sha256Digest) -> Self {
+    pub fn build(workspace: &Path, evidence: &Path, endpoint: &str, network: BackupDigest) -> Self {
         let mut tree = Command::new("cargo");
         tree.args([
             "tree",
@@ -55,7 +55,7 @@ impl Consumer {
             network,
         }
     }
-    pub fn call(&self, mode: &str, id: &str, approval: Sha256Digest, live: bool) {
+    pub fn call(&self, mode: &str, id: &str, approval: BackupDigest, live: bool) {
         let mut process = Command::new(&self.binary);
         process
             .arg(mode)

@@ -1,6 +1,6 @@
 //! Test-only public-API consumer, built alone without Testkit/PocketIC in its graph.
+use ic_backup::store::BackupDigest;
 use ic_backup::store::{BackupConnection, BackupHttpTransport, BackupStore, OperationProgress};
-use ic_host_artifacts::artifact::Sha256Digest;
 use std::{
     path::Path,
     sync::{
@@ -15,7 +15,7 @@ fn main() {
     let args: Vec<_> = std::env::args().collect();
     assert!(args.len() == 5 || args.len() == 8);
     let store = BackupStore::open(Path::new(&args[2])).unwrap();
-    let approval: Sha256Digest = args[4].parse().unwrap();
+    let approval: BackupDigest = args[4].parse().unwrap();
     match args[1].as_str() {
         "capture-inspect" => {
             assert!(

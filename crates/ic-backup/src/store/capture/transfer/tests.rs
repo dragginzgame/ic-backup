@@ -1,6 +1,6 @@
 //! Re-authored legacy extent/metadata regressions; no IC effects or wire decoding.
 use super::*;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::{
     candid_codec::{Nat, Reserved},
     management_canister_types::{CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus},
@@ -33,7 +33,7 @@ pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> ReadCanisterSnaps
 }
 pub(super) fn chunk(bytes: &[u8]) -> ChunkHash {
     ChunkHash {
-        hash: Sha256Digest::compute(bytes).as_bytes().to_vec(),
+        hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
     }
 }
 fn kinds(transfer: &CaptureTransfer<'_>) -> Vec<String> {

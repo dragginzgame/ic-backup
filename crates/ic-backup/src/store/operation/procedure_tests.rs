@@ -26,14 +26,14 @@ fn encode(value: &impl Encode) -> Vec<u8> {
 }
 pub(in crate::store) fn selected() -> CapturePlan {
     let mut request = fixture(Scheme::Ed25519).0.request().clone();
-    request.module_sha256 = Sha256Digest::compute(b"abcdefghij");
+    request.module_sha256 = BackupDigest::compute(b"abcdefghij");
     request.limits.extent_bytes = 4;
     request.limits.payload_bytes = 64;
     request.limits.evidence_bytes = allowance().evidence;
     request.limits.signing_requests = allowance().signatures;
     request.limits.network_requests = allowance().network;
     request.limits.observations = allowance().observations;
-    request.trust_root = Sha256Digest::compute(&profile().root_der);
+    request.trust_root = BackupDigest::compute(&profile().root_der);
     CapturePlan::new(request, profile()).unwrap()
 }
 fn allowance() -> Allowance {
@@ -67,7 +67,7 @@ fn metadata() -> ReadCanisterSnapshotMetadataResult {
         wasm_chunk_store: vec![b"chk".as_slice(), b""]
             .into_iter()
             .map(|bytes| ChunkHash {
-                hash: Sha256Digest::compute(bytes).as_bytes().to_vec(),
+                hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
             })
             .collect(),
         global_timer: Some(CanisterTimer::Inactive),
@@ -91,11 +91,11 @@ fn data() -> Vec<(SnapshotDataKind, Vec<u8>)> {
         }
     }
     let mut chunks = [b"chk".as_slice(), b""];
-    chunks.sort_by_key(|bytes| *Sha256Digest::compute(bytes).as_bytes());
+    chunks.sort_by_key(|bytes| *BackupDigest::compute(bytes).as_bytes());
     result.extend(chunks.map(|bytes| {
         (
             SnapshotDataKind::WasmChunk {
-                hash: Sha256Digest::compute(bytes).as_bytes().to_vec(),
+                hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
             },
             bytes.to_vec(),
         )
@@ -157,7 +157,7 @@ pub(in crate::store) fn expected_request(
 fn reference(bytes: &[u8]) -> ReferenceRecord {
     ReferenceRecord {
         bytes: bytes.len().try_into().unwrap(),
-        sha256: *Sha256Digest::compute(bytes).as_bytes(),
+        sha256: *BackupDigest::compute(bytes).as_bytes(),
     }
 }
 fn append(bytes: &mut Vec<u8>, plan: &CapturePlan, fact: FactRecord) -> Journal {

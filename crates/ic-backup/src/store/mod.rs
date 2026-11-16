@@ -28,7 +28,9 @@
 //! # }
 //! ```
 
+mod digest;
 mod limits;
+pub use digest::{BackupDigest, DigestParseError};
 pub use limits::OperationLimits;
 mod capture;
 mod manifest;
@@ -60,32 +62,17 @@ pub use capture::{
 pub use manifest::ManifestError;
 pub use payload::{PayloadReadError, PayloadSource};
 
-use ic_host_artifacts::artifact::{ArtifactError, Sha256Digest};
-use ic_host_fs::{
-    capability::{CapabilityError, Directory, DirectoryOptions, EntryKind},
-    durable::{NamedWriteError, create_retained_at, publish_retained_at},
-    read::read_opened_file,
-};
+use ic_host_artifacts::{Error as ArtifactError, Length};
+use ic_host_fs::{Access, Directory, FilePolicy, Kind as EntryKind};
 use ic_platform::Principal;
-use std::{
-    convert::Infallible,
-    ffi::OsStr,
-    fs::File,
-    io::{self, Write},
-    num::NonZeroUsize,
-    os::{fd::AsFd, unix::fs::MetadataExt},
-    path::Path,
-};
+use std::{ffi::OsStr, fs::File, io, num::NonZeroUsize, path::Path};
 use thiserror::Error;
 
 const FORMAT: &[u8] = b"ic-backup/host-store/1\n";
-const PRIVATE: DirectoryOptions = DirectoryOptions {
-    create_permissions: None,
-    forbidden_permissions: 0o077,
-};
-const CREATE: DirectoryOptions = DirectoryOptions {
-    create_permissions: Some(0o700),
-    forbidden_permissions: 0o077,
+const PRIVATE: u32 = 0o077;
+const FILE_POLICY: FilePolicy = FilePolicy {
+    forbidden: 0o177,
+    single_link: true,
 };
 const MANIFEST_LIMIT: usize = 1024 * 1024;
 
@@ -93,7 +80,7 @@ const MANIFEST_LIMIT: usize = 1024 * 1024;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BackupTarget {
     /// Application-provisioned commitment to the network instance and trust binding.
-    pub network: Sha256Digest,
+    pub network: BackupDigest,
     /// Canonical Platform canister identity.
     pub canister: Principal,
 }
@@ -123,13 +110,13 @@ pub struct BackupSummary {
     /// Original completion time from the operator host's clock, in Unix nanoseconds.
     pub completed_at_ns: u64,
     /// Integration-owned release commitment.
-    pub release: Sha256Digest,
+    pub release: BackupDigest,
     /// Declared module SHA-256.
-    pub module_sha256: Sha256Digest,
+    pub module_sha256: BackupDigest,
     /// Declared total payload bytes, excluding operation evidence.
     pub payload_bytes: u64,
     /// SHA-256 of the exact manifest bytes observed by this scan.
-    pub manifest_sha256: Sha256Digest,
+    pub manifest_sha256: BackupDigest,
 }
 
 impl BackupSummary {
@@ -155,25 +142,28 @@ impl BackupStore {
     /// Refuses missing/unsafe/nonprivate directories, occupied roots and IO failures.
     /// Publication errors preserve whether the final format name became visible.
     pub fn initialize(path: &Path) -> Result<Self, StoreError> {
-        let root = Directory::open_root(path, PRIVATE)?.ok_or(StoreError::MissingStore)?;
-        if let Some(entry) = root.entries(1)?.next() {
-            entry?;
-            return Err(StoreError::Occupied);
+        let root = Directory::open(path, PRIVATE)?.ok_or(StoreError::MissingStore)?;
+        match root.entries(1) {
+            Ok(entries) if entries.is_empty() => (),
+            Ok(_) | Err(ic_host_fs::Error::EntryLimit) => return Err(StoreError::Occupied),
+            Err(error) => return Err(error.into()),
         }
-        let parent = root.open_syncable()?;
-        let mut stage = create_retained_at(parent.as_fd(), OsStr::new("format.pending"), 0o600)?;
-        stage.write_all(FORMAT)?;
-        stage.sync_all()?;
+        let stage = root
+            .stage(
+                OsStr::new("format.pending"),
+                OsStr::new("format"),
+                ic_host_fs::Policy {
+                    destination: ic_host_fs::Destination::CreateNew,
+                    permissions: 0o600,
+                    retention: ic_host_fs::Retention::Retain,
+                },
+            )?
+            .write_from(FORMAT, Length::Exactly(FORMAT.len() as u64))?
+            .seal()?;
         for name in ["bundles", "operations", "targets"] {
-            root.open_directory(OsStr::new(name), CREATE)?
-                .ok_or(StoreError::IncompleteStore)?;
+            root.create_directory(OsStr::new(name), 0o700, PRIVATE)?;
         }
-        publish_retained_at(
-            parent.as_fd(),
-            OsStr::new("format.pending"),
-            OsStr::new("format"),
-            stage,
-        )?;
+        commit(stage)?;
         Ok(Self { root })
     }
 
@@ -186,7 +176,7 @@ impl BackupStore {
     /// Refuses missing, partial, unsupported or unsafe roots. An empty directory
     /// is not interpreted as an empty initialized store.
     pub fn open(path: &Path) -> Result<Self, StoreError> {
-        let root = Directory::open_root(path, PRIVATE)?.ok_or(StoreError::MissingStore)?;
+        let root = Directory::open(path, PRIVATE)?.ok_or(StoreError::MissingStore)?;
         let Some(format) = read_optional(&root, "format", 128)? else {
             return Err(StoreError::IncompleteStore);
         };
@@ -195,7 +185,6 @@ impl BackupStore {
         }
         let mut count = 0;
         for entry in root.entries(4)? {
-            let entry = entry?;
             let expected = match entry.name.to_str() {
                 Some("format") => EntryKind::File,
                 Some("bundles" | "operations" | "targets") => EntryKind::Directory,
@@ -280,7 +269,6 @@ impl BackupStore {
             .ok_or(StoreError::IncompleteStore)?;
         let mut remaining = limits.bytes.get();
         for entry in bundles.entries(limits.entries.get())? {
-            let entry = entry?;
             let id = entry
                 .name
                 .to_str()
@@ -318,21 +306,37 @@ fn read_optional(
     limit: usize,
 ) -> Result<Option<Vec<u8>>, StoreError> {
     open_optional(root, name)?
-        .map(|file| read_opened_file(file, limit).map_err(StoreError::Read))
+        .map(|file| {
+            ic_host_artifacts::read(file, Length::AtMost(limit as u64))
+                .map(|(bytes, _)| bytes)
+                .map_err(StoreError::Read)
+        })
         .transpose()
 }
 
 fn open_optional(root: &Directory, name: &str) -> Result<Option<File>, StoreError> {
-    let entry = root
-        .resolve_parent(Path::new(name), PRIVATE)?
-        .ok_or(StoreError::InvalidLayout)?;
-    let Some(file) = entry.open_regular_file_with_permissions(0o177)? else {
-        return Ok(None);
-    };
-    if file.metadata()?.nlink() != 1 {
-        return Err(StoreError::InvalidLayout);
+    Ok(root.open_file(OsStr::new(name), Access::Read, FILE_POLICY)?)
+}
+
+fn commit(stage: ic_host_fs::Sealed) -> Result<(), StoreError> {
+    match stage.commit() {
+        ic_host_fs::Commit::Committed(_) => Ok(()),
+        ic_host_fs::Commit::NotPublished { cause, .. } => Err(StoreError::NotPublished {
+            cause,
+            cleanup: None,
+        }),
+        ic_host_fs::Commit::PublishedUnconfirmed {
+            receipt,
+            phase,
+            cause,
+            sync_error,
+        } => Err(StoreError::PublishedUnconfirmed {
+            receipt: Box::new(receipt),
+            phase,
+            cause,
+            sync_error,
+        }),
     }
-    Ok(Some(file))
 }
 
 /// A local refusal, preserving original IO/publication errors and retained files.
@@ -387,7 +391,7 @@ pub enum StoreError {
     },
     /// Host directory/file admission, including entry limits.
     #[error(transparent)]
-    Filesystem(#[from] CapabilityError),
+    Filesystem(#[from] ic_host_fs::Error),
     /// Host bounded byte read or manifest digest mismatch; no partial result.
     #[error(transparent)]
     Read(#[from] ArtifactError),
@@ -396,7 +400,47 @@ pub enum StoreError {
     Io(#[from] io::Error),
     /// Original publication phase, including visibility before failed durability.
     #[error(transparent)]
-    Publication(#[from] NamedWriteError<Infallible>),
+    Publication(#[from] ic_host_fs::AttemptFailure),
+    /// Publication refused before this attempt made the destination visible.
+    #[error("publication refused before visibility: {cause}")]
+    NotPublished {
+        /// Original refusal; no visibility was granted by this attempt.
+        #[source]
+        cause: ic_host_fs::Error,
+        /// Cleanup refusal for an explicitly discarded temporary owner file.
+        cleanup: Option<ic_host_fs::Error>,
+    },
+    /// Destination became visible; its cleanup or durability remains unconfirmed.
+    #[error("publication visible but {phase:?} unconfirmed: {cause}")]
+    PublishedUnconfirmed {
+        /// Exact destination and admitted bytes.
+        receipt: Box<ic_host_fs::Receipt>,
+        /// First unconfirmed phase.
+        phase: ic_host_fs::Phase,
+        /// Original phase refusal.
+        #[source]
+        cause: ic_host_fs::Error,
+        /// Additional directory sync refusal after cleanup failed.
+        sync_error: Option<io::Error>,
+    },
+    /// Complete bytes differ from the caller's original commitment.
+    #[error("backup digest mismatch: expected {expected}, received {actual}")]
+    DigestMismatch {
+        /// Original trusted commitment.
+        expected: BackupDigest,
+        /// Complete observed commitment.
+        actual: BackupDigest,
+    },
+    /// A payload member differs from its admitted manifest commitment.
+    #[error("payload digest mismatch for {member}: expected {expected}, received {actual}")]
+    PayloadDigest {
+        /// Admitted payload member name.
+        member: String,
+        /// Original manifest commitment.
+        expected: BackupDigest,
+        /// Complete observed commitment.
+        actual: BackupDigest,
+    },
 }
 
 pub use capture::transfer::readback::ReadbackMetadataError;

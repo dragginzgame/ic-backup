@@ -4,7 +4,7 @@
 pub(in crate::store) mod framing;
 use framing::{Bounds, FRAME_BYTES, FRAMES, Frames, LEDGER_BYTES, LedgerError, encode_frame};
 pub(in crate::store) mod intent;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use intent::Intent;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -190,7 +190,7 @@ pub(in crate::store) struct Journal {
     pub(in crate::store) observations: u32,
     pub(in crate::store) evidence_reserved: u64,
     pub(in crate::store) frames_reserved: u32,
-    pub(in crate::store) head: Sha256Digest,
+    pub(in crate::store) head: BackupDigest,
     pub(in crate::store) bytes: u64,
     pub(in crate::store) count: u32,
 }
@@ -483,8 +483,8 @@ impl Journal {
         }
         Ok(())
     }
-    fn seed(intent: &[u8]) -> Sha256Digest {
-        Sha256Digest::compute(&[DOMAIN, intent].concat())
+    fn seed(intent: &[u8]) -> BackupDigest {
+        BackupDigest::compute(&[DOMAIN, intent].concat())
     }
     fn payload(sequence: u32, fact: FactRecord) -> Result<Vec<u8>, LedgerError> {
         serde_json::to_vec(&FrameRecord { sequence, fact }).map_err(|_| LedgerError::Transition)

@@ -8,7 +8,7 @@ fn bounds() -> Bounds {
         bytes: LEDGER_BYTES,
     }
 }
-fn frame(head: Sha256Digest, payload: &[u8]) -> (Vec<u8>, Sha256Digest) {
+fn frame(head: BackupDigest, payload: &[u8]) -> (Vec<u8>, BackupDigest) {
     let bytes = encode_frame(head, payload).unwrap();
     let digest = chain(head, &(payload.len() as u32).to_le_bytes(), payload);
     (bytes, digest)

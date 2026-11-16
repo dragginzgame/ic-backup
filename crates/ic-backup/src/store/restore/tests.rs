@@ -14,5 +14,5 @@ fn original_restore_intent_has_an_independent_encoding_and_domain_vector() {
         plan.digest().to_string(),
         include_str!("restore-intent.sha256").trim()
     );
-    assert_ne!(plan.digest(), Sha256Digest::compute(bytes));
+    assert_ne!(plan.digest(), BackupDigest::compute(bytes));
 }

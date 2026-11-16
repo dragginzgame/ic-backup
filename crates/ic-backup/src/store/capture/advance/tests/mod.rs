@@ -1,8 +1,8 @@
 //! Exact protocol and HTTP regressions. Call lifecycle tests live with the recorder.
 use super::*;
+use crate::store::BackupDigest;
 use crate::store::capture::status::tests::{plan, status};
 pub(in crate::store) use crate::store::capture::test_fixtures as fixtures;
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{candid_codec, ic_protocol::EnvelopeContent};
 use std::borrow::Cow;
 pub(in crate::store) fn admission() -> StatusAdmissionRecord {

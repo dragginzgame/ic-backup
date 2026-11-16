@@ -14,7 +14,6 @@ ignored = ["toko-tooling"]
 
 [dev-dependencies]
 ic-backup.workspace = true
-ic-host-artifacts.workspace = true
 ic-platform.workspace = true
 ic-testkit.workspace = true
 tokio.workspace = true

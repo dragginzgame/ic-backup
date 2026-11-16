@@ -6,7 +6,7 @@ struct Fixture {
     store: BackupStore,
     folder: PathBuf,
     record: ManifestRecord,
-    commitment: Sha256Digest,
+    commitment: BackupDigest,
 }
 
 impl Fixture {
@@ -41,7 +41,7 @@ impl Fixture {
         ];
         // An empty chunk is a real named file, distinct from an empty region.
         for bytes in chunks {
-            let name = format!("chunk-{}.bin", Sha256Digest::compute(&bytes));
+            let name = format!("chunk-{}.bin", BackupDigest::compute(&bytes));
             contents.push((name, bytes));
         }
         record.members = contents
@@ -49,12 +49,12 @@ impl Fixture {
             .map(|(name, bytes)| MemberRecord {
                 name: name.clone(),
                 bytes: bytes.len() as u64,
-                sha256: Sha256Digest::compute(bytes).to_string(),
+                sha256: BackupDigest::compute(bytes).to_string(),
             })
             .collect();
         record.module_sha256 = record.members[0].sha256.clone();
         record.payload_bytes = record.members.iter().map(|m| m.bytes).sum();
-        let commitment = Sha256Digest::compute(&serde_json::to_vec(&record).unwrap());
+        let commitment = BackupDigest::compute(&serde_json::to_vec(&record).unwrap());
         let folder = bundle(&path, &record);
         let payload = folder.join("payload");
         DirBuilder::new().mode(0o700).create(&payload).unwrap();
@@ -115,7 +115,7 @@ fn corruption_is_distinct_from_listing_and_never_repaired() {
     fs::write(&file, b"bad wasm").unwrap();
     let err = fixture.verify().unwrap_err();
     assert!(matches!(err,
-        StoreError::Payload { member, source: ArtifactError::DigestMismatch { .. } }
+        StoreError::PayloadDigest { member,  .. }
         if member == "module.wasm"));
     assert_eq!(fs::read(file).unwrap(), b"bad wasm");
     assert_eq!(fixture.store.list_backups(None, limits()).unwrap().len(), 1);
@@ -136,13 +136,13 @@ fn short_and_grown_files_return_exact_length_failures() {
                 if bytes.len() < 8 {
                     assert!(matches!(
                         source,
-                        ArtifactError::LengthMismatch {
+                        ArtifactError::Short {
                             expected: 8,
                             actual: 5
                         }
                     ));
                 } else {
-                    assert!(matches!(source, ArtifactError::LimitExceeded { limit: 8 }));
+                    assert!(matches!(source, ArtifactError::Limit { limit: 8 }));
                 }
             }
             other => panic!("unexpected refusal: {other:?}"),
@@ -159,11 +159,11 @@ fn manifest_commitment_and_budget_are_admitted_before_payload_access() {
         fixture.folder.join("retained-payload"),
     )
     .unwrap();
-    let wrong = Sha256Digest::compute(b"untrusted replacement");
+    let wrong = BackupDigest::compute(b"untrusted replacement");
     assert!(matches!(fixture.store.verify_payload(
         &fixture.record.operation_id, wrong, NonZeroU64::new(1).unwrap()
-    ), Err(StoreError::Read(ArtifactError::DigestMismatch { expected, actual }))
-        if expected == wrong && actual.sha256 == fixture.commitment));
+    ), Err(StoreError::DigestMismatch { expected, actual })
+        if expected == wrong && actual == fixture.commitment));
     assert!(matches!(
         fixture.store.verify_payload(
             &fixture.record.operation_id,
@@ -211,14 +211,17 @@ fn missing_extra_nested_linked_and_nonprivate_payload_members_refuse() {
         }
         let error = fixture.verify().unwrap_err();
         match case {
+            "hardlink" => assert!(matches!(
+                error,
+                StoreError::Filesystem(ic_host_fs::Error::Aliased)
+            )),
             "permissions" => assert!(matches!(
                 error,
-                StoreError::Filesystem(CapabilityError::Permissions { .. })
+                StoreError::Filesystem(ic_host_fs::Error::Permissions { .. })
             )),
             "extra" => assert!(matches!(
                 error,
-                StoreError::InvalidLayout
-                    | StoreError::Filesystem(CapabilityError::EntryLimit { .. })
+                StoreError::InvalidLayout | StoreError::Filesystem(ic_host_fs::Error::EntryLimit)
             )),
             _ => assert!(matches!(error, StoreError::InvalidLayout)),
         }
@@ -237,7 +240,7 @@ fn payload_directory_substitution_and_unsafe_ids_refuse() {
     symlink(&original, &payload).unwrap();
     assert!(matches!(
         fixture.verify(),
-        Err(StoreError::Filesystem(CapabilityError::Refused { .. }))
+        Err(StoreError::Filesystem(ic_host_fs::Error::Refused(..)))
     ));
     for id in [
         "../escape",
@@ -263,7 +266,7 @@ fn a_self_consistent_replacement_cannot_change_the_trusted_manifest() {
     let mut fixture = Fixture::new("replaced-manifest");
     let module = fixture.folder.join("payload/module.wasm");
     fs::write(module, b"modified").unwrap();
-    let replacement = Sha256Digest::compute(b"modified").to_string();
+    let replacement = BackupDigest::compute(b"modified").to_string();
     fixture.record.module_sha256 = replacement.clone();
     fixture.record.members[0].sha256 = replacement;
     fs::write(
@@ -272,7 +275,7 @@ fn a_self_consistent_replacement_cannot_change_the_trusted_manifest() {
     )
     .unwrap();
     assert!(
-        matches!(fixture.verify(), Err(StoreError::Read(ArtifactError::DigestMismatch { expected, .. }))
+        matches!(fixture.verify(), Err(StoreError::DigestMismatch { expected, .. })
         if expected == fixture.commitment)
     );
     let listed = fixture.store.list_backups(None, limits()).unwrap();
@@ -315,7 +318,11 @@ fn legacy_same_bytes_file_replacement_during_read_is_refused() {
         fixture.commitment,
         NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
         |file, length| {
-            let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+            let identity = ic_host_artifacts::copy(
+                file,
+                std::io::sink(),
+                ic_host_artifacts::Length::Exactly(length),
+            )?;
             if !changed {
                 fs::rename(&path, &retained)?;
                 write_file(&path, b"\0asm\x01\0\0\0");
@@ -343,7 +350,11 @@ fn legacy_extra_entry_after_opening_scan_is_refused_without_cleanup() {
         fixture.commitment,
         NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
         |file, length| {
-            let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+            let identity = ic_host_artifacts::copy(
+                file,
+                std::io::sink(),
+                ic_host_artifacts::Length::Exactly(length),
+            )?;
             if !changed {
                 write_file(&extra, b"retained unexpected bytes");
                 changed = true;
@@ -354,8 +365,7 @@ fn legacy_extra_entry_after_opening_scan_is_refused_without_cleanup() {
     assert!(
         matches!(
             result,
-            Err(StoreError::InvalidLayout
-                | StoreError::Filesystem(CapabilityError::EntryLimit { .. }))
+            Err(StoreError::InvalidLayout | StoreError::Filesystem(ic_host_fs::Error::EntryLimit))
         ),
         "{result:?}"
     );
@@ -374,7 +384,11 @@ fn changed_manifest_during_payload_read_cannot_return_original_success() {
             fixture.commitment,
             NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
             |file, length| {
-                let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+                let identity = ic_host_artifacts::copy(
+                    file,
+                    std::io::sink(),
+                    ic_host_artifacts::Length::Exactly(length),
+                )?;
                 if !changed {
                     if replace {
                         fs::rename(&path, fixture.folder.join("retained-manifest"))?;
@@ -403,10 +417,7 @@ fn changed_manifest_during_payload_read_cannot_return_original_success() {
             );
         } else {
             assert!(
-                matches!(
-                    result,
-                    Err(StoreError::Read(ArtifactError::DigestMismatch { .. }))
-                ),
+                matches!(result, Err(StoreError::DigestMismatch { .. })),
                 "{result:?}"
             );
             assert_ne!(fs::read(&path).unwrap(), original);
@@ -431,7 +442,11 @@ fn legacy_replaced_child_directories_during_read_are_refused() {
             fixture.commitment,
             NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
             |file, length| {
-                let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+                let identity = ic_host_artifacts::copy(
+                    file,
+                    std::io::sink(),
+                    ic_host_artifacts::Length::Exactly(length),
+                )?;
                 if !changed {
                     fs::rename(&path, &retained)?;
                     DirBuilder::new().mode(0o700).create(&path)?;
@@ -468,7 +483,11 @@ fn legacy_extent_change_after_hash_is_refused() {
         fixture.commitment,
         NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
         |file, length| {
-            let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+            let identity = ic_host_artifacts::copy(
+                file,
+                std::io::sink(),
+                ic_host_artifacts::Length::Exactly(length),
+            )?;
             if !changed {
                 OpenOptions::new()
                     .append(true)
@@ -518,7 +537,11 @@ fn legacy_fifo_replacement_after_hash_refuses_and_retains_original() {
         fixture.commitment,
         NonZeroU64::new(fixture.record.payload_bytes).unwrap(),
         |file, length| {
-            let identity = ic_host_artifacts::artifact::hash_exact_reader(file, length)?;
+            let identity = ic_host_artifacts::copy(
+                file,
+                std::io::sink(),
+                ic_host_artifacts::Length::Exactly(length),
+            )?;
             if !changed {
                 fs::rename(&path, &retained)?;
                 let status = std::process::Command::new("mkfifo")
@@ -532,10 +555,7 @@ fn legacy_fifo_replacement_after_hash_refuses_and_retains_original() {
         },
     );
     assert!(
-        matches!(
-            result,
-            Err(StoreError::Filesystem(CapabilityError::Refused { .. }))
-        ),
+        matches!(result, Err(StoreError::Filesystem(ic_host_fs::Error::Kind))),
         "{result:?}"
     );
     assert!(fs::symlink_metadata(path).unwrap().file_type().is_fifo());

@@ -189,7 +189,7 @@ fn held_unfinished_or_wrong_approval_predecessor_cannot_change_a_claim() {
     assert!(matches!(
         f.store.create_capture_after(
             next,
-            Sha256Digest::compute(b"wrong"),
+            BackupDigest::compute(b"wrong"),
             crate::store::OperationPlan::Capture(&f.p)
         ),
         Err(CaptureSuccessionError::Capture(

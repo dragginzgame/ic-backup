@@ -10,6 +10,7 @@ impl<P> Recorder<P> {
         &self.intent
     }
 }
+use crate::store::BackupDigest;
 use crate::store::{
     LedgerError, PRIVATE, StoreError,
     capture::{
@@ -20,17 +21,11 @@ use crate::store::{
     payload::unchanged_file,
     read_optional,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
-use ic_host_fs::{
-    capability::{Directory, EntryKind},
-    durable::{ExclusiveFileLock, create_retained_at},
-};
+use ic_host_fs::{Directory, Kind as EntryKind, Lock};
 use std::{
     ffi::OsStr,
     fs::File,
     io::{self, Seek, SeekFrom, Write},
-    os::fd::AsFd,
-    path::Path,
 };
 use thiserror::Error;
 
@@ -78,7 +73,7 @@ impl ReferenceRecord {
                 .len()
                 .try_into()
                 .map_err(|_| OperationStoreError::Changed)?,
-            sha256: *Sha256Digest::compute(bytes).as_bytes(),
+            sha256: *BackupDigest::compute(bytes).as_bytes(),
         })
     }
 }
@@ -121,7 +116,7 @@ pub struct Recorder<P> {
     pub(in crate::store) intent: P,
     intent_file: File,
     pub(in crate::store) journal_file: File,
-    lock: ExclusiveFileLock,
+    lock: Lock,
     evidence: Vec<Held>,
     pub(in crate::store) usable: bool,
 }
@@ -168,14 +163,13 @@ impl<P: Intent> Recorder<P> {
     pub(in crate::store) fn create_claimed(
         store: &Directory,
         intent: P,
-        target_lock: ExclusiveFileLock,
+        target_lock: Lock,
         initial: &[u8],
     ) -> Result<Self, OperationStoreError> {
         let parent = child(store, "operations", false)?;
         let id = &intent.view().operation_id();
         let directory = child(&parent, id, true)?;
-        let syncable = directory.open_syncable()?;
-        let file = create_retained_at(syncable.as_fd(), OsStr::new("lock"), 0o600)?;
+        let file = directory.create_file(OsStr::new("lock"), 0o600)?;
         file.sync_all()?;
         let lock = acquire(file)?;
         retain(&directory, "intent.json", intent.view().encoded())?;
@@ -190,10 +184,10 @@ impl<P: Intent> Recorder<P> {
 
     pub(in crate::store) fn check_target_lock(
         &self,
-        held: &ExclusiveFileLock,
+        held: &Lock,
     ) -> Result<(), OperationStoreError> {
-        if ic_host_fs::identity::FileIdentity::from_file(&self.target_lock_file)?
-            != ic_host_fs::identity::FileIdentity::from_file(held.file())?
+        if ic_host_fs::FileId::from_file(&self.target_lock_file)?
+            != ic_host_fs::FileId::from_file(held.file())?
         {
             return Err(OperationStoreError::Changed);
         }
@@ -245,7 +239,7 @@ impl<P: Intent> Recorder<P> {
         store: &Directory,
         directory: Directory,
         intent: P,
-        lock: ExclusiveFileLock,
+        lock: Lock,
     ) -> Result<Self, OperationStoreError> {
         let parent = child(store, "operations", false)?;
         let target = target_for(store, intent.view().target(), false)?;
@@ -265,7 +259,7 @@ impl<P: Intent> Recorder<P> {
             })
             .collect::<Result<_, OperationStoreError>>()?;
         let recorder = Self {
-            store: store.try_clone()?,
+            store: store.clone(),
             parent,
             directory,
             target,
@@ -299,7 +293,7 @@ impl<P: Intent> Recorder<P> {
         )?;
         exact(&self.target, "lock", b"", 0)?;
         for entry in self.target.entries(2)? {
-            if !matches!(entry?.name.to_str(), Some("lock" | "owner.json")) {
+            if !matches!(entry.name.to_str(), Some("lock" | "owner.json")) {
                 return Err(OperationStoreError::Changed);
             }
         }
@@ -314,9 +308,12 @@ impl<P: Intent> Recorder<P> {
             &self.intent_file,
             &self.intent_file.metadata()?,
         )?;
-        let bytes =
-            ic_host_fs::read::read_opened_file(intent, crate::store::capture::plan::PLAN_LIMIT)
-                .map_err(crate::store::StoreError::from)?;
+        let bytes = ic_host_artifacts::read(
+            intent,
+            ic_host_artifacts::Length::AtMost(crate::store::capture::plan::PLAN_LIMIT as u64),
+        )
+        .map(|(bytes, _)| bytes)
+        .map_err(crate::store::StoreError::from)?;
         if bytes != self.intent.view().encoded() {
             return Err(OperationStoreError::Changed);
         }
@@ -348,7 +345,6 @@ impl<P: Intent> Recorder<P> {
             return Err(OperationStoreError::Changed);
         }
         for entry in self.directory.entries(names.len())? {
-            let entry = entry?;
             if entry.kind != EntryKind::File
                 || !names.iter().any(|name| OsStr::new(name) == entry.name)
             {
@@ -379,8 +375,12 @@ impl<P: Intent> Recorder<P> {
             .ok_or(OperationStoreError::Incomplete)?;
         let before = held.file.metadata()?;
         let file = unchanged_file(&self.directory, name, &held.file, &before)?;
-        let bytes = ic_host_fs::read::read_opened_file(file, reference.bytes as usize)
-            .map_err(crate::store::StoreError::from)?;
+        let bytes = ic_host_artifacts::read(
+            file,
+            ic_host_artifacts::Length::AtMost(u64::from(reference.bytes)),
+        )
+        .map(|(bytes, _)| bytes)
+        .map_err(crate::store::StoreError::from)?;
         if ReferenceRecord::new(&bytes)? != *reference {
             return Err(OperationStoreError::Changed);
         }
@@ -446,12 +446,14 @@ impl<P: Intent> Recorder<P> {
         let frame = original.candidate(fact)?;
         let mut file = self
             .directory
-            .resolve_parent(Path::new("journal.bin"), PRIVATE)?
-            .ok_or(OperationStoreError::Incomplete)?
-            .open_regular_file_for_update(0o177)?
+            .open_file(
+                OsStr::new("journal.bin"),
+                ic_host_fs::Access::Update,
+                crate::store::FILE_POLICY,
+            )?
             .ok_or(OperationStoreError::Incomplete)?;
-        if ic_host_fs::identity::FileIdentity::from_file(&file)?
-            != ic_host_fs::identity::FileIdentity::from_file(&self.journal_file)?
+        if ic_host_fs::FileId::from_file(&file)?
+            != ic_host_fs::FileId::from_file(&self.journal_file)?
         {
             return Err(OperationStoreError::Changed);
         }
@@ -552,7 +554,7 @@ pub enum OperationStoreError {
     Store(#[from] StoreError),
     /// Held-directory admission failure.
     #[error(transparent)]
-    Filesystem(#[from] ic_host_fs::capability::CapabilityError),
+    Filesystem(#[from] ic_host_fs::Error),
     /// Original native IO failure; all partial files remain retained.
     #[error(transparent)]
     Io(#[from] io::Error),

@@ -3,8 +3,8 @@ use super::{
     BackupStore, CaptureOperation, CapturePlan, OperationReplayError, OperationStoreError, PRIVATE,
     child, exact, lock_target, target_for,
 };
+use crate::store::BackupDigest;
 use crate::store::operation::intent::{Intent, Plan};
-use ic_host_artifacts::artifact::Sha256Digest;
 use std::ffi::OsStr;
 use thiserror::Error;
 /// Succession never removes predecessor evidence or refunds its original authority.
@@ -32,7 +32,7 @@ impl BackupStore {
     pub fn create_capture_after(
         &self,
         plan: CapturePlan,
-        approval: Sha256Digest,
+        approval: BackupDigest,
         predecessor: Plan<'_>,
     ) -> Result<CaptureOperation, CaptureSuccessionError> {
         if plan.digest() != approval {

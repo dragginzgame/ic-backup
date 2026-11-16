@@ -33,7 +33,7 @@ impl CaptureTransfer<'_> {
     }
 }
 use super::super::OperationStoreError;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
 use ic_platform::{
     candid_codec::{
@@ -101,7 +101,7 @@ impl CaptureTransfer<'_> {
                         actual: bytes.len(),
                     });
                 }
-                if Sha256Digest::compute(bytes).as_bytes().as_slice() != hash {
+                if BackupDigest::compute(bytes).as_bytes().as_slice() != hash {
                     return Err(TransferDataError::ChunkHash);
                 }
             }

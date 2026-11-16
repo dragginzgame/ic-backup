@@ -1,4 +1,5 @@
 use super::*;
+use crate::store::BackupDigest;
 use crate::store::{
     capture::{
         advance::tests::{
@@ -12,7 +13,6 @@ use crate::store::{
     },
     tests::root,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use std::io::Write;
 use std::{fs, io::Read, net::TcpListener, thread, time::Duration};
 
@@ -253,7 +253,7 @@ fn wrong_binding_changed_envelope_and_expired_admission_send_nothing() {
     let server = Server::new(Response::Disconnect);
     let wrong = BackupHttpTransport::new(
         &server.endpoint,
-        Sha256Digest::compute(b"wrong network"),
+        BackupDigest::compute(b"wrong network"),
         der(1),
         Duration::from_secs(1),
     )

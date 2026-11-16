@@ -1,7 +1,7 @@
 //! Re-authored frozen legacy lifecycle cases; see the capture-intent contract.
 use super::super::tests::{plan, status};
 use super::*;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::candid_codec::{self, Reserved, Writer, arguments::encode_args};
 use serde::Deserialize;
 
@@ -88,7 +88,7 @@ fn frozen_legacy_vectors_keep_exact_bytes_and_do_not_gain_missing_module_authori
             .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
             .collect();
         assert_eq!(
-            Sha256Digest::compute(&raw).to_string(),
+            BackupDigest::compute(&raw).to_string(),
             case.payload_checksum,
             "{}",
             case.name

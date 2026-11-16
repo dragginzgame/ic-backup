@@ -3,12 +3,12 @@
 //! ```no_run
 //! use ic_backup::store::{BackupStore, BackupSummary, CapturePlan, BackupSigner,
 //!     BackupApplicationGuard, BackupConnection, OperationAdvanceError, OperationProgress};
-//! use ic_host_artifacts::artifact::Sha256Digest;
+//! use ic_backup::store::BackupDigest;
 //!
 //! // First construct/review connection.plan(request, options), then supply its approval.
 //! async fn capture<S: BackupSigner, G: BackupApplicationGuard>(
 //!     store: &BackupStore, connection: &mut BackupConnection<S, G>,
-//!     plan: CapturePlan, approval: Sha256Digest,
+//!     plan: CapturePlan, approval: BackupDigest,
 //! ) -> Result<Option<BackupSummary>, OperationAdvanceError<S::Error, G::Error>> {
 //!     let mut operation = store.create_capture(plan, approval)?;
 //!     loop {
@@ -26,12 +26,12 @@ use super::{
     replay::Error,
     runtime::{Connection, Guard, Signer},
 };
+use crate::store::BackupDigest;
 use crate::store::operation::intent::ProfileRecord;
 use crate::store::{
     BackupStore, BackupSummary,
     capture::{CaptureRequest, CaptureTiming, OperationStoreError, intent::CapturePlan},
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 
 #[cfg(test)]
 mod tests;
@@ -143,7 +143,7 @@ impl BackupStore {
     pub fn create_capture(
         &self,
         plan: CapturePlan,
-        approval: Sha256Digest,
+        approval: BackupDigest,
     ) -> Result<CaptureOperation, Error> {
         if plan.digest() != approval {
             return Err(OperationStoreError::ApprovalMismatch.into());
@@ -157,7 +157,7 @@ impl BackupStore {
     pub fn open_capture(
         &self,
         id: &str,
-        approval: Sha256Digest,
+        approval: BackupDigest,
     ) -> Result<CaptureOperation, Error> {
         let operation = CaptureOperation::open(&self.root, id)?;
         if operation.intent.digest() != approval {
@@ -188,13 +188,13 @@ impl CaptureOperation {
     /// Verify an exact already-published receipt and payload, with no publication or sync.
     /// # Errors
     /// Refuses missing/staged publication, wrong selection, changed evidence or payload.
-    pub fn verify_completion(&self, expected: Sha256Digest) -> Result<BackupSummary, Error> {
+    pub fn verify_completion(&self, expected: BackupDigest) -> Result<BackupSummary, Error> {
         self.verified_completion(expected)
             .map(|(summary, _)| summary)
     }
     pub(in crate::store) fn verified_completion(
         &self,
-        expected: Sha256Digest,
+        expected: BackupDigest,
     ) -> Result<
         (
             BackupSummary,

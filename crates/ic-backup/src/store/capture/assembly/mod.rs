@@ -1,14 +1,14 @@
 //! Closed payload-member hashing retained by completion.
 use super::{OperationStoreError, open_optional};
+use crate::store::BackupDigest;
 use crate::store::{StoreError, payload::unchanged_file};
-use ic_host_artifacts::artifact::hash_exact_reader;
-use ic_host_fs::capability::{Directory, EntryKind};
+use ic_host_artifacts::Length;
+use ic_host_fs::{Directory, Kind as EntryKind};
 use std::fs::File;
 fn names(directory: &Directory, limit: u64) -> Result<Vec<String>, OperationStoreError> {
     let mut names = Vec::new();
     let mut total = 0_u64;
     for entry in directory.entries(1027)? {
-        let entry = entry?;
         let name = entry.name.to_str().ok_or(OperationStoreError::Changed)?;
         let valid = matches!(name, "module.wasm" | "heap.bin" | "stable.bin")
             || name
@@ -44,11 +44,13 @@ pub(in crate::store) fn tree_members(
             .checked_add(before.len())
             .filter(|n| *n <= limit)
             .ok_or(OperationStoreError::Changed)?;
-        let identity = hash_exact_reader(&mut file, before.len()).map_err(StoreError::from)?;
+        let identity =
+            ic_host_artifacts::copy(&mut file, std::io::sink(), Length::Exactly(before.len()))
+                .map_err(StoreError::from)?;
         members.push(crate::store::manifest::MemberRecord {
             name: name.clone(),
             bytes: identity.bytes,
-            sha256: identity.sha256.to_string(),
+            sha256: BackupDigest::from_bytes(identity.sha256).to_string(),
         });
         held.push((name.clone(), file, before));
     }

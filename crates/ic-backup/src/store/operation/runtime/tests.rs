@@ -14,7 +14,7 @@ use crate::store::{
     },
     tests::root,
 };
-use ic_host_fs::capability::Directory;
+use ic_host_fs::Directory;
 use ic_platform::{
     certification::{fork, labeled, leaf},
     ic_protocol::{
@@ -1157,6 +1157,8 @@ fn interrupted_publication_reconciles_exact_readiness_without_new_effects() {
     let id = recorder.intent.plan().request().operation_id.clone();
     let bundle = path.join("bundles").join(&id);
     crate::store::tests::write_file(&bundle.join("manifest.pending"), &bytes);
+    let original_manifest = fs::File::open(bundle.join("manifest.pending")).unwrap();
+    let original_identity = ic_host_fs::FileId::from_file(&original_manifest).unwrap();
     drop(recorder);
     server.finish();
     connection.guard.allowed.store(false, Ordering::SeqCst);
@@ -1168,6 +1170,12 @@ fn interrupted_publication_reconciles_exact_readiness_without_new_effects() {
     };
     assert_eq!(summary.completed_at_ns, 987);
     assert_eq!(fs::read(bundle.join("manifest.json")).unwrap(), bytes);
+    assert!(!bundle.join("manifest.pending").exists());
+    assert_eq!(
+        ic_host_fs::FileId::from_file(&fs::File::open(bundle.join("manifest.json")).unwrap())
+            .unwrap(),
+        original_identity,
+    );
     assert_eq!(reopened.check().unwrap(), journal);
     assert_eq!(connection.signer.calls, 14);
     assert_eq!(

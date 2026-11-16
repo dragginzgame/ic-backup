@@ -55,8 +55,8 @@ pub(in crate::store) fn settled(mixed: bool) -> (Fixture, Server, FixtureConnect
         .0
         .request()
         .clone();
-    request.module_sha256 = Sha256Digest::compute(b"helloworld");
-    request.trust_root = Sha256Digest::compute(&certificates::der(1));
+    request.module_sha256 = BackupDigest::compute(b"helloworld");
+    request.trust_root = BackupDigest::compute(&certificates::der(1));
     request.limits.extent_bytes = 5;
     request.limits.payload_bytes = 64;
     request.limits.evidence_bytes = 16 * 1024 * 1024;

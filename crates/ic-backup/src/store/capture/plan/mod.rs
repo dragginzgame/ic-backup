@@ -1,7 +1,7 @@
 //! Immutable direct capture declaration and private bounded policy.
 use super::{OperationLimits, OperationStoreError};
+use crate::store::BackupDigest;
 use crate::store::{BackupTarget, manifest::lower_hex};
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::Principal;
 pub(in crate::store) const PLAN_LIMIT: usize = 1024 * 1024;
 /// Passive input for a single stopped-canister capture plan.
@@ -12,13 +12,13 @@ pub struct CaptureRequest {
     /// Exact network/canister selection.
     pub target: BackupTarget,
     /// Provisioned network trust-root commitment, independent of routing URLs.
-    pub trust_root: Sha256Digest,
+    pub trust_root: BackupDigest,
     /// Approving operator identity.
     pub initiator: Principal,
     /// Integration-owned release commitment.
-    pub release: Sha256Digest,
+    pub release: BackupDigest,
     /// Expected installed module SHA-256.
-    pub module_sha256: Sha256Digest,
+    pub module_sha256: BackupDigest,
     /// Actual direct-host management sender. Canic execution requires a separate qualified adapter.
     pub sender: Principal,
     /// Explicit original finite ceilings.
@@ -75,7 +75,7 @@ pub(super) fn principal(text: &str) -> Result<Principal, OperationStoreError> {
     }
     Ok(p)
 }
-pub(super) fn hash(text: &str) -> Result<Sha256Digest, OperationStoreError> {
+pub(super) fn hash(text: &str) -> Result<BackupDigest, OperationStoreError> {
     if !lower_hex(text, 64) {
         return Err(OperationStoreError::InvalidPlan);
     }

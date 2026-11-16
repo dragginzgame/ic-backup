@@ -99,20 +99,16 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
             let mut bytes = response(&flow, &mut source, step);
             let mut rejected = false;
             let mut request_id =
-                *ic_host_artifacts::artifact::Sha256Digest::compute(format!("{step:?}").as_bytes())
-                    .as_bytes();
+                *crate::store::BackupDigest::compute(format!("{step:?}").as_bytes()).as_bytes();
             let inject = match (fault, step) {
                 ("reused-initial-status", Step::BeforeLoadStatus) => {
-                    request_id = *ic_host_artifacts::artifact::Sha256Digest::compute(
-                        b"RestoreInitialStatus",
-                    )
-                    .as_bytes();
+                    request_id =
+                        *crate::store::BackupDigest::compute(b"RestoreInitialStatus").as_bytes();
                     true
                 }
                 ("reused-preload-status", Step::AfterLoadStatus) => {
                     request_id =
-                        *ic_host_artifacts::artifact::Sha256Digest::compute(b"BeforeLoadStatus")
-                            .as_bytes();
+                        *crate::store::BackupDigest::compute(b"BeforeLoadStatus").as_bytes();
                     true
                 }
                 ("rejected", Step::LoadSnapshot) => {
@@ -252,8 +248,7 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             flow.accept(
                 step,
                 false,
-                *ic_host_artifacts::artifact::Sha256Digest::compute(format!("{step:?}").as_bytes())
-                    .as_bytes(),
+                *crate::store::BackupDigest::compute(format!("{step:?}").as_bytes()).as_bytes(),
                 &bytes,
                 &mut source,
             )
@@ -301,8 +296,7 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             let result = flow.accept(
                 step,
                 false,
-                *ic_host_artifacts::artifact::Sha256Digest::compute(format!("{step:?}").as_bytes())
-                    .as_bytes(),
+                *crate::store::BackupDigest::compute(format!("{step:?}").as_bytes()).as_bytes(),
                 &bytes,
                 &mut source,
             );

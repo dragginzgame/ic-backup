@@ -34,7 +34,7 @@ pub(in crate::store) fn profile() -> ProfileRecord {
 fn input() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     let (plan, _) = fixture(Scheme::Ed25519);
     let mut request = plan.request().clone();
-    request.trust_root = Sha256Digest::compute(&der(1));
+    request.trust_root = BackupDigest::compute(&der(1));
     request.limits.evidence_bytes = 8 * 1024 * 1024;
     let intent = CapturePlan::new(request, profile()).unwrap();
     let (method, args) = Procedure::new(&intent).unwrap().request().unwrap();
@@ -139,8 +139,8 @@ fn intent_wire_and_approval_have_an_independently_constructed_vector() {
     // bytes are the DER-wrapped BLS key-1 generator used by these fixtures.
     let (policy, _) = fixture(Scheme::Ed25519);
     let mut request = policy.request().clone();
-    request.trust_root = Sha256Digest::compute(&profile().root_der);
-    request.module_sha256 = Sha256Digest::compute(b"abcdefghij");
+    request.trust_root = BackupDigest::compute(&profile().root_der);
+    request.module_sha256 = BackupDigest::compute(b"abcdefghij");
     request.limits.payload_bytes = 64;
     request.limits.extent_bytes = 4;
     request.limits.network_requests = 20;

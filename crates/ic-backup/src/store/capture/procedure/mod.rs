@@ -16,14 +16,13 @@ use crate::store::StatusEvidence;
 use crate::store::operation::Step;
 #[cfg(test)]
 use crate::store::operation::intent::Intent;
-use ic_host_artifacts::artifact::HashingWriter;
 use ic_platform::{
     candid_codec,
     management_canister_types::{
         CanisterIdRecord, ReadCanisterSnapshotMetadataResult, Snapshot, SnapshotDataKind,
     },
 };
-use std::io::{self, Sink, Write, sink};
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -42,7 +41,7 @@ pub(in crate::store) struct Procedure<'a> {
     inventory: Vec<Snapshot>,
     snapshot: Option<Snapshot>,
     metadata: Option<ReadCanisterSnapshotMetadataResult>,
-    module: Option<HashingWriter<Sink>>,
+    module: Option<(Sha256, u64)>,
 }
 
 #[derive(Debug, Error)]
@@ -90,9 +89,6 @@ pub enum Error {
     #[error("final status must have a distinct original request")]
     /// Final status reused the original initial-status request.
     ReusedStatus,
-    #[error("bounded module hashing refused")]
-    /// Bounded module hashing refused.
-    Hash(#[from] io::Error),
 }
 
 impl<'a> Procedure<'a> {
@@ -246,7 +242,7 @@ impl<'a> Procedure<'a> {
                 if metadata.taken_at_timestamp != snapshot.taken_at_timestamp {
                     return Err(Error::SnapshotTimestamp);
                 }
-                self.module = Some(HashingWriter::new(sink(), metadata.wasm_module_size));
+                self.module = Some((Sha256::new(), 0));
                 self.metadata = Some(metadata);
                 Next::Call(Step::Data(0))
             }
@@ -263,12 +259,18 @@ impl<'a> Procedure<'a> {
                 );
                 let last = n + 1 == transfer.data_calls();
                 if module {
-                    self.module.as_mut().ok_or(Error::Order)?.write_all(&data)?;
+                    let (hash, bytes) = self.module.as_mut().ok_or(Error::Order)?;
+                    *bytes = bytes
+                        .checked_add(data.len() as u64)
+                        .filter(|n| *n <= self.metadata.as_ref().map_or(0, |m| m.wasm_module_size))
+                        .ok_or(Error::ModuleHash)?;
+                    hash.update(&data);
                 }
                 if last {
-                    let module = self.module.as_ref().ok_or(Error::Order)?.identity();
-                    if module.bytes != self.metadata.as_ref().ok_or(Error::Order)?.wasm_module_size
-                        || module.sha256 != self.intent.plan().request().module_sha256
+                    let (hash, bytes) = self.module.take().ok_or(Error::Order)?;
+                    if bytes != self.metadata.as_ref().ok_or(Error::Order)?.wasm_module_size
+                        || hash.finalize().as_slice()
+                            != self.intent.plan().request().module_sha256.as_bytes()
                     {
                         return Err(Error::ModuleHash);
                     }

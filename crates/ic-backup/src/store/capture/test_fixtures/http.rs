@@ -1,4 +1,5 @@
 use super::*;
+use crate::store::BackupDigest;
 use crate::store::{
     capture::{
         advance::tests::{
@@ -11,7 +12,6 @@ use crate::store::{
     },
     tests::root,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use std::io::Write;
 use std::{
     fs,
@@ -62,7 +62,7 @@ pub(in crate::store) fn input_for(
     let (_, old, _) = fixture();
     let (p, mut r) = request_fixture(scheme);
     let mut request = p.request().clone();
-    request.trust_root = Sha256Digest::compute(&der(1));
+    request.trust_root = BackupDigest::compute(&der(1));
     let p = CapturePolicy::new(request).unwrap();
     set_expiry(&mut r, now() + 30_000_000_000, scheme);
     r.observation = old.observation;

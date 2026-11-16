@@ -1,6 +1,7 @@
 //! Held payload bytes with ephemeral block commitments; no operation-evidence admission.
 use super::{BackupStore, BackupSummary, PayloadDirectory, StoreError, unchanged_file};
-use ic_host_artifacts::artifact::{ArtifactIdentity, Sha256Digest, hash_exact_reader};
+use crate::store::BackupDigest;
+use ic_host_artifacts::Length;
 use ic_platform::management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
 use std::{
     fmt,
@@ -27,7 +28,7 @@ pub struct PayloadSource<'store> {
 struct HeldMember {
     file: File,
     original: Metadata,
-    blocks: Vec<Sha256Digest>,
+    blocks: Vec<BackupDigest>,
 }
 
 impl BackupStore {
@@ -48,12 +49,12 @@ impl BackupStore {
     ///
     /// ```no_run
     /// use ic_backup::store::BackupStore;
-    /// use ic_host_artifacts::artifact::Sha256Digest;
+    /// use ic_backup::store::BackupDigest;
     /// use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
     /// use std::num::NonZeroU64;
     ///
     /// fn read_extent(
-    ///     store: &BackupStore, bundle: &str, trusted_manifest: Sha256Digest,
+    ///     store: &BackupStore, bundle: &str, trusted_manifest: BackupDigest,
     ///     source_request: &ReadCanisterSnapshotDataArgs,
     /// ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     ///     let mut source = store.open_payload(
@@ -70,7 +71,7 @@ impl BackupStore {
     pub fn open_payload(
         &self,
         bundle_id: &str,
-        expected_manifest: Sha256Digest,
+        expected_manifest: BackupDigest,
         maximum_payload_bytes: NonZeroU64,
     ) -> Result<PayloadSource<'_>, StoreError> {
         let original =
@@ -82,9 +83,10 @@ impl BackupStore {
                 pending: Vec::with_capacity(BLOCK_BYTES.min(length as usize)),
                 blocks: Vec::with_capacity(length.div_ceil(BLOCK_BYTES as u64) as usize),
             };
-            let identity = hash_exact_reader(&mut reader, length)?;
+            let identity =
+                ic_host_artifacts::copy(&mut reader, io::sink(), Length::Exactly(length))?;
             if !reader.pending.is_empty() {
-                reader.blocks.push(Sha256Digest::compute(&reader.pending));
+                reader.blocks.push(BackupDigest::compute(&reader.pending));
             }
             let held = HeldMember {
                 file: reader.file.try_clone()?,
@@ -179,7 +181,7 @@ impl PayloadSource<'_> {
                 ("stable.bin".to_owned(), Some((*offset, *size)))
             }
             SnapshotDataKind::WasmChunk { hash } => {
-                let hash = Sha256Digest::from_bytes(
+                let hash = BackupDigest::from_bytes(
                     hash.as_slice()
                         .try_into()
                         .map_err(|_| PayloadReadError::Request)?,
@@ -241,15 +243,15 @@ impl PayloadSource<'_> {
                 block.resize(length, 0);
                 held.file.seek(SeekFrom::Start(start))?;
                 held.file.read_exact(&mut block)?;
-                ArtifactIdentity {
-                    bytes: length as u64,
-                    sha256: Sha256Digest::compute(&block),
+                let actual = BackupDigest::compute(&block);
+                let expected = held.blocks[ordinal as usize];
+                if actual != expected {
+                    return Err(StoreError::PayloadDigest {
+                        member: member.name.clone(),
+                        expected,
+                        actual,
+                    });
                 }
-                .verify(held.blocks[ordinal as usize])
-                .map_err(|source| StoreError::Payload {
-                    member: member.name.clone(),
-                    source,
-                })?;
                 let from = offset.saturating_sub(start) as usize;
                 let to = (end - start).min(length as u64) as usize;
                 output.extend_from_slice(&block[from..to]);
@@ -274,7 +276,7 @@ impl fmt::Debug for PayloadSource<'_> {
 struct IndexingReader<'file> {
     file: &'file mut File,
     pending: Vec<u8>,
-    blocks: Vec<Sha256Digest>,
+    blocks: Vec<BackupDigest>,
 }
 impl Read for IndexingReader<'_> {
     fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
@@ -285,7 +287,7 @@ impl Read for IndexingReader<'_> {
             self.pending.extend_from_slice(&remaining[..take]);
             remaining = &remaining[take..];
             if self.pending.len() == BLOCK_BYTES {
-                self.blocks.push(Sha256Digest::compute(&self.pending));
+                self.blocks.push(BackupDigest::compute(&self.pending));
                 self.pending.clear();
             }
         }

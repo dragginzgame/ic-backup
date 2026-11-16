@@ -1,7 +1,7 @@
 //! Pure exact-length restore transfer schedule; no destination or dispatch authority.
 use super::CaptureSource;
+use crate::store::BackupDigest;
 use crate::store::{BackupSummary, BackupTarget};
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
 use thiserror::Error;
 
@@ -12,7 +12,7 @@ pub struct RestoreTransferRequest {
     /// Must equal the authenticated source network/canister.
     pub target: BackupTarget,
     /// Must equal the authenticated source release.
-    pub release: Sha256Digest,
+    pub release: BackupDigest,
     /// Region extent and whole-chunk ceiling, in 1..=1 MiB.
     pub extent_bytes: u32,
     /// Total actual payload ceiling, in 1..=1 GiB.
@@ -131,7 +131,7 @@ pub(in crate::store) fn plan_payload(
                         extent: request.extent_bytes,
                     });
                 }
-                let hash: Sha256Digest = name
+                let hash: BackupDigest = name
                     .strip_prefix("chunk-")
                     .and_then(|s| s.strip_suffix(".bin"))
                     .ok_or(RestoreTransferError::Source)?

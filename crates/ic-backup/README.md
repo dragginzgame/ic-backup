@@ -1,5 +1,13 @@
 # IC Backup
 
+For the pending Host 0.80 adoption, commitment arguments and results use
+`ic_backup::store::BackupDigest`. Replace the former Host `Sha256Digest` import;
+`compute`, `from_bytes`, `as_bytes` and canonical lowercase parsing/display remain
+available on the new Backup type. Filesystem and byte errors now use Host 0.80
+variants; publication distinguishes an unpublished attempt from visible but
+unconfirmed cleanup/durability. This is a Rust API change, with no stored-format
+change or migration of existing evidence.
+
 An experimental Unix host library for capturing one stopped Internet Computer
 canister and restoring it to the same canister, network and release. Restore
 verifies metadata and every uploaded byte before loading, then returns

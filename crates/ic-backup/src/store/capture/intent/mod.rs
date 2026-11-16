@@ -3,6 +3,7 @@ use super::{
     CapturePolicy, CaptureRequest, OperationLimits, OperationStoreError,
     plan::{PLAN_LIMIT, hash, principal},
 };
+use crate::store::BackupDigest;
 pub(in crate::store) use crate::store::operation::intent::Error;
 use crate::store::{
     BackupTarget,
@@ -12,7 +13,6 @@ use crate::store::{
         intent::{Intent, Plan, ProfileRecord},
     },
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use serde::{Deserialize, Serialize};
 const FORMAT: &str = "ic-backup/capture-intent/1";
 const DOMAIN: &[u8] = b"ic-backup/capture-intent/1\0";
@@ -39,7 +39,7 @@ pub struct CapturePlan {
     plan: CapturePolicy,
     profile: ProfileRecord,
     bytes: Vec<u8>,
-    digest: Sha256Digest,
+    digest: BackupDigest,
 }
 
 impl CapturePlan {
@@ -72,7 +72,7 @@ impl CapturePlan {
         if bytes.len() > PLAN_LIMIT {
             return Err(Error::Profile);
         }
-        let digest = Sha256Digest::compute(&[DOMAIN, &bytes].concat());
+        let digest = BackupDigest::compute(&[DOMAIN, &bytes].concat());
         let intent = Self {
             plan,
             profile,
@@ -127,7 +127,7 @@ impl CapturePlan {
     }
     /// Domain-separated approval commitment to all original identities and limits.
     #[must_use]
-    pub fn digest(&self) -> Sha256Digest {
+    pub fn digest(&self) -> BackupDigest {
         self.digest
     }
 }

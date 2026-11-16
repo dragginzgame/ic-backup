@@ -48,7 +48,7 @@ impl Scheme {
                 use ecdsa::PrehashSigner;
                 let signature: ecdsa::Signature = ecdsa::SigningKey::from_slice(&[17; 32])
                     .unwrap()
-                    .sign_prehash(Sha256Digest::compute(message).as_bytes())
+                    .sign_prehash(BackupDigest::compute(message).as_bytes())
                     .unwrap();
                 signature.to_bytes().to_vec()
             }

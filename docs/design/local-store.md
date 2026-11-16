@@ -61,6 +61,87 @@ Complete exact manifest staging can reconcile create-only; partial/changed stagi
 refuses. No automatic rollback, truncation or cleanup is authorized. Read-only
 published replay performs no sync or publication.
 
+### Host 0.80.1 adoption blocker — 2026-11-16
+
+Supplier remediation is owned by [IC Tooling #2](https://github.com/dragginzgame/ic-tooling/issues/2).
+The evidence below records the consumer investigation, not a separate tracker.
+
+Resolved by published FS/Artifacts **0.80.2**, source
+`828c2692523a7a906188c111c9b58f30d0f52468`, now adopted in Backup's two locked
+graphs. `Directory::admit_retained` re-admits the original held manifest against
+its complete authorized length/hash, then seals and commits create-only. Native
+recovery additionally checks that the published file retains the original inode.
+Fresh initialization uses retained stage/write/seal/commit; journals and payloads
+use explicit retained-file creation. Target succession stages `owner.pending`,
+rechecks original authority before replacement, explicitly aborts on refusal and
+preserves cleanup errors. It is a temporary publication file, not another journal
+or recovery authority; unknown leftovers still refuse normal target admission.
+
+Artifacts owns bounded complete reads/copies and `hash_with` producer admission.
+Backup owns canonical `BackupDigest`, expected-digest comparisons and the fixed
+module stream's exact-length counter, using direct approved `sha2` 0.11.1.
+This changes public Rust digest/error types without changing any stored encoding,
+domain tag, original proof, spending or recovery authority. HTTP remains 0.79.0;
+its Artifacts 0.79 type never crosses this new storage boundary. Testkit retains
+its independent FS/Process 0.79 graph. Archive/graph/check evidence is under
+`target/evidence/host-tooling-recheck/`; historical blocked probes remain below.
+
+Focused legacy re-review used frozen `4ae087fad8c23de712aa60bf569bde4b2b932651`:
+`download_journal/manifest/{mod.rs,tests/mod.rs}` for immutable publication/lost
+reply/original replay, and `ic_snapshot_artifact/verification/mod.rs` plus
+`tests/verification/mod.rs` for exact lengths, closed members and custody checks.
+History `9f7b886a824eec67dda8f81792a560436419bb2a` explains same-pass source
+verification and closing re-admission. Existing owning inventory/payload,
+recorder custody, interrupted publication and restore-source tests adapt those
+cases to this single-canister store. Original inode publication is strengthened;
+legacy generic trees, schema and stage catalogs are not copied. Native checks
+alone establish neither IC effects nor physical power-loss behavior.
+
+The following investigation describes the earlier unpublished-fix state.
+
+The requested Host refresh was investigated against current non-yanked registry
+releases: FS/Artifacts 0.80.1; HTTP remains 0.79.0. Both 0.80.1 archives identify
+supplier source `ca0bef0cd29ab272c3e3419d28292ca83ecff875`; verified SHA-256 values:
+FS `6dfb8ed3f645487c12ec0f7a8384bc1750e67649bdf7062bb12f136b3384e461`,
+Artifacts `b9083e3927eb9649c429a1c8dfeb5b7be844cebf1596e93b077f9908d6289dcc`.
+The supplier's [foundation changes](https://github.com/dragginzgame/ic-tooling/blob/4b8200e66fffe1b08c8220fc7df83a21d94ec8f2/releases/foundation/CHANGELOG.md)
+describe an incompatible replacement, not a version-only update.
+
+FS `publication/mod.rs` exposes new `Stage -> Written -> Sealed -> Commit`
+publication and retained failure files, but no way to re-admit an existing staged
+file into that sequence. `Directory::stage` always creates exclusively;
+`Directory::open_file` returns a regular file without publication authority.
+`publish_directory` handles directories, not this manifest. Backup's
+`capture/completion/mod.rs::publish_manifest_file` needs to verify and publish the
+original `manifest.pending` after reopening, without rewriting/removing it or
+creating a replacement recovery record. Direct pathname syscalls or a second FS
+implementation in Backup would bypass the selected Host custody owner.
+
+Fresh evidence under `target/evidence/host-adoption/`: the current Backup
+`interrupted_publication_reconciles_exact_readiness_without_new_effects` regression
+passes (one test, 231 filtered). A separate registry-backed 0.80.1 probe writes and
+seals a retained stage, drops its handles, reopens the directory, and confirms that
+fresh staging refuses `AlreadyExists` while the original inode/bytes survive and
+the destination remains absent. This qualifies the observed refusal, not a
+replacement recovery path. Source, lock, logs and fixture remain there.
+
+Required supplier capability: explicit admission/publication of a caller-held
+original retained regular file, binding its name/identity and complete admitted
+content, synchronizing before create-only visibility, and preserving distinct
+pre-effect versus visible-but-unconfirmed errors. Keep partial/changed originals
+retained on refusal. Revisit adoption when this is published, then migrate and run
+the owning custody/publication/source and actual-IC consumer checks. Artifacts
+also removes the public digest wrapper and incremental writer; that requires an
+explicit consumer API/hash-flow migration, not another compatibility framework.
+HTTP 0.79.0 retains its own Artifacts 0.79 edge; review actual crossing types rather
+than forcing all Host packages onto one version.
+
+No dependency, lock, stored format or runtime behavior changed during this probe;
+that probe did not complete adoption. The 0.80.2 disposition above supersedes the hold.
+Focused legacy reference remains `4ae087fad8c23de712aa60bf569bde4b2b932651`,
+`download_journal/manifest/mod.rs`: immutable declarations and exact original replay
+remain required, while the restart owns its distinct staged-manifest contract.
+
 ### Completed receipt admission
 
 Published capture evidence remains admissible after authenticated target ownership

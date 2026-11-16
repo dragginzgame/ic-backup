@@ -145,8 +145,8 @@ fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
             "network" => changed.limits.network_requests = 14,
             "signing" => changed.limits.signing_requests = 14,
             "evidence" => changed.limits.evidence_bytes = 0,
-            "release" => changed.release = Sha256Digest::compute(b"other"),
-            _ => changed.target.network = Sha256Digest::compute(b"other"),
+            "release" => changed.release = BackupDigest::compute(b"other"),
+            _ => changed.target.network = BackupDigest::compute(b"other"),
         }
         assert!(
             RestorePlan::new(&source, changed, direct.clone()).is_err(),

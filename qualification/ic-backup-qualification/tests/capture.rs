@@ -1,11 +1,11 @@
 //! Actual-IC public-API tests, including a separately built normal-dependency consumer.
 //! All keys, application permissions, fixture memory and proxying remain test-only.
+use ic_backup::store::BackupDigest;
 use ic_backup::store::{
     BackupConnection, BackupHttpTransport, BackupStore, BackupSummary, BackupTarget,
     CaptureRequest, CaptureTiming, OperationLimits, OperationOptions, OperationPlan,
     OperationProgress, OperationStep, RestoreRequest, ScanLimits,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     Principal,
     management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind},
@@ -231,7 +231,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
             pic.upload_chunk(canister, Some(native_sender), bytes.clone())
                 .await
                 .unwrap(),
-            Sha256Digest::compute(bytes).as_bytes()
+            BackupDigest::compute(bytes).as_bytes()
         );
     }
     pic.stop_canister(canister, Some(native_sender))
@@ -275,7 +275,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
     );
     let calls = Arc::new(AtomicUsize::new(0));
     let allowed = Arc::new(AtomicBool::new(true));
-    let network = Sha256Digest::compute(b"ic-backup/private-pocketic-fixture/1");
+    let network = BackupDigest::compute(b"ic-backup/private-pocketic-fixture/1");
     let consumer = matches!(mode, Mode::Isolated).then(|| {
         consumer::Consumer::build(
             &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".."),
@@ -301,10 +301,10 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
             network,
             canister: Principal::from_slice(canister.as_slice()),
         },
-        trust_root: Sha256Digest::compute(&trust),
+        trust_root: BackupDigest::compute(&trust),
         initiator: sender,
-        release: Sha256Digest::compute(b"memory-fixture-release"),
-        module_sha256: Sha256Digest::compute(&wasm),
+        release: BackupDigest::compute(b"memory-fixture-release"),
+        module_sha256: BackupDigest::compute(&wasm),
         sender,
         limits: OperationLimits {
             // Metadata lacks chunk lengths: allow 1 MiB per chunk, including empty.
@@ -481,7 +481,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
     }
     for chunk in &chunks {
         assert_eq!(
-            fs::read(payload.join(format!("chunk-{}.bin", Sha256Digest::compute(chunk)))).unwrap(),
+            fs::read(payload.join(format!("chunk-{}.bin", BackupDigest::compute(chunk)))).unwrap(),
             *chunk
         );
     }
@@ -760,7 +760,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
     assert_eq!(format!("{:?}", status.status), "Stopped");
     assert_eq!(
         status.module_hash.unwrap(),
-        Sha256Digest::compute(&wasm).as_bytes()
+        BackupDigest::compute(&wasm).as_bytes()
     );
     assert_eq!(
         owned.instance_mut().get_stable_memory(canister).await,

@@ -1,9 +1,9 @@
 //! Fixture-only direct authority shared by the IC harness and isolated consumer.
+use ic_backup::store::BackupDigest;
 use ic_backup::store::{
     BackupApplicationGuard, BackupSigner, OperationAction, OperationPlan, OperationSigningContent,
     OperationSigningRequest,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     ed25519::{Signer as _, SigningKey},
     ic_protocol::{Envelope, EnvelopeContent, encode_envelope},
@@ -45,7 +45,7 @@ impl BackupSigner for FixtureSigner {
         let content = match request.signing {
             OperationSigningContent::Call { method, arguments } => EnvelopeContent::Call {
                 nonce: Some(
-                    Sha256Digest::compute(
+                    BackupDigest::compute(
                         &[
                             request.plan.operation_id().as_bytes(),
                             &ordinal.to_le_bytes(),

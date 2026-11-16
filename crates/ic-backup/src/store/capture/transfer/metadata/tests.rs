@@ -2,7 +2,7 @@
 //! is recorded in docs/architecture/capture-transfer.md.
 use super::super::tests::{chunk, metadata, plan};
 use super::*;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use ic_platform::{
     candid_codec::Nat,
     management_canister_types::{CanisterTimer, OnLowWasmMemoryHookStatus},
@@ -54,7 +54,7 @@ fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
     for case in cases {
         let raw = hex(&case.reply_hex);
         assert_eq!(
-            Sha256Digest::compute(&raw).to_string(),
+            BackupDigest::compute(&raw).to_string(),
             case.payload_checksum,
             "{}",
             case.name

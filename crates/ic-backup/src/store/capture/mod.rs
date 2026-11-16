@@ -14,7 +14,8 @@ pub(in crate::store) mod source;
 pub(in crate::store) mod status;
 mod succession;
 pub(in crate::store) mod transfer;
-use super::{BackupStore, CREATE, PRIVATE, manifest::lower_hex, open_optional, read_optional};
+use super::{BackupStore, PRIVATE, manifest::lower_hex, open_optional, read_optional};
+use crate::store::BackupDigest;
 pub(in crate::store) use crate::store::OperationLimits;
 pub use crate::store::operation::framing::LedgerError;
 pub use crate::store::operation::intent::Error as OperationPlanError;
@@ -30,12 +31,7 @@ pub use advance::{
 pub(in crate::store) use advance::{
     CertificateRequirements, authenticate_direct_request, certificate_observation,
 };
-use ic_host_artifacts::artifact::Sha256Digest;
-use ic_host_fs::{
-    capability::Directory,
-    durable::{ExclusiveFileLock, create_retained_at},
-    identity::FileIdentity,
-};
+use ic_host_fs::{Directory, Lock};
 pub use intent::CapturePlan;
 pub(in crate::store) use plan::CapturePolicy;
 pub use plan::CaptureRequest;
@@ -50,7 +46,6 @@ pub use status::{CaptureStatusError, CaptureStatusReplyError};
 use std::{
     ffi::OsStr,
     io::{self, Write},
-    os::fd::AsFd,
 };
 pub use succession::CaptureSuccessionError;
 pub use transfer::{DataReadError, TransferDataError, TransferError, TransferMetadataError};
@@ -59,9 +54,11 @@ pub(in crate::store) fn child(
     name: &str,
     create: bool,
 ) -> Result<Directory, OperationStoreError> {
-    parent
-        .open_directory(OsStr::new(name), if create { CREATE } else { PRIVATE })?
-        .ok_or(OperationStoreError::Incomplete)
+    match parent.open_directory(OsStr::new(name), PRIVATE)? {
+        Some(directory) => Ok(directory),
+        None if create => Ok(parent.create_directory(OsStr::new(name), 0o700, PRIVATE)?),
+        None => Err(OperationStoreError::Incomplete),
+    }
 }
 pub(in crate::store) fn target_for(
     root: &Directory,
@@ -72,10 +69,8 @@ pub(in crate::store) fn target_for(
     let network = child(&targets, &target.network.to_string(), create)?;
     child(&network, &target.canister.to_text(), create)
 }
-pub(in crate::store) fn acquire(
-    file: std::fs::File,
-) -> Result<ExclusiveFileLock, OperationStoreError> {
-    ExclusiveFileLock::try_acquire(file).map_err(|error| {
+pub(in crate::store) fn acquire(file: std::fs::File) -> Result<Lock, OperationStoreError> {
+    Lock::acquire(file).map_err(|error| {
         if error.kind() == io::ErrorKind::WouldBlock {
             OperationStoreError::Locked
         } else {
@@ -85,16 +80,15 @@ pub(in crate::store) fn acquire(
 }
 pub(in crate::store) fn lock_target(
     target: &Directory,
-) -> Result<(ExclusiveFileLock, bool), OperationStoreError> {
+) -> Result<(Lock, bool), OperationStoreError> {
     if let Some(file) = open_optional(target, "lock")? {
         return Ok((acquire(file)?, false));
     }
     // A missing established lock must never be recreated alongside retained authority.
-    if target.entries(1)?.next().transpose()?.is_some() {
+    if !target.entries(1)?.is_empty() {
         return Err(OperationStoreError::Incomplete);
     }
-    let parent = target.open_syncable()?;
-    let file = create_retained_at(parent.as_fd(), OsStr::new("lock"), 0o600)?;
+    let file = target.create_file(OsStr::new("lock"), 0o600)?;
     file.sync_all()?;
     Ok((acquire(file)?, true))
 }
@@ -103,8 +97,7 @@ pub(in crate::store) fn retain(
     name: &str,
     bytes: &[u8],
 ) -> Result<(), OperationStoreError> {
-    let parent = directory.open_syncable()?;
-    let mut file = create_retained_at(parent.as_fd(), OsStr::new(name), 0o600)?;
+    let mut file = directory.create_file(OsStr::new(name), 0o600)?;
     file.write_all(bytes)?;
     file.sync_all()?;
     Ok(())
@@ -125,9 +118,7 @@ pub(in crate::store) fn same_identity(
     first: &Directory,
     second: &Directory,
 ) -> Result<(), OperationStoreError> {
-    if FileIdentity::from_metadata(&first.open_syncable()?.metadata()?)
-        != FileIdentity::from_metadata(&second.open_syncable()?.metadata()?)
-    {
+    if first.identity()? != second.identity()? {
         return Err(OperationStoreError::Changed);
     }
     Ok(())
@@ -151,7 +142,7 @@ pub(in crate::store) fn owner(plan: &CapturePlan) -> Result<Vec<u8>, OperationSt
 }
 pub(in crate::store) fn owner_bytes(
     id: &str,
-    digest: Sha256Digest,
+    digest: BackupDigest,
 ) -> Result<Vec<u8>, OperationStoreError> {
     Ok(serde_json::to_vec(&OwnerRecord {
         format: "ic-backup/local-target-owner/1",

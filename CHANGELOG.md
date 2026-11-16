@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.103.0] - Unreleased
+
+### ⚠️ Breaking
+
+- Adopt registry-backed Host FS/Artifacts 0.80.2. Public commitments now use
+  `ic_backup::store::BackupDigest`; filesystem, bounded-read and publication
+  errors expose the new Host outcomes. Stored SHA-256 bytes, canonical text,
+  intents, journals and manifests keep their existing formats.
+- Publish an exact retained manifest through Host's `admit_retained` API,
+  preserving its original inode and create-only recovery authority
+  ([IC Tooling #2](https://github.com/dragginzgame/ic-tooling/issues/2)).
+  Use complete bounded producer hashing for materialization and direct SHA-256
+  for the fixed capture module stream; remove obsolete qualification digest dependencies.
+
+### 🔧 Changed
+
+- Adopt Toko Tooling 0.44.5 in both workspaces and refresh the managed snapshot.
+  The supplier fixes declaration checks for the required tooling pin and private
+  qualification versions ([Toko Tooling #386](https://github.com/dragginzgame/toko-tooling/issues/386)).
+
 ## [0.102.1] - 2026-11-16
 
 ### ⚠️ Breaking

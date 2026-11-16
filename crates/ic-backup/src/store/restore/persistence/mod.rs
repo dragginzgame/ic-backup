@@ -1,5 +1,6 @@
 //! Original restore approval/source custody over the shared recorder.
 use super::{RestorePlan, RestorePlanError, procedure::Procedure};
+use crate::store::BackupDigest;
 use crate::store::operation::{
     replay::{self, Error as ReplayError},
     runtime::{Action, Connection, Error, Guard, Progress, Signer, now},
@@ -13,13 +14,9 @@ use crate::store::{
     open_optional,
     operation::{FactRecord, Journal, custody::Recorder, intent::Intent},
 };
-use ic_host_artifacts::artifact::Sha256Digest;
-use ic_host_fs::{
-    capability::Directory,
-    durable::{NamedWriteError, PublicationMode, WriteOptions, write_at_validated_with},
-};
+use ic_host_fs::Directory;
 use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
-use std::{ffi::OsStr, io::Write, os::fd::AsFd};
+use std::ffi::OsStr;
 
 /// Original immutable approval, source custody or local publication refused.
 #[derive(Debug, thiserror::Error)]
@@ -38,7 +35,16 @@ pub enum RestorePersistenceError {
     Completion(#[from] OperationReplayError),
     /// Owner replacement may have published before failure.
     #[error("restore owner publication failed")]
-    Publication(Box<NamedWriteError<OperationStoreError>>),
+    Publication(Box<crate::store::StoreError>),
+    /// Original custody validation failed before replacing owner authority.
+    #[error("owner admission refused: {source}")]
+    OwnerAdmission {
+        /// Original custody refusal.
+        #[source]
+        source: Box<OperationStoreError>,
+        /// Explicit stage cleanup refusal, if any.
+        cleanup: Option<ic_host_fs::Error>,
+    },
 }
 #[derive(Debug)]
 pub(in crate::store) struct Source<'store> {
@@ -78,15 +84,15 @@ pub struct LoadedStopped {
     /// Original capture operation identity.
     pub source_operation_id: String,
     /// Exact authenticated original payload manifest.
-    pub source_manifest_sha256: Sha256Digest,
+    pub source_manifest_sha256: BackupDigest,
     /// Newly allocated destination snapshot, retained by the IC.
     pub snapshot_id: Vec<u8>,
     /// Original local completion timestamp, never renewed on replay.
     pub completed_at_ns: u64,
     /// Exact immutable restore approval.
-    pub plan_sha256: Sha256Digest,
+    pub plan_sha256: BackupDigest,
     /// Closing hash-chain commitment to original calls and local completion.
-    pub journal_sha256: Sha256Digest,
+    pub journal_sha256: BackupDigest,
 }
 impl RestoreOperation<'_> {
     /// Exact immutable original restore approval.
@@ -374,7 +380,7 @@ impl BackupStore {
     pub fn create_restore(
         &self,
         plan: &RestorePlan,
-        approval: Sha256Digest,
+        approval: BackupDigest,
         predecessor: &CapturePlan,
     ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
         approve(plan, approval)?;
@@ -425,10 +431,10 @@ impl BackupStore {
     ///
     /// ```no_run
     /// use ic_backup::store::{BackupStore, LoadedStopped, RestorePersistenceError};
-    /// use ic_host_artifacts::artifact::Sha256Digest;
+    /// use ic_backup::store::BackupDigest;
     ///
     /// fn restored_outcome(
-    ///     store: &BackupStore, original_id: &str, original_approval: Sha256Digest,
+    ///     store: &BackupStore, original_id: &str, original_approval: BackupDigest,
     /// ) -> Result<Option<LoadedStopped>, RestorePersistenceError> {
     ///     let mut operation = store.open_restore(original_id, original_approval)?;
     ///     // The store supplies the original plan; no signer or live guard is needed.
@@ -441,7 +447,7 @@ impl BackupStore {
     pub fn open_restore(
         &self,
         id: &str,
-        approval: Sha256Digest,
+        approval: BackupDigest,
     ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
         let plan = Recorder::<RestorePlan>::select_intent(&self.root, id)?;
         approve(&plan, approval)?;
@@ -456,9 +462,9 @@ impl BackupStore {
     pub(in crate::store) fn open_restore_locked(
         &self,
         plan: &RestorePlan,
-        approval: Sha256Digest,
+        approval: BackupDigest,
         target: &Directory,
-        target_lock: &ic_host_fs::durable::ExclusiveFileLock,
+        target_lock: &ic_host_fs::Lock,
     ) -> Result<RestoreOperation<'_>, RestorePersistenceError> {
         approve(plan, approval)?;
         let source = self.restore_source(
@@ -479,7 +485,7 @@ impl BackupStore {
         Ok(operation)
     }
 }
-fn approve(plan: &RestorePlan, approval: Sha256Digest) -> Result<(), OperationStoreError> {
+fn approve(plan: &RestorePlan, approval: BackupDigest) -> Result<(), OperationStoreError> {
     if plan.digest() != approval {
         return Err(OperationStoreError::ApprovalMismatch);
     }
@@ -494,25 +500,63 @@ pub(in crate::store) fn replace_owner(
 ) -> Result<(), RestorePersistenceError> {
     let before = owner_bytes(previous.operation_id(), previous.digest())?;
     let bytes = owner_bytes(next.operation_id(), next.digest())?;
-    let parent = target.open_syncable().map_err(OperationStoreError::from)?;
-    write_at_validated_with(
-        parent.as_fd(),
-        OsStr::new("owner.json"),
-        WriteOptions {
-            mode: PublicationMode::Replace,
-            permissions: 0o600,
-        },
-        |file| {
-            file.write_all(&bytes)?;
-            Ok(())
-        },
-        |()| {
-            exact(target, "owner.json", &before, 1024)?;
-            same_directory(store, "operations", operations)?;
-            same_identity(&target_for(store, previous.target(), false)?, target)
-        },
-    )
-    .map_err(|e| RestorePersistenceError::Publication(Box::new(e)))?;
+    let stage_owner = || -> Result<ic_host_fs::Sealed, crate::store::StoreError> {
+        let stage = target
+            .stage(
+                OsStr::new("owner.pending"),
+                OsStr::new("owner.json"),
+                ic_host_fs::Policy {
+                    destination: ic_host_fs::Destination::Replace,
+                    permissions: 0o600,
+                    retention: ic_host_fs::Retention::Discard,
+                },
+            )?
+            .write_from(
+                bytes.as_slice(),
+                ic_host_artifacts::Length::Exactly(bytes.len() as u64),
+            )?
+            .seal()?;
+        // All original custody checks below run before granting replacement visibility.
+        Ok(stage)
+    };
+    let stage = stage_owner().map_err(|e| RestorePersistenceError::Publication(Box::new(e)))?;
+    let admission = || {
+        exact(target, "owner.json", &before, 1024)?;
+        same_directory(store, "operations", operations)?;
+        same_identity(&target_for(store, previous.target(), false)?, target)
+    };
+    if let Err(source) = admission() {
+        return Err(RestorePersistenceError::OwnerAdmission {
+            source: Box::new(source),
+            cleanup: stage.abort().err(),
+        });
+    }
+    match stage.commit() {
+        ic_host_fs::Commit::Committed(_) => (),
+        ic_host_fs::Commit::NotPublished { cause, stage } => {
+            return Err(RestorePersistenceError::Publication(Box::new(
+                crate::store::StoreError::NotPublished {
+                    cause,
+                    cleanup: stage.abort().err(),
+                },
+            )));
+        }
+        ic_host_fs::Commit::PublishedUnconfirmed {
+            receipt,
+            phase,
+            cause,
+            sync_error,
+        } => {
+            return Err(RestorePersistenceError::Publication(Box::new(
+                crate::store::StoreError::PublishedUnconfirmed {
+                    receipt: Box::new(receipt),
+                    phase,
+                    cause,
+                    sync_error,
+                },
+            )));
+        }
+    }
     exact(target, "owner.json", &bytes, 1024)?;
     Ok(())
 }

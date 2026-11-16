@@ -5,12 +5,9 @@ pub use source::{PayloadReadError, PayloadSource};
 use super::{
     BackupStore, BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError, manifest, open_optional,
 };
-use ic_host_artifacts::artifact::{ArtifactIdentity, Sha256Digest, hash_exact_reader};
-use ic_host_fs::{
-    capability::{Directory, EntryKind},
-    identity::FileIdentity,
-    read::read_opened_file,
-};
+use crate::store::BackupDigest;
+use ic_host_artifacts::{Identity, Length};
+use ic_host_fs::{Directory, FileId, Kind as EntryKind};
 use std::{
     collections::BTreeSet,
     ffi::OsStr,
@@ -70,14 +67,14 @@ impl BackupStore {
     pub fn verify_payload(
         &self,
         bundle_id: &str,
-        expected_manifest: Sha256Digest,
+        expected_manifest: BackupDigest,
         maximum_payload_bytes: NonZeroU64,
     ) -> Result<BackupSummary, StoreError> {
         self.verify_payload_with(
             bundle_id,
             expected_manifest,
             maximum_payload_bytes,
-            |file, length| hash_exact_reader(file, length),
+            |file, length| ic_host_artifacts::copy(file, std::io::sink(), Length::Exactly(length)),
         )
     }
 
@@ -86,9 +83,9 @@ impl BackupStore {
     pub(super) fn verify_payload_with(
         &self,
         bundle_id: &str,
-        expected_manifest: Sha256Digest,
+        expected_manifest: BackupDigest,
         maximum_payload_bytes: NonZeroU64,
-        mut read: impl FnMut(&mut File, u64) -> Result<ArtifactIdentity, super::ArtifactError>,
+        mut read: impl FnMut(&mut File, u64) -> Result<Identity, super::ArtifactError>,
     ) -> Result<BackupSummary, StoreError> {
         let original =
             PayloadDirectory::open(self, bundle_id, expected_manifest, maximum_payload_bytes)?;
@@ -112,7 +109,7 @@ impl<'store> PayloadDirectory<'store> {
     fn open(
         store: &'store BackupStore,
         bundle_id: &str,
-        expected_manifest: Sha256Digest,
+        expected_manifest: BackupDigest,
         maximum_payload_bytes: NonZeroU64,
     ) -> Result<Self, StoreError> {
         if !manifest::lower_hex(bundle_id, 32) {
@@ -128,12 +125,11 @@ impl<'store> PayloadDirectory<'store> {
         let manifest_file =
             open_optional(&bundle, "manifest.json")?.ok_or(StoreError::InvalidLayout)?;
         let original_manifest = manifest_file.metadata()?;
-        let bytes = read_opened_file(manifest_file.try_clone()?, MANIFEST_LIMIT)?;
-        ArtifactIdentity {
-            bytes: bytes.len() as u64,
-            sha256: Sha256Digest::compute(&bytes),
-        }
-        .verify(expected_manifest)?;
+        let (bytes, identity) = ic_host_artifacts::read(
+            manifest_file.try_clone()?,
+            Length::AtMost(MANIFEST_LIMIT as u64),
+        )?;
+        BackupDigest::from_bytes(identity.sha256).check(expected_manifest)?;
         let decoded =
             manifest::decode(bundle_id, &bytes).map_err(|source| StoreError::Manifest {
                 bundle: bundle_id.into(),
@@ -162,7 +158,7 @@ impl<'store> PayloadDirectory<'store> {
 
     fn verify_with<T>(
         &self,
-        mut read: impl FnMut(&mut File, u64) -> Result<(ArtifactIdentity, T), super::ArtifactError>,
+        mut read: impl FnMut(&mut File, u64) -> Result<(Identity, T), super::ArtifactError>,
     ) -> Result<Vec<T>, StoreError> {
         let mut retained = Vec::with_capacity(self.decoded.members.len());
         for member in &self.decoded.members {
@@ -173,12 +169,19 @@ impl<'store> PayloadDirectory<'store> {
                 .sha256
                 .parse()
                 .map_err(|_| StoreError::InvalidLayout)?;
-            let value = read(&mut file, member.bytes)
-                .and_then(|(identity, value)| identity.verify(expected).map(|_| value))
-                .map_err(|source| StoreError::Payload {
+            let (identity, value) =
+                read(&mut file, member.bytes).map_err(|source| StoreError::Payload {
                     member: member.name.clone(),
                     source,
                 })?;
+            let actual = BackupDigest::from_bytes(identity.sha256);
+            if actual != expected {
+                return Err(StoreError::PayloadDigest {
+                    member: member.name.clone(),
+                    expected,
+                    actual,
+                });
+            }
             unchanged_file(&self.payload, &member.name, &file, &original)?;
             retained.push(value);
         }
@@ -194,8 +197,12 @@ impl<'store> PayloadDirectory<'store> {
             &self.manifest_file,
             &self.original_manifest,
         )?;
-        hash_exact_reader(current_manifest, self.original_manifest.len())?
-            .verify(self.decoded.summary.manifest_sha256)?;
+        let identity = ic_host_artifacts::copy(
+            current_manifest,
+            std::io::sink(),
+            Length::Exactly(self.original_manifest.len()),
+        )?;
+        BackupDigest::from_bytes(identity.sha256).check(self.decoded.summary.manifest_sha256)?;
         unchanged_directory(&self.bundle, "payload", &self.payload)?;
         unchanged_directory(&self.bundles, &self.decoded.summary.bundle_id, &self.bundle)?;
         unchanged_directory(&self.store.root, "bundles", &self.bundles)?;
@@ -209,7 +216,6 @@ fn check_members(
 ) -> Result<(), StoreError> {
     let mut names: BTreeSet<_> = members.iter().map(|m| m.name.as_str()).collect();
     for entry in directory.entries(names.len())? {
-        let entry = entry?;
         if entry.kind != EntryKind::File
             || !entry.name.to_str().is_some_and(|name| names.remove(name))
         {
@@ -232,7 +238,7 @@ pub(super) fn unchanged_file(
 ) -> Result<File, StoreError> {
     let current = open_optional(parent, name)?.ok_or(StoreError::CustodyChanged)?;
     let observed = current.metadata()?;
-    if FileIdentity::from_metadata(original) != FileIdentity::from_metadata(&observed)
+    if FileId::from_metadata(original) != FileId::from_metadata(&observed)
         || original.len() != observed.len()
         || original.len() != held.metadata()?.len()
     {
@@ -245,9 +251,7 @@ fn unchanged_directory(parent: &Directory, name: &str, held: &Directory) -> Resu
     let current = parent
         .open_directory(OsStr::new(name), PRIVATE)?
         .ok_or(StoreError::CustodyChanged)?;
-    if FileIdentity::from_metadata(&held.open_syncable()?.metadata()?)
-        != FileIdentity::from_metadata(&current.open_syncable()?.metadata()?)
-    {
+    if held.identity()? != current.identity()? {
         return Err(StoreError::CustodyChanged);
     }
     Ok(())

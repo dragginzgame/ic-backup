@@ -1,4 +1,5 @@
 //! Original direct profile and borrowed approval shared by the two fixed procedures.
+use crate::store::BackupDigest;
 use crate::store::{
     BackupTarget, CaptureLookupError, CaptureObservationError, CapturePlan, CaptureTiming,
     OperationLimits, OperationStoreError, PreparedStatus, RestorePlan, StatusAdmissionRecord,
@@ -13,7 +14,6 @@ use crate::store::{
         authenticate_direct_request, certificate_observation,
     },
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{Principal, canister_sig_creation::extract_raw_root_pk_from_der};
 use serde::{Deserialize, Serialize};
 
@@ -71,7 +71,7 @@ impl<'a> Plan<'a> {
     }
     /// Exact original approval commitment.
     #[must_use]
-    pub fn digest(self) -> Sha256Digest {
+    pub fn digest(self) -> BackupDigest {
         match self {
             Self::Capture(p) => p.digest(),
             Self::Restore(p) => p.digest(),
@@ -85,7 +85,7 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.encoded(),
         }
     }
-    pub(in crate::store) fn trust_root(self) -> Sha256Digest {
+    pub(in crate::store) fn trust_root(self) -> BackupDigest {
         match self {
             Self::Capture(p) => p.request().trust_root,
             Self::Restore(p) => p.request().trust_root,
@@ -125,7 +125,7 @@ impl<'a> Plan<'a> {
             || !(1..=1024).contains(&p.snapshot_capacity)
             || p.root_der.len() != 133
             || extract_raw_root_pk_from_der(&p.root_der).is_err()
-            || Sha256Digest::compute(&p.root_der) != self.trust_root()
+            || BackupDigest::compute(&p.root_der) != self.trust_root()
             || p.prepare_duration_ns == 0
             || p.prepare_duration_ns > p.submit_duration_ns
             || p.submit_duration_ns > 300_000_000_000

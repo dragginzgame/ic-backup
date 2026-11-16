@@ -1,5 +1,6 @@
 //! Real loopback read-state with signed synthetic certificates; no IC effect simulation.
 use super::*;
+use crate::store::BackupDigest;
 use crate::store::capture::advance::tests::{
     fixtures::certificates::{der, reply_tree, signed},
     fixtures::{
@@ -8,7 +9,6 @@ use crate::store::capture::advance::tests::{
         signatures::{Scheme, change},
     },
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use std::{
     sync::{
         Arc,
@@ -103,7 +103,7 @@ fn read_state_refuses_policy_signature_binding_and_expiry_before_connection() {
     }
     let wrong = BackupHttpTransport::new(
         &s.endpoint,
-        Sha256Digest::compute(b"wrong network"),
+        BackupDigest::compute(b"wrong network"),
         der(1),
         Duration::from_secs(1),
     )

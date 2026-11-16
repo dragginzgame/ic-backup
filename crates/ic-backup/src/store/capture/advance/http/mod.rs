@@ -3,9 +3,9 @@ use super::{
     OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
     StatusEvidence, StatusRequestError,
 };
+use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_host_http::{
     ReadError, read_body,
     reqwest::{self, Client, Url, header},
@@ -56,7 +56,7 @@ impl std::fmt::Debug for ReceivedCertificate {
 pub struct BackupHttpTransport {
     client: Client,
     origin: Url,
-    network: Sha256Digest,
+    network: BackupDigest,
     root_key_der: Vec<u8>,
     timeout: Duration,
 }
@@ -145,10 +145,10 @@ impl BackupHttpTransport {
 
     pub(in crate::store) fn admit_binding(
         &self,
-        network: Sha256Digest,
-        trust_root: Sha256Digest,
+        network: BackupDigest,
+        trust_root: BackupDigest,
     ) -> Result<(), BackupHttpError> {
-        if network != self.network || trust_root != Sha256Digest::compute(&self.root_key_der) {
+        if network != self.network || trust_root != BackupDigest::compute(&self.root_key_der) {
             return Err(BackupHttpError::Binding);
         }
         Ok(())
@@ -161,10 +161,10 @@ impl BackupHttpTransport {
     pub(in crate::store) fn commitment(&self) -> [u8; 32] {
         let mut bytes = b"ic-backup/status-http/1\n".to_vec();
         bytes.extend_from_slice(self.network.as_bytes());
-        bytes.extend_from_slice(Sha256Digest::compute(&self.root_key_der).as_bytes());
+        bytes.extend_from_slice(BackupDigest::compute(&self.root_key_der).as_bytes());
         bytes.extend_from_slice(&(self.timeout.as_nanos() as u64).to_le_bytes());
         bytes.extend_from_slice(self.origin.as_str().as_bytes());
-        *Sha256Digest::compute(&bytes).as_bytes()
+        *BackupDigest::compute(&bytes).as_bytes()
     }
 
     /// Configure HTTPS or an explicit literal-loopback HTTP root origin.
@@ -179,7 +179,7 @@ impl BackupHttpTransport {
     /// Refuses invalid configuration or HTTP client construction.
     pub fn new(
         endpoint: &str,
-        network: Sha256Digest,
+        network: BackupDigest,
         root_key_der: Vec<u8>,
         timeout: Duration,
     ) -> Result<Self, BackupHttpError> {

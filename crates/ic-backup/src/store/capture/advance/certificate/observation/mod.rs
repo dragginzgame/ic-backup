@@ -3,7 +3,7 @@
 use super::super::CaptureCall;
 #[cfg(test)]
 use super::CapturePolicy;
-use super::{LIMITS, LookupResult, Sha256Digest, StatusCertificateError, TimePolicy, historical};
+use super::{BackupDigest, LIMITS, LookupResult, StatusCertificateError, TimePolicy, historical};
 #[cfg(test)]
 use super::{PreparedStatus, StatusAdmissionRecord};
 use crate::store::StatusRequestError;
@@ -123,7 +123,7 @@ pub(in crate::store) fn observe_authenticated_request(
     }
     super::validate_window(policy.time.certificate)?;
     super::validate_window(policy.time.delegation)?;
-    if root_key_der.len() != 133 || Sha256Digest::compute(root_key_der) != authority.trust_root {
+    if root_key_der.len() != 133 || BackupDigest::compute(root_key_der) != authority.trust_root {
         return Err(StatusCertificateError::TrustRoot.into());
     }
     let authenticated = historical::authenticate_certificate_at(

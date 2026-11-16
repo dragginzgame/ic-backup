@@ -1,11 +1,9 @@
 //! Create-only exact manifest publication. The recorder owns completion policy.
 use super::{OperationStoreError, open_optional};
-use crate::store::{MANIFEST_LIMIT, StoreError, payload::unchanged_file};
-use ic_host_fs::{
-    capability::Directory,
-    durable::{create_retained_at, publish_retained_at},
-};
-use std::{ffi::OsStr, io::Write, os::fd::AsFd};
+use crate::store::{BackupDigest, MANIFEST_LIMIT, StoreError, payload::unchanged_file};
+use ic_host_artifacts::{Identity, Length};
+use ic_host_fs::Directory;
+use std::ffi::OsStr;
 pub(in crate::store) fn publish_manifest_file(
     bundle: &Directory,
     bytes: &[u8],
@@ -16,23 +14,39 @@ pub(in crate::store) fn publish_manifest_file(
         bundle.sync()?;
         return Ok(());
     }
-    let parent = bundle.open_syncable()?;
-    let file = if let Some(file) = open_optional(bundle, "manifest.pending")? {
-        file
+    let written = if let Some(file) = open_optional(bundle, "manifest.pending")? {
+        verify_manifest_file(bundle, "manifest.pending", &file, bytes)?;
+        bundle.admit_retained(
+            OsStr::new("manifest.pending"),
+            OsStr::new("manifest.json"),
+            &file,
+            Identity {
+                bytes: bytes.len() as u64,
+                sha256: *BackupDigest::compute(bytes).as_bytes(),
+            },
+            crate::store::FILE_POLICY.forbidden,
+        )?
     } else {
-        let mut file = create_retained_at(parent.as_fd(), OsStr::new("manifest.pending"), 0o600)?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        file
+        let written = bundle
+            .stage(
+                OsStr::new("manifest.pending"),
+                OsStr::new("manifest.json"),
+                ic_host_fs::Policy {
+                    destination: ic_host_fs::Destination::CreateNew,
+                    permissions: 0o600,
+                    retention: ic_host_fs::Retention::Retain,
+                },
+            )
+            .map_err(StoreError::from)?
+            .write_from(bytes, Length::Exactly(bytes.len() as u64))
+            .map_err(StoreError::from)?;
+        // Retain the existing exact readback before publication authority is sealed.
+        let file =
+            open_optional(bundle, "manifest.pending")?.ok_or(OperationStoreError::Incomplete)?;
+        verify_manifest_file(bundle, "manifest.pending", &file, bytes)?;
+        written
     };
-    verify_manifest_file(bundle, "manifest.pending", &file, bytes)?;
-    publish_retained_at(
-        parent.as_fd(),
-        OsStr::new("manifest.pending"),
-        OsStr::new("manifest.json"),
-        file,
-    )
-    .map_err(StoreError::from)?;
+    crate::store::commit(written.seal().map_err(StoreError::from)?)?;
     Ok(())
 }
 pub(in crate::store) fn verify_manifest_file(
@@ -43,8 +57,8 @@ pub(in crate::store) fn verify_manifest_file(
 ) -> Result<(), OperationStoreError> {
     let before = file.metadata()?;
     let reader = unchanged_file(bundle, name, file, &before)?;
-    let bytes =
-        ic_host_fs::read::read_opened_file(reader, MANIFEST_LIMIT).map_err(StoreError::from)?;
+    let (bytes, _) = ic_host_artifacts::read(reader, Length::AtMost(MANIFEST_LIMIT as u64))
+        .map_err(StoreError::from)?;
     if bytes != expected {
         return Err(OperationStoreError::Changed);
     }

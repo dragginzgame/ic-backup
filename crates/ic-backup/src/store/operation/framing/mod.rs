@@ -1,5 +1,5 @@
 //! Bounded hash-chained framing shared by the capture recorder and retained restore status contract.
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use std::io::{self, Read};
 use thiserror::Error;
 #[cfg(test)]
@@ -14,11 +14,11 @@ pub(in crate::store) struct Bounds {
     pub(in crate::store) bytes: u64,
 }
 #[cfg(test)]
-fn seed(plan: &[u8]) -> Sha256Digest {
-    Sha256Digest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
+fn seed(plan: &[u8]) -> BackupDigest {
+    BackupDigest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
 }
-fn chain(previous: Sha256Digest, length: &[u8; 4], payload: &[u8]) -> Sha256Digest {
-    Sha256Digest::compute(&[previous.as_bytes().as_slice(), length, payload].concat())
+fn chain(previous: BackupDigest, length: &[u8; 4], payload: &[u8]) -> BackupDigest {
+    BackupDigest::compute(&[previous.as_bytes().as_slice(), length, payload].concat())
 }
 #[cfg(test)]
 pub(in crate::store) fn initial_bytes(
@@ -34,7 +34,7 @@ pub(in crate::store) fn initial_bytes(
     Ok(bytes)
 }
 pub(in crate::store) fn encode_frame(
-    head: Sha256Digest,
+    head: BackupDigest,
     payload: &[u8],
 ) -> Result<Vec<u8>, LedgerError> {
     if payload.is_empty() || payload.len() > FRAME_BYTES {
@@ -51,13 +51,13 @@ pub(in crate::store) fn encode_frame(
 
 pub(in crate::store) struct Frames<R> {
     reader: R,
-    pub(in crate::store) head: Sha256Digest,
+    pub(in crate::store) head: BackupDigest,
     count: u32,
     pub(in crate::store) bytes: u64,
     bounds: Bounds,
 }
 impl<R: Read> Frames<R> {
-    pub(in crate::store) fn new(reader: R, head: Sha256Digest, bounds: Bounds) -> Self {
+    pub(in crate::store) fn new(reader: R, head: BackupDigest, bounds: Bounds) -> Self {
         Self {
             reader,
             head,

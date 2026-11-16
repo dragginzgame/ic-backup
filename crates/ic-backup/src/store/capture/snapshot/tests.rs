@@ -1,7 +1,7 @@
 //! Re-authored frozen-legacy wire cases; goldens retain original bytes and hashes.
 use super::super::status::tests::plan;
 use super::*;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 use serde::Deserialize;
 
 fn snapshot(id: Vec<u8>) -> Snapshot {
@@ -39,7 +39,7 @@ fn every_legacy_golden_preserves_exact_snapshot_fields_and_wire_order() {
     for case in goldens() {
         let raw = hex(&case.reply_hex);
         assert_eq!(
-            Sha256Digest::compute(&raw).to_string(),
+            BackupDigest::compute(&raw).to_string(),
             case.payload_checksum,
             "{}",
             case.name

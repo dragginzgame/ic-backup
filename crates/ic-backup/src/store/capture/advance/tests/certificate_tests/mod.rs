@@ -9,7 +9,7 @@ use ic_platform::certification::{
 
 pub(in crate::store) fn fixture() -> (CapturePolicy, PreparedStatus, StatusEvidence) {
     let mut request = plan().request().clone();
-    request.trust_root = Sha256Digest::compute(&der(1));
+    request.trust_root = BackupDigest::compute(&der(1));
     let plan = CapturePolicy::new(request).unwrap();
     let mut prepared = prepared();
     prepared.observation = status_certificate_observation(times()).unwrap();
@@ -106,7 +106,7 @@ fn exact_original_request_id_call_and_root_are_required() {
     let mut malformed = der(1);
     malformed[0] ^= 1;
     let mut request = p.request().clone();
-    request.trust_root = Sha256Digest::compute(&malformed);
+    request.trust_root = BackupDigest::compute(&malformed);
     assert!(matches!(
         authenticate_status_evidence(
             &CapturePolicy::new(request).unwrap(),

@@ -1,4 +1,5 @@
 //! Exact restore transfer bounds over authenticated sources; no restore effects.
+use crate::store::BackupDigest;
 use crate::store::{
     BackupSummary, RestoreTransferError, RestoreTransferRequest,
     capture::test_fixtures::{
@@ -6,7 +7,6 @@ use crate::store::{
         source::{extent, maximum},
     },
 };
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::management_canister_types::SnapshotDataKind;
 use std::fs;
 
@@ -73,8 +73,8 @@ fn wrong_selection_and_exact_budget_boundaries_refuse_without_source_reads() {
     ] {
         let mut request = selection(&receipt);
         match field {
-            "target" => request.target.network = Sha256Digest::compute(b"other"),
-            "release" => request.release = Sha256Digest::compute(b"other"),
+            "target" => request.target.network = BackupDigest::compute(b"other"),
+            "release" => request.release = BackupDigest::compute(b"other"),
             "extent-zero" => request.extent_bytes = 0,
             "extent-large" => request.extent_bytes = 1_048_577,
             "calls-zero" => request.maximum_management_calls = 0,
@@ -132,7 +132,7 @@ fn mixed_regions_and_empty_whole_chunks_use_actual_lengths_and_sorted_order() {
         (6, 19)
     );
     let requests: Vec<_> = schedule.source_requests().collect();
-    let mut hashes = [Sha256Digest::compute(b""), Sha256Digest::compute(b"chunk")];
+    let mut hashes = [BackupDigest::compute(b""), BackupDigest::compute(b"chunk")];
     hashes.sort_by_key(|hash| *hash.as_bytes());
     for (request, hash) in requests[4..].iter().zip(hashes) {
         assert!(

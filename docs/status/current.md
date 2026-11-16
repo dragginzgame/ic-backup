@@ -8,6 +8,48 @@ atomically and independently read back from GitHub. Product, both locks and the
 qualification requirement select 0.102.1; qualification stays private.
 Hosted CI was left asynchronous, without polling, as requested.
 
+Toko Tooling 0.44.5 is selected in both manifests/locks and installed through the
+canonical exporter. Its verified archive is
+`aef8ac5d84866cf4ceb5b9d91ce9d458708069fc0c585345f07054186d267199`, source
+`081753852ae398661fadfd0fe3b3fc631f0a96e6`. The same 59 managed payloads are
+byte-identical; only the receipt's version/origin changed. Executable tool pins
+are unchanged. Product version remains 0.102.1. Tooling evidence: `target/evidence/host-tooling-adoption/`.
+Exporter/tooling admission, standard dependency declarations and tracked locks,
+documentation links (122 references in 19 documents), and `git diff --check` pass.
+The optional `--cargo-inheritance` probe rejects the existing explicit product
+version; this update leaves release-version ownership unchanged. Its failed log
+is retained separately from the passing standard declaration check.
+
+Host FS/Artifacts **0.80.2** are now registry-backed in both graphs, from verified
+source `828c2692523a7a906188c111c9b58f30d0f52468`. HTTP 0.79.0 and Toko 0.44.5
+remain current. The published fix for [IC Tooling #2](https://github.com/dragginzgame/ic-tooling/issues/2)
+unblocks exact original-inode manifest recovery. Backup uses explicit Host
+stage/seal/commit outcomes and retained files; original authority, spending,
+canonical SHA-256 and stored formats are unchanged. Public commitments now use
+`store::BackupDigest`; Host/error type changes require the pending **0.103.0**
+compatibility note. The maintainer authorized committing and pushing this adoption
+to `main`; version bump and crates.io publication remain pending.
+Direct SHA-256 0.11.1 owns hashing; Artifacts owns bounded complete byte streams.
+HTTP's Artifacts 0.79 and Testkit's private FS/Process 0.79 remain isolated;
+qualification no longer imports Host just to construct Backup commitments.
+
+Both full locked metadata graphs, dependency boundaries, and affected product/
+qualification Clippy pass. All 100 selected native cases pass across the retained
+runs: inventory/payload/source, digest/golden encodings, recorder framing/custody,
+fixed capture policy, runtime recovery and restore sources. The original sandbox
+run passed 69 and refused local sockets/process setup; the FIFO test was adapted
+to Host's typed `Kind` refusal. The affected 34-case rerun passes, including
+original-inode publication and retained partial/changed-manifest refusal.
+The actual-IC multi-extent capture/restore/succession/offline-replay case and the
+isolated normal-dependency consumer's fresh-process continuation/replay pass.
+The final manifest closing-read check retains its exact readback before sealing;
+its three affected native publication regressions pass. Five public examples,
+strict rustdoc, formatting, tooling admission and documentation links pass.
+Evidence, failed runs and original fixture roots remain under
+`target/evidence/host-tooling-recheck/` and `qualification/target/fixtures/`.
+See [the migration and legacy anchors](../design/local-store.md#host-0801-adoption-blocker--2026-11-16).
+No full release gate, hosted macOS, CI polling or physical power-loss proof is claimed.
+
 The [Canic-readiness code audit](../reports/audits/2026/11/16/canic-readiness/01/report.md)
 found one reproducible Backup defect: an admitted request ceiling above 1 MiB
 (including the documented 2 MiB restore profile) fails lookup authentication at
@@ -19,24 +61,16 @@ publication occurred in the audit; the release passes below did not exercise
 this cross-profile recovery case. Canic integration can start as coordinated
 work on real signing, manager execution/admission/replay and fenced recovery.
 
-Release supplier review found the selected Host 0.79.0, Platform 0.33.7,
-Testkit 0.106.0 and Tooling 0.44.4 are the current stable non-yanked registry
-versions. No supplier changed; only Backup's entries changed in both locks.
-Evidence is under `target/evidence/release-0.102.1/`. The first gate exposed inherited
-evidence paths in the nested publication fixture, before any upload. The corrected
-fixture owns its path and excludes parent timing records. Its regression and the
-complete rerun pass: 232 native tests, five examples, eleven IC cases, strict lint,
-docs, tooling admission, package/consumer and publication-caller checks. The full
-gate took 175.10 seconds; Cargo verification/upload/availability took 7.90 seconds.
-Original failed evidence remains; no upload was retried.
-
-The non-yanked registry archive has SHA-256
-`551f6abc1e7a631982c41f7e4ab807ccc6e0b6bf6213f013f0b16a331d2c73aa`, matches the
-verified local archive byte-for-byte and names the release commit in its clean
-Cargo provenance. A normal consumer resolves `ic-backup = "=0.102.1"` from the
-registry, builds offline with its lock, then replays completed capture and restore
-after backend shutdown. Its graph excludes Testkit/PocketIC; `registry-consumer/`
-retains resolution, build and replay evidence. This does not qualify live HTTPS.
+The published 0.102.1 baseline selected Host 0.79.0, Platform 0.33.7, Testkit 0.106.0
+and Tooling 0.44.4. Its complete release gate passed 232 native tests, five examples,
+eleven IC cases, lint/docs and package/consumer/publication-caller checks. This
+historical evidence does not cover the later cross-profile lookup defect above.
+The registry archive SHA-256 is
+`551f6abc1e7a631982c41f7e4ab807ccc6e0b6bf6213f013f0b16a331d2c73aa`;
+archive bytes and clean release provenance match independently. Its normal
+registry consumer built offline without Testkit/PocketIC and replayed completed
+capture/restore after backend shutdown. Evidence, including original failed
+preparation, remains under `target/evidence/release-0.102.1/`.
 
 ## Capacity and publication scope
 
@@ -53,7 +87,7 @@ Failed fixtures remain retained; production limits/behavior are unchanged.
 
 The [packaged guide](../../crates/ic-backup/README.md) covers setup, scope and
 original-store migration/recovery. [Publication](../development/publication.md)
-uses the verified Toko 0.44.4 single-package adapter, installed through its exporter
+uses the verified Toko 0.44.5 single-package adapter, installed through its exporter
 (59 managed files), with local package/consumer and caller checks. Caller tests
 cover private/unknown/duplicate selection, validation/source drift, lock retention
 and one failed dispatch without retry. Automated version/tag orchestration is not
@@ -64,36 +98,24 @@ reconciliation. Successful publication does not authorize another upload.
 ## Legacy review corrections
 
 All four [comparison findings](../design/legacy-assessment.md#review-corrections--2026-11-16)
-are addressed: bounded original certificates in redacted errors, independent
-observation-reply import, full 1 MiB envelopes and a normal-dependency process
-consumer. Original spending/custody and separate observation timing remain intact.
-Audited size before this preparation: 8,098 product / 196 consumer / 12,583 test
-Rust LOC; app/lib 46.99% smaller than frozen legacy, total 53.48%, crate-only
-production 40.36%. Narrower scope establishes neither parity nor speed.
+are addressed; that assessment owns historical LOC comparisons, provenance and
+scope exclusions. Smaller code does not establish feature parity or speed.
 
 ## Implemented Backup scope
 
-The direct-controller single-canister library implements capture, bounded history/
-latest, authenticated original source/payload, same-ID/network/release restore,
-original-call recovery, cold continuation and completed-target succession.
-Capture/restore leave the application stopped. One `BackupConnection`, signer,
-action guard and private sealed recorder serve both fixed procedures.
-The [operation contract](../design/operation-contract.md) owns approvals, cold reopen and ordering.
-Complete metadata/byte checks precede load. Pending calls never repeat; spending
-survives interruption. Explicit observation retains separate original timing.
-Dependent effects require live permission. Completed replay uses original evidence
-without clock, guard, signing, HTTP or writes. Unknown tails/orphans/changed files
-refuse intact; uncertain writes invalidate the handle. No reset/refund/start occurs.
-[Capture](../architecture/capture-intent.md), [transfer](../architecture/capture-transfer.md)
-and [restore](../design/local-store.md#immutable-restore-approval-and-original-custody) own behavior.
+The direct-controller library implements capture, history/latest, held source/payload,
+same-ID/network/release restore, original-call recovery and completed-target succession.
+Capture/restore leave the application stopped. One recorder preserves spending and
+original evidence; pending calls never repeat and unknown/changed files refuse intact.
+Completed replay needs no live authority or writes. [Capture](../architecture/capture-intent.md),
+[transfer](../architecture/capture-transfer.md) and
+[restore](../design/local-store.md#immutable-restore-approval-and-original-custody) own details.
 
 ## Acceptance and preservation
 
-Post-push review of the delivered release and affected Make, package, fixture and
-documentation callers found no additional actionable drift, duplicated recovery
-policy or unused production abstractions. Product Rust behavior and stored formats
-are unchanged by this release preparation. Earlier macOS socket, cancellation and
-deadline corrections retain their Linux evidence under `macos-*`.
+The 0.102.1 post-push review found no additional actionable drift in its release
+callers. Earlier macOS socket/cancellation/deadline corrections retain their Linux
+evidence under `macos-*`.
 `twenty-mib-{release,warm}-*` retains the new capacity evidence; the warm fixture is
 `qualification/target/fixtures/capture-Capacity-3805726-1794820857897640283/`.
 `twenty-mib-archive-replay.json`: that archive's consumer reopens completed 20 MiB

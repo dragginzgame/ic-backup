@@ -1,10 +1,10 @@
 //! Direct-key authentication of original status ingress; no signing, clock or effects.
 use super::{OperationStoreError, PreparedStatus};
+use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::StatusAdmissionRecord;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_host_artifacts::artifact::Sha256Digest;
 use ic_platform::{
     Principal, ecdsa,
     ecdsa::PrehashVerifier,
@@ -169,7 +169,7 @@ fn authenticate_direct_envelope(
         if signature.normalize_s() != signature {
             return Err(StatusRequestError::Signature);
         }
-        key.verify_prehash(Sha256Digest::compute(&message).as_bytes(), &signature)
+        key.verify_prehash(BackupDigest::compute(&message).as_bytes(), &signature)
             .map_err(|_| StatusRequestError::Signature)
     } else {
         Err(StatusRequestError::Identity)
@@ -193,5 +193,5 @@ pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
 pub(in crate::store) struct DirectRequirements {
     pub target: crate::store::BackupTarget,
     pub sender: Principal,
-    pub trust_root: ic_host_artifacts::artifact::Sha256Digest,
+    pub trust_root: crate::store::BackupDigest,
 }

@@ -12,14 +12,17 @@ or Agent. Its futures require a caller-owned Tokio runtime with IO
 and timers; tests use the selected Tokio 1.54.1 runtime. External IC DTOs and
 certificate codecs remain Platform-owned. No Canic framework dependency is added.
 
-Host FS and Artifacts 0.79.0 resolve from verified registry archives. The
-temporary sibling overrides were removed after native consumer qualification;
-no sibling checkout is required. Registry admission and the affected persistence
-suite for the earlier 0.77.3 adoption remain under
-`target/evidence/registry-host-0.77.3/`; current archive/graph evidence is under
-`target/evidence/host-0.79.0/`. Consumers exchanging Backup's public Host digest
-and error types must use the 0.79 line. This changes Rust identities, not stored
-formats or recovery authority; the 0.101.0 GitHub checkpoint contains the adoption.
+Host FS and Artifacts 0.80.2 resolve from verified registry archives, source
+`828c2692523a7a906188c111c9b58f30d0f52468`. SHA-256 values are
+FS `81c73a53b929355c2056a2783c0f61676251c0ddba2d6e0109c3ac53841b396b` and
+Artifacts `f8645c876c9f26469c46e0ec764b639b192d2f2336d71815a2fd11d4c86b6f1e`.
+No sibling override or shared target is used. Evidence is under
+`target/evidence/host-tooling-recheck/`. HTTP remains 0.79.0 with its own Artifacts
+0.79 dependency; no old digest type crosses that body-reader boundary. Testkit's
+private graph retains FS/Process 0.79 without sharing their handles with Backup.
+Backup now owns `store::BackupDigest` and uses approved direct SHA-256 0.11.1;
+its canonical commitment bytes and stored formats are unchanged. Publication
+errors retain pre-visibility, post-visibility and explicit cleanup causes.
 The direct capture provider composes status, list and take through the existing helpers.
 Locked Platform 0.33.7 resolves canonical Types 0.20.4 through the existing dependency.
 The Types patch leaves source and identity bytes unchanged; no direct Types
@@ -39,10 +42,10 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.44.4 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.44.5 is adopted from its registry
 archive with SHA-256
-`b52bb793b386309b8c4a9e88f32711bb5d1fd11a47bf337c11c63ca2aa22fc97`,
-source `8bcece573511a6ce6ee8879443a8d19b6e43e7ad`. Both workspaces declare
+`aef8ac5d84866cf4ceb5b9d91ce9d458708069fc0c585345f07054186d267199`,
+source `081753852ae398661fadfd0fe3b3fc631f0a96e6`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs ten selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -208,7 +211,8 @@ Testkit 0.106.0 archive SHA-256 is
 `d12b0174cd04c556f065c39bc12dd366628cc6df`. Its native PocketIC 16.1 client pins
 `thiserror = 2.0.18`; the separate qualification lock satisfies that requirement.
 The product's compatible requirement admits it while its original lock retains
-2.0.21. Both graphs select Platform 0.33.7/Types 0.20.4 and Host 0.79.0. Revisit
+2.0.21. Both graphs select Platform 0.33.7/Types 0.20.4; Backup selects FS/Artifacts 0.80.2
+while Testkit retains its independent Host 0.79 edges. Revisit
 this concrete constraint when the client pin changes. No direct PocketIC, registry
 management, Candid or CBOR dependency is added; native DTOs stay fixture-private.
 

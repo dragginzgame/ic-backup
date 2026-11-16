@@ -4,6 +4,7 @@ use super::{
     custody::{CaptureOperation, Role},
     replay::Error,
 };
+use crate::store::BackupDigest;
 use crate::store::operation::intent::Intent;
 use crate::store::{
     BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError,
@@ -20,16 +21,15 @@ use crate::store::{
     open_optional,
     payload::unchanged_file,
 };
-use ic_host_artifacts::artifact::{HashingWriter, Sha256Digest, hash_exact_reader};
-use ic_host_fs::{capability::EntryKind, durable::create_retained_at};
+use ic_host_artifacts::Length;
+use ic_host_fs::Kind as EntryKind;
 use ic_platform::{
     ic_protocol::{EnvelopeContent, decode_call_content_strict},
     management_canister_types::SnapshotDataKind,
 };
 use std::{
     ffi::OsStr,
-    io::{Read, Write, sink},
-    os::fd::AsFd,
+    io::{Read, Write},
 };
 
 struct Member {
@@ -67,7 +67,9 @@ impl CaptureOperation {
         let before = self.journal_file.metadata()?;
         let mut reader =
             unchanged_file(&self.directory, "journal.bin", &self.journal_file, &before)?;
-        let identity = hash_exact_reader(&mut reader, journal.bytes).map_err(StoreError::from)?;
+        let identity =
+            ic_host_artifacts::copy(&mut reader, std::io::sink(), Length::Exactly(journal.bytes))
+                .map_err(StoreError::from)?;
         unchanged_file(&self.directory, "journal.bin", &self.journal_file, &before)?;
         let payload = child(&bundle, "payload", false)?;
         let members = tree_members(&payload, self.intent.request().limits.payload_bytes)?;
@@ -76,7 +78,7 @@ impl CaptureOperation {
             || manifest.ledger
                 != (CommitmentRecord {
                     bytes: identity.bytes,
-                    sha256: identity.sha256.to_string(),
+                    sha256: BackupDigest::from_bytes(identity.sha256).to_string(),
                 })
             || manifest.summary.target != p.target
             || manifest.summary.release != p.release
@@ -184,7 +186,6 @@ impl CaptureOperation {
             return Err(OperationStoreError::Changed);
         }
         for entry in bundle.entries(3)? {
-            let entry = entry?;
             if !(entry.kind == EntryKind::Directory && entry.name == OsStr::new("payload"))
                 && !(journal.completed_at_ns.is_some()
                     && entry.kind == EntryKind::File
@@ -268,7 +269,7 @@ impl CaptureOperation {
                 SnapshotDataKind::WasmMemory { .. } => 1,
                 SnapshotDataKind::StableMemory { .. } => 2,
                 SnapshotDataKind::WasmChunk { hash } => {
-                    let hash = Sha256Digest::from_bytes(
+                    let hash = BackupDigest::from_bytes(
                         hash.as_slice()
                             .try_into()
                             .map_err(|_| OperationStoreError::Changed)?,
@@ -290,7 +291,6 @@ impl CaptureOperation {
             .entries(members.len())
             .map_err(OperationStoreError::from)?
         {
-            let entry = entry.map_err(OperationStoreError::from)?;
             if entry.kind != EntryKind::File
                 || !members.iter().any(|m| OsStr::new(&m.name) == entry.name)
             {
@@ -312,21 +312,30 @@ impl CaptureOperation {
                 .map(std::fs::File::metadata)
                 .transpose()
                 .map_err(OperationStoreError::from)?;
-            let mut hash =
-                HashingWriter::new(sink(), self.intent.plan().request().limits.payload_bytes);
-            for &n in &member.ordinals {
-                let bytes = self.payload(journal, &transfer, n)?;
-                hash.write_all(&bytes).map_err(OperationStoreError::from)?;
-                if let Some(file) = &mut file {
-                    let mut actual = vec![0; bytes.len()];
-                    file.read_exact(&mut actual)
-                        .map_err(OperationStoreError::from)?;
-                    if actual != bytes {
-                        return Err(OperationStoreError::Changed.into());
+            let identity = ic_host_artifacts::hash_with(
+                Length::AtMost(self.intent.plan().request().limits.payload_bytes),
+                |hash| -> Result<(), Error> {
+                    for &n in &member.ordinals {
+                        let bytes = self.payload(journal, &transfer, n)?;
+                        hash.write_all(&bytes).map_err(OperationStoreError::from)?;
+                        if let Some(file) = &mut file {
+                            let mut actual = vec![0; bytes.len()];
+                            file.read_exact(&mut actual)
+                                .map_err(OperationStoreError::from)?;
+                            if actual != bytes {
+                                return Err(OperationStoreError::Changed.into());
+                            }
+                        }
                     }
+                    Ok(())
+                },
+            )
+            .map_err(|error| match error {
+                ic_host_artifacts::ProduceError::Producer(error) => error,
+                ic_host_artifacts::ProduceError::Admission(error) => {
+                    OperationStoreError::from(StoreError::from(error)).into()
                 }
-            }
-            let identity = hash.identity();
+            })?;
             if let (Some(file), Some(before)) = (&file, &before) {
                 if before.len() != identity.bytes {
                     return Err(OperationStoreError::Changed.into());
@@ -337,17 +346,16 @@ impl CaptureOperation {
             expected.push(MemberRecord {
                 name: member.name.clone(),
                 bytes: identity.bytes,
-                sha256: identity.sha256.to_string(),
+                sha256: BackupDigest::from_bytes(identity.sha256).to_string(),
             });
             held.push(file);
         }
         if create {
-            let parent = payload.open_syncable().map_err(OperationStoreError::from)?;
             for (member, file) in members.iter().zip(&mut held) {
                 if file.is_none() {
-                    let mut created =
-                        create_retained_at(parent.as_fd(), OsStr::new(&member.name), 0o600)
-                            .map_err(OperationStoreError::from)?;
+                    let mut created = payload
+                        .create_file(OsStr::new(&member.name), 0o600)
+                        .map_err(OperationStoreError::from)?;
                     for &n in &member.ordinals {
                         created
                             .write_all(&self.payload(journal, &transfer, n)?)
@@ -483,9 +491,10 @@ impl CaptureOperation {
         let mut reader =
             unchanged_file(&self.directory, "journal.bin", &self.journal_file, &before)
                 .map_err(OperationStoreError::from)?;
-        let identity = hash_exact_reader(&mut reader, journal.bytes)
-            .map_err(StoreError::from)
-            .map_err(OperationStoreError::from)?;
+        let identity =
+            ic_host_artifacts::copy(&mut reader, std::io::sink(), Length::Exactly(journal.bytes))
+                .map_err(StoreError::from)
+                .map_err(OperationStoreError::from)?;
         unchanged_file(&self.directory, "journal.bin", &self.journal_file, &before)
             .map_err(OperationStoreError::from)?;
         let p = self.intent.plan().request();
@@ -505,7 +514,7 @@ impl CaptureOperation {
             plan: commitment(self.intent.encoded()),
             ledger: CommitmentRecord {
                 bytes: identity.bytes,
-                sha256: identity.sha256.to_string(),
+                sha256: BackupDigest::from_bytes(identity.sha256).to_string(),
             },
             metadata_arguments: commitment(&arg),
             metadata_reply: commitment(&self.response(journal, Step::Metadata)?),
@@ -522,6 +531,6 @@ impl CaptureOperation {
 fn commitment(bytes: &[u8]) -> CommitmentRecord {
     CommitmentRecord {
         bytes: bytes.len() as u64,
-        sha256: Sha256Digest::compute(bytes).to_string(),
+        sha256: BackupDigest::compute(bytes).to_string(),
     }
 }

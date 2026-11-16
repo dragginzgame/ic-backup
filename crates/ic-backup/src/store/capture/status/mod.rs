@@ -1,6 +1,6 @@
 //! Pure status preconditions; observation authentication stays with the caller.
 use super::CapturePolicy;
-use ic_host_artifacts::artifact::Sha256Digest;
+use crate::store::BackupDigest;
 #[cfg(test)]
 use ic_platform::management_canister_types::CanisterStatusResult;
 use ic_platform::{Principal, management_canister_types::CanisterStatusType};
@@ -9,7 +9,7 @@ use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
 
 pub(in crate::store) struct StatusRequirements {
-    pub module_sha256: Sha256Digest,
+    pub module_sha256: BackupDigest,
     pub sender: Principal,
 }
 

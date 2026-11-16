@@ -15,6 +15,7 @@ use crate::store::{
     },
     tests::{root, write_file},
 };
+use std::path::Path;
 use std::{
     fs,
     os::unix::fs::{DirBuilderExt, symlink},
@@ -29,7 +30,7 @@ pub(in crate::store::operation) fn store(path: &Path) -> Directory {
             .create(path.join(name))
             .unwrap();
     }
-    Directory::open_root(path, PRIVATE).unwrap().unwrap()
+    Directory::open(path, PRIVATE).unwrap().unwrap()
 }
 
 fn fixture() -> (PathBuf, Directory, CaptureOperation) {
@@ -612,7 +613,7 @@ fn old_store_marker_and_changed_target_custody_refuse_before_work() {
             .create(old.join(name))
             .unwrap();
     }
-    let directory = Directory::open_root(&old, PRIVATE).unwrap().unwrap();
+    let directory = Directory::open(&old, PRIVATE).unwrap().unwrap();
     let before = fs::read(old.join("format")).unwrap();
     let intent = selected();
     let id = intent.plan().request().operation_id.clone();

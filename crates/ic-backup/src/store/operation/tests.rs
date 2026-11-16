@@ -19,7 +19,7 @@ fn allowance() -> Allowance {
 fn reference(bytes: &[u8]) -> ReferenceRecord {
     ReferenceRecord {
         bytes: bytes.len().try_into().unwrap(),
-        sha256: *Sha256Digest::compute(bytes).as_bytes(),
+        sha256: *BackupDigest::compute(bytes).as_bytes(),
     }
 }
 fn read(bytes: &[u8], a: Allowance) -> Journal {
