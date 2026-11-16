@@ -34,6 +34,7 @@ type Connection = BackupConnection<FixtureSigner, FixtureGuard>;
 #[derive(Clone, Copy, Debug)]
 enum Mode {
     Complete,
+    Capacity,
     Isolated,
     Boundary,
     WriteFailure,
@@ -43,6 +44,10 @@ enum Mode {
     RestoreAllocationObservation,
     RestoreUpload,
     RestoreLoad,
+}
+#[test]
+fn twenty_mib_capture_restore_interrupted_transfer_and_offline_replay() {
+    run(Mode::Capacity);
 }
 #[test]
 fn isolated_normal_consumer_continues_capture_restore_and_replays_in_new_processes() {
@@ -168,11 +173,13 @@ async fn complete(
     panic!("fixed capture did not complete within original call allowance")
 }
 async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
+    let capacity = matches!(mode, Mode::Capacity);
     let mut owned = PocketIcStartupConfig::Spawn {
         server_binary: binary,
         timeout: Duration::from_secs(30),
-        server_hard_ttl: Some(Duration::from_secs(600)),
-        server_idle_ttl: None,
+        server_hard_ttl: Some(Duration::from_secs(if capacity { 1800 } else { 600 })),
+        // Large local replay/source checks can exceed the server's default idle TTL.
+        server_idle_ttl: capacity.then(|| Duration::from_secs(1800)),
         server_output_files: Some((
             evidence.join("server.stdout"),
             evidence.join("server.stderr"),
@@ -200,16 +207,20 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         )
         .await;
     let heap: Vec<_> = (0..65536).map(|n| (n % 251) as u8).collect();
-    let stable: Vec<_> = (0..131072).map(|n| ((n * 3) % 251) as u8).collect();
+    let stable: Vec<_> = (0..if capacity { 19 * 1024 * 1024 } else { 131072 })
+        .map(|n| ((n * 3) % 251) as u8)
+        .collect();
     let wasm = wasm(&heap);
     pic.install_canister(canister, wasm.clone(), vec![], Some(native_sender))
         .await;
     pic.set_stable_memory(canister, stable.clone(), BlobCompression::NoCompression)
         .await;
-    let boundary = matches!(mode, Mode::Boundary);
+    let boundary = matches!(mode, Mode::Boundary | Mode::Capacity);
     let chunks = [
         vec![],
-        if boundary {
+        if capacity {
+            vec![0xa7; 20 * 1024 * 1024 - wasm.len() - heap.len() - stable.len()]
+        } else if boundary {
             vec![0xa7; 1024 * 1024]
         } else {
             vec![0, 255, 17]
@@ -246,6 +257,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         evidence.join("wire"),
         match mode {
             Mode::Complete | Mode::Boundary | Mode::WriteFailure | Mode::Isolated => None,
+            Mode::Capacity => Some(("read_canister_snapshot_data", 2)),
             Mode::TakeObservation => Some(("take_canister_snapshot", 0)),
             Mode::DataReply => Some(("read_canister_snapshot_data", 0)),
             Mode::RestoreAllocation | Mode::RestoreAllocationObservation => {
@@ -295,12 +307,13 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         module_sha256: Sha256Digest::compute(&wasm),
         sender,
         limits: OperationLimits {
-            payload_bytes: 4 * 1024 * 1024,
+            // Metadata lacks chunk lengths: allow 1 MiB per chunk, including empty.
+            payload_bytes: if capacity { 22 } else { 4 } * 1024 * 1024,
             extent_bytes: if boundary { 1024 * 1024 } else { 16 * 1024 },
             network_requests: 128,
             observations: 1,
             signing_requests: 128,
-            evidence_bytes: 256 * 1024 * 1024,
+            evidence_bytes: if capacity { 1024 } else { 256 } * 1024 * 1024,
         },
     };
     let mut capture_options = options();
@@ -316,6 +329,42 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         .unwrap();
     let store = BackupStore::initialize(&evidence.join("store")).unwrap();
     let mut operation = store.create_capture(plan.clone(), approval).unwrap();
+    if capacity {
+        loop {
+            match operation.advance(&mut connection).await {
+                Ok(OperationProgress::Advanced) => (),
+                Err(_) => break,
+                other => panic!("expected interrupted capacity transfer, got {other:?}"),
+            }
+        }
+        let before = operation.inspect().unwrap();
+        assert_eq!(before.next_call, Some(OperationStep::Data(2)));
+        let certificate = proxy.lost.lock().unwrap().clone().unwrap();
+        let signatures = calls.load(Ordering::SeqCst);
+        let requests = proxy.calls.load(Ordering::SeqCst);
+        drop(operation);
+        operation = store
+            .open_capture(&plan.request().operation_id, approval)
+            .unwrap();
+        let reopened = operation.inspect().unwrap();
+        assert_eq!(reopened.next_call, before.next_call);
+        assert_eq!(reopened.request_id, before.request_id);
+        assert_eq!(
+            reopened.signing_requests_reserved,
+            before.signing_requests_reserved
+        );
+        assert_eq!(
+            reopened.network_requests_reserved,
+            before.network_requests_reserved
+        );
+        assert_eq!(reopened.observations_reserved, before.observations_reserved);
+        allowed.store(false, Ordering::SeqCst);
+        operation.reconcile_reply(&certificate).unwrap();
+        assert!(operation.reconcile_reply(&certificate).is_err());
+        assert_eq!(calls.load(Ordering::SeqCst), signatures);
+        assert_eq!(proxy.calls.load(Ordering::SeqCst), requests);
+        allowed.store(true, Ordering::SeqCst);
+    }
     if let Some(child) = &consumer {
         drop(operation);
         child.call("capture-step", &plan.request().operation_id, approval, true);
@@ -412,6 +461,9 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         return;
     }
     let receipt = complete(&mut operation, &mut connection).await;
+    if capacity {
+        assert_eq!(receipt.payload_bytes, 20 * 1024 * 1024);
+    }
     assert_eq!(
         receipt.payload_bytes,
         (wasm.len() + heap.len() + stable.len() + chunks[1].len()) as u64
@@ -455,7 +507,10 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         .join("journal.bin");
     let original_bytes = fs::read(&original_journal).unwrap();
     drop(operation);
-    let (next, second) = if matches!(mode, Mode::Complete | Mode::Boundary | Mode::Isolated) {
+    let (next, second) = if matches!(
+        mode,
+        Mode::Complete | Mode::Boundary | Mode::Capacity | Mode::Isolated
+    ) {
         let mut request = plan.request().clone();
         request.operation_id = "02".repeat(16);
         let next = connection.plan(request, capture_options).unwrap();
@@ -516,12 +571,12 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
                 release: receipt.release,
                 sender,
                 limits: OperationLimits {
-                    payload_bytes: 4 * 1024 * 1024,
+                    payload_bytes: if capacity { 22 } else { 4 } * 1024 * 1024,
                     extent_bytes: if boundary { 1024 * 1024 } else { 16 * 1024 },
                     network_requests: 128,
                     observations: 1,
                     signing_requests: 128,
-                    evidence_bytes: 256 * 1024 * 1024,
+                    evidence_bytes: if capacity { 1024 } else { 256 } * 1024 * 1024,
                 },
             },
             restore_options,

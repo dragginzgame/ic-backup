@@ -4,6 +4,9 @@ TOKO_TOOLING_ROOT := $(REPO_ROOT)vendor/toko-tooling
 LOCAL_TOOL_INSTALL_TARGETS := fetch-dependencies install-testkit-server
 LOCAL_TOOL_CHECK_TARGETS := testkit-server-check
 FORMAT_RUST_ARGS := --extra-workspace qualification
+override CARGO_PUBLISH_PACKAGES := ic-backup
+override CARGO_PUBLISH_REGISTRY := crates-io
+override CARGO_PUBLISH_VERIFY_TARGETS := publication-verify
 include $(TOKO_TOOLING_ROOT)/make/consumer.mk
 include $(TOKO_TOOLING_ROOT)/make/cargo-dependencies.mk
 
@@ -24,6 +27,10 @@ help:
 	  'install-tools       Prepare common tools, dependencies and Testkit' \
 	  'test-qualification  Offline actual-IC status, snapshot and replay qualification' \
 	  'testkit-server-check  Admit the prepared server without downloads' \
+	  'package-check       Verify archive, packaged README and isolated consumer' \
+	  'publication-verify  Complete local publication gate, without upload' \
+	  'publish-check       Shared Cargo publication dry run (requires eligibility)' \
+	  'publish             One explicitly authorized crates.io attempt' \
 	  'toko-tooling-check  Admit Cargo pin, members, lockfile and snapshot'
 	@printf '\n%s\n' 'LOC report (PATH command): toko-cloc [-d N] [directory | crate[::module]]'
 
@@ -45,7 +52,26 @@ test: toko-tooling-check
 
 doc-links-check: toko-tooling-check
 	@perl "$(TOKO_TOOLING_ROOT)/scripts/ci/check-documentation-links.pl" \
-	  --root "$(REPO_ROOT)" README.md AGENTS.md CHANGELOG.md docs
+	  --root "$(REPO_ROOT)" README.md AGENTS.md CHANGELOG.md docs crates/ic-backup/README.md
+
+.PHONY: package-check publication-verify test-publication-adapter
+package-check: toko-tooling-check
+	bash scripts/publication/check-package.sh
+
+# Keep the complete gate ordered even under parallel Make. Publication dispatch
+# subsequently requires a clean, unchanged source through the shared runner.
+publication-verify:
+	$(MAKE) tools-check
+	$(MAKE) clippy
+	cargo clippy --manifest-path qualification/Cargo.toml --locked --offline --all-targets -- -D warnings
+	$(MAKE) doc-links-check fmt-check rustdoc
+	$(MAKE) test
+	$(MAKE) test-qualification
+	$(MAKE) package-check
+	$(MAKE) test-publication-adapter
+
+test-publication-adapter: toko-tooling-check
+	bash scripts/publication/test-adapter.sh
 
 TESTKIT_DIRECTORY := $(REPO_ROOT).tools/testkit
 TESTKIT_INSTALLER = bash "$(TOKO_TOOLING_ROOT)/scripts/dev/install-rust-tools.sh" --consumer "$(REPO_ROOT)" --package ic-testkit --lockfile qualification/Cargo.lock --bin ic-testkit-server --profile release --features cli
@@ -58,4 +84,4 @@ testkit-server-check: | toko-execution-check
 	@tool="$$($(TESTKIT_INSTALLER) --check)" && "$$tool" check --directory "$(TESTKIT_DIRECTORY)"
 
 test-qualification: testkit-server-check
-	IC_BACKUP_TESTKIT_DIRECTORY="$(TESTKIT_DIRECTORY)" cargo test --manifest-path qualification/Cargo.toml --locked --offline
+	IC_BACKUP_TESTKIT_DIRECTORY="$(TESTKIT_DIRECTORY)" cargo test --release --manifest-path qualification/Cargo.toml --locked --offline

@@ -1,15 +1,39 @@
 # Changelog
 
-## [0.102.1] — Unreleased
+## [0.102.1] - 2026-11-16
+
+### ⚠️ Breaking
+
+- First registry release of the incompatible restart described in 0.102.0 below.
+  Legacy consumers must adopt the fixed capture/restore API and use a new store;
+  retain original readers and authority for existing backups and unfinished work.
+  Canic manager integration remains unfinished. This release supports the
+  experimental direct-controller workflow and its bounded 20 MiB profile.
 
 ### 🧪 Testing
 
+- Add an actual-IC 20 MiB capture/restore case with interrupted-transfer recovery,
+  cold reopening and offline replay under explicit payload/evidence allowances.
+- Verify the packaged README and an isolated archive consumer; qualify the shared
+  publication caller's selection, validation and single-attempt failure behavior.
 - Explicitly select blocking IO for accepted HTTP/TLS fixture and IC proxy
   connections, preserving timeouts when macOS inherits the listener's nonblocking mode.
 - Recognize peer reset as well as EOF when observing HTTP cancellation; timeouts,
   other read failures and detached retries still fail the fixture.
 - Start HTTP deadline tests after fixture setup and allow dispatch on loaded
   hosts while retaining a watchdog shorter than the configured transport timeout.
+
+### 📚 Documentation
+
+- Package consumer setup, bounded capacity, original-store recovery and legacy
+  migration guidance. Add explicit publication checks; qualification packages
+  remain private.
+
+### ▶️ Try it
+
+`make package-check` verifies the crate archive and isolated consumer.
+`make publish` performs the complete local gate and one authorized upload;
+see [publication and recovery](docs/development/publication.md).
 
 ## [0.102.0] - 2026-11-16
 

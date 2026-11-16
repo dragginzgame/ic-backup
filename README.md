@@ -3,7 +3,13 @@
 A standalone host-side Internet Computer backup library. Canic is a required
 integration and owns its adapter, membership, application maintenance and external
 obligations. Backup production depends on Platform and Host, without Canic runtime
-or control-plane crates. Every package remains unpublished.
+or control-plane crates. The 0.102.1 release is an experimental direct-controller
+library; qualification packages remain private.
+
+The [packaged consumer guide](crates/ic-backup/README.md) explains required adapters,
+capacity limits, recovery custody and legacy migration. The
+[publication workflow](docs/development/publication.md) owns package verification
+and the single-attempt Cargo publication commands.
 
 Capture runs through one fixed public loop. Configure `BackupConnection` with a
 bounded transport, sign-only adapter and action-aware application guard, then use
@@ -51,6 +57,9 @@ application authority. They additionally exercise full 1 MiB whole chunks,
 offline recovery from a failed load-result write, and a separately built normal
 consumer continuing capture/restore across processes. They do not qualify Canic
 or physical power loss.
+The [20 MiB profile](docs/architecture/capture-transfer.md#20-mib-qualification--2026-11-16)
+also passes full capture/restore, interrupted-transfer recovery and offline replay
+on Linux, with explicit geometry and finite allowances.
 
 After [tool preparation](docs/development/setup.md):
 

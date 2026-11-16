@@ -133,3 +133,62 @@ uses 16 KiB extents over a nontrivial module, 64 KiB heap, 128 KiB stable memory
 and both empty/nonempty chunks. It independently compares payload bytes and
 qualifies interrupted original data settlement; this is fresh IC evidence.
 Native synthetic-certificate and pure readback tests do not qualify restore effects.
+
+## 20 MiB qualification — 2026-11-16
+
+`twenty_mib_capture_restore_interrupted_transfer_and_offline_replay` in the same
+actual-IC consumer passes with exactly 20 MiB of combined module, heap, stable
+memory and chunk bytes. The fixture uses a 64 KiB heap, 19 MiB stable memory,
+the existing small module and two chunks: empty and the remaining payload bytes.
+One MiB extents produce 23 data units, 28 calls per complete capture and 53 per
+complete restore. This is a tested shape, not a guarantee for every 20 MiB input.
+
+The approved profile reserves 22 MiB payload, 128 network requests and signatures,
+one observation and 1 GiB evidence per operation. Capture has an 8 KiB request /
+4 MiB result ceiling; restore has 2 MiB / 4 MiB. A first attempt with only 20 MiB
+payload allowance correctly refused the conservative metadata total of 22,151,205
+bytes: each chunk reserves a full extent, including the empty chunk. No allowance
+is enlarged after approval or refunded after interruption.
+
+The test loses the original third data reply, closes and reopens the operation,
+checks its original request and spending, then imports the surviving certificate
+with application permission revoked and no additional signature or network call.
+A second import refuses. It completes capture, compares all local payload bytes,
+publishes a successor, restores the older source after changing actual stable
+memory, verifies full readback/load and stopped state, checks restored memory and
+module independently through PocketIC, and starts capture after restore. After
+backend shutdown, both completed captures, restore and history replay offline.
+
+Two optimized Linux runs pass in 89.20 and 88.63 seconds. The second warm command
+takes 89.58 seconds overall and `/usr/bin/time -v` reports 730,672 KiB maximum RSS
+and 908,184 filesystem output blocks. These are test-command/process accounting,
+including fixture/backend work, not isolated library memory, a byte-read trace or
+a production throughput comparison. The debug attempt spent 482 seconds before
+the backend's default idle timeout expired during local source/replay work; its
+evidence is retained. Qualification now uses the optimized profile and an explicit
+finite 30-minute idle/hard server lifetime for this case. Production code and
+operation deadlines are unchanged; repeated replay still has substantial costs.
+
+Evidence: `target/evidence/twenty-mib-{release,warm}-{qualification.log,time.txt}`;
+warm original store, journals, certificates and server logs:
+`qualification/target/fixtures/capture-Capacity-3805726-1794820857897640283/`.
+Failed capacity fixtures are retained too. Production HTTPS, Canic authority and
+actual-IC macOS behavior remain separate unqualified boundaries.
+
+The normal-dependency consumer built against the extracted current Cargo archive
+also reopens the completed 20 MiB capture and restore after backend shutdown, with
+only the original store/IDs/approvals. Its debug-build inspections take 21.95 and
+51.62 seconds; `target/evidence/twenty-mib-archive-replay.json` retains both zero
+exit statuses. The initial sandbox subprocess-control error is retained separately.
+This is archive replay, not a newly published registry install or a live archive
+capture/restore run.
+
+Focused review also used frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`:
+`src/standalone/transfer/mod.rs`, core `model/ic_snapshot_coverage/tests/mod.rs`
+and `workflow/ic_snapshot_restore/tests/mod.rs` (the
+`failure_boundaries_retain_pending_or_applied_and_never_repeat_provider` case).
+History `a860d14421b9ff1c61c1dce079cdc6a19316bfd0` and
+`9f7b886a824eec67dda8f81792a560436419bb2a` explain bounded ownership and verified
+upload planning. This fixture adapts their coverage, held-source and original-call
+recovery guarantees to the fixed public loop and actual IC. It imports no legacy
+source or driver architecture; synthetic historical passes are not this proof.

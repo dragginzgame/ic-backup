@@ -8,6 +8,15 @@ explicit shape and call bounds. This amendment changes the capacity requirement,
 not the source revision or historical validation results below. The subsequent
 fixture repair and its checks are tracked in the [handoff](../../../../../../../status/current.md).
 
+Follow-through, 2026-11-16: the
+[bounded 20 MiB journey](../../../../../../../architecture/capture-transfer.md#20-mib-qualification--2026-11-16)
+now passes on Linux, and the packaged consumer guide and
+[publication adapter](../../../../../../../development/publication.md) are prepared
+with archive-consumer, caller-regression and actual Cargo dry-run evidence.
+The verdict below describes the audited revision, not those later local changes.
+Latest macOS fixture corrections are pushed; CI was left running as requested.
+Canic, production HTTPS and post-publication registry acceptance remain separate.
+
 ## Verdict
 
 **Not ready to publish as a qualified 20 MiB, supported-host Backup release.**

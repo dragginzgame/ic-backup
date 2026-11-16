@@ -60,10 +60,10 @@ legacy recovery material read-only and under its original authority.
 - Keep integrations responsible for membership, routing, application quiescence
   and external-effect settlement. Exact new authority/custody contracts remain
   to be designed before effects are implemented.
-- Keep every package non-publishable until the user authorizes publication of
-  the mature implementation. Root workspace metadata sets `publish = false`;
-  members inherit it with `publish.workspace = true`. Any future independent
-  workspace or canister package must also disable publication.
+- The maintainer authorized the experimental direct-controller release on
+  2026-11-16. Root workspace metadata admits only `crates-io`; the product inherits
+  it with `publish.workspace = true`. Qualification and any future independent
+  workspace or canister package remain non-publishable unless separately authorized.
 - `0.100.0` began the unpublished incompatible restart. Preserve historical
   release identities and review consumer migration before publication.
 

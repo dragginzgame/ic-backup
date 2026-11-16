@@ -1,6 +1,7 @@
 # Development setup
 
-The virtual workspace has one unpublished library under `crates/ic-backup`.
+The virtual workspace has one library under `crates/ic-backup`, admitted for the
+experimental direct-controller crates.io release. Qualification remains private.
 Local inventory, payload checks and capture intent use Host filesystem/artifact
 primitives and published Platform identity and management DTOs, with Serde/JSON
 and typed errors. Platform's native protocol codec checks prepared status call
@@ -43,9 +44,11 @@ archive with SHA-256
 `b52bb793b386309b8c4a9e88f32711bb5d1fd11a47bf337c11c63ca2aa22fc97`,
 source `8bcece573511a6ce6ee8879443a8d19b6e43e7ad`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
-The canonical exporter installs nine selected entrypoints, including the shared
+The canonical exporter installs ten selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
-No producer regression suites or release/publication entrypoints are selected.
+The shared publication adapter is selected; no producer regression suites or
+automatic version/tag release runner are installed. See the
+[publication workflow](publication.md) for gates, eligibility and recovery.
 
 ## Commands
 
@@ -184,6 +187,12 @@ make install-testkit-server
 make testkit-server-check
 make test-qualification
 ```
+
+Actual-IC journeys use the optimized Cargo release profile under
+`qualification/target/release/`; native product tests retain their ordinary
+profile. This avoids measuring debug-mode crypto and payload replay as release
+performance. The 20 MiB fixture explicitly bounds both server lifetime and idle
+time at 30 minutes to accommodate long local source checks between IC calls.
 
 Setup selects the unique Testkit version from `qualification/Cargo.lock` through
 Tooling's Cargo installer and delegates server assets to Testkit. It is also an

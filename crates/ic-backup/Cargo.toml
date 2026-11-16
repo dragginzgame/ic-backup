@@ -1,7 +1,8 @@
 [package]
 name = "ic-backup"
-version = "0.102.0"
+version = "0.102.1"
 description = "Host-side capture, restore and local backup inventory for Internet Computer canisters"
+readme = "README.md"
 edition.workspace = true
 rust-version.workspace = true
 license-file.workspace = true
