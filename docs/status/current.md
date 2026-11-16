@@ -1,26 +1,33 @@
 # Current handoff — 2026-11-16
 
-Work: `/home/adam/projects/ic-backup`, branch `main`. The maintainer authorized
-deployment of the experimental direct-controller library as 0.102.1, tag
-`v0.102.1`, to `origin/main` and crates.io. Previous pushed source is
-`e8f2ad5a2691020c1feac49768981a94e07d5e4b` (0.102.0, unpublished).
-Product, both locks and the qualification requirement now select 0.102.1.
-Qualification stays private. The registry lacked 0.102.1 at release preflight;
-delivery/publication results must be verified before claiming completion.
-Older operations retain their preserved readers and authority; no migration.
-Hosted CI remains asynchronous at the user's request.
+Work: `/home/adam/projects/ic-backup`, branch `main`. **0.102.1 is published** on
+[crates.io](https://crates.io/crates/ic-backup/0.102.1), with annotated
+[tag v0.102.1](https://github.com/dragginzgame/ic-backup/tree/v0.102.1) at
+`1db82ba22ac15c761906af0935e0e918acf40801`. The release commit and tag were pushed
+atomically and independently read back from GitHub. Product, both locks and the
+qualification requirement select 0.102.1; qualification stays private.
+Hosted CI was left asynchronous, without polling, as requested.
 
 Release supplier review found the selected Host 0.79.0, Platform 0.33.7,
 Testkit 0.106.0 and Tooling 0.44.4 are the current stable non-yanked registry
 versions. No supplier changed; only Backup's entries changed in both locks.
-Evidence is under `target/evidence/release-0.102.1/`.
-The first release gate passed native/docs, all eleven IC cases and the archive
-consumer, then exposed inherited publication-evidence paths in the nested caller
-fixture. No upload was dispatched. The fixture now owns its evidence path and
-excludes parent timing records; the complete gate must rerun because the current
-adapter has no qualified partial-gate reuse.
+Evidence is under `target/evidence/release-0.102.1/`. The first gate exposed inherited
+evidence paths in the nested publication fixture, before any upload. The corrected
+fixture owns its path and excludes parent timing records. Its regression and the
+complete rerun pass: 232 native tests, five examples, eleven IC cases, strict lint,
+docs, tooling admission, package/consumer and publication-caller checks. The full
+gate took 175.10 seconds; Cargo verification/upload/availability took 7.90 seconds.
+Original failed evidence remains; no upload was retried.
 
-## Publication preparation
+The non-yanked registry archive has SHA-256
+`551f6abc1e7a631982c41f7e4ab807ccc6e0b6bf6213f013f0b16a331d2c73aa`, matches the
+verified local archive byte-for-byte and names the release commit in its clean
+Cargo provenance. A normal consumer resolves `ic-backup = "=0.102.1"` from the
+registry, builds offline with its lock, then replays completed capture and restore
+after backend shutdown. Its graph excludes Testkit/PocketIC; `registry-consumer/`
+retains resolution, build and replay evidence. This does not qualify live HTTPS.
+
+## Capacity and publication scope
 
 The [full comparison/readiness audit](../reports/audits/2026/11/16/publication-readiness/01/report.md)
 records the original findings. The 20 MiB journey now passes actual-IC capture,
@@ -38,12 +45,10 @@ original-store migration/recovery. [Publication](../development/publication.md)
 uses the verified Toko 0.44.4 single-package adapter, installed through its exporter
 (59 managed files), with local package/consumer and caller checks. Caller tests
 cover private/unknown/duplicate selection, validation/source drift, lock retention
-and one failed dispatch without retry. Actual Cargo registry dry-run passes in a
-disposable eligibility-enabled copy; that was not an upload. Product eligibility
-is now enabled under deployment authority. Automated version/tag orchestration
-is not installed; this release uses explicit Git delivery and the existing
-publication adapter. Its complete gate and registry readback remain mandatory;
-no prior log silently bypasses that gate.
+and one failed dispatch without retry. Automated version/tag orchestration is not
+installed; this release used explicit Git delivery and the existing publication
+adapter. Future attempts retain the complete gate and independent registry
+reconciliation. Successful publication does not authorize another upload.
 
 ## Legacy review corrections
 
@@ -73,24 +78,16 @@ and [restore](../design/local-store.md#immutable-restore-approval-and-original-c
 
 ## Acceptance and preservation
 
-`target/evidence/macos-fixture-*`: 232 native tests, strict Clippy for both
-workspaces, formatting/links and actual-IC capture/restore pass locally on Linux.
-`macos-cancellation-*` and `macos-deadline-*`: all 20 HTTP cases and focused checks pass.
-[Current CI](https://github.com/dragginzgame/ic-backup/actions/runs/43836041869)
-passes ARM/scaffold; Linux/Intel remain pending at the last observation.
-Post-push review of all three commits and their affected callers found no new
-actionable drift, duplicate policy, recovery paths or unused abstractions.
+Post-push review of the delivered release and affected Make, package, fixture and
+documentation callers found no additional actionable drift, duplicated recovery
+policy or unused production abstractions. Product Rust behavior and stored formats
+are unchanged by this release preparation. Earlier macOS socket, cancellation and
+deadline corrections retain their Linux evidence under `macos-*`.
 `twenty-mib-{release,warm}-*` retains the new capacity evidence; the warm fixture is
 `qualification/target/fixtures/capture-Capacity-3805726-1794820857897640283/`.
-`publication-adapter-final.log` and `publication-real-online-dry-run.log` retain
-caller and actual Cargo preflight evidence. `publication-audit-*` is historical.
-`publication-other-ic-cases.log`: all ten remaining IC cases pass (120.15 seconds).
-`publication-package-final.log`: current archive and isolated normal consumer pass.
 `twenty-mib-archive-replay.json`: that archive's consumer reopens completed 20 MiB
-capture and restore offline (21.95/51.62 seconds in its debug build). The first
-sandbox subprocess-control error is retained separately; the admitted rerun passes.
-Strict qualification Clippy, ShellCheck, formatting, links and snapshot admission
-pass. The aggregate publication gate is configured, not claimed as executed.
+capture and restore offline (21.95/51.62 seconds in its debug build). Earlier
+publication-audit/preparation evidence and failed sandbox runs remain historical.
 
 Original wires, roots, journals, child outputs/graph and server logs remain under
 `qualification/target/fixtures/`, including failed runs. Native cases preserve
@@ -117,7 +114,6 @@ retains exact ownership. Full integration needs the actual manager's authenticat
 receipt protocol/surviving ledger, bounded signer, continuous application/rewind
 fence and real consumer qualification. No substitute route is invented locally.
 
-Replay remains quadratic. Canic adapters, production HTTPS, actual-IC on macOS,
-physical power loss and a freshly published registry consumer remain unqualified.
-The current deployment request authorizes Git delivery and registry publication
-of this limited scope; it does not qualify the unfinished integration boundaries.
+Replay remains quadratic. Canic adapters, production HTTPS, actual-IC on macOS
+and physical power loss remain unqualified. This is the authorized experimental
+direct-controller release, not qualification of those unfinished boundaries.
