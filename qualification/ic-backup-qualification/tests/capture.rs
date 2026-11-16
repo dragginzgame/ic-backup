@@ -554,7 +554,13 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         wasm
     );
     let mut restore_options = options();
-    restore_options.request_bytes = if boundary { 2 * 1024 * 1024 } else { 64 * 1024 };
+    // Original-result lookup must also work under the admitted 2 MiB upload profile.
+    restore_options.request_bytes =
+        if boundary || matches!(mode, Mode::RestoreAllocationObservation) {
+            2 * 1024 * 1024
+        } else {
+            64 * 1024
+        };
     restore_options.result_bytes = if boundary {
         4 * 1024 * 1024
     } else {

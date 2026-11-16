@@ -284,10 +284,7 @@ impl<P: crate::store::operation::intent::Intent> super::custody::Recorder<P> {
             .map(|c| {
                 self.intent
                     .view()
-                    .decode_request(
-                        c.update.reference_ns,
-                        self.read_role(journal, c.step, Role::Request)?,
-                    )
+                    .decode_request(c.update.reference_ns, self.read_role(c, Role::Request)?)
                     .map(|r| r.request_id)
             })
             .transpose()?;

@@ -214,15 +214,14 @@ impl<'a> Plan<'a> {
         authenticate_direct_request(self.sender(), a.request_bytes, prepared, method, arguments)?;
         Ok(())
     }
-    pub(in crate::store) fn authenticate(
+    // The caller authenticates this owned request before resolving its result.
+    // No await or replacement of those prepared bytes may intervene.
+    pub(in crate::store) fn authenticate_result(
         self,
         reference: u64,
         prepared: &PreparedStatus,
         evidence: &StatusEvidence,
-        method: &str,
-        arguments: &[u8],
     ) -> Result<(), Error> {
-        self.authenticate_request(reference, prepared, method, arguments)?;
         let a = self.admission(reference)?;
         evidence.encode(a.result_bytes)?;
         self.certificate()

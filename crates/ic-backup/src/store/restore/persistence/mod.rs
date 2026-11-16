@@ -113,8 +113,8 @@ impl RestoreOperation<'_> {
             }
             let (method, arguments) = flow.request(&mut self.source)?;
             let result =
-                replay::resolve_call(plan.view(), call, method, &arguments, &mut |step, role| {
-                    self.record.read_role(journal, step, role)
+                replay::resolve_call(plan.view(), call, method, &arguments, &mut |call, role| {
+                    self.record.read_role(call, role)
                 })?;
             if let Some(result) = result {
                 flow.accept(

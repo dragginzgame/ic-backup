@@ -174,7 +174,10 @@ impl<'a> Procedure<'a> {
             let (method, arguments) = self.request()?;
             self.intent
                 .view()
-                .authenticate(reference, prepared, evidence, method, &arguments)?;
+                .authenticate_request(reference, prepared, method, &arguments)?;
+            self.intent
+                .view()
+                .authenticate_result(reference, prepared, evidence)?;
             self.accept(
                 evidence.rejected,
                 step,

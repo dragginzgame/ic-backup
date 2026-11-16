@@ -4,6 +4,17 @@ Date: 2026-11-16. Requested scope: audit Backup's code and determine whether
 Canic integration can start. This is an audit, not authorization to repair,
 commit, publish, or modify Canic.
 
+Follow-up, 2026-11-16: the maintainer subsequently authorized fixing finding 1.
+The local change after `747768b6fe50fc59a1246fb4be6d3eedeef501b4` uses the shared
+request ceiling in lookup admission. A new native regression reproduces the old
+`Bounds` refusal before correction; all six lookup tests then pass, and the
+actual-IC interrupted-allocation case passes under the 2 MiB profile with exact
+one-observation spending and offline replay. Evidence is retained under
+`target/evidence/lookup-profile-fix/`. The correction is included in the
+maintainer-authorized GitHub delivery batch, but remains unpublished on crates.io;
+0.102.1 remains affected. Original findings and failed evidence below
+remain historical; no original reservation or approval was reset.
+
 ## Verdict
 
 **Ready to begin coordinated Canic integration work; fix finding 1 before pinning

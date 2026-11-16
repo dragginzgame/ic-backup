@@ -4,6 +4,7 @@ use super::super::CaptureCall;
 use super::StatusRequestError;
 #[cfg(test)]
 use super::{CapturePolicy, PreparedStatus, StatusAdmissionRecord};
+use crate::store::limits::REQUEST_BYTES;
 use ic_platform::ic_protocol::{
     EnvelopeContent, decode_envelope, decode_read_state_content_strict,
 };
@@ -15,7 +16,7 @@ use thiserror::Error;
 pub struct CaptureLookupPolicy {
     /// Exact nonzero lookup expiry in Unix nanoseconds, including historical replay.
     pub expires_ns: u64,
-    /// Complete lookup envelope cap, from one byte through 1 MiB.
+    /// Complete lookup envelope cap, from one byte through the shared 2 MiB request limit.
     /// This bounds input bytes, not total decoder work or allocations.
     pub envelope_bytes: u32,
 }
@@ -55,9 +56,8 @@ pub enum CaptureLookupError {
 /// establish current expiry or permission. Before a live lookup the workflow must
 /// separately retain exact policy/bytes, reserve finite signing and network costs,
 /// and admit route, original trust root, provider and observation time windows.
-/// Reply authentication remains with [`crate::store::observe_capture_certificate`];
+/// Reply authentication remains with the shared certificate authenticator;
 /// this function does not settle uncertainty or authorize another management call.
-///
 ///
 /// # Errors
 /// Refuses bounds, invalid original requests, malformed/ambiguous read-state content,
@@ -72,7 +72,7 @@ pub fn authenticate_capture_lookup(
     policy: CaptureLookupPolicy,
 ) -> Result<[u8; 32], CaptureLookupError> {
     if policy.expires_ns == 0
-        || !(1..=1024 * 1024).contains(&policy.envelope_bytes)
+        || !(1..=REQUEST_BYTES).contains(&policy.envelope_bytes)
         || bytes.is_empty()
         || bytes.len() > policy.envelope_bytes as usize
     {
@@ -92,7 +92,7 @@ pub(in crate::store) fn authenticate_lookup_envelope(
     policy: CaptureLookupPolicy,
 ) -> Result<[u8; 32], CaptureLookupError> {
     if policy.expires_ns == 0
-        || !(1..=1024 * 1024).contains(&policy.envelope_bytes)
+        || !(1..=REQUEST_BYTES).contains(&policy.envelope_bytes)
         || bytes.is_empty()
         || bytes.len() > policy.envelope_bytes as usize
     {

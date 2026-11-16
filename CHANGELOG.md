@@ -2,6 +2,13 @@
 
 ## [0.103.0] - Unreleased
 
+### 🐛 Fixed
+
+- Admit original-result lookup under every supported request ceiling through
+  2 MiB using the shared request limit. Preserve exact sender/path/expiry checks
+  and spent observations; qualify interrupted allocation recovery at 2 MiB.
+- Correct lookup authentication and Host error documentation after API migration.
+
 ### ⚠️ Breaking
 
 - Adopt registry-backed Host FS/Artifacts 0.80.2. Public commitments now use
@@ -16,6 +23,14 @@
 
 ### 🔧 Changed
 
+- Reuse Host's digest when reading retained operation evidence, removing a second
+  full SHA-256 pass while preserving exact length, digest and closing custody checks.
+- Authenticate each original request once within semantic replay, then bind its
+  result certificate to those same owned bytes. Remove redundant signature checks
+  without caching authentication across invocations or changing recovery authority.
+- Read evidence references directly from their journal call and index held files
+  by canonical name, removing repeated journal/name scans and temporary filename
+  lists while retaining complete byte and directory admission.
 - Adopt Toko Tooling 0.44.5 in both workspaces and refresh the managed snapshot.
   The supplier fixes declaration checks for the required tooling pin and private
   qualification versions ([Toko Tooling #386](https://github.com/dragginzgame/toko-tooling/issues/386)).

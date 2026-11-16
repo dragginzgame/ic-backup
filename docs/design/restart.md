@@ -326,6 +326,57 @@ refuse. Evidence is under `target/evidence/reduction-followthrough/`.
 Source/payload scans remain substantial; this is IO reduction, not a throughput
 claim. Further reuse must preserve independent source admission and closing custody.
 
+After Host 0.80.2 adoption, `operation/custody::Recorder::read` now uses the
+identity returned by Host's bounded read instead of hashing its returned bytes a
+second time. Exact declared length and expected digest are still compared before
+the independent closing file-identity check. No reads, custody checks or journal
+admissions are removed, and no cache is added; replay remains quadratic.
+An optimized Linux component probe uses deterministic 4 KiB, 1 MiB and 4 MiB files,
+warm page cache and seven alternating-order paired rounds. Median read/admit/hash
+time decreases by 22.7%, 43.5% and 44.1%, respectively. This excludes custody/stat
+checks, certified replay and IC effects; it is not an end-to-end backup speedup.
+Probe source, lock, raw timings and focused validation are retained under
+`target/evidence/replay-hash-review/`.
+
+Focused legacy review at `4ae087fad8c23de712aa60bf569bde4b2b932651` revisited
+`ops/persistence/download_journal/ic_snapshot_artifact/verification/mod.rs`
+(`checksum_child_with`, `checksum_exact_reader`) and its `tests/mod.rs` cases
+`exact_stream_identity_and_shape_errors_keep_product_contract`,
+`exact_stream_preserves_original_io_error` and
+`callback_reads_reject_same_length_replacement_and_retain_both_files`.
+History `9f7b886a824eec67dda8f81792a560436419bb2a` consolidates verification's
+read/hash pass while preserving closing custody. Backup applies the same ownership
+principle to Host's complete bounded identity; it retains its own expected journal
+reference and held descriptor rather than legacy's callback/download lifecycle.
+The owning custody tests cover changed/replaced/aliased evidence and now include
+truncation, growth, wrong declared length and wrong digest. No legacy code was
+copied; shared-reader IO faults remain the existing payload/Host tests' concern.
+
+A subsequent replay pass removes duplicate request-signature verification for
+calls with original replies; result certificates still bind the same owned,
+already-authenticated request. Both before/after optimized normal consumers
+include the hash reuse above. Nine alternating-order paired runs of offline
+open-plus-inspect on the same retained multi-extent IC fixture measured median
+capture 184.02 to 180.54 ms and restore 614.34 to 605.98 ms. These small local
+differences (1.9% / 1.4%) are not a general throughput guarantee. Request
+verification count falls from two to one for that path; retained reads and
+independent custody checks remain. Raw timings, binaries and fixture selection
+are in `target/evidence/replay-auth-review/`; original-request provenance and
+rejection coverage are in [the capture contract](../architecture/capture-intent.md#focused-legacy-review--2026-11-15).
+
+Evidence lookup now takes references from the selected call instead of walking
+the journal and allocating every preceding filename. One name-indexed map owns
+the existing held descriptors and closed-directory membership, replacing the
+linear held-file list and temporary name list. Each reference selection is
+constant-time and held-file lookup is logarithmic; all byte reads, hashes and
+independent admission boundaries remain. Overall replay is still quadratic.
+Nine alternating-order offline open-plus-inspect pairs, after native tests had
+finished, measured capture 179.93 to 180.59 ms and restore 608.33 to 605.16 ms on
+the same fixture: no clear end-to-end speed improvement. Keep the simpler direct
+ownership and reduced lookup/allocation work without a throughput claim. Evidence
+is in `target/evidence/replay-index-review/`; the preliminary timings collected
+alongside native tests are retained separately and excluded from those medians.
+
 ### Completed restore cut and remaining work
 
 The new [restore contract](local-store.md#immutable-restore-approval-and-original-custody)

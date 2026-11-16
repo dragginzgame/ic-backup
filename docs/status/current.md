@@ -8,6 +8,12 @@ atomically and independently read back from GitHub. Product, both locks and the
 qualification requirement select 0.102.1; qualification stays private.
 Hosted CI was left asynchronous, without polling, as requested.
 
+The maintainer authorized GitHub delivery of the lookup fix and replay cleanup
+below to `origin/main` on 2026-11-16. This handoff accompanies that delivery batch.
+Package version remains 0.102.1, with pending 0.103.0 notes; no new tag or crates.io
+publication is part of this push. Existing focused evidence is retained and CI
+remains asynchronous.
+
 Toko Tooling 0.44.5 is selected in both manifests/locks and installed through the
 canonical exporter. Its verified archive is
 `aef8ac5d84866cf4ceb5b9d91ce9d458708069fc0c585345f07054186d267199`, source
@@ -50,16 +56,52 @@ Evidence, failed runs and original fixture roots remain under
 See [the migration and legacy anchors](../design/local-store.md#host-0801-adoption-blocker--2026-11-16).
 No full release gate, hosted macOS, CI polling or physical power-loss proof is claimed.
 
-The [Canic-readiness code audit](../reports/audits/2026/11/16/canic-readiness/01/report.md)
-found one reproducible Backup defect: an admitted request ceiling above 1 MiB
-(including the documented 2 MiB restore profile) fails lookup authentication at
-the stale 1 MiB bound after reserving the observation. A focused actual-IC
-interrupted-allocation probe fails with `CapturePlan(Lookup(Bounds))`; original
-journal/evidence remain under `target/evidence/canic-readiness-audit/`.
-Fix and qualify this before Canic pins the dependency. No runtime fix, commit or
-publication occurred in the audit; the release passes below did not exercise
-this cross-profile recovery case. Canic integration can start as coordinated
-work on real signing, manager execution/admission/replay and fenced recovery.
+The [Canic-readiness audit's lookup defect](../reports/audits/2026/11/16/canic-readiness/01/report.md)
+is fixed in this delivery batch after adoption `747768b6fe50fc59a1246fb4be6d3eedeef501b4`.
+Lookup uses the shared 2 MiB request ceiling; its original profile's byte cap,
+sender, path, signature and expiry checks remain. No spent observations are reset.
+A new regression first reproduced `Bounds`; all six native lookup tests now pass,
+as does actual-IC interrupted-allocation observation and offline replay at 2 MiB
+(8.64 seconds). Product/qualification Clippy, strict rustdoc and formatting pass.
+Evidence: `target/evidence/lookup-profile-fix/`; original failed audit journals
+remain under `target/evidence/canic-readiness-audit/`. Stale lookup/Host error docs
+are corrected. This fix remains unpublished on crates.io; published 0.102.1 still has
+the defect. Canic still needs real signing, manager execution/admission/replay
+and fenced recovery.
+
+A focused replay improvement now reuses Host's complete read identity instead of
+hashing retained evidence twice. Exact length/digest comparison and closing
+custody remain; no reads or independent admissions are removed. A Linux optimized
+component probe measured 43.5–44.1% lower read/admit/hash time for 1–4 MiB files
+(22.7% at 4 KiB), not end-to-end throughput. All 14 custody tests, the mutation
+across HTTP regression, strict product Clippy and actual-IC multi-extent
+capture/restore/succession/offline replay (30.58 seconds) pass. Evidence remains in
+`target/evidence/replay-hash-review/`; method, legacy provenance and remaining
+quadratic replay are described in [the restart design](../design/restart.md#size-maintained-surface-and-repeated-io).
+This improvement is included in the same GitHub delivery batch.
+
+The next focused pass removes a repeated request-signature check within each
+synchronous replay of an original reply. The same owned request still gates
+result/observation resolution; no cross-invocation cache, file-check removal or
+new authority is introduced. A new four-case signature regression, all six intent
+tests, strict product Clippy and the actual-IC capture/restore/succession/offline
+replay (30.17 seconds) pass. Nine paired optimized offline consumer runs measured
+only a small local median reduction (1.9% capture / 1.4% restore), not a general
+throughput guarantee. Evidence and before/after binaries remain under
+`target/evidence/replay-auth-review/`. This pass is included in the delivery batch;
+remaining replay reads still protect separate custody/source boundaries.
+
+Evidence lookup now uses each admitted call's own references and a name-indexed
+map of original held descriptors, removing repeated journal/name scans and the
+temporary directory-name list. Stored formats, evidence reads, hashes, admission
+and finite spending are unchanged. All 15 custody and 22 runtime recovery tests,
+strict product Clippy and actual-IC capture/restore/succession/offline replay
+(30.56 seconds) pass. Nine isolated paired offline replay timings show no clear
+end-to-end speed change; the lookup/allocation reduction is not an IO or throughput
+claim. Source/test provenance and measurements are in the owning capture/restart
+documents, with raw evidence under `target/evidence/replay-index-review/`.
+This pass is included in the delivery batch; complete-history replay still dominates
+the larger cost and remains quadratic.
 
 The published 0.102.1 baseline selected Host 0.79.0, Platform 0.33.7, Testkit 0.106.0
 and Tooling 0.44.4. Its complete release gate passed 232 native tests, five examples,

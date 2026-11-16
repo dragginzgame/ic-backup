@@ -40,7 +40,7 @@ impl Journal {
     pub(in crate::store) fn replay<'a>(
         &self,
         intent: &'a CapturePlan,
-        mut read: impl FnMut(Step, super::custody::Role) -> Result<Vec<u8>, OperationStoreError>,
+        mut read: impl FnMut(&super::Call, super::custody::Role) -> Result<Vec<u8>, OperationStoreError>,
         mut verify_materialized: impl FnMut(&Procedure<'_>) -> Result<(), Error>,
     ) -> Result<Procedure<'a>, Error> {
         let mut flow = Procedure::new(intent)?;
@@ -93,14 +93,13 @@ pub(in crate::store) fn resolve_call(
     call: &super::Call,
     method: &str,
     arguments: &[u8],
-    read: &mut impl FnMut(Step, super::custody::Role) -> Result<Vec<u8>, OperationStoreError>,
+    read: &mut impl FnMut(&super::Call, super::custody::Role) -> Result<Vec<u8>, OperationStoreError>,
 ) -> Result<Option<Applied>, Error> {
     use super::custody::Role;
     if call.update.request.is_none() {
         return Ok(None);
     }
-    let prepared =
-        intent.decode_request(call.update.reference_ns, read(call.step, Role::Request)?)?;
+    let prepared = intent.decode_request(call.update.reference_ns, read(call, Role::Request)?)?;
     intent.authenticate_request(call.update.reference_ns, &prepared, method, arguments)?;
     let mut terminal = None;
     if let Some(o) = &call.observation {
@@ -108,14 +107,14 @@ pub(in crate::store) fn resolve_call(
             intent.authenticate_lookup(
                 o.reference_ns,
                 &prepared,
-                &read(call.step, Role::ObservationRequest)?,
+                &read(call, Role::ObservationRequest)?,
             )?;
         }
         if o.result.is_some() {
             terminal = match intent.observe(
                 o.reference_ns,
                 &prepared,
-                &read(call.step, Role::ObservationResult)?,
+                &read(call, Role::ObservationResult)?,
             )? {
                 CaptureObservation::Replied(r) => Some((false, r)),
                 CaptureObservation::Rejected(r) => Some((true, r)),
@@ -127,14 +126,8 @@ pub(in crate::store) fn resolve_call(
         if terminal.is_some() {
             return Err(Error::History);
         }
-        let evidence = StatusEvidence::decode(&read(call.step, Role::Result)?)?;
-        intent.authenticate(
-            call.update.reference_ns,
-            &prepared,
-            &evidence,
-            method,
-            arguments,
-        )?;
+        let evidence = StatusEvidence::decode(&read(call, Role::Result)?)?;
+        intent.authenticate_result(call.update.reference_ns, &prepared, &evidence)?;
         terminal = Some((evidence.rejected, evidence.response));
     }
     Ok(terminal.map(|(rejected, response)| Applied {

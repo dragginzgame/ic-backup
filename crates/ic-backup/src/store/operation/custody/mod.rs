@@ -1,5 +1,5 @@
 //! Held original files for the common recorder. No caller-selected evidence paths.
-use super::{FactRecord, Journal, ReferenceRecord, Step};
+use super::{Call, FactRecord, Journal, ReferenceRecord, Step};
 use crate::store::{CapturePlan, operation::intent::Intent};
 /// Held capture approval and original files over the shared recorder.
 pub type CaptureOperation = Recorder<CapturePlan>;
@@ -23,6 +23,7 @@ use crate::store::{
 };
 use ic_host_fs::{Directory, Kind as EntryKind, Lock};
 use std::{
+    collections::BTreeMap,
     ffi::OsStr,
     fs::File,
     io::{self, Seek, SeekFrom, Write},
@@ -78,31 +79,30 @@ impl ReferenceRecord {
     }
 }
 
+impl Call {
+    pub(in crate::store) fn reference(&self, role: Role) -> Option<&ReferenceRecord> {
+        match role {
+            Role::Request => self.update.request.as_ref(),
+            Role::Result => self.update.result.as_ref(),
+            Role::ObservationRequest => self.observation.as_ref()?.request.as_ref(),
+            Role::ObservationResult => self.observation.as_ref()?.result.as_ref(),
+        }
+    }
+}
+
 impl Journal {
     pub(in crate::store) fn evidence(&self) -> impl Iterator<Item = (String, &ReferenceRecord)> {
         self.calls.iter().flat_map(|call| {
             [
-                (Role::Request, call.update.request.as_ref()),
-                (Role::Result, call.update.result.as_ref()),
-                (
-                    Role::ObservationRequest,
-                    call.observation.as_ref().and_then(|o| o.request.as_ref()),
-                ),
-                (
-                    Role::ObservationResult,
-                    call.observation.as_ref().and_then(|o| o.result.as_ref()),
-                ),
+                Role::Request,
+                Role::Result,
+                Role::ObservationRequest,
+                Role::ObservationResult,
             ]
             .into_iter()
-            .filter_map(move |(role, reference)| reference.map(|r| (call.step.name(role), r)))
+            .filter_map(move |role| call.reference(role).map(|r| (call.step.name(role), r)))
         })
     }
-}
-
-#[derive(Debug)]
-struct Held {
-    name: String,
-    file: File,
 }
 
 #[derive(Debug)]
@@ -117,7 +117,7 @@ pub struct Recorder<P> {
     intent_file: File,
     pub(in crate::store) journal_file: File,
     lock: Lock,
-    evidence: Vec<Held>,
+    evidence: BTreeMap<String, File>,
     pub(in crate::store) usable: bool,
 }
 
@@ -129,8 +129,8 @@ impl<P: Intent> Recorder<P> {
     pub(in crate::store) fn sync_evidence(&self) -> Result<(), OperationStoreError> {
         self.intent_file.sync_all()?;
         self.journal_file.sync_all()?;
-        for held in &self.evidence {
-            held.file.sync_all()?;
+        for file in self.evidence.values() {
+            file.sync_all()?;
         }
         self.directory.sync()?;
         Ok(())
@@ -255,7 +255,7 @@ impl<P: Intent> Recorder<P> {
             .map(|(name, _)| {
                 let file =
                     open_optional(&directory, &name)?.ok_or(OperationStoreError::Incomplete)?;
-                Ok(Held { name, file })
+                Ok((name, file))
             })
             .collect::<Result<_, OperationStoreError>>()?;
         let recorder = Self {
@@ -332,21 +332,20 @@ impl<P: Intent> Recorder<P> {
         )?;
         let journal = Journal::open(file, &self.intent)?;
         P::check_layout(self, &journal)?;
-        let mut names = vec![
-            "lock".to_owned(),
-            "intent.json".to_owned(),
-            "journal.bin".to_owned(),
-        ];
+        let mut evidence_count = 0;
         for (name, reference) in journal.evidence() {
             self.read(&name, reference)?;
-            names.push(name);
+            evidence_count += 1;
         }
-        if self.evidence.len() != names.len() - 3 {
+        if self.evidence.len() != evidence_count {
             return Err(OperationStoreError::Changed);
         }
-        for entry in self.directory.entries(names.len())? {
+        for entry in self.directory.entries(evidence_count + 3)? {
             if entry.kind != EntryKind::File
-                || !names.iter().any(|name| OsStr::new(name) == entry.name)
+                || !entry.name.to_str().is_some_and(|name| {
+                    matches!(name, "lock" | "intent.json" | "journal.bin")
+                        || self.evidence.contains_key(name)
+                })
             {
                 return Err(OperationStoreError::Changed);
             }
@@ -370,21 +369,19 @@ impl<P: Intent> Recorder<P> {
     ) -> Result<Vec<u8>, OperationStoreError> {
         let held = self
             .evidence
-            .iter()
-            .find(|e| e.name == name)
+            .get(name)
             .ok_or(OperationStoreError::Incomplete)?;
-        let before = held.file.metadata()?;
-        let file = unchanged_file(&self.directory, name, &held.file, &before)?;
-        let bytes = ic_host_artifacts::read(
+        let before = held.metadata()?;
+        let file = unchanged_file(&self.directory, name, held, &before)?;
+        let (bytes, identity) = ic_host_artifacts::read(
             file,
             ic_host_artifacts::Length::AtMost(u64::from(reference.bytes)),
         )
-        .map(|(bytes, _)| bytes)
         .map_err(crate::store::StoreError::from)?;
-        if ReferenceRecord::new(&bytes)? != *reference {
+        if identity.bytes != u64::from(reference.bytes) || identity.sha256 != reference.sha256 {
             return Err(OperationStoreError::Changed);
         }
-        unchanged_file(&self.directory, name, &held.file, &before)?;
+        unchanged_file(&self.directory, name, held, &before)?;
         Ok(bytes)
     }
 
@@ -462,8 +459,8 @@ impl<P: Intent> Recorder<P> {
         }
         self.usable = false;
         file.sync_all()?;
-        for held in &self.evidence {
-            held.file.sync_all()?;
+        for file in self.evidence.values() {
+            file.sync_all()?;
         }
         self.directory.sync()?;
         if let Some((name, bytes)) = retained {
@@ -471,7 +468,7 @@ impl<P: Intent> Recorder<P> {
             self.directory.sync()?;
             let file =
                 open_optional(&self.directory, &name)?.ok_or(OperationStoreError::Incomplete)?;
-            self.evidence.push(Held { name, file });
+            self.evidence.insert(name, file);
         }
         file.seek(SeekFrom::Start(original.bytes))?;
         write(&mut file, &frame)?;

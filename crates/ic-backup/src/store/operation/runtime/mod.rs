@@ -308,17 +308,13 @@ pub(in crate::store) struct Applied {
 impl<P: Intent> Recorder<P> {
     pub(in crate::store) fn read_role(
         &self,
-        journal: &Journal,
-        step: Step,
+        call: &super::Call,
         role: Role,
     ) -> Result<Vec<u8>, OperationStoreError> {
-        let name = step.name(role);
-        let reference = journal
-            .evidence()
-            .find(|(n, _)| *n == name)
-            .ok_or(OperationStoreError::Incomplete)?
-            .1;
-        self.read(&name, reference)
+        let reference = call
+            .reference(role)
+            .ok_or(OperationStoreError::Incomplete)?;
+        self.read(&call.step.name(role), reference)
     }
     #[expect(
         clippy::too_many_arguments,
@@ -380,8 +376,7 @@ impl<P: Intent> Recorder<P> {
             .last()
             .ok_or(OperationStoreError::Incomplete)?;
         let reference = call.update.reference_ns;
-        let prepared =
-            intent.decode_request(reference, self.read_role(&journal, step, Role::Request)?)?;
+        let prepared = intent.decode_request(reference, self.read_role(call, Role::Request)?)?;
         intent.authenticate_request(reference, &prepared, method, arguments)?;
         source()?;
         connection.admit(intent, action, reference, false)?;
@@ -457,7 +452,7 @@ impl<P: Intent> Recorder<P> {
         }
         let original = intent.decode_request(
             call.update.reference_ns,
-            self.read_role(&journal, step, Role::Request)?,
+            self.read_role(call, Role::Request)?,
         )?;
         if call.observation.is_none() {
             let reference = now().ok_or(Error::Deadline)?;
@@ -494,13 +489,16 @@ impl<P: Intent> Recorder<P> {
                 Some(&envelope),
             )?;
         }
-        let observation = journal
+        let call = journal
             .calls
             .last()
-            .and_then(|c| c.observation.as_ref())
+            .ok_or(OperationStoreError::Incomplete)?;
+        let observation = call
+            .observation
+            .as_ref()
             .ok_or(OperationStoreError::Incomplete)?;
         let reference = observation.reference_ns;
-        let lookup = self.read_role(&journal, step, Role::ObservationRequest)?;
+        let lookup = self.read_role(call, Role::ObservationRequest)?;
         intent.authenticate_lookup(reference, &original, &lookup)?;
         source()?;
         connection.admit(intent, Action::Inspect, reference, false)?;
@@ -579,7 +577,7 @@ impl<P: Intent> Recorder<P> {
         }
         let request = intent.decode_request(
             call.update.reference_ns,
-            self.read_role(journal, call.step, Role::Request)?,
+            self.read_role(call, Role::Request)?,
         )?;
         intent.authenticate_request(call.update.reference_ns, &request, method, arguments)?;
         let (rejected, response) = intent
@@ -635,12 +633,12 @@ impl<P: Intent> Recorder<P> {
         }
         let original = intent.decode_request(
             call.update.reference_ns,
-            self.read_role(journal, call.step, Role::Request)?,
+            self.read_role(call, Role::Request)?,
         )?;
         intent.authenticate_lookup(
             observation.reference_ns,
             &original,
-            &self.read_role(journal, call.step, Role::ObservationRequest)?,
+            &self.read_role(call, Role::ObservationRequest)?,
         )?;
         let observed = intent.observe(observation.reference_ns, &original, certificate)?;
         self.append(

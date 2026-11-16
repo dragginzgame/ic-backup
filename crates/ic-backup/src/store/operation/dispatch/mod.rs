@@ -22,7 +22,7 @@ impl CaptureOperation {
     ) -> Result<Procedure<'a>, super::replay::Error> {
         journal.replay(
             intent,
-            |step, role| self.read_role(journal, step, role),
+            |call, role| self.read_role(call, role),
             |flow| self.materialize(journal, flow, false).map(|_| ()),
         )
     }

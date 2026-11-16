@@ -392,13 +392,13 @@ pub enum StoreError {
     /// Host directory/file admission, including entry limits.
     #[error(transparent)]
     Filesystem(#[from] ic_host_fs::Error),
-    /// Host bounded byte read or manifest digest mismatch; no partial result.
+    /// Host bounded byte admission refused; no partial result.
     #[error(transparent)]
     Read(#[from] ArtifactError),
     /// Native initialization IO; partial entries remain retained.
     #[error(transparent)]
     Io(#[from] io::Error),
-    /// Original publication phase, including visibility before failed durability.
+    /// Staging, writing or sealing failed before publication; includes cleanup evidence.
     #[error(transparent)]
     Publication(#[from] ic_host_fs::AttemptFailure),
     /// Publication refused before this attempt made the destination visible.

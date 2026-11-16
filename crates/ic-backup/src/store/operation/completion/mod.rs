@@ -208,14 +208,10 @@ impl CaptureOperation {
             .find(|c| c.step == step)
             .ok_or(OperationStoreError::Incomplete)?;
         if call.update.result.is_some() {
-            return Ok(
-                crate::store::capture::advance::StatusEvidence::decode(&self.read_role(
-                    journal,
-                    step,
-                    Role::Result,
-                )?)?
-                .response,
-            );
+            return Ok(crate::store::capture::advance::StatusEvidence::decode(
+                &self.read_role(call, Role::Result)?,
+            )?
+            .response);
         }
         let observation = call
             .observation
@@ -223,12 +219,12 @@ impl CaptureOperation {
             .ok_or(OperationStoreError::Incomplete)?;
         let prepared = self.intent.view().decode_request(
             call.update.reference_ns,
-            self.read_role(journal, step, Role::Request)?,
+            self.read_role(call, Role::Request)?,
         )?;
         match self.intent.view().observe(
             observation.reference_ns,
             &prepared,
-            &self.read_role(journal, step, Role::ObservationResult)?,
+            &self.read_role(call, Role::ObservationResult)?,
         )? {
             crate::store::capture::CaptureObservation::Replied(response) => Ok(response),
             _ => Err(Error::History),
@@ -468,7 +464,7 @@ impl CaptureOperation {
             .ok_or(OperationStoreError::Incomplete)?;
         let request = self.intent.view().decode_request(
             call.update.reference_ns,
-            self.read_role(journal, Step::Metadata, Role::Request)?,
+            self.read_role(call, Role::Request)?,
         )?;
         let EnvelopeContent::Call { arg, .. } = decode_call_content_strict(
             &request.envelope,

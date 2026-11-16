@@ -168,11 +168,7 @@ fn replay(recorder: &CaptureOperation, materialized: bool) -> Result<Next, repla
     let journal = recorder.check()?;
     let flow = journal.replay(
         &recorder.intent,
-        |step, role| {
-            let name = step.name(role);
-            let reference = journal.evidence().find(|(n, _)| *n == name).unwrap().1;
-            recorder.read(&name, reference)
-        },
+        |call, role| recorder.read_role(call, role),
         |_| {
             if materialized {
                 Ok(())
@@ -431,7 +427,7 @@ fn unreferenced_surviving_evidence_is_retained_and_never_adopted() {
 
 #[test]
 fn changed_replaced_aliased_and_orphan_files_refuse_without_repair() {
-    for mutation in 0..6 {
+    for mutation in 0..8 {
         let (path, parent, mut recorder) = fixture();
         append_call(&mut recorder, Step::InitialStatus, true);
         let dir = directory(&path, &recorder);
@@ -457,10 +453,13 @@ fn changed_replaced_aliased_and_orphan_files_refuse_without_repair() {
             4 => {
                 write_file(&dir.join("orphan.bin"), b"retained");
             }
-            _ => {
+            5 => {
                 fs::rename(&dir, path.join("held-original")).unwrap();
                 fs::create_dir(&dir).unwrap();
             }
+            6 => fs::write(&evidence, &bytes[..bytes.len() - 1]).unwrap(),
+            7 => fs::write(&evidence, [bytes.as_slice(), b"extra"].concat()).unwrap(),
+            _ => unreachable!(),
         }
         assert!(recorder.check().is_err(), "{mutation}");
         let id = recorder.intent.plan().request().operation_id.clone();
@@ -470,6 +469,104 @@ fn changed_replaced_aliased_and_orphan_files_refuse_without_repair() {
         if mutation != 1 {
             assert!(CaptureOperation::open(&parent, &id).is_err(), "{mutation}");
         }
+    }
+}
+
+#[test]
+fn evidence_read_requires_both_declared_length_and_digest() {
+    let (_, _, mut recorder) = fixture();
+    append_call(&mut recorder, Step::InitialStatus, true);
+    let journal = recorder.check().unwrap();
+    let name = Step::InitialStatus.name(Role::Result);
+    let original = journal
+        .evidence()
+        .find(|(n, _)| *n == name)
+        .unwrap()
+        .1
+        .clone();
+    let bytes = recorder.read(&name, &original).unwrap();
+    assert_eq!(bytes.len(), original.bytes as usize);
+
+    // A matching digest does not excuse a longer declaration ending before its bound.
+    let mut longer = original.clone();
+    longer.bytes += 1;
+    assert!(matches!(
+        recorder.read(&name, &longer),
+        Err(OperationStoreError::Changed)
+    ));
+    let mut shorter = original.clone();
+    shorter.bytes -= 1;
+    assert!(matches!(
+        recorder.read(&name, &shorter),
+        Err(OperationStoreError::Store(StoreError::Read(
+            ic_host_artifacts::Error::Limit { .. }
+        )))
+    ));
+    let mut wrong_hash = original;
+    wrong_hash.sha256[0] ^= 1;
+    assert!(matches!(
+        recorder.read(&name, &wrong_hash),
+        Err(OperationStoreError::Changed)
+    ));
+    assert_eq!(recorder.check().unwrap(), journal);
+}
+
+#[test]
+fn replay_requires_original_signature_for_pending_reply_and_observed_calls() {
+    for resolution in 0..4 {
+        let path = root("capture-replay-signature");
+        let parent = store(&path);
+        let mut recorder = CaptureOperation::create(&parent, with_observations()).unwrap();
+        let mut original = append_call(&mut recorder, Step::InitialStatus, resolution == 1);
+        if resolution >= 2 {
+            observe(
+                &mut recorder,
+                &original,
+                if resolution == 2 {
+                    b"replied"
+                } else {
+                    b"processing"
+                },
+            );
+        }
+        if resolution == 3 {
+            let (method, args) = expected_request(&recorder.intent, Step::InitialStatus);
+            let (_, evidence) = signed_reply(
+                &recorder.intent,
+                0,
+                method,
+                args,
+                reply(&recorder.intent, Step::InitialStatus),
+            );
+            settle_call(&mut recorder, Step::InitialStatus, &evidence);
+        }
+        let journal = recorder.check().unwrap();
+        assert!(replay(&recorder, false).is_ok());
+        // The content/request ID and valid result proof stay unchanged. A result
+        // certificate alone cannot excuse an invalid original request signature.
+        crate::store::capture::test_fixtures::signatures::change(&mut original, |envelope| {
+            envelope.sender_sig.as_mut().unwrap()[0] ^= 1;
+        });
+        let result = journal.replay(
+            &recorder.intent,
+            |call, role| {
+                if matches!(role, Role::Request) {
+                    Ok(original.envelope.clone())
+                } else {
+                    recorder.read_role(call, role)
+                }
+            },
+            |_| unreachable!(),
+        );
+        assert!(matches!(
+            result,
+            Err(replay::Error::Authentication(
+                crate::store::operation::intent::Error::Request(
+                    crate::store::StatusRequestError::Signature
+                )
+            ))
+        ));
+        assert_eq!(recorder.check().unwrap(), journal);
     }
 }
 

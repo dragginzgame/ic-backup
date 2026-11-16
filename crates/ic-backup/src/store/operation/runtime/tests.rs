@@ -722,9 +722,7 @@ fn certified_rejection_remains_settled_without_replacement_or_live_replay() {
     assert!(spent.calls[0].update.result.is_some());
     let id = operation.plan().request().operation_id.clone();
     let journal = fs::read(path.join("operations").join(&id).join("journal.bin")).unwrap();
-    let evidence = operation
-        .read_role(&spent, Step::InitialStatus, Role::Result)
-        .unwrap();
+    let evidence = operation.read_role(&spent.calls[0], Role::Result).unwrap();
     assert!(StatusEvidence::decode(&evidence).unwrap().rejected);
     drop(operation);
     drop(server);
@@ -740,9 +738,7 @@ fn certified_rejection_remains_settled_without_replacement_or_live_replay() {
         journal
     );
     assert_eq!(
-        operation
-            .read_role(&spent, Step::InitialStatus, Role::Result)
-            .unwrap(),
+        operation.read_role(&spent.calls[0], Role::Result).unwrap(),
         evidence
     );
     assert_eq!(connection.signer.calls, 1);

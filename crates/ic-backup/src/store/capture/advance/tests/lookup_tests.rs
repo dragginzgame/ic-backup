@@ -106,6 +106,73 @@ fn lookup_binds_all_original_calls_and_preserves_both_signed_envelopes() {
 }
 
 #[test]
+fn lookup_accepts_approved_request_ceilings_through_two_mib() {
+    for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
+        let (p, r) = original(scheme, CaptureCall::Status);
+        let bytes = lookup(&p, &r, scheme);
+        let expected = *decode_envelope(&bytes, 4096)
+            .unwrap()
+            .content
+            .to_request_id();
+        for envelope_bytes in [
+            bytes.len() as u32,
+            1024 * 1024,
+            1024 * 1024 + 1,
+            2 * 1024 * 1024,
+        ] {
+            let approved = CaptureLookupPolicy {
+                envelope_bytes,
+                ..policy()
+            };
+            assert_eq!(
+                authenticate_lookup_envelope(p.request().sender, r.request_id, &bytes, approved)
+                    .unwrap(),
+                expected,
+            );
+            assert_eq!(
+                authenticate_capture_lookup(
+                    &p,
+                    &admission(),
+                    &r,
+                    CaptureCall::Status,
+                    &bytes,
+                    approved
+                )
+                .unwrap(),
+                expected,
+            );
+        }
+        let too_large = vec![0xff; 2 * 1024 * 1024 + 1];
+        assert!(matches!(
+            authenticate_lookup_envelope(
+                p.request().sender,
+                r.request_id,
+                &too_large,
+                CaptureLookupPolicy {
+                    envelope_bytes: 2 * 1024 * 1024,
+                    ..policy()
+                }
+            ),
+            Err(CaptureLookupError::Bounds)
+        ));
+        for envelope_bytes in [0, bytes.len() as u32 - 1, 2 * 1024 * 1024 + 1] {
+            assert!(matches!(
+                authenticate_lookup_envelope(
+                    p.request().sender,
+                    r.request_id,
+                    &bytes,
+                    CaptureLookupPolicy {
+                        envelope_bytes,
+                        ..policy()
+                    }
+                ),
+                Err(CaptureLookupError::Bounds)
+            ));
+        }
+    }
+}
+
+#[test]
 fn valid_lookup_signatures_cannot_expand_or_replace_the_original_status_path() {
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         let (p, r) = original(scheme, CaptureCall::Status);
@@ -270,7 +337,7 @@ fn lookup_bounds_precede_decode_and_malformed_or_ambiguous_content_refuses() {
             ..policy()
         },
         CaptureLookupPolicy {
-            envelope_bytes: 1024 * 1024 + 1,
+            envelope_bytes: 2 * 1024 * 1024 + 1,
             ..policy()
         },
     ] {

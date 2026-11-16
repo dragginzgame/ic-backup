@@ -76,6 +76,15 @@ Uncertain write/sync/custody failure leaves the handle unusable. Complete uncert
 frames stay spent; partial tails, replaced files and unreferenced evidence refuse
 intact. No truncation, cleanup or automatic retry is performed.
 
+Each admitted journal call owns its four possible evidence references. Readers
+select that call's reference directly and find the original held descriptor by
+canonical name; they still re-read and hash every selected file. Closed-directory
+admission reads every journal reference, requires the held descriptor count to
+match and rejects names outside that exact set and the three fixed operation
+files. Journal chronology forbids duplicate steps or repeated evidence roles
+within a call. The descriptor map
+replaces the held-file list; it is neither persisted nor an authentication cache.
+
 The writer takes its caller's already-checked prefix and rechecks exact custody
 before writing. Closing admission must match the expected new length/head and
 returns that checked journal; callers do not immediately repeat the same scan.
@@ -133,6 +142,25 @@ The signed request contains the exact original sender/request ID and single
 request-status path. Its request, submission and certificate remain in the same
 journal with separate spending. There is no automatic or repeated lookup of that call.
 
+Lookup admission uses the same `limits::REQUEST_BYTES` ceiling as operation
+profiles (2 MiB), while enforcing the original profile's own byte cap. The
+former independent 1 MiB policy bound rejected valid larger profiles even for
+small lookup envelopes, after spending their observation reservation. The fix
+does not refund or renew those reservations or rewrite original approvals.
+Native signed-envelope cases cover the old threshold, 2 MiB and invalid/oversized
+inputs for both direct key schemes; the actual-IC interrupted-allocation case
+now selects 2 MiB and checks one observation plus offline original-result replay.
+
+Focused review: frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`, Agent
+`submission/mod.rs` and `tests/http_boundary/recovery/mod.rs`, retain original
+requests, separately spent recovery and zero-or-one submission. History
+`a860d14421b9ff1c61c1dce079cdc6a19316bfd0` keeps observation authority separate
+from dependent effects. Current history `af240881239112b8a8a9250b4c37e3f00dc68b19`
+introduced the shared 2 MiB upload profile but left lookup's old bound behind.
+The new store uses signed read-state and certified original-result lookup instead
+of legacy lane-specific recovery queries; reuse the original-request and finite
+spending guarantees, not those old provider/stage APIs. No legacy source was copied.
+
 Terminal retained observations resolve the original update during semantic replay,
 without a second result file or settlement event. Nonterminal or interrupted lookup
 stays spent and pending. A surviving independent original reply may still resolve
@@ -155,6 +183,14 @@ PublishReady freezes the original host timestamp and closed journal hash.
 Create-only publication reconciles only exact complete original bytes.
 Published replay and `verify_completion(manifest_hash)` authenticate full original
 evidence and payload without sync, guard, clock, signing, HTTP or writes.
+
+Within each synchronous call replay, `resolve_call` authenticates the original
+owned request once before any pending/reply/observation resolution. Result
+authentication checks complete framing, original trust/time, request ID and exact
+certified response against that same request; it does not repeat the request
+signature check. No authentication is cached across invocations or awaits. Native
+coverage rejects a changed signature with unchanged content/request ID for pending,
+original-reply, terminal-observation and nonterminal-observation-plus-reply cases.
 
 A completed receipt may survive target succession. Structural custody checks
 require its exact published manifest to bind original intent, closed journal and
@@ -182,6 +218,28 @@ binds retained results to the original request; `a860d14421b9ff1c61c1dce079cdc6a
 separates observation from dependent-effect admission;
 `9f7b886a824eec67dda8f81792a560436419bb2a` preserves original pass ownership.
 Their no-retry, original-evidence and independent-authority guarantees remain.
+
+The replay-authentication follow-up re-reviewed the same frozen Agent
+`submission/mod.rs` (`submit_once`, `submit_admitted`) and HTTP recovery cases
+`status_recovery_preserves_both_attempts_and_exact_zero_or_one_submission` and
+`data_readback_recovery_preserves_both_attempts_and_exact_zero_or_one_submission`.
+The `d245b0f03a505ba5215d65c10bdebf1890c7dc37` submission patch binds reply retention
+to its original prepared request. Backup preserves that binding with an owned
+authenticated request and independent certificate checks in the shared replay
+resolver; it does not reuse the legacy Agent/provider lifecycle. Its existing
+spending/no-retry tests remain, with the signature regressions above at the owning
+recorder boundary. No legacy code was copied or external authority removed.
+
+The subsequent evidence-lookup cut re-reviewed frozen
+`ops/persistence/attempt_journal/mod.rs` (`open`, `record`) and its tests
+`retained_limits_exact_identity_and_receipts_survive_reopen` and
+`unsafe_corrupt_excessive_and_replaced_evidence_rejects`. The
+`a860d14421b9ff1c61c1dce079cdc6a19316bfd0` patch centralizes prerequisite admission
+using the original current record. Backup likewise selects references from its
+already-admitted call, but keeps the new recorder's independent byte, namespace
+and closing-identity checks rather than adopting legacy's cached JSON record.
+Existing custody and runtime recovery cases cover the changed lookup path; no
+legacy source, state or cleanup behavior was imported.
 
 The new common recorder replaces phase catalogs, repeated lifecycle events and
 accepted/schedule/assembly digest records. Tests now live with
