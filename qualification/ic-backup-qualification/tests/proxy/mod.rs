@@ -1,8 +1,6 @@
 //! Loopback fixture proxy: forward once, retain original wire bytes, optionally lose one reply.
 //! It is not a Backup transport or a production HTTP implementation.
-use ic_platform::ic_protocol::{
-    EnvelopeContent, TransportCallResponse, decode_call_content_strict, decode_call_response,
-};
+use ic_platform::ingress::{CallResponse, Content, decode_call_response, decode_envelope};
 use std::{
     fs,
     io::{Read, Write},
@@ -97,10 +95,10 @@ impl Proxy {
                         .unwrap();
                     assert!(response.len() <= 3 * 1024 * 1024);
                     fs::write(directory.join(format!("response-{n}.http")), &response).unwrap();
-                    let method = decode_call_content_strict(&request[split + 4..], 2 * 1024 * 1024)
+                    let method = decode_envelope(&request[split + 4..], 2 * 1024 * 1024)
                         .ok()
-                        .and_then(|content| match content {
-                            EnvelopeContent::Call { method_name, .. } => Some(method_name),
+                        .and_then(|packet| match packet.value.content {
+                            Content::Call { method_name, .. } => Some(method_name),
                             _ => None,
                         });
                     if let Some((selected, path)) = &deny_write
@@ -122,8 +120,8 @@ impl Proxy {
                     };
                     if !discarded && discard {
                         let body = body(&response);
-                        let TransportCallResponse::Replied { certificate } =
-                            decode_call_response(&body, 2 * 1024 * 1024).unwrap()
+                        let CallResponse::Replied { certificate } =
+                            decode_call_response(&body, 2 * 1024 * 1024).unwrap().value
                         else {
                             panic!("lost response must be certified terminal")
                         };

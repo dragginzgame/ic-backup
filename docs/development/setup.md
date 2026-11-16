@@ -6,9 +6,8 @@ Local inventory, payload checks and capture intent use Host filesystem/artifact
 primitives and published Platform identity and management DTOs, with Serde/JSON
 and typed errors. Platform's native protocol codec checks prepared status call
 content; its historical certificate verifier authenticates retained replies and
-certified rejections. Host HTTP 0.79.0 supplies the bounded body reader and
-Reqwest 0.13.5 re-export with opt-in Rustls, without a direct Reqwest dependency
-or Agent. Its futures require a caller-owned Tokio runtime with IO
+certified rejections. Host HTTP 0.80.0 supplies bounded complete-body consumption. Backup directly
+selects Reqwest 0.13.5 with opt-in Rustls and owns its client policy, without Agent. Its futures require a caller-owned Tokio runtime with IO
 and timers; tests use the selected Tokio 1.54.1 runtime. External IC DTOs and
 certificate codecs remain Platform-owned. No Canic framework dependency is added.
 
@@ -17,9 +16,8 @@ Host FS and Artifacts 0.80.2 resolve from verified registry archives, source
 FS `81c73a53b929355c2056a2783c0f61676251c0ddba2d6e0109c3ac53841b396b` and
 Artifacts `f8645c876c9f26469c46e0ec764b639b192d2f2336d71815a2fd11d4c86b6f1e`.
 No sibling override or shared target is used. Evidence is under
-`target/evidence/host-tooling-recheck/`. HTTP remains 0.79.0 with its own Artifacts
-0.79 dependency; no old digest type crosses that body-reader boundary. Testkit's
-private graph retains FS/Process 0.79 without sharing their handles with Backup.
+`target/evidence/host-tooling-recheck/`. HTTP 0.80.0 removes its old Artifacts
+edge. Testkit 0.107.3 now selects FS/Artifacts/Process 0.80.2 in qualification.
 Backup now owns `store::BackupDigest` and uses approved direct SHA-256 0.11.1;
 its canonical commitment bytes and stored formats are unchanged. Publication
 errors retain pre-visibility, post-visibility and explicit cleanup causes.
@@ -42,10 +40,10 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.44.5 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.44.11 is adopted from its registry
 archive with SHA-256
-`aef8ac5d84866cf4ceb5b9d91ce9d458708069fc0c585345f07054186d267199`,
-source `081753852ae398661fadfd0fe3b3fc631f0a96e6`. Both workspaces declare
+`7d16b815ae322ae3f88580ee6af1611bdafde08b77592cd886bfa0eece0f1be8`,
+source `08d63df7661910554ef72980037f55edd914aba0`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs ten selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -197,24 +195,39 @@ profile. This avoids measuring debug-mode crypto and payload replay as release
 performance. The 20 MiB fixture explicitly bounds both server lifetime and idle
 time at 30 minutes to accommodate long local source checks between IC calls.
 
-Setup selects the unique Testkit version from `qualification/Cargo.lock` through
-Tooling's Cargo installer and delegates server assets to Testkit. It is also an
-ordered `install-tools` extension after common tools and locked fetch. The matching
-`tools-check` extension and fixture library admission are offline and never install.
-There is no second PocketIC catalog, auto-download or IC executable bundle.
-Keep `.tools/testkit/` setup evidence and `qualification/target/fixtures/` original
-journals, roots and raw server output, including failed runs. Production builds
-use root `target/`; qualification uses its own `target/`, never sibling/shared output.
+Setup builds the private `server` example against the locked Testkit 0.107.4
+library. `make install-testkit-server` explicitly downloads the supplier-selected
+archive with a finite time/byte ceiling, then delegates checksum admission,
+bounded decompression and create-only publication to Testkit. It is an ordered
+`install-tools` extension after common tools and locked fetch. `tools-check`
+and each fixture independently admit the prepared server offline. There is no
+second PocketIC catalog, implicit download, Testkit CLI or copied executable bundle.
+The gzip executable must be prepared on PATH; its absolute path is passed explicitly.
+Prepared bytes live under `.tools/testkit-server/`; download attempts remain in
+`qualification/target/testkit-setup/`. Preparation uses private permissions.
+Original `.tools/testkit/` assets and failed attempts remain untouched.
 
-Testkit 0.106.0 archive SHA-256 is
-`090cea21af2208dad7a359e99fe803b356fe8daa27cdc52d545df7de3b32c43e`, from source
-`d12b0174cd04c556f065c39bc12dd366628cc6df`. Its native PocketIC 16.1 client pins
-`thiserror = 2.0.18`; the separate qualification lock satisfies that requirement.
-The product's compatible requirement admits it while its original lock retains
-2.0.21. Both graphs select Platform 0.33.7/Types 0.20.4; Backup selects FS/Artifacts 0.80.2
-while Testkit retains its independent Host 0.79 edges. Revisit
-this concrete constraint when the client pin changes. No direct PocketIC, registry
-management, Candid or CBOR dependency is added; native DTOs stay fixture-private.
+Testkit's managed server has finite startup/lifetime/output limits. The fixture
+owns instance deletion followed by server cancellation/join, retaining stdout,
+stderr and the original process/cleanup report under each fixture directory.
+Unwinding also attempts to retain stopped-process evidence. A deletion attempt is
+not claimed as proof of remote deletion; successful runs require no abandoned
+instance owners or cleanup errors. The 20 MiB profile keeps a 30-minute lifetime.
+Keep all original journals, roots and byte evidence, including failed runs.
+Product builds use root `target/`; qualification uses its own target directory.
+
+Verified registry Testkit 0.107.3 archive SHA-256 is
+`f1abdecdc13e767e8f5f7f83f2c19e48a414d6a7eea2e2ffdbfe95222c56d6c2`, source
+`3c3fd63a6c16f4f1c38eef7984d211791022ba37`. Its native PocketIC 16.1 client still
+pins thiserror 2.0.18; qualification selects that version and product retains
+2.0.21. The managed-server feature does not enable unused Protocol/Types helpers.
+That initial pass used Platform 0.33.7 / Types 0.20.4 in both graphs;
+the current partial migration below supersedes that selection.
+No direct PocketIC, Candid or CBOR dependency was added. Native DTOs stay private.
+Host HTTP 0.80.0 archive SHA-256 is
+`81c55b5294ff4c4bcab841ca6b72140796abd5c095651bf7e44e77ac2f5f843a`, source
+`18198d6cfe6c097ef007a1a6a8b312c0a394e211`. This adoption's archives and checks are
+under `target/evidence/supplier-refresh/`.
 
 `target/evidence/direct-status/` retains the initial archive/index verification.
 `target/evidence/snapshot-capture/` retains snapshot, custody, codec and consumer
@@ -474,3 +487,49 @@ its IC fixture. It shares the existing qualification lock, which adds only that
 local package; supplier versions and the root lock are unchanged. Final comment,
 error-message and import cleanup is checked by Clippy/Rustdoc without repeating
 unchanged runtime journeys. No release/support matrix or legacy test rerun is claimed.
+
+### CI setup diagnostics
+
+Toko 0.44.11's setup diagnostic policy is wired through `scripts/ci/setup.pl`
+for host tools, Rust toolchain/tools, dependency fetches and the secret scanner.
+Only that selected command's bounded, sanitized output is retained; no cache,
+home, environment dump or backup store is uploaded. Hidden attempt directories
+under `target/ci-setup/` hold at most 64 KiB of diagnostics plus a small status
+header per phase. URLs, known secret environment values, credential lines and
+private keys are omitted; oversized lines and truncation are explicit.
+Failures print an 8 KiB excerpt and retain their original exit status. Failed
+collection is reported separately and cannot turn a failed command green.
+CI uploads only these diagnostic files, including hidden directories, for seven
+days and reports the artifact URL or missing/failed upload. This does not assert
+hosted retrieval until observed. Run `perl scripts/ci/test-setup.pl` after changing
+this wiring; the focused offline fixture covers early failure, hidden evidence,
+redaction/bounds, empty diagnostics, collector failure and symlink refusal.
+
+### Current partial Platform migration
+
+Protocol 0.2.8 owns product data/allocation/empty-response decoding for 0.104.0.
+The earlier qualification below used 0.2.7; 0.2.8 leaves this management codec unchanged. The
+qualification signer and proxy use Platform 0.34.9's offline envelope encoder and
+strict packet decoders. Complete envelopes are decoded before selecting content;
+request-ID/signable failures refuse, and only new signer outputs are encoded.
+Retained original requests are never re-encoded during recovery.
+The shared fixture authority is exposed through the private consumer library;
+qualification uses normal module/package imports instead of a source-path override.
+
+Product Platform 0.33.7 remains for status/list/take/metadata, request DTOs,
+certificate verification and retained-envelope authentication. Qualification's
+`ic-platform-legacy` dev dependency supplies the product's current typed source-read
+API and its matching Principal, not an alternate transport or fallback reader.
+Both cohorts are explicit and this remains partial adoption. The new Protocol
+uses Types 0.21.2; old public product identities remain Types 0.20.4.
+
+The qualification graph selects Testkit 0.107.4. A separate resolution probe
+confirmed 0.107.3 also remains compatible with Protocol 0.2.7 while its optional
+codec feature is disabled; the patch is not a prerequisite for this migration.
+The managed-server source is byte-identical between the two Testkit archives.
+The selected 0.107.4 archive checksum is
+`8629db43fa7a3e3655184c6173a5ccdecf67a87d29f0c929228bec7f8a1c392b`, source
+`67ac61f89a7311e278027bee3078de7e24a0a241`. This upgrade changes no server asset
+or lifecycle limits. Current migration logs are under
+`target/evidence/platform-recheck-current/`; the previous Host/Testkit qualification
+remains historical evidence under its original directory.

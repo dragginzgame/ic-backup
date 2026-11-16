@@ -69,8 +69,8 @@ legacy recovery material read-only and under its original authority.
 
 ## Dependency selection
 
-Host FS/Artifacts 0.80.2 are selected from verified registry archives. HTTP remains
-0.79.0; Testkit's independent native graph retains its own older Host dependencies. The
+Host FS/Artifacts 0.80.2 and HTTP 0.80.0 are selected from verified registry archives.
+Backup owns its Reqwest 0.13.5 client; Host bounds complete response bodies. The
 maintainer-authorized temporary sibling overrides have been removed after
 consumer qualification. Keep dependencies registry-backed and builds in this
 repository's target directory; do not add sibling patches or shared targets.
@@ -83,15 +83,17 @@ when actual test-only packages justify one; product must never depend on it.
 Use directory modules with `mod.rs` when modules exist. Keep tests with owners.
 
 The private `qualification/` workspace owns actual management ingress through
-Testkit 0.106 and its native `ic_testkit::pocket_ic` boundary. Product dependencies
+Testkit 0.107.4 and its native `ic_testkit::pocket_ic` boundary. Product dependencies
 never point back into it. Its independent lock selects PocketIC 16.1 and that
 client's exact `thiserror` 2.0.18 constraint; the product lock retains 2.0.21.
 The compatible product requirement admits both. Revisit this constraint when
 PocketIC relaxes its pin. Fixture keys, upstream DTOs and runtime construction
 remain test-only; no production identity alias or direct PocketIC dependency.
 
-`make install-testkit-server` selects the unique locked Testkit CLI through the
-shared Cargo installer, then uses Testkit's authenticated setup.
+`make install-testkit-server` explicitly downloads the locked Testkit library's
+selected archive and uses its authenticated offline preparation through the private
+qualification example. No Testkit CLI is selected. Assets live under
+`.tools/testkit-server/`; old `.tools/testkit/` evidence stays preserved.
 `make testkit-server-check` admits the server offline; `make test-qualification`
 runs the actual-IC caller under `qualification/target/`. Fixtures independently
 call the locked Testkit library's offline check before managed startup and retain

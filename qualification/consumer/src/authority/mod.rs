@@ -6,16 +6,19 @@ use ic_backup::store::{
 };
 use ic_platform::{
     ed25519::{Signer as _, SigningKey},
-    ic_protocol::{Envelope, EnvelopeContent, encode_envelope},
+    ingress::{Content, Envelope, encode_envelope},
 };
 use std::{
-    borrow::Cow,
     sync::{
         Arc,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     time::{SystemTime, UNIX_EPOCH},
 };
+/// Current fixture wall-clock time in Unix nanoseconds.
+/// # Panics
+/// Panics if the fixture clock precedes Unix time or exceeds the u64 range.
+#[must_use]
 pub fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -24,6 +27,8 @@ pub fn now() -> u64 {
         .try_into()
         .unwrap()
 }
+/// Public DER for the fixed test-only signing key.
+#[must_use]
 pub fn der() -> Vec<u8> {
     [
         b"\x30\x2a\x30\x05\x06\x03\x2b\x65\x70\x03\x21\x00".as_slice(),
@@ -31,6 +36,7 @@ pub fn der() -> Vec<u8> {
     ]
     .concat()
 }
+/// Offline test signer whose counter records every signing invocation.
 pub struct FixtureSigner(pub Arc<AtomicUsize>);
 impl BackupSigner for FixtureSigner {
     type Error = ();
@@ -43,7 +49,7 @@ impl BackupSigner for FixtureSigner {
         assert_eq!(request.network_requests, 0);
         let sender = request.plan.sender().as_slice().try_into().unwrap();
         let content = match request.signing {
-            OperationSigningContent::Call { method, arguments } => EnvelopeContent::Call {
+            OperationSigningContent::Call { method, arguments } => Content::Call {
                 nonce: Some(
                     BackupDigest::compute(
                         &[
@@ -62,19 +68,17 @@ impl BackupSigner for FixtureSigner {
                 arg: arguments.to_vec(),
                 sender_info: None,
             },
-            OperationSigningContent::Observation { request_id } => EnvelopeContent::ReadState {
+            OperationSigningContent::Observation { request_id } => Content::ReadState {
                 sender,
                 ingress_expiry: request.expires_ns,
-                paths: vec![vec![
-                    b"request_status".to_vec().into(),
-                    request_id.to_vec().into(),
-                ]],
+                paths: vec![vec![b"request_status".to_vec(), request_id.to_vec()]],
             },
         };
-        let signature = SigningKey::from_bytes(&[17; 32]).sign(&content.to_request_id().signable());
+        let signature =
+            SigningKey::from_bytes(&[17; 32]).sign(&content.signable().map_err(|_| ())?);
         encode_envelope(
             &Envelope {
-                content: Cow::Owned(content),
+                content,
                 sender_pubkey: Some(der()),
                 sender_sig: Some(signature.to_bytes().to_vec()),
                 sender_delegation: None,
@@ -84,6 +88,7 @@ impl BackupSigner for FixtureSigner {
         .map_err(|_| ())
     }
 }
+/// Revocable test application authority shared with the harness.
 pub struct FixtureGuard(pub Arc<AtomicBool>);
 impl BackupApplicationGuard for FixtureGuard {
     type Error = ();

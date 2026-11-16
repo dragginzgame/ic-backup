@@ -28,30 +28,55 @@ jobs:
       - name: Restore pinned tool downloads
         uses: ./vendor/toko-tooling/.github/actions/cache-tool-downloads
       - name: Prepare admission prerequisites
-        run: make install-host-tools
+        run: perl scripts/ci/setup.pl host-tools make install-host-tools
       - name: Prepare selected Rust toolchain
         shell: bash
         run: |
           toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
-          rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
+          perl scripts/ci/setup.pl rust-toolchain rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
       - name: Admit Cargo selection and documentation
         run: make toko-tooling-check doc-links-check
       - name: Prepare shared Rust developer tools
-        run: make install-rust-tools
+        run: perl scripts/ci/setup.pl rust-tools make install-rust-tools
       - name: Check formatting
         run: make fmt-check
       - name: Prepare the pinned secret scanner
         shell: bash
         run: |
+          perl scripts/ci/setup.pl secret-scanner bash -euo pipefail -c '
           gitleaks_bin="$(bash vendor/toko-tooling/scripts/ci/install-ci-tool.sh gitleaks \
             --install-dir "$RUNNER_TEMP/ic-backup-security-bin")"
-          printf 'GITLEAKS_BIN=%s\n' "$gitleaks_bin" >> "$GITHUB_ENV"
+          printf "GITLEAKS_BIN=%s\n" "$gitleaks_bin" >> "$GITHUB_ENV"
+          '
       - name: Save pinned tool downloads
         uses: ./vendor/toko-tooling/.github/actions/cache-tool-downloads
         with:
           mode: save
       - name: Scan repository history for secrets
         run: '"$GITLEAKS_BIN" git --redact=100 --no-banner --no-color --log-level error'
+
+      - name: Retain sanitized setup diagnostics
+        if: failure()
+        id: setup-evidence
+        # actions/upload-artifact v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: setup-scaffold
+          path: target/ci-setup/.attempt-*/diagnostic.txt
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report setup evidence location
+        if: failure()
+        env:
+          EVIDENCE_URL: ${{ steps.setup-evidence.outputs.artifact-url }}
+          UPLOAD_OUTCOME: ${{ steps.setup-evidence.outcome }}
+        run: |
+          if [[ "$UPLOAD_OUTCOME" == success && -n "$EVIDENCE_URL" ]]; then
+            printf 'Sanitized setup diagnostics: %s\n' "$EVIDENCE_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Setup diagnostic upload failed or selected evidence is missing.' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   native:
     strategy:
@@ -68,15 +93,37 @@ jobs:
       - name: Admit snapshot before preparation
         run: bash vendor/toko-tooling/scripts/ci/verify-toko-tooling-snapshot.sh --consumer . --require-annotations
       - name: Prepare admission prerequisites
-        run: make install-host-tools
+        run: perl scripts/ci/setup.pl host-tools make install-host-tools
       - name: Prepare selected Rust toolchain
         shell: bash
         run: |
           toolchain="$(sed -n 's/^channel = "\([^"]*\)"/\1/p' rust-toolchain.toml)"
-          rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
+          perl scripts/ci/setup.pl rust-toolchain rustup toolchain install "$toolchain" --profile minimal --component rustfmt --component clippy
       - name: Admit Cargo selection
         run: make toko-tooling-check
       - name: Prepare locked dependencies
-        run: make fetch-dependencies
+        run: perl scripts/ci/setup.pl dependencies make fetch-dependencies
       - name: Qualify native scaffold offline
         run: make clippy rustdoc test
+      - name: Retain sanitized setup diagnostics
+        if: failure()
+        id: setup-evidence
+        # actions/upload-artifact v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: setup-${{ matrix.os }}
+          path: target/ci-setup/.attempt-*/diagnostic.txt
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report setup evidence location
+        if: failure()
+        env:
+          EVIDENCE_URL: ${{ steps.setup-evidence.outputs.artifact-url }}
+          UPLOAD_OUTCOME: ${{ steps.setup-evidence.outcome }}
+        run: |
+          if [[ "$UPLOAD_OUTCOME" == success && -n "$EVIDENCE_URL" ]]; then
+            printf 'Sanitized setup diagnostics: %s\n' "$EVIDENCE_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Setup diagnostic upload failed or selected evidence is missing.' >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.104.0] - 2026-11-16
+
+### ⚠️ Breaking
+
+- Snapshot-data and restore-reply decode errors now carry Protocol's bounded
+  codec error type. Original arguments, evidence and stored formats are unchanged.
+
+### 🔧 Changed
+
+- Use Protocol 0.2.8 for production snapshot-data, restore allocation and empty
+  replies, removing private schema decoders; partial adoption for
+  [Platform #11](https://github.com/dragginzgame/ic-platform/issues/11).
+- Move actual-IC external signing and proxy admission to Platform 0.34.9 for
+  [Platform #12](https://github.com/dragginzgame/ic-platform/issues/12). Retain
+  product 0.33.7 APIs pending the remaining coordinated migration.
+
+- Adopt Host HTTP 0.80.0 in both graphs; keep client/TLS/no-retry policy in
+  Backup and delegate complete-body limits to Host.
+- Adopt Testkit 0.107.4 for private qualification, using explicit prepared
+  assets, managed server/instance lifetimes and retained process evidence.
+  Replace the removed Testkit CLI setup with the locked library example.
+
+- Adopt Toko Tooling 0.44.11 in both workspaces and refresh its managed snapshot.
+  Retain bounded sanitized CI setup diagnostics with original failure status and
+  seven-day artifacts, following [Toko Tooling #387](https://github.com/dragginzgame/toko-tooling/issues/387).
+
 ## [0.103.0] - 2026-11-16
 
 ### ⚠️ Breaking

@@ -41,13 +41,92 @@ baseline, not a Backup runtime dependency.
 
 ## Dependency selection by owner
 
+### Platform rebuild adoption review — 2026-11-16
+
+Supplier work is tracked in [Platform #11 — snapshot/status codecs](https://github.com/dragginzgame/ic-platform/issues/11)
+and [Platform #12 — signed ingress/recovery](https://github.com/dragginzgame/ic-platform/issues/12).
+These own implementation acceptance; the evidence below records the reviewed consumer boundary.
+
+Registry trial of **Platform 0.34.7 / Protocol 0.2.6 / Types 0.21.2** now passes.
+Platform/Protocol source is `a813d4ea5378515984a547a9f4e9d37f2124cf14`; archives
+match their registry checksums. Protocol now supplies `management-snapshots`.
+The isolated public-API probe uses no old Platform implementation: it reads the
+original wire requests from the qualified 20 MiB fixture, existing independently
+retained golden replies and explicit byte fixtures. All 110 ingress envelopes
+parse with original-byte custody and computable request IDs; 11 status/list and
+two take argument encodings match original requests exactly. All eight golden
+status/list/take/metadata replies decode; metadata checks preserve full-width
+integers, NaN/signed-zero bits, chunk order, optional absence, timer/hook and
+provenance. Full 1 MiB data and empty-result decoding pass, along with byte-cap
+and trailing-data refusals. Evidence and exact probe source/lock are under
+`target/evidence/platform-retry/`; no source, operation or wire record was changed.
+This removes the previous missing-API observation, but does not qualify a complete
+consumer port, certificate authentication, every request shape or installed IC
+effects. Product and qualification still use the old cohort until coordinated
+caller migration and recovery qualification are complete.
+
+Earlier recheck: verified Platform **0.34.6** / Protocol **0.2.5**, source
+`9dfdc0083fa5d6e56da7b90c04c20de4b2d3cc9f`, now supplies `ingress-packets` with
+strict content/envelope decoding, original bytes, request IDs and response parsing.
+This advances #12; actual Backup migration and regression qualification remain.
+Protocol's `management-chunks` handles `stored_chunks` / `upload_chunk`, not
+snapshot metadata/data, allocation/load or status. #11 therefore still blocks
+complete adoption. Types 0.21.2 is available, but both maintained workspaces still
+need the old facade's Types 0.20.4 at their shared public boundary. No independent
+qualification migration is claimed. Evidence: `target/evidence/platform-tooling-refresh/`.
+
+The preceding review found gaps at the management codec and signed-ingress
+boundaries. That registry/archive review verified Platform **0.34.5** and
+Protocol **0.2.4** at `1e92703bc803b81dbe1e3d815fd1077d440d62b4`; Types remains
+**0.21.1**. Original archives, index checksums and the fresh offline resolution
+refusal remain under `target/evidence/platform-refresh-next/`.
+The earlier review verified Platform **0.34.3** at `3f972ec7d43e2fcd087f69bae90767f6bc405c85`, Types
+**0.21.1** at `2797582e24f782e442df841d24db1ea0fac7bb92`, and Protocol **0.2.3** at
+`cbbf26ade6644ed6fbcadfe3ccbafe809c362f25`. Protocol 0.2.2 at the Platform release
+revision was also inspected. These are deliberately narrowed rebuilds, not
+compatible facade updates. Original archives, index checksums and an offline
+resolution refusal remain under `target/evidence/platform-refresh/`.
+
+| Backup requirement | New published surface / gap |
+| --- | --- |
+| Snapshot/status DTOs and bounded Candid encoding/decoding in `capture/status/wire`, `capture/transfer` and `restore/procedure` | Protocol exposes selected Cloud Engine, Registry and HTTP-request formats; no management snapshot/status DTOs or replacement for the used codec API. |
+| Original call/read-state envelopes, request IDs and response parsing in `capture/advance/request`, `request/lookup` and `capture/advance/http` | Platform 0.34.5's anonymous `native-read` client privately uses upstream envelope types; it exposes no replacement for Backup's signed ingress/recovery parsing. |
+| Strict Ed25519 and low-S secp256k1 verification in `capture/advance/request` | Supplier gap resolved: Platform 0.34.4 restored `ed25519`/`ecdsa`, retained in 0.34.5. Backup consumer qualification still belongs to the coordinated migration. |
+| One public Principal identity shared by DTOs, requests, plans and fixtures | New Types 0.21.1 is distinct from the Types 0.20.4 used by the required old facade; adding it alone does not migrate those boundaries. |
+
+Cargo rejects the existing feature selection against 0.34.5, beginning with the
+removed `certification-verify` feature. Renaming that feature alone cannot restore
+the other missing APIs. Keep Platform 0.33.7 / Types 0.20.4 until the supplying
+owners implement the required boundaries and Backup qualifies a coordinated
+migration. Do not import the old facade, duplicate wire/crypto ownership or add
+an unused parallel Types dependency just to claim adoption.
+
+The [0.34.5 release notes](https://github.com/dragginzgame/ic-platform/blob/1e92703bc803b81dbe1e3d815fd1077d440d62b4/releases/platform/CHANGELOG.md)
+also add certificate construction and separately selected fixture signing. The
+new crypto modules re-export upstream Dalek/K256 types; no missing-crypto claim
+remains. Anonymous query/subnet observations are not a substitute for exact
+externally signed update envelopes, original request IDs and retained recovery
+proofs. No dual Platform dependency or consumer-side protocol implementation was
+added to work around the remaining supplier gaps.
+
+The [new Platform changelog](https://github.com/dragginzgame/ic-platform/blob/3f972ec7d43e2fcd087f69bae90767f6bc405c85/releases/platform/CHANGELOG.md)
+records immutable bounded certificate/authentication APIs and independent
+direct/delegated, subgroup and mainnet replay evidence. These are useful future
+migration inputs, not proof that a known Backup defect has been fixed. Backup
+already uses historical root/target/signing/delegation checks. The
+[supplier requirements](https://github.com/dragginzgame/ic-platform/blob/3f972ec7d43e2fcd087f69bae90767f6bc405c85/docs/requirements.md)
+retain Backup's signed recovery inspection contract as a separate requirement.
+Canic signing, manager execution and fenced recovery remain consumer work.
+
+### Selected dependency boundaries
+
 | Dependency | Proposed owner/use | Selection rule |
 | --- | --- | --- |
 | `ic-platform` | Backup's external management DTOs and bounded Candid encoding/decoding; Agent adapter's transport/signing/certificate interfaces. | `default-features = false`; select `management-canister-types` and `candid-codec` at the management boundary, `agent` only in the native adapter, and `ic-protocol` when inspecting signed envelopes/read-state messages. |
 | `ic-platform-types` | Canonical Principal/Account owner. | Platform reexports the same Principal. A future pure identity-only package may depend on Types directly; do not add a redundant dependency to a package already using Platform merely to duplicate that import. |
 | `ic-host-fs` | Selected 0.80.2: held directories, no-follow reads, retained files, descriptor locks and explicit publication outcomes. | Direct storage dependency; the old `capability` feature is retired. |
 | `ic-host-artifacts` | Selected 0.80.2: complete bounded reads/copies and producer hashing. | Backup owns its commitment encoding and expected-digest comparisons; approved direct `sha2` 0.11.1 supplies SHA-256 and the fixed module stream. |
-| `ic-host-http` | Selected 0.79.0: bounded complete-body consumption and Reqwest re-export for direct status HTTP. | Enable `rustls`; import Reqwest only through Host HTTP. Backup owns endpoints, retries, trust, deadlines and IC evidence. |
+| `ic-host-http` | Selected 0.80.0: bounded complete-body consumption. | Backup directly owns Reqwest 0.13.5 with Rustls, endpoints, retries, trust, deadlines and IC evidence. |
 | `ic-host-process` | External signer execution/custody. | Canic's signer adapter already needs it. Core does not spawn signers or management commands. |
 | `ic-wire` | Canic-owned recovery/control RPC and any manager execution protocol. | In Canic's protocol/adapter, not a replacement for management Candid or a mandatory host artifact format. |
 | `ic-platform-runtime` | Canic's canister-side execution and lifecycle. | Canic dependency only; never pulled into host Backup for a manager route. |
@@ -317,9 +396,9 @@ replay with a direct controller fixture key. Canic still owns its actual signer
 process, manager-controlled execution, continuous maintenance and external
 settlement. [Canic #1](https://github.com/dragginzgame/canic/issues/1) remains the
 integration umbrella. Its implementation owners are
-[#5 signing](https://github.com/dragginzgame/canic/issues/5),
-[#6 manager execution and original-result lookup](https://github.com/dragginzgame/canic/issues/6)
-and [#7 fenced application recovery](https://github.com/dragginzgame/canic/issues/7).
+[Canic #5 signing](https://github.com/dragginzgame/canic/issues/5),
+[Canic #6 manager execution and original-result lookup](https://github.com/dragginzgame/canic/issues/6)
+and [Canic #7 fenced application recovery](https://github.com/dragginzgame/canic/issues/7).
 These issues distinguish completed supplier prerequisites and locally qualified
 Backup from Canic's actual implementation/qualification. No Canic execution enum
 promises an unsupported route.
@@ -334,3 +413,24 @@ not a total work/allocation quota. Backup still owns exact request-status paths,
 signature/binding checks, finite observation accounting, timing, retention and
 settlement; the direct-host workflow is now qualified with fixture authority. No supplier edits or local
 wire schema were added.
+
+The subsequent coordinated adoption review found a remaining construction gap in
+that same 0.34.7 archive: `ingress` has no public bounded encoder for an externally
+signed envelope. The unchanged `qualification/consumer/src/authority/mod.rs`
+needs both Call and ReadState before Backup records its original bytes. Platform's
+`native::Ed25519Identity::prepare_update` covers calls only; its
+`ReadClient::observe_request` creates and sends a read-state internally and adds
+a time path, bypassing the required original custody boundary. The locked offline
+compile refusal is retained in `target/evidence/platform-adoption/encoder-probe.log`.
+[Platform #12](https://github.com/dragginzgame/ic-platform/issues/12#issuecomment-6928914126)
+now records that exact missing capability and acceptance. The successful decoder
+trial does not establish complete API availability. Both maintained graphs remain
+on the working old cohort; no consumer CBOR codec or sibling patch was introduced.
+
+The focused review also re-read frozen legacy metadata `wire/mod.rs` and
+`tests/mod.rs` at `4ae087fad8c23de712aa60bf569bde4b2b932651`, and its migration history
+`1af7e219c3073395992c316ecaa5e83e74b1aecc`. Separate allocation/work/skipping limits,
+optional distinctions, exact floating-point bits and v128 bounds remain required.
+New Protocol owns those decoders; Backup retains capture/restore policy and
+original evidence. Existing independent golden vectors remain the regression
+source; no legacy implementation or historical pass was imported as qualification.

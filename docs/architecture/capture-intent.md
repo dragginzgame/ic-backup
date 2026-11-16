@@ -311,3 +311,33 @@ plus history `f332118eeed000e4615e48155c162a4e113076a8` and
 guarantee is adapted to certificates and the original recorder; legacy stages
 and receipt storage are not copied. Native late-deadline, old-allowance and failed
 write/import cases exercise the new owner.
+
+### Host HTTP 0.80 / Testkit 0.107 adoption — 2026-11-16
+
+The focused review re-read frozen legacy Agent `submission/mod.rs::submit_admitted`
+and `tests/http_boundary/mod.rs` at `4ae087fad8c23de712aa60bf569bde4b2b932651`, with
+migration history `1af7e219c3073395992c316ecaa5e83e74b1aecc`. Original ingress must
+precede submission; uncertain replies, redirect/oversize/timeout/disconnect and
+failed retention never replenish a submission. Those cases remain in Backup's
+owning HTTP and recovery tests. No legacy implementation was copied.
+
+Host HTTP 0.80.0 only consumes bounded response bodies. Backup now selects Reqwest
+directly and preserves the same TLS, no-proxy/no-redirect/no-retry, timeout,
+content-encoding, exact-byte and post-response evidence rules. Both declared and
+streamed `TooLarge` errors map to the existing response-limit refusal; allocation
+and transport failures remain uncertain. No public operation or stored format changes.
+
+Testkit 0.107.3 supplies prepared asset admission and explicit bounded process
+ownership. Qualification owns startup, instance deletion attempts and final
+cancel/join evidence. It retains original server output/process reports even when
+unwinding; finite output exhaustion is a fixture failure, never a relaxed budget.
+The previous CLI and `pic` wrapper are removed. PocketIC 16.1 and actual test
+journeys remain unchanged; supplier tests alone do not qualify Backup.
+
+Fresh consumer qualification passes all 236 native tests, five documentation
+examples, both strict Clippy checks and all 11 actual-IC journeys (107.11 seconds),
+including 20 MiB capture/restore, interrupted original-call settlement and
+separate-process offline replay. The isolated archive consumer passes. Original
+fixtures and joined process reports remain under `qualification/target/fixtures/`;
+logs and verified archives are under `target/evidence/supplier-refresh/`. These
+Linux results do not qualify macOS or the blocked new Platform cohort.

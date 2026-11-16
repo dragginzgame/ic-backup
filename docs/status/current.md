@@ -1,90 +1,108 @@
 # Current handoff — 2026-11-16
 
-Release **[0.103.0](https://crates.io/crates/ic-backup/0.103.0) is published** under
-the maintainer's explicit deploy/publish request. Annotated
-[tag v0.103.0](https://github.com/dragginzgame/ic-backup/tree/v0.103.0) and `main`
-were pushed atomically at `34e268a866aed8d30ffbdb7d09283d768f36fc65` and independently
-read back from GitHub. Product, both locks and qualification select 0.103.0;
-qualification stays private and supplier selections are unchanged.
-Scoped post-push review found no additional issue in payload checks/release callers.
-Hosted CI stays asynchronous; no hosted result is claimed.
+Local adoption selects **Host HTTP 0.80.0** in both graphs and **Testkit 0.107.3**
+in the preceding private qualification pass. Backup directly owns Reqwest 0.13.5 with the original
+TLS/no-retry/redirect/proxy/deadline policy; Host only bounds complete response
+bodies. No public operation or stored format changed. Obsolete Host 0.79 graph
+edges are removed; FS/Artifacts/Process now select 0.80.2 where used.
 
-The complete publication gate passed: 236 native tests, five documentation examples,
-all 11 actual-IC journeys (105.82 seconds), both Clippy checks, formatting, rustdoc,
-links, isolated archive consumer and publication-caller regression. The single upload
-in `target/publication/publish.selection.RkiVSN/` has Cargo/logger/final statuses 0.
-Official registry SHA-256 is
-`4269639bb9857e5079dcc71d2aaa689537976aa04212bc236eaa7b5a1b24f046`;
-the archive has clean release-commit provenance and all 94 tracked source files match.
-A fresh normal registry consumer resolves 0.103.0 without Testkit/PocketIC, builds
-offline and replays completed 20 MiB capture/restore in separate processes without
-a backend. Its graph, build and replay results remain beside the registry readback.
-Evidence remains under `target/evidence/release-0.103.0/`; package verification is
-in `target/package-consumer/check.g4L1ji/`.
+Testkit's removed CLI/pic wrapper is replaced by its prepared-server and explicit
+server/instance owners. The private qualification example handles setup/admission;
+`make install-testkit-server` downloads only during explicit setup. Assets use
+`.tools/testkit-server/`; old assets remain untouched. Fixtures retain bounded
+server output and original process/cleanup reports, including during unwinding.
+The 20 MiB journey retains its finite 30-minute server lifetime. Permission refusal
+of the old group-writable archive was resolved using a private copy; failed
+preparation logs and the original archive remain intact.
 
-The previous published release is [0.102.1](https://crates.io/crates/ic-backup/0.102.1),
-tag `v0.102.1`, commit `1db82ba22ac15c761906af0935e0e918acf40801`.
-Its archive, registry consumer and original failed preparation remain under
-`target/evidence/release-0.102.1/`. Historical release/adoption details are preserved
-in [handoff commit 61e0cac](https://github.com/dragginzgame/ic-backup/blob/61e0cac7de314bcd9f62e88cc975368abf36e677/docs/status/current.md).
-That commit delivered the lookup fix and initial replay reductions to `main`;
-independent remote readback and scoped post-push review found no additional issue.
+Fresh qualification passes: 236 native tests, five documentation examples, strict
+Clippy in both workspaces and all 11 actual-IC journeys (107.11 seconds), including
+20 MiB capture/restore and separate-process recovery. The archive/isolated normal
+consumer, explicit setup reuse, snapshot/tool checks, both workspace format checks
+and 121 documentation links pass. Provenance,
+commands and preparation ownership are in [setup](../development/setup.md);
+legacy/recovery rationale is in the [capture contract](../architecture/capture-intent.md#host-http-080--testkit-0107-adoption--2026-11-16).
+Logs/archives are under `target/evidence/supplier-refresh/`. These are prior-pass results; the release candidate qualification is recorded below.
 
-## Included changes and evidence
+**Partial Platform adoption now runs in the actual callers.** Product decoding
+of snapshot-data, restore allocation and exact empty replies uses Protocol 0.2.7;
+61 net lines of private production schema decoding were removed. Original bounds,
+geometry/hash/identity policy and evidence formats remain intact. Decode errors
+now expose Protocol's error type. Nine existing data regressions and the added
+allocation/empty-result boundaries pass; the full native suite passes 237 tests
+and five documentation examples. Both strict Clippy checks pass.
 
-Host FS/Artifacts **0.80.2** are registry-backed in both graphs; HTTP 0.79.0,
-Platform 0.33.7, Testkit 0.106.0 and Toko Tooling **0.44.5** remain selected.
-Public commitments now use `store::BackupDigest`; filesystem/byte errors expose
-Host's new outcomes. Stored SHA-256 bytes, intents, journals and manifests retain
-their formats. See the [consumer migration](../../crates/ic-backup/README.md) and
-[Host adoption/legacy anchors](../design/local-store.md#host-0801-adoption-blocker--2026-11-16).
-The tooling snapshot was installed through its exporter; managed files remain intact.
-Adoption evidence and failed probes remain in `target/evidence/host-tooling-adoption/`
-and `target/evidence/host-tooling-recheck/`.
+The actual-IC signer and proxy use Platform 0.34.9, including offline bounded
+encoding before Backup retains/submits the exact request. The shared private
+fixture authority uses ordinary library imports; its source-path override is gone.
+All 11 actual-IC journeys pass in 105.69 seconds, including 20 MiB, original
+observation/reply recovery and separate-process replay. The isolated archive
+consumer, Rustdoc, formatting, snapshot/tool admission and 122 doc links pass. Logs are in `target/evidence/platform-recheck-current/`.
+Qualification now selects Testkit 0.107.4, whose managed-server source is unchanged.
+A resolution probe confirmed 0.107.3 remains compatible with its codec feature
+disabled; the patch is not required by Protocol 0.2.7.
 
-The [Canic-readiness audit's lookup defect](../reports/audits/2026/11/16/canic-readiness/01/report.md)
-is fixed using the shared 2 MiB request ceiling with original authentication,
-expiry and spent-observation checks. Six native lookup tests and actual-IC
-interrupted allocation/offline replay at 2 MiB pass. Evidence remains under
-`target/evidence/lookup-profile-fix/`; original failed audit journals remain under
-`target/evidence/canic-readiness-audit/`. Release 0.103.0 fixes the published
-0.102.1 defect.
+This remains partial acceptance for [Platform #11](https://github.com/dragginzgame/ic-platform/issues/11)
+and [Platform #12](https://github.com/dragginzgame/ic-platform/issues/12).
+Product Platform 0.33.7 still owns status/list/take/metadata, request DTOs,
+certificate verification and retained-envelope authentication. Qualification's
+explicit `ic-platform-legacy` dev dependency is needed at the current product
+source-read DTO/Principal boundary. Next: port those remaining public types and
+callers, remove that old-cohort dependency, then repeat affected qualification.
+A remaining response-fixture construction gap is now reported in Platform #11:
+Protocol 0.2.8 supplies request encoders/reply decoders but no public bounded
+constructor for the status/snapshot/metadata/data/allocation replies used by native
+recovery fixtures. A registry compile probe confirms the missing methods; private
+codec internals cannot replace that public boundary. Earlier static golden probes
+did not cover these dynamic fixture callers. Evidence and checksums are under
+`target/evidence/platform-final-port/`. Preserve all native rejection coverage;
+do not retain the old crate solely as a hidden fixture codec or copy its generic
+codec into Backup. No sibling source was edited.
 
-Replay reuses Host's read digest, authenticates each owned original request once,
-and indexes held evidence by canonical name. Read-only materialization removes an
-earlier payload comparison while retaining the complete closing tree hash and
-custody checks. Creation still admits every existing member before writing any
-missing member. No persistent cache, new journal or recovery authority was added.
-The latest focused pass passes all 15 custody tests, the mutation-across-HTTP
-regression, strict product Clippy and the actual-IC 20 MiB journey (90.10 seconds).
-On that retained fixture it saves 80 MiB of capture payload reads and 120 MiB for
-restore (13.8% / 8.1% of all store reads); paired timings establish no meaningful
-end-to-end speedup. Evidence and journals are unchanged. Provenance, earlier
-qualification and measurements belong to the [restart design](../design/restart.md#size-maintained-surface-and-repeated-io)
-and [assembly contract](../architecture/capture-transfer.md#local-artifact-assembly),
-with raw evidence under `target/evidence/replay-{hash,auth,index,payload}-review/`.
-Full-history replay remains quadratic.
+The maintainer's subsequent deploy request selects **0.104.0** for the qualified
+partial adoption, without claiming completion of Platform #11/#12. The minor bump
+covers public Protocol decode-error types; stored formats remain unchanged.
+The baseline permits release of a qualified existing dependency selection while
+an optional upgrade is blocked. Product Platform 0.33.7 and the qualification
+DTO bridge remain necessary for the unmigrated callers above.
+Release-time registry review confirms Host FS/Artifacts/Process 0.80.2, HTTP
+0.80.0, Testkit 0.107.4, Platform 0.34.9 and Toko Tooling 0.44.11 are current.
+Both current locks select Protocol 0.2.8; its selected management codec is unchanged
+from the prior 0.2.7 pass. The release gate will qualify 0.2.8 with the matching
+updated manifest requirement. Full Platform migration remains deferred to #11/#12.
+The complete 0.104.0 local gate now passes: 237 native tests, five documentation
+examples, all 11 actual-IC journeys, strict Clippy in both workspaces, Rustdoc,
+tools/format/link checks, archive/isolated consumer and publication-adapter tests.
+Logs and registry observations: target/evidence/release-0.104.0/. Publication
+will repeat the mandatory gate on committed source; no upload is yet claimed.
+The [transfer contract](../architecture/capture-transfer.md#partial-protocol-adoption--2026-11-16)
+and [setup](../development/setup.md#current-partial-platform-migration) own details.
 
-## Implemented scope and publication
+**Toko Tooling 0.44.11** remains installed through its canonical exporter in both
+workspaces. Its 59-file snapshot changed policy only. CI setup diagnostics retain
+bounded sanitized output and original status, with seven-day failure artifacts.
+Local failure-path and workflow checks pass; hosted upload remains unobserved.
+Those changes are included in the selected release candidate.
+
+Release **[0.103.0](https://crates.io/crates/ic-backup/0.103.0) remains the published
+release**, tagged/pushed at `34e268a866aed8d30ffbdb7d09283d768f36fc65`.
+Its completed publication gate, archive checksum and independent registry replay
+are preserved in [handoff commit 2239e1b](https://github.com/dragginzgame/ic-backup/blob/2239e1bdf9f503dd65c183445f1e3ef72b4076ec/docs/status/current.md)
+and `target/evidence/release-0.103.0/`. This adoption is not a new release.
+
+## Implemented scope
 
 The experimental direct-controller library implements capture, history/latest,
 held sources/payloads, same-ID/network/release restore, original-call recovery and
 completed-target succession. Capture/restore leave the application stopped.
-One recorder preserves spending and original evidence; pending calls never repeat
-and changed/unknown files refuse intact. Completed replay needs no live authority
-or writes. [Capture](../architecture/capture-intent.md),
+One recorder preserves finite spending and exact original evidence; pending calls
+never repeat and changed/unknown files refuse intact. Completed replay requires
+no live authority or writes. [Capture](../architecture/capture-intent.md),
 [transfer](../architecture/capture-transfer.md) and
-[restore](../design/local-store.md#immutable-restore-approval-and-original-custody) own details.
-
-The [20 MiB qualification](../architecture/capture-transfer.md#20-mib-qualification--2026-11-16)
-uses a 22 MiB payload approval, 1 MiB extents, two chunks and 1 GiB evidence.
-Actual-IC capture, interrupted transfer, older-source restore, state verification
-and offline replay pass on Linux. The fixture uses finite 30-minute backend
-idle/hard limits and the optimized profile. Original failed fixtures remain.
-[Publication](../development/publication.md) owns the complete gate and selected
-single-attempt adapter; no automatic version/tag orchestration is installed.
-All four [legacy comparison corrections](../design/legacy-assessment.md#review-corrections--2026-11-16)
-are addressed; smaller code does not establish feature parity or speed.
+[restore](../design/local-store.md#immutable-restore-approval-and-original-custody)
+own these guarantees. Full-history replay remains quadratic; reduced payload IO
+does not establish end-to-end speedup. Measurements belong to the
+[restart design](../design/restart.md#size-maintained-surface-and-repeated-io).
 
 ## Preservation and remaining integration
 
@@ -101,10 +119,10 @@ both locks, six artifacts; archive SHA-256
 Old operations keep their matching readers, IDs, authority and evidence;
 this release migrates no records and changes no legacy/sibling data.
 
-Canic work remains [#5 signing](https://github.com/dragginzgame/canic/issues/5),
-[#6 manager execution/original-result lookup](https://github.com/dragginzgame/canic/issues/6)
-and [#7 fenced recovery](https://github.com/dragginzgame/canic/issues/7), under
-[#1](https://github.com/dragginzgame/canic/issues/1). The [sibling review](../design/sibling-integration.md)
+Canic work remains [Canic #5 signing](https://github.com/dragginzgame/canic/issues/5),
+[Canic #6 manager execution/original-result lookup](https://github.com/dragginzgame/canic/issues/6)
+and [Canic #7 fenced recovery](https://github.com/dragginzgame/canic/issues/7), under
+[Canic #1](https://github.com/dragginzgame/canic/issues/1). The [sibling review](../design/sibling-integration.md)
 owns boundaries: an authenticated manager receipt protocol/surviving ledger,
 bounded signer, continuous application/rewind fence and actual consumer qualification.
 Canic adapters, production HTTPS, actual-IC on macOS and physical power loss remain

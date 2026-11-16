@@ -1,6 +1,7 @@
 //! Re-authored legacy data-admission cases against the extracted implementation.
 use super::super::tests::{chunk, metadata, plan};
 use super::*;
+use ic_platform::management_canister_types::ReadCanisterSnapshotDataResult;
 
 fn reply(bytes: &[u8]) -> Vec<u8> {
     candid_codec::encode_one(

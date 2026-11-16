@@ -13,19 +13,18 @@ use crate::store::{
 };
 use ic_platform::{
     Principal,
-    candid_codec::{
-        self, Encode, Type, Writer,
-        decoder::{
-            Arity, Decode, Error as DecodeError, Limits, Reader, decode_args_with_skip_limit,
-            decode_one_with_skip_limit,
-        },
-    },
+    candid_codec::{self, Encode},
     management_canister_types::{
         CanisterIdRecord, LoadCanisterSnapshotArgs, ReadCanisterSnapshotDataArgs,
         ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult, Snapshot,
         SnapshotDataKind, SnapshotDataOffset, UploadCanisterSnapshotDataArgs,
-        UploadCanisterSnapshotMetadataArgs, UploadCanisterSnapshotMetadataResult,
+        UploadCanisterSnapshotMetadataArgs,
     },
+};
+
+use ic_platform_protocol::{
+    candid::{Error as DecodeError, Limits},
+    management_snapshots::{decode_empty_response, decode_snapshot_allocation},
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -252,7 +251,7 @@ impl<'a> Procedure<'a> {
                 Some(Step::AllocateSnapshot)
             }
             Step::AllocateSnapshot => {
-                let Allocation(value) = decode_one_with_skip_limit(reply, limits(), 0)?;
+                let value = decode_snapshot_allocation(reply, limits())?;
                 if !(1..=256).contains(&value.snapshot_id.len())
                     || self.inventory.iter().any(|s| s.id == value.snapshot_id)
                     || self
@@ -348,40 +347,13 @@ fn limits() -> Limits {
         types: 16,
         work: 8192,
         allocation: 4096,
+        vector: 256,
+        skipping: 0,
     }
 }
 fn unit(reply: &[u8]) -> Result<(), Error> {
-    decode_args_with_skip_limit::<()>(reply, limits(), Arity::Exact, 0).map_err(Error::from)
+    decode_empty_response(reply, limits()).map_err(Error::from)
 }
-struct Allocation(UploadCanisterSnapshotMetadataResult);
-impl Encode for Allocation {
-    const TYPE: &'static Type = UploadCanisterSnapshotMetadataResult::TYPE;
-    fn write(&self, w: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.0.write(w)
-    }
-}
-impl<'a> Decode<'a> for Allocation {
-    fn read(reader: &mut Reader<'a>, wire: i64) -> Result<Self, DecodeError> {
-        let Type::Record([(label, _)]) = Self::TYPE
-            .resolved()
-            .map_err(|_| DecodeError::Unsupported)?
-        else {
-            return Err(DecodeError::Unsupported);
-        };
-        let mut id = None;
-        reader.record(wire, false, |name, ty, r| {
-            if name != *label {
-                return Ok(false);
-            }
-            id = Some(r.bounded_vec::<u8>(ty, 256)?);
-            Ok(true)
-        })?;
-        Ok(Self(UploadCanisterSnapshotMetadataResult {
-            snapshot_id: id.ok_or(DecodeError::Type)?,
-        }))
-    }
-}
-
 impl From<DecodeError> for Error {
     fn from(error: DecodeError) -> Self {
         Self::Reply(error)

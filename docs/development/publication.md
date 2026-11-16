@@ -51,7 +51,7 @@ make publish
 ```
 
 `publish-check` invokes Cargo's real `--dry-run`; `publish` can upload. Both use
-the installed Toko 0.44.5 publication adapter, the fixed `ic-backup` roster and
+the installed Toko 0.44.11 publication adapter, the fixed `ic-backup` roster and
 `crates-io` registry, exact versions from locked metadata and the complete local
 gate. Unknown, duplicate, empty or private package selections refuse. Only a
 command-line `PACKAGE=ic-backup` may narrow the roster; qualification packages

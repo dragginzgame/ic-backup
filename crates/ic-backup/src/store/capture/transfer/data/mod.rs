@@ -35,12 +35,10 @@ impl CaptureTransfer<'_> {
 use super::super::OperationStoreError;
 use crate::store::BackupDigest;
 use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
-use ic_platform::{
-    candid_codec::{
-        self, Encode, Type, Writer,
-        decoder::{Decode, Error as DecodeError, Limits, Reader, decode_one_with_skip_limit},
-    },
-    management_canister_types::{ReadCanisterSnapshotDataResult, SnapshotDataKind},
+use ic_platform::{candid_codec, management_canister_types::SnapshotDataKind};
+use ic_platform_protocol::{
+    candid::{Error as DecodeError, Limits},
+    management_snapshots::decode_snapshot_data,
 };
 use thiserror::Error;
 
@@ -114,7 +112,7 @@ pub(in crate::store) fn decode_reply(reply: &[u8]) -> Result<Vec<u8>, TransferDa
     if reply.len() > MAX_REPLY_BYTES {
         return Err(TransferDataError::ReplyTooLarge);
     }
-    let BoundedData(result) = decode_one_with_skip_limit(
+    let result = decode_snapshot_data(
         reply,
         Limits {
             bytes: MAX_REPLY_BYTES,
@@ -122,43 +120,12 @@ pub(in crate::store) fn decode_reply(reply: &[u8]) -> Result<Vec<u8>, TransferDa
             types: 16,
             work: 8 * 1024 * 1024,
             allocation: 2 * 1024 * 1024,
+            vector: MAX_DATA_BYTES,
+            skipping: 0,
         },
-        0,
     )
     .map_err(TransferDataError::Decode)?;
     Ok(result.chunk)
-}
-
-// Platform owns the DTO, schema, numeric field label and codec. This mapping
-// only imposes Backup's vector cap, before Platform allocates the field payload.
-struct BoundedData(ReadCanisterSnapshotDataResult);
-impl Encode for BoundedData {
-    const TYPE: &'static Type = ReadCanisterSnapshotDataResult::TYPE;
-    fn write(&self, output: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.0.write(output)
-    }
-}
-impl<'a> Decode<'a> for BoundedData {
-    fn read(reader: &mut Reader<'a>, wire: i64) -> Result<Self, DecodeError> {
-        let schema = match Self::TYPE {
-            Type::Deferred(resolve) => resolve(),
-            schema => schema,
-        };
-        let Type::Record([(chunk_label, Type::Vec(Type::Primitive(-5)))]) = schema else {
-            return Err(DecodeError::Unsupported);
-        };
-        let mut chunk = None;
-        reader.record(wire, false, |label, field_type, reader| {
-            if label != *chunk_label {
-                return Ok(false);
-            }
-            chunk = Some(reader.bounded_vec::<u8>(field_type, MAX_DATA_BYTES)?);
-            Ok(true)
-        })?;
-        Ok(Self(ReadCanisterSnapshotDataResult {
-            chunk: chunk.ok_or(DecodeError::Type)?,
-        }))
-    }
 }
 
 /// Typed data-reply refusal, without raw payloads or any new attempt authority.

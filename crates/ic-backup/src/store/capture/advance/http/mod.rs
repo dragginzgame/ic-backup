@@ -6,14 +6,11 @@ use super::{
 use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_host_http::{
-    ReadError, read_body,
-    reqwest::{self, Client, Url, header},
-};
 use ic_platform::{
     canister_sig_creation::extract_raw_root_pk_from_der,
     ic_protocol::{TransportCallResponse, decode_call_response},
 };
+use reqwest::{Client, Url, header};
 use std::{
     net::IpAddr,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -402,13 +399,13 @@ impl BackupHttpTransport {
         {
             return Err(BackupHttpError::Response);
         }
-        let bytes = read_body(response, maximum)
+        let bytes = ic_host_http::body(response, maximum)
             .await
             .map_err(|error| match error {
-                ReadError::DeclaredLength { .. } | ReadError::Limit { .. } => {
-                    BackupHttpError::ResponseLimit
+                ic_host_http::Error::TooLarge { .. } => BackupHttpError::ResponseLimit,
+                ic_host_http::Error::Transport(_) | ic_host_http::Error::Allocation(_) => {
+                    BackupHttpError::Uncertain
                 }
-                ReadError::Transport(_) | ReadError::Allocation(_) => BackupHttpError::Uncertain,
             })?;
         Ok(bytes)
     }

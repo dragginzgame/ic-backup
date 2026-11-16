@@ -13,7 +13,9 @@ use crate::store::{
 };
 use ic_platform::{
     candid_codec::{Reserved, arguments::encode_args},
-    management_canister_types::{CanisterStatusType, SnapshotSource},
+    management_canister_types::{
+        CanisterStatusType, SnapshotSource, UploadCanisterSnapshotMetadataResult,
+    },
 };
 fn encoded(value: &impl Encode) -> Vec<u8> {
     candid_codec::encode_one(value, 2 * 1024 * 1024).unwrap()
@@ -206,7 +208,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
     // Oversized and malformed allocation/unit inputs refuse before unbounded decoding.
     for bytes in [vec![], vec![0; 4097], b"DIDL\x00\x00trailing".to_vec()] {
         assert!(unit(&bytes).is_err());
-        assert!(decode_one_with_skip_limit::<Allocation>(&bytes, limits(), 0).is_err());
+        assert!(decode_snapshot_allocation(&bytes, limits()).is_err());
     }
 }
 
@@ -268,7 +270,18 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             if let Step::Readback(ordinal) = step {
                 assert_eq!(method, "read_canister_snapshot_data");
                 let request: ReadCanisterSnapshotDataArgs =
-                    decode_one_with_skip_limit(&args, limits(), 0).unwrap();
+                    ic_platform::candid_codec::decoder::decode_one_with_skip_limit(
+                        &args,
+                        ic_platform::candid_codec::decoder::Limits {
+                            bytes: 4096,
+                            header: 2048,
+                            types: 16,
+                            work: 8192,
+                            allocation: 4096,
+                        },
+                        0,
+                    )
+                    .unwrap();
                 assert_eq!(request.snapshot_id, [10]);
                 assert_eq!(request.canister_id, plan.request().target.canister);
                 assert_eq!(
@@ -308,4 +321,46 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             result.unwrap();
         }
     }
+}
+
+#[test]
+fn protocol_allocation_bounds_and_exact_empty_results_preserve_legacy_refusals() {
+    // Re-authored from legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
+    // model/ic_snapshot_upload/tests/mod.rs::bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject.
+    // Empty/reused/source IDs remain policy checks in the fixed-procedure matrix.
+    for length in [1, 256] {
+        let id = vec![21; length];
+        let raw = encoded(&UploadCanisterSnapshotMetadataResult {
+            snapshot_id: id.clone(),
+        });
+        assert_eq!(
+            decode_snapshot_allocation(&raw, limits())
+                .unwrap()
+                .snapshot_id,
+            id
+        );
+        for end in 0..raw.len() {
+            assert!(decode_snapshot_allocation(&raw[..end], limits()).is_err());
+        }
+        assert_eq!(
+            decode_snapshot_allocation(&[raw.as_slice(), &[0]].concat(), limits()),
+            Err(DecodeError::Trailing)
+        );
+    }
+    let excessive = encoded(&UploadCanisterSnapshotMetadataResult {
+        snapshot_id: vec![1; 257],
+    });
+    assert_eq!(
+        decode_snapshot_allocation(&excessive, limits()),
+        Err(DecodeError::Limit)
+    );
+    assert!(unit(b"DIDL\0\0").is_ok());
+    assert!(matches!(
+        unit(b"DIDL\0\0\0"),
+        Err(Error::Reply(DecodeError::Trailing))
+    ));
+    assert!(matches!(
+        unit(&encoded(&())),
+        Err(Error::Reply(DecodeError::Arity))
+    ));
 }

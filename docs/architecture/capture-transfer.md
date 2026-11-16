@@ -221,3 +221,41 @@ History `a860d14421b9ff1c61c1dce079cdc6a19316bfd0` and
 upload planning. This fixture adapts their coverage, held-source and original-call
 recovery guarantees to the fixed public loop and actual IC. It imports no legacy
 source or driver architecture; synthetic historical passes are not this proof.
+
+## Partial Protocol adoption — 2026-11-16
+
+Production snapshot-data, restore allocation and exact empty-result decoding now
+use Protocol 0.2.7's selected APIs. Backup's private data/allocation schema wrappers
+are removed (61 net production lines). Original byte/header/type/work/allocation
+ceilings remain explicit; vector ceilings are 1 MiB for data and 256 for allocation,
+and skipped work remains zero. Geometry/hash, nonempty/reused/source snapshot IDs,
+step ordering and finite spending remain Backup policy. Original reply bytes and
+stored encodings do not change. The affected error variants expose Protocol's
+error type, which is a consumer-facing type change for the next release.
+
+Re-reviewed frozen legacy `4ae087fad8c23de712aa60bf569bde4b2b932651`,
+`model/ic_snapshot_data/wire/mod.rs`, data tests and
+`model/ic_snapshot_upload/tests/mod.rs::bounded_reply_identity_exact_empty_tuple_and_wire_extensions_reject`,
+plus migration history `1af7e219c3073395992c316ecaa5e83e74b1aecc`.
+These checks prevent oversized allocation, silent field skipping, altered framing
+and replacement/source-ID reuse. Existing data tests run against the new decoder;
+a re-authored restore regression adds 256/257-byte IDs, every truncated prefix,
+trailing bytes and empty tuple versus one-unit-argument refusal. No legacy source
+was copied. The fixed-procedure matrix still owns empty/reused/source-ID policy.
+
+This is partial acceptance for
+[Platform #11](https://github.com/dragginzgame/ic-platform/issues/11): status,
+list/take, metadata and request DTO migration remain. The old production Platform
+cohort still supplies those APIs; no replacement management DTO or codec was added.
+Qualification signing/proxying uses Platform 0.34.9, while its explicitly named
+old-cohort dev dependency is needed only for the product's current public
+source-read DTO/identity contract. Remove it when that boundary is ported.
+
+Fresh partial-adoption qualification passes 237 native tests, five documentation
+examples, both strict Clippy checks, Rustdoc, all 11 actual-IC journeys (105.69
+seconds) and the isolated archive consumer. The actual signer/proxy use Platform
+0.34.9 against the existing product recorder, including original-request observation
+and full 20 MiB recovery. This is mixed-cohort acceptance, not qualification of
+the still-unported new product certificate/metadata/status boundary. Logs remain
+under `target/evidence/platform-recheck-current/`; failed preparation and original
+IC evidence remain preserved. Neither Platform issue is closed.

@@ -3,7 +3,7 @@
 A standalone host-side Internet Computer backup library. Canic is a required
 integration and owns its adapter, membership, application maintenance and external
 obligations. Backup production depends on Platform and Host, without Canic runtime
-or control-plane crates. The 0.103.0 release is an experimental direct-controller
+or control-plane crates. The 0.104.0 release is an experimental direct-controller
 library; qualification packages remain private.
 
 The [packaged consumer guide](crates/ic-backup/README.md) explains required adapters,
@@ -40,9 +40,9 @@ restore. Its fixed loop allocates/uploads, compares metadata and every byte, loa
 and verifies stopped state, then derives `LoadedStopped` from the original journal.
 Capture and restore share one recorder and recovery boundary. Canic process,
 manager execution and maintenance/fence adapters are tracked in Canic
-[#5](https://github.com/dragginzgame/canic/issues/5),
-[#6](https://github.com/dragginzgame/canic/issues/6) and
-[#7](https://github.com/dragginzgame/canic/issues/7).
+[Canic #5](https://github.com/dragginzgame/canic/issues/5),
+[Canic #6](https://github.com/dragginzgame/canic/issues/6) and
+[Canic #7](https://github.com/dragginzgame/canic/issues/7).
 The selected direct-controller library workflow is implemented; full Canic
 integration remains dependent on those concrete consumers.
 

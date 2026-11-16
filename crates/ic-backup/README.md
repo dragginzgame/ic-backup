@@ -1,5 +1,10 @@
 # IC Backup
 
+In 0.104.0, snapshot-data and restore-reply decode errors carry
+`ic_platform_protocol::candid::Error`. Consumers matching these errors must update
+their imports and patterns. The remaining public Platform types still use 0.33.7;
+this is partial Platform adoption. Stored formats and retained evidence are unchanged.
+
 In 0.103.0, commitment arguments and results use
 `ic_backup::store::BackupDigest`. Replace the former Host `Sha256Digest` import;
 `compute`, `from_bytes`, `as_bytes` and canonical lowercase parsing/display remain
@@ -19,7 +24,7 @@ product and is still unfinished. A host controlling a manager canister does not
 thereby control that manager's children. No manager route is implemented here.
 
 This incompatible restart replaces legacy `ic-backup`/`ic-backup-agent` APIs.
-Version 0.103.0 remains an experimental restart release. Rust 1.100 or later is
+Version 0.104.0 remains an experimental restart release. Rust 1.100 or later is
 required. Native checks target Linux x86-64 and macOS ARM64/x86-64;
 actual-IC qualification currently runs locally on Linux using PocketIC.
 

@@ -6,13 +6,13 @@ use ic_backup::store::{
     CaptureRequest, CaptureTiming, OperationLimits, OperationOptions, OperationPlan,
     OperationProgress, OperationStep, RestoreRequest, ScanLimits,
 };
-use ic_platform::{
+use ic_platform_legacy::{
     Principal,
     management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind},
 };
 use ic_testkit::{
-    pic::{PocketIcStartupConfig, server_assets},
     pocket_ic::{CanisterSettings, PocketIcBuilder, common::rest::BlobCompression},
+    server::PreparedServer,
 };
 use std::{
     fs,
@@ -26,10 +26,10 @@ use std::{
 };
 mod consumer;
 mod proxy;
+mod server;
 
-#[path = "../../consumer/src/authority/mod.rs"]
-mod authority;
 use authority::{FixtureGuard, FixtureSigner, der, now};
+use ic_backup_consumer::authority;
 type Connection = BackupConnection<FixtureSigner, FixtureGuard>;
 #[derive(Clone, Copy, Debug)]
 enum Mode {
@@ -99,8 +99,8 @@ fn run(mode: Mode) {
         .unwrap();
     let assets = std::env::var_os("IC_BACKUP_TESTKIT_DIRECTORY")
         .map(PathBuf::from)
-        .unwrap_or_else(|| workspace.parent().unwrap().join(".tools/testkit"));
-    let binary = server_assets::check(&assets).expect("run make install-testkit-server");
+        .unwrap_or_else(|| workspace.parent().unwrap().join(".tools/testkit-server"));
+    let prepared = PreparedServer::check(&assets).expect("run make install-testkit-server");
     let evidence = workspace.join("target/fixtures").join(format!(
         "capture-{mode:?}-{}-{}",
         std::process::id(),
@@ -111,7 +111,7 @@ fn run(mode: Mode) {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(exercise(&evidence, binary, mode));
+        .block_on(exercise(&evidence, prepared, mode));
 }
 fn leb(mut value: u64) -> Vec<u8> {
     let mut out = Vec::new();
@@ -172,31 +172,27 @@ async fn complete(
     }
     panic!("fixed capture did not complete within original call allowance")
 }
-async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
+async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
     let capacity = matches!(mode, Mode::Capacity);
-    let mut owned = PocketIcStartupConfig::Spawn {
-        server_binary: binary,
-        timeout: Duration::from_secs(30),
-        server_hard_ttl: Some(Duration::from_secs(if capacity { 1800 } else { 600 })),
-        // Large local replay/source checks can exceed the server's default idle TTL.
-        server_idle_ttl: capacity.then(|| Duration::from_secs(1800)),
-        server_output_files: Some((
-            evidence.join("server.stdout"),
-            evidence.join("server.stderr"),
-        )),
-    }
-    .build_instance(
-        PocketIcBuilder::new()
-            .with_nns_subnet()
-            .with_application_subnet()
-            .with_initial_time(SystemTime::now().into())
-            .with_max_request_time_ms(Some(30_000)),
-    )
-    .await
-    .unwrap();
+    let mut server = server::RetainedServer::start(
+        prepared,
+        evidence,
+        Duration::from_secs(if capacity { 1800 } else { 600 }),
+    );
+    let mut owned = server
+        .server()
+        .instance(
+            PocketIcBuilder::new()
+                .with_nns_subnet()
+                .with_application_subnet()
+                .with_initial_time(SystemTime::now().into()),
+            Duration::from_secs(30),
+        )
+        .await
+        .unwrap();
     let sender = Principal::self_authenticating(der());
     let native_sender = sender.as_slice().try_into().unwrap();
-    let pic = owned.instance_mut();
+    let pic = owned.client_mut();
     let canister = pic
         .create_canister_with_settings(
             Some(native_sender),
@@ -416,7 +412,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
             assert_eq!(operation.inspect().unwrap().observations_reserved, 1);
         }
         let snapshots = owned
-            .instance_mut()
+            .client_mut()
             .list_canister_snapshots(canister, Some(native_sender))
             .await
             .unwrap();
@@ -430,7 +426,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
             .join("journal.bin");
         drop(operation);
         proxy.finish();
-        owned.close().await;
+        server::close(owned, &mut server).await;
         allowed.store(false, Ordering::SeqCst);
         let mut operation = store
             .open_capture(&plan.request().operation_id, approval)
@@ -602,17 +598,14 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         .join("journal.bin");
     // Change actual stable bytes independently so successful restore must rewind state.
     owned
-        .instance_mut()
+        .client_mut()
         .set_stable_memory(
             canister,
             vec![0xa5; stable.len()],
             BlobCompression::NoCompression,
         )
         .await;
-    assert_ne!(
-        owned.instance_mut().get_stable_memory(canister).await,
-        stable
-    );
+    assert_ne!(owned.client_mut().get_stable_memory(canister).await, stable);
     if let Some(child) = &consumer {
         drop(restoring);
         child.call("restore-step", &restore_id, restore_approval, true);
@@ -669,14 +662,14 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         assert_eq!(fs::read(&restore_path).unwrap(), pending);
         assert_eq!(
             owned
-                .instance_mut()
+                .client_mut()
                 .list_canister_snapshots(canister, Some(native_sender))
                 .await
                 .unwrap()
                 .len(),
             3
         );
-        let actual = owned.instance_mut().get_stable_memory(canister).await;
+        let actual = owned.client_mut().get_stable_memory(canister).await;
         if matches!(mode, Mode::RestoreLoad | Mode::WriteFailure) {
             assert_eq!(actual, stable);
         } else {
@@ -712,7 +705,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         drop(restoring);
         drop(restore);
         proxy.finish();
-        owned.close().await;
+        server::close(owned, &mut server).await;
         allowed.store(false, Ordering::SeqCst);
         let mut restoring = store.open_restore(&restore_id, restore_approval).unwrap();
         assert_eq!(restoring.plan().encoded(), restore_intent);
@@ -759,7 +752,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
     assert_eq!(loaded.source_operation_id, receipt.bundle_id);
     assert_eq!(restoring.inspect().unwrap().completed, Some(loaded.clone()));
     let status = owned
-        .instance_mut()
+        .client_mut()
         .canister_status(canister, Some(native_sender))
         .await
         .unwrap();
@@ -768,13 +761,10 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
         status.module_hash.unwrap(),
         BackupDigest::compute(&wasm).as_bytes()
     );
-    assert_eq!(
-        owned.instance_mut().get_stable_memory(canister).await,
-        stable
-    );
+    assert_eq!(owned.client_mut().get_stable_memory(canister).await, stable);
     assert_eq!(
         owned
-            .instance_mut()
+            .client_mut()
             .list_canister_snapshots(canister, Some(native_sender))
             .await
             .unwrap()
@@ -804,7 +794,7 @@ async fn exercise(evidence: &Path, binary: PathBuf, mode: Mode) {
     let signatures = calls.load(Ordering::SeqCst);
     drop(restore);
     proxy.finish();
-    owned.close().await;
+    server::close(owned, &mut server).await;
     allowed.store(false, Ordering::SeqCst);
     let mut operation = store.open_capture(&receipt.bundle_id, approval).unwrap();
     assert_eq!(

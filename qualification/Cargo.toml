@@ -9,12 +9,16 @@ license-file = "../LICENSE.md"
 publish = false
 
 [workspace.dependencies]
-ic-backup = { path = "../crates/ic-backup", version = "0.103.0" }
-ic-platform = { version = "0.33.7", default-features = false, features = ["ed25519", "ic-protocol", "principal-self-authenticating"] }
-ic-testkit = { version = "0.106.0", default-features = false }
+ic-backup = { path = "../crates/ic-backup", version = "0.104.0" }
+ic-backup-consumer = { path = "consumer" }
+ic-host-process = "0.80.2"
+ic-platform = { version = "0.34.9", default-features = false, features = ["ed25519", "ingress-packets"] }
+# The current product source-read API still exposes this cohort's management DTOs.
+ic-platform-legacy = { package = "ic-platform", version = "0.33.7", default-features = false, features = ["management-canister-types", "principal-self-authenticating"] }
+ic-testkit = { version = "0.107.4", default-features = false, features = ["managed-server"] }
 tokio = { version = "1.53.3", default-features = false, features = ["rt", "net", "time"] }
 
-toko-tooling = "=0.44.5"
+toko-tooling = "=0.44.11"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"
