@@ -1,94 +1,72 @@
 # Current handoff — 2026-11-16
 
-Local adoption selects **Host HTTP 0.80.0** in both graphs and **Testkit 0.107.3**
-in the preceding private qualification pass. Backup directly owns Reqwest 0.13.5 with the original
-TLS/no-retry/redirect/proxy/deadline policy; Host only bounds complete response
-bodies. No public operation or stored format changed. Obsolete Host 0.79 graph
-edges are removed; FS/Artifacts/Process now select 0.80.2 where used.
+**[ic-backup 0.104.0](https://crates.io/crates/ic-backup/0.104.0) is published.**
+Release commit and tag `v0.104.0` are pushed to `origin/main` at
+`2941ca1324a95c1afdb57e33cef79362c28b0731`.
+The minor bump covers public snapshot-data/restore decode errors now carrying
+Protocol's codec error type; stored formats and retained evidence are unchanged.
+The packaged README documents consumer migration. Full Platform adoption remains
+unfinished and is not a claim of this release.
 
-Testkit's removed CLI/pic wrapper is replaced by its prepared-server and explicit
-server/instance owners. The private qualification example handles setup/admission;
-`make install-testkit-server` downloads only during explicit setup. Assets use
-`.tools/testkit-server/`; old assets remain untouched. Fixtures retain bounded
-server output and original process/cleanup reports, including during unwinding.
-The 20 MiB journey retains its finite 30-minute server lifetime. Permission refusal
-of the old group-writable archive was resolved using a private copy; failed
-preparation logs and the original archive remain intact.
+The complete publication gate passes: **237 native tests**, five documentation
+examples, **all 11 actual-IC journeys (102.26 seconds)**, strict Clippy in both
+workspaces, Rustdoc, tools/format/link checks, archive/isolated normal consumer and
+publication-adapter regressions. Actual-IC cases include 20 MiB capture/restore,
+original-call recovery and separate-process replay. Hosted CI was not awaited.
+The single successful upload attempt is `target/publication/publish.selection.bcLVA8`;
+release evidence is under `target/evidence/release-0.104.0/`.
+Independent registry download has SHA-256
+`233bd3de78ea8aab3040eada7f44a5396ef063aff2c32e30c7d5d80955759394`.
+Its embedded source matches the tag, all 96 tracked package source files match,
+and a fresh registry-backed consumer builds without Testkit/PocketIC and replays
+completed 20 MiB capture and restore offline. The post-push review found no new
+competing recovery path, journal or authority input in this release.
 
-Fresh qualification passes: 236 native tests, five documentation examples, strict
-Clippy in both workspaces and all 11 actual-IC journeys (107.11 seconds), including
-20 MiB capture/restore and separate-process recovery. The archive/isolated normal
-consumer, explicit setup reuse, snapshot/tool checks, both workspace format checks
-and 121 documentation links pass. Provenance,
-commands and preparation ownership are in [setup](../development/setup.md);
-legacy/recovery rationale is in the [capture contract](../architecture/capture-intent.md#host-http-080--testkit-0107-adoption--2026-11-16).
-Logs/archives are under `target/evidence/supplier-refresh/`. These are prior-pass results; the release candidate qualification is recorded below.
+## Selected suppliers and remaining migration
 
-**Partial Platform adoption now runs in the actual callers.** Product decoding
-of snapshot-data, restore allocation and exact empty replies uses Protocol 0.2.7;
-61 net lines of private production schema decoding were removed. Original bounds,
-geometry/hash/identity policy and evidence formats remain intact. Decode errors
-now expose Protocol's error type. Nine existing data regressions and the added
-allocation/empty-result boundaries pass; the full native suite passes 237 tests
-and five documentation examples. Both strict Clippy checks pass.
+Product uses Host FS/Artifacts 0.80.2, HTTP 0.80.0, Protocol 0.2.8 and Platform
+0.33.7. Backup owns Reqwest 0.13.5 and its original TLS/no-retry/redirect/proxy/
+deadline policy; Host bounds complete response bodies. Obsolete Host 0.79 edges
+are removed. Protocol owns data/allocation/exact-empty decoding, removing 61 net
+production schema-decoder lines while preserving policy and resource bounds.
 
-The actual-IC signer and proxy use Platform 0.34.9, including offline bounded
-encoding before Backup retains/submits the exact request. The shared private
-fixture authority uses ordinary library imports; its source-path override is gone.
-All 11 actual-IC journeys pass in 105.69 seconds, including 20 MiB, original
-observation/reply recovery and separate-process replay. The isolated archive
-consumer, Rustdoc, formatting, snapshot/tool admission and 122 doc links pass. Logs are in `target/evidence/platform-recheck-current/`.
-Qualification now selects Testkit 0.107.4, whose managed-server source is unchanged.
-A resolution probe confirmed 0.107.3 remains compatible with its codec feature
-disabled; the patch is not required by Protocol 0.2.7.
+Qualification uses Platform 0.34.9 for actual external signing/proxy admission
+and Testkit 0.107.4 for prepared-server/instance ownership. Explicit old Platform
+0.33.7 dev selection remains necessary at the product source-read DTO/Principal
+boundary. Fixture authority uses ordinary library imports. Original server logs,
+process/cleanup evidence, journals and failed fixtures remain retained.
+Setup downloads only explicitly into `.tools/testkit-server/`; old
+`.tools/testkit/` assets remain untouched. The 20 MiB case has a finite
+30-minute server lifetime. [Setup](../development/setup.md) owns preparation.
 
-This remains partial acceptance for [Platform #11](https://github.com/dragginzgame/ic-platform/issues/11)
-and [Platform #12](https://github.com/dragginzgame/ic-platform/issues/12).
-Product Platform 0.33.7 still owns status/list/take/metadata, request DTOs,
-certificate verification and retained-envelope authentication. Qualification's
-explicit `ic-platform-legacy` dev dependency is needed at the current product
-source-read DTO/Principal boundary. Next: port those remaining public types and
-callers, remove that old-cohort dependency, then repeat affected qualification.
-A remaining response-fixture construction gap is now reported in Platform #11:
-Protocol 0.2.8 supplies request encoders/reply decoders but no public bounded
-constructor for the status/snapshot/metadata/data/allocation replies used by native
-recovery fixtures. A registry compile probe confirms the missing methods; private
-codec internals cannot replace that public boundary. Earlier static golden probes
-did not cover these dynamic fixture callers. Evidence and checksums are under
-`target/evidence/platform-final-port/`. Preserve all native rejection coverage;
-do not retain the old crate solely as a hidden fixture codec or copy its generic
-codec into Backup. No sibling source was edited.
+Release-time registry review found these Host/Testkit/new Platform versions and
+Toko Tooling 0.44.11 current. Protocol 0.2.8 leaves the management codec unchanged
+from the earlier 0.2.7 pass, and is now qualified in the release gate.
+Earlier evidence remains in `target/evidence/supplier-refresh/` and
+`target/evidence/platform-recheck-current/`. Testkit 0.107.3 also resolves with
+Protocol 0.2.7 when its optional codec feature is disabled; 0.107.4 was not required
+for that compatibility. Their managed-server sources are byte-identical.
 
-The maintainer's subsequent deploy request selects **0.104.0** for the qualified
-partial adoption, without claiming completion of Platform #11/#12. The minor bump
-covers public Protocol decode-error types; stored formats remain unchanged.
-The baseline permits release of a qualified existing dependency selection while
-an optional upgrade is blocked. Product Platform 0.33.7 and the qualification
-DTO bridge remain necessary for the unmigrated callers above.
-Release-time registry review confirms Host FS/Artifacts/Process 0.80.2, HTTP
-0.80.0, Testkit 0.107.4, Platform 0.34.9 and Toko Tooling 0.44.11 are current.
-Both current locks select Protocol 0.2.8; its selected management codec is unchanged
-from the prior 0.2.7 pass. The release gate will qualify 0.2.8 with the matching
-updated manifest requirement. Full Platform migration remains deferred to #11/#12.
-The complete 0.104.0 local gate now passes: 237 native tests, five documentation
-examples, all 11 actual-IC journeys, strict Clippy in both workspaces, Rustdoc,
-tools/format/link checks, archive/isolated consumer and publication-adapter tests.
-Logs and registry observations: target/evidence/release-0.104.0/. Publication
-will repeat the mandatory gate on committed source; no upload is yet claimed.
+Remaining [Platform #11](https://github.com/dragginzgame/ic-platform/issues/11)
+and [Platform #12](https://github.com/dragginzgame/ic-platform/issues/12) work:
+port product status/list/take/metadata, request DTOs, certificate verification and
+retained-envelope authentication, then remove the old dependency and requalify.
+The response-fixture construction gap is documented in
+[Platform #11](https://github.com/dragginzgame/ic-platform/issues/11#issuecomment-6931401980):
+Protocol 0.2.8 lacks public bounded constructors for dynamic recovery replies.
+Evidence is in `target/evidence/platform-final-port/`. Preserve rejection coverage;
+do not copy the generic legacy codec or retain an old crate solely as a hidden
+fixture encoder. No sibling source was edited. The baseline permits this qualified
+partial release while the remaining upgrade is blocked; neither issue is closed.
 The [transfer contract](../architecture/capture-transfer.md#partial-protocol-adoption--2026-11-16)
-and [setup](../development/setup.md#current-partial-platform-migration) own details.
+owns decoder and legacy-regression rationale.
 
-**Toko Tooling 0.44.11** remains installed through its canonical exporter in both
-workspaces. Its 59-file snapshot changed policy only. CI setup diagnostics retain
-bounded sanitized output and original status, with seven-day failure artifacts.
-Local failure-path and workflow checks pass; hosted upload remains unobserved.
-Those changes are included in the selected release candidate.
-
-Release **[0.103.0](https://crates.io/crates/ic-backup/0.103.0) remains the published
-release**, tagged/pushed at `34e268a866aed8d30ffbdb7d09283d768f36fc65`.
-Its completed publication gate, archive checksum and independent registry replay
-are preserved in [handoff commit 2239e1b](https://github.com/dragginzgame/ic-backup/blob/2239e1bdf9f503dd65c183445f1e3ef72b4076ec/docs/status/current.md)
-and `target/evidence/release-0.103.0/`. This adoption is not a new release.
+Toko Tooling 0.44.11 is installed through its canonical exporter in both workspaces.
+Its 59-file snapshot is admitted. CI setup retains bounded sanitized diagnostics
+with original failure status and seven-day artifacts; local failure-path tests
+pass, while hosted artifact retrieval remains unobserved.
+Previous 0.103.0 publication evidence remains in `target/evidence/release-0.103.0/`
+and [handoff commit 2239e1b](https://github.com/dragginzgame/ic-backup/blob/2239e1bdf9f503dd65c183445f1e3ef72b4076ec/docs/status/current.md).
 
 ## Implemented scope
 
