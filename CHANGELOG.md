@@ -16,6 +16,7 @@
   cold reopening and offline replay under explicit payload/evidence allowances.
 - Verify the packaged README and an isolated archive consumer; qualify the shared
   publication caller's selection, validation and single-attempt failure behavior.
+  Nested caller fixtures retain their own evidence and timing scope.
 - Explicitly select blocking IO for accepted HTTP/TLS fixture and IC proxy
   connections, preserving timeouts when macOS inherits the listener's nonblocking mode.
 - Recognize peer reset as well as EOF when observing HTTP cancellation; timeouts,

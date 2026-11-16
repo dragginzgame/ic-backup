@@ -14,6 +14,11 @@ Release supplier review found the selected Host 0.79.0, Platform 0.33.7,
 Testkit 0.106.0 and Tooling 0.44.4 are the current stable non-yanked registry
 versions. No supplier changed; only Backup's entries changed in both locks.
 Evidence is under `target/evidence/release-0.102.1/`.
+The first release gate passed native/docs, all eleven IC cases and the archive
+consumer, then exposed inherited publication-evidence paths in the nested caller
+fixture. No upload was dispatched. The fixture now owns its evidence path and
+excludes parent timing records; the complete gate must rerun because the current
+adapter has no qualified partial-gate reuse.
 
 ## Publication preparation
 

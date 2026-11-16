@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Nested publication validation must not write synthetic events into its parent's
+# attempt journal. Each fixture owns its own publication directory below.
+unset RELEASE_TIMING_JOURNAL RELEASE_TIMING_PARENT
 # Exercise Backup's actual Make declaration and shared caller. Only the expensive
 # validation command and Cargo publication effect are substituted, never uploaded.
 root="$(git rev-parse --show-toplevel)"
@@ -51,7 +54,8 @@ export PUBLICATION_REAL_CARGO="$real_cargo"
 export PUBLICATION_REAL_MAKE="$real_make"
 export PATH="$fixture/target/bin:$PATH"
 publication_check() {
-    make --no-print-directory "MAKE_COMMAND=$fixture/target/bin/verify" publish-check "$@"
+    make --no-print-directory "MAKE_COMMAND=$fixture/target/bin/verify" \
+        "CARGO_PUBLISH_EVIDENCE_ROOT=$fixture/target/publication" publish-check "$@"
 }
 expect_failure() {
     if "$@" > target/refusal.log 2>&1; then
