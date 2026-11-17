@@ -4,11 +4,8 @@ use super::{
     fixtures::signatures::{Scheme, change, fixture as signed_request},
     *,
 };
-use ic_platform::certification::{
-    HashTree, empty, fork,
-    historical::{self, TimePolicy, TimeWindow},
-    labeled, leaf, pruned,
-};
+use ic_platform::certificate::construction::{HashTree, empty, fork, labeled, leaf, pruned};
+use ic_platform::certificate::{TimePolicy, TimeWindow};
 
 fn window(reference_ns: u64) -> TimeWindow {
     TimeWindow {
@@ -40,13 +37,13 @@ fn original(
             arg,
             ingress_expiry,
             ..
-        } = envelope.content.to_mut()
+        } = &mut envelope.content
         {
             *method_name = call.method_name().into();
             *arg = call.arguments(&p).unwrap();
             *ingress_expiry = 150;
         }
-        envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+        envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     });
     r.expires_ns = 150;
     r.observation = status_certificate_observation(TimePolicy {
@@ -110,7 +107,7 @@ fn original_calls_and_direct_keys_use_separate_observation_time_without_rewritin
             assert!(matches!(
                 certificate::call_certificate_evidence(&p, &a, &r, &proof, &der(1), call),
                 Err(StatusCertificateError::Certificate(
-                    historical::Error::TimeOutsideWindow
+                    ic_platform::certificate::VerifyError::TimeOutsideWindow
                 ))
             ));
         }
@@ -169,12 +166,12 @@ fn original_request_signature_sender_method_and_content_remain_mandatory() {
             1 => changed.request_id[0] ^= 1,
             2 => changed.expires_ns += 1,
             3 => change(&mut changed, |e| {
-                if let EnvelopeContent::Call { arg, .. } = e.content.to_mut() {
+                if let EnvelopeContent::Call { arg, .. } = &mut e.content {
                     arg.push(0);
                 }
             }),
             _ => change(&mut changed, |e| {
-                if let EnvelopeContent::Call { sender, .. } = e.content.to_mut() {
+                if let EnvelopeContent::Call { sender, .. } = &mut e.content {
                     *sender = [].as_slice().try_into().unwrap();
                 }
             }),
@@ -197,7 +194,7 @@ fn original_request_signature_sender_method_and_content_remain_mandatory() {
         Err(CaptureObservationError::Request(_))
     ));
     let mut fields = p.request().clone();
-    fields.target.canister = ic_platform::Principal::from_slice(&[99]);
+    fields.target.canister = ic_platform_types::Principal::from_slice(&[99]);
     let other = CapturePolicy::new(fields).unwrap();
     assert!(matches!(
         observe(&other, &a, &r, &proof, policy()),
@@ -380,7 +377,9 @@ fn delegation_range_and_its_separate_time_window_remain_mandatory() {
     assert!(matches!(
         observe(&p, &a, &r, &foreign, limits),
         Err(CaptureObservationError::Certificate(
-            StatusCertificateError::Certificate(historical::Error::NotAuthorized)
+            StatusCertificateError::Certificate(
+                ic_platform::certificate::VerifyError::NotAuthorized
+            )
         ))
     ));
     let stale = CaptureObservationPolicy {
@@ -393,7 +392,9 @@ fn delegation_range_and_its_separate_time_window_remain_mandatory() {
     assert!(matches!(
         observe(&p, &a, &r, &proof, stale),
         Err(CaptureObservationError::Certificate(
-            StatusCertificateError::Certificate(historical::Error::TimeOutsideWindow)
+            StatusCertificateError::Certificate(
+                ic_platform::certificate::VerifyError::TimeOutsideWindow
+            )
         ))
     ));
 }

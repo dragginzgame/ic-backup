@@ -1,11 +1,9 @@
 //! Native held-source regressions; synthetic bytes do not qualify IC effects.
 use super::*;
-use ic_platform::{
-    candid_codec::Reserved,
-    management_canister_types::{
-        CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotDataArgs,
-        ReadCanisterSnapshotMetadataResult, SnapshotDataKind, SnapshotSource,
-    },
+use ic_platform_protocol::management_snapshots::Extent;
+use ic_platform_protocol::management_snapshots::Reserved;
+use ic_platform_protocol::management_snapshots::{
+    LowMemoryHook, ReadDataArgs, ReadKind, SnapshotChunk, SnapshotMetadata, SnapshotSource, Timer,
 };
 
 impl Fixture {
@@ -18,9 +16,9 @@ impl Fixture {
             )
             .unwrap()
     }
-    fn request(&self, kind: SnapshotDataKind) -> ReadCanisterSnapshotDataArgs {
-        ReadCanisterSnapshotDataArgs {
-            canister_id: ic_platform::Principal::from_text(&self.record.canister).unwrap(),
+    fn request(&self, kind: ReadKind) -> ReadDataArgs {
+        ReadDataArgs {
+            canister_id: ic_platform_types::Principal::from_text(&self.record.canister).unwrap(),
             snapshot_id: vec![1, 2],
             kind,
         }
@@ -46,7 +44,7 @@ fn source_reads_follow_exact_original_schedule_without_reopening_by_absolute_pat
     request.limits.network_requests = 8192;
     request.limits.signing_requests = 8192;
     let plan = CapturePolicy::new(request).unwrap();
-    let metadata = ReadCanisterSnapshotMetadataResult {
+    let metadata = SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
         taken_at_timestamp: 100,
         canister_version: 1,
@@ -55,11 +53,11 @@ fn source_reads_follow_exact_original_schedule_without_reopening_by_absolute_pat
         stable_memory_size: 32_769,
         globals: vec![],
         certified_data: vec![],
-        global_timer: Some(CanisterTimer::Inactive),
-        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::ConditionNotSatisfied),
+        global_timer: Some(Timer::Inactive),
+        on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
         wasm_chunk_store: [b"".as_slice(), b"stored chunk"]
             .into_iter()
-            .map(|bytes| ChunkHash {
+            .map(|bytes| SnapshotChunk {
                 hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
             })
             .collect(),
@@ -101,9 +99,9 @@ fn arbitrary_bounded_ranges_cross_blocks_and_preserve_exact_bytes() {
             let offset = offset as u64;
             let size = size as u64;
             let kind = match region {
-                0 => SnapshotDataKind::WasmModule { offset, size },
-                1 => SnapshotDataKind::WasmMemory { offset, size },
-                _ => SnapshotDataKind::StableMemory { offset, size },
+                0 => ReadKind::WasmModule(Extent { offset, size }),
+                1 => ReadKind::WasmMemory(Extent { offset, size }),
+                _ => ReadKind::StableMemory(Extent { offset, size }),
             };
             assert_eq!(
                 source.read_data(&fixture.request(kind)).unwrap(),
@@ -114,9 +112,9 @@ fn arbitrary_bounded_ranges_cross_blocks_and_preserve_exact_bytes() {
     let chunk = vec![19; BLOCK];
     assert_eq!(
         source
-            .read_data(&fixture.request(SnapshotDataKind::WasmChunk {
+            .read_data(&fixture.request(ReadKind::WasmChunk(SnapshotChunk {
                 hash: BackupDigest::compute(&chunk).as_bytes().to_vec()
-            }))
+            })))
             .unwrap(),
         chunk
     );
@@ -126,15 +124,15 @@ fn arbitrary_bounded_ranges_cross_blocks_and_preserve_exact_bytes() {
 fn invalid_identity_range_and_chunk_requests_leave_the_source_usable() {
     let fixture = Fixture::new("source-invalid-request");
     let mut source = fixture.source();
-    let good = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 });
-    let mut wrong_target = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 });
-    wrong_target.canister_id = ic_platform::Principal::anonymous();
+    let good = fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 8 }));
+    let mut wrong_target = fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 8 }));
+    wrong_target.canister_id = ic_platform_types::Principal::anonymous();
     assert!(matches!(
         source.read_data(&wrong_target),
         Err(PayloadReadError::Request)
     ));
     for id in [vec![], vec![1], vec![2, 1], vec![1; 257]] {
-        let mut wrong = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 });
+        let mut wrong = fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 8 }));
         wrong.snapshot_id = id;
         assert!(matches!(
             source.read_data(&wrong),
@@ -142,19 +140,19 @@ fn invalid_identity_range_and_chunk_requests_leave_the_source_usable() {
         ));
     }
     for kind in [
-        SnapshotDataKind::WasmModule { offset: 0, size: 0 },
-        SnapshotDataKind::WasmModule { offset: 8, size: 1 },
-        SnapshotDataKind::WasmMemory { offset: 0, size: 1 },
-        SnapshotDataKind::StableMemory {
+        ReadKind::WasmModule(Extent { offset: 0, size: 0 }),
+        ReadKind::WasmModule(Extent { offset: 8, size: 1 }),
+        ReadKind::WasmMemory(Extent { offset: 0, size: 1 }),
+        ReadKind::StableMemory(Extent {
             offset: 0,
             size: 1024 * 1024 + 1,
-        },
-        SnapshotDataKind::StableMemory {
+        }),
+        ReadKind::StableMemory(Extent {
             offset: u64::MAX,
             size: 1,
-        },
-        SnapshotDataKind::WasmChunk { hash: vec![0; 31] },
-        SnapshotDataKind::WasmChunk { hash: vec![0; 32] },
+        }),
+        ReadKind::WasmChunk(SnapshotChunk { hash: vec![0; 31] }),
+        ReadKind::WasmChunk(SnapshotChunk { hash: vec![0; 32] }),
     ] {
         assert!(matches!(
             source.read_data(&fixture.request(kind)),
@@ -164,9 +162,9 @@ fn invalid_identity_range_and_chunk_requests_leave_the_source_usable() {
     assert_eq!(source.read_data(&good).unwrap(), b"\0asm\x01\0\0\0");
     assert!(
         source
-            .read_data(&fixture.request(SnapshotDataKind::WasmChunk {
+            .read_data(&fixture.request(ReadKind::WasmChunk(SnapshotChunk {
                 hash: BackupDigest::compute(b"").as_bytes().to_vec()
-            }))
+            })))
             .unwrap()
             .is_empty()
     );
@@ -183,7 +181,7 @@ fn same_inode_same_length_corruption_is_caught_and_handle_stays_invalidated() {
         original_identity,
         ic_host_fs::FileId::from_metadata(&fs::metadata(&path).unwrap())
     );
-    let request = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 });
+    let request = fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 8 }));
     assert!(matches!(
         source.read_data(&request),
         Err(PayloadReadError::Store(StoreError::PayloadDigest { .. }))
@@ -204,7 +202,7 @@ fn replacement_even_with_identical_bytes_refuses_and_preserves_both_files() {
     fs::rename(&path, &retained).unwrap();
     write_file(&path, b"\0asm\x01\0\0\0");
     assert!(matches!(
-        source.read_data(&fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 1 })),
+        source.read_data(&fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 1 }))),
         Err(PayloadReadError::Store(StoreError::CustodyChanged))
     ));
     assert_eq!(fs::read(path).unwrap(), fs::read(retained).unwrap());
@@ -257,7 +255,7 @@ fn changed_member_length_manifest_or_tree_cannot_return_source_bytes() {
             .unwrap(),
             _ => unreachable!(),
         }
-        let request = fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 1 });
+        let request = fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 1 }));
         assert!(
             matches!(source.read_data(&request), Err(PayloadReadError::Store(_))),
             "{change}"
@@ -280,7 +278,7 @@ fn held_source_follows_root_rename_and_never_reads_a_replacement_store() {
     let _replacement = BackupStore::initialize(original_root).unwrap();
     assert_eq!(
         source
-            .read_data(&fixture.request(SnapshotDataKind::WasmModule { offset: 0, size: 8 }))
+            .read_data(&fixture.request(ReadKind::WasmModule(Extent { offset: 0, size: 8 })))
             .unwrap(),
         b"\0asm\x01\0\0\0"
     );

@@ -2,9 +2,9 @@
 #[cfg(test)]
 use super::CapturePolicy;
 use super::OperationStoreError;
-use ic_platform::ic_protocol::{EnvelopeContent, decode_call_content_strict};
+use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
 #[cfg(test)]
-use ic_platform::{candid_codec, management_canister_types::CanisterIdRecord};
+use ic_platform_protocol::management_snapshots::CanisterArgs;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 mod call;
@@ -118,12 +118,10 @@ pub struct StatusEvidence {
 
 #[cfg(test)]
 pub(in crate::store) fn arguments(plan: &CapturePolicy) -> Result<Vec<u8>, OperationStoreError> {
-    candid_codec::encode_one(
-        &CanisterIdRecord {
-            canister_id: plan.request().target.canister,
-        },
-        256,
-    )
+    (CanisterArgs {
+        canister_id: plan.request().target.canister,
+    })
+    .encode(256)
     .map_err(|_| OperationStoreError::StatusAdmission)
 }
 
@@ -162,15 +160,14 @@ impl PreparedStatus {
 
     fn validate_direct_call(
         &self,
-        expected: ic_platform::Principal,
+        expected: ic_platform_types::Principal,
         method: &str,
         arguments: &[u8],
     ) -> Result<(), OperationStoreError> {
-        let content = decode_call_content_strict(
-            &self.envelope,
-            crate::store::limits::REQUEST_BYTES as usize,
-        )
-        .map_err(|_| OperationStoreError::StatusAdmission)?;
+        let content = decode_envelope(&self.envelope, crate::store::limits::REQUEST_BYTES as usize)
+            .map_err(|_| OperationStoreError::StatusAdmission)?
+            .value
+            .content;
         let EnvelopeContent::Call {
             ingress_expiry,
             sender,
@@ -188,7 +185,10 @@ impl PreparedStatus {
             && arg.as_slice() == arguments;
         if !matches_status
             || *ingress_expiry != self.expires_ns
-            || *content.to_request_id() != self.request_id
+            || content
+                .request_id()
+                .map_err(|_| OperationStoreError::StatusAdmission)?
+                != self.request_id
         {
             return Err(OperationStoreError::StatusAdmission);
         }

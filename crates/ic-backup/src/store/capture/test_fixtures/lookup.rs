@@ -1,10 +1,7 @@
 use super::*;
 use crate::store::capture::advance::tests::fixtures::{http::now, signatures::Scheme};
-use ic_platform::{
-    certification::historical::{TimePolicy, TimeWindow},
-    ic_protocol::{Envelope, encode_envelope},
-};
-use std::borrow::Cow;
+use ic_platform::certificate::{TimePolicy, TimeWindow};
+use ic_platform::ingress::{Envelope, encode_envelope};
 
 pub(in crate::store) fn policy() -> CaptureLookupHttpPolicy {
     CaptureLookupHttpPolicy {
@@ -41,15 +38,12 @@ pub(in crate::store) fn lookup(
     let content = EnvelopeContent::ReadState {
         sender: sender.as_slice().try_into().unwrap(),
         ingress_expiry: expiry,
-        paths: vec![vec![
-            b"request_status".to_vec().into(),
-            r.request_id.to_vec().into(),
-        ]],
+        paths: vec![vec![b"request_status".to_vec(), r.request_id.to_vec()]],
     };
-    let signature = scheme.sign(&content.to_request_id().signable());
+    let signature = scheme.sign(&content.signable().unwrap());
     encode_envelope(
         &Envelope {
-            content: Cow::Owned(content),
+            content,
             sender_pubkey: Some(scheme.key()),
             sender_sig: Some(signature),
             sender_delegation: None,

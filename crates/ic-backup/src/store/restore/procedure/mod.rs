@@ -11,16 +11,12 @@ use crate::store::{
     },
     operation::Step,
 };
-use ic_platform::{
-    Principal,
-    candid_codec::{self, Encode},
-    management_canister_types::{
-        CanisterIdRecord, LoadCanisterSnapshotArgs, ReadCanisterSnapshotDataArgs,
-        ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult, Snapshot,
-        SnapshotDataKind, SnapshotDataOffset, UploadCanisterSnapshotDataArgs,
-        UploadCanisterSnapshotMetadataArgs,
-    },
+use ic_platform_protocol::management_snapshots::{
+    CanisterArgs, LoadSnapshotArgs, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs,
+    SnapshotMetadata, UploadDataArgs, UploadMetadataArgs, WriteKind,
 };
+use ic_platform_protocol::management_snapshots::{Extent, Offset, SnapshotChunk};
+use ic_platform_types::Principal;
 
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
@@ -83,7 +79,7 @@ pub(in crate::store) struct Procedure<'a> {
     failed: bool,
     transfer: RestoreTransfer,
     source_plan: CapturePlan,
-    metadata: ReadCanisterSnapshotMetadataResult,
+    metadata: SnapshotMetadata,
     inventory: Vec<Snapshot>,
     status_requests: Vec<[u8; 32]>,
     destination: Option<Vec<u8>>,
@@ -115,7 +111,7 @@ impl<'a> Procedure<'a> {
     pub(in crate::store) fn data_calls(&self) -> u32 {
         self.transfer.data_calls()
     }
-    fn source_request(&self, n: u32) -> Result<ReadCanisterSnapshotDataArgs, Error> {
+    fn source_request(&self, n: u32) -> Result<ReadDataArgs, Error> {
         self.transfer
             .source_requests()
             .nth(n as usize)
@@ -130,17 +126,21 @@ impl<'a> Procedure<'a> {
             Step::RestoreInitialStatus | Step::BeforeLoadStatus | Step::AfterLoadStatus => {
                 return Ok((
                     "canister_status",
-                    encode(&CanisterIdRecord {
+                    (CanisterArgs {
                         canister_id: target,
-                    })?,
+                    })
+                    .encode(crate::store::limits::REQUEST_BYTES as usize)
+                    .map_err(|_| Error::Encoding)?,
                 ));
             }
             Step::RestoreListSnapshots => {
                 return Ok((
                     "list_canister_snapshots",
-                    encode(&CanisterIdRecord {
+                    (CanisterArgs {
                         canister_id: target,
-                    })?,
+                    })
+                    .encode(crate::store::limits::REQUEST_BYTES as usize)
+                    .map_err(|_| Error::Encoding)?,
                 ));
             }
             Step::AllocateSnapshot => {
@@ -153,46 +153,57 @@ impl<'a> Procedure<'a> {
                 let request = self.source_request(n)?;
                 let chunk = source.payload.read_data(&request)?;
                 let kind = match request.kind {
-                    SnapshotDataKind::WasmModule { offset, .. } => {
-                        SnapshotDataOffset::WasmModule { offset }
+                    ReadKind::WasmModule(Extent { offset, .. }) => {
+                        WriteKind::WasmModule(Offset { offset })
                     }
-                    SnapshotDataKind::WasmMemory { offset, .. } => {
-                        SnapshotDataOffset::WasmMemory { offset }
+                    ReadKind::WasmMemory(Extent { offset, .. }) => {
+                        WriteKind::WasmMemory(Offset { offset })
                     }
-                    SnapshotDataKind::StableMemory { offset, .. } => {
-                        SnapshotDataOffset::StableMemory { offset }
+                    ReadKind::StableMemory(Extent { offset, .. }) => {
+                        WriteKind::StableMemory(Offset { offset })
                     }
-                    SnapshotDataKind::WasmChunk { .. } => SnapshotDataOffset::WasmChunk,
+                    ReadKind::WasmChunk(SnapshotChunk { .. }) => WriteKind::WasmChunk,
                 };
                 (
                     "upload_canister_snapshot_data",
-                    encode(&UploadCanisterSnapshotDataArgs {
+                    (UploadDataArgs {
                         canister_id: target,
                         snapshot_id: self.destination()?.to_vec(),
                         kind,
                         chunk,
-                    })?,
+                    })
+                    .encode(crate::store::limits::REQUEST_BYTES as usize)
+                    .map_err(|_| Error::Encoding)?,
                 )
             }
             Step::ReadbackMetadata => (
                 "read_canister_snapshot_metadata",
-                encode(&ReadCanisterSnapshotMetadataArgs {
+                (SnapshotArgs {
                     canister_id: target,
                     snapshot_id: self.destination()?.to_vec(),
-                })?,
+                })
+                .encode(crate::store::limits::REQUEST_BYTES as usize)
+                .map_err(|_| Error::Encoding)?,
             ),
             Step::Readback(n) => {
                 let mut request = self.source_request(n)?;
                 request.snapshot_id = self.destination()?.to_vec();
-                ("read_canister_snapshot_data", encode(&request)?)
+                (
+                    "read_canister_snapshot_data",
+                    (request)
+                        .encode(crate::store::limits::REQUEST_BYTES as usize)
+                        .map_err(|_| Error::Encoding)?,
+                )
             }
             Step::LoadSnapshot => (
                 "load_canister_snapshot",
-                encode(&LoadCanisterSnapshotArgs {
+                (LoadSnapshotArgs {
                     canister_id: target,
                     snapshot_id: self.destination()?.to_vec(),
                     sender_canister_version: None,
-                })?,
+                })
+                .encode(crate::store::limits::REQUEST_BYTES as usize)
+                .map_err(|_| Error::Encoding)?,
             ),
             _ => return Err(Error::Order),
         };
@@ -311,7 +322,7 @@ impl<'a> Procedure<'a> {
 }
 pub(in crate::store) fn upload_metadata_arguments(
     canister_id: Principal,
-    metadata: &ReadCanisterSnapshotMetadataResult,
+    metadata: &SnapshotMetadata,
     limit: usize,
 ) -> Result<Vec<u8>, Error> {
     let globals = metadata
@@ -320,25 +331,19 @@ pub(in crate::store) fn upload_metadata_arguments(
         .cloned()
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::MetadataProfile)?;
-    candid_codec::encode_one(
-        &UploadCanisterSnapshotMetadataArgs {
-            canister_id,
-            replace_snapshot: None,
-            wasm_module_size: metadata.wasm_module_size,
-            globals,
-            wasm_memory_size: metadata.wasm_memory_size,
-            stable_memory_size: metadata.stable_memory_size,
-            certified_data: metadata.certified_data.clone(),
-            global_timer: metadata.global_timer.clone(),
-            on_low_wasm_memory_hook_status: metadata.on_low_wasm_memory_hook_status.clone(),
-        },
-        limit,
-    )
+    (UploadMetadataArgs {
+        canister_id,
+        replace_snapshot: None,
+        wasm_module_size: metadata.wasm_module_size,
+        globals,
+        wasm_memory_size: metadata.wasm_memory_size,
+        stable_memory_size: metadata.stable_memory_size,
+        certified_data: metadata.certified_data.clone(),
+        global_timer: metadata.global_timer.clone(),
+        on_low_wasm_memory_hook_status: metadata.on_low_wasm_memory_hook_status.clone(),
+    })
+    .encode(limit)
     .map_err(|_| Error::Encoding)
-}
-fn encode(value: &impl Encode) -> Result<Vec<u8>, Error> {
-    candid_codec::encode_one(value, crate::store::limits::REQUEST_BYTES as usize)
-        .map_err(|_| Error::Encoding)
 }
 fn limits() -> Limits {
     Limits {

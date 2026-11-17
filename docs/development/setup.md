@@ -174,7 +174,7 @@ older-source full restore, capture after restore and offline history/replay.
 Separate cases lose original take/data/allocation/upload/load replies and recover
 via an accounted observation or surviving certificate.
 Its Backup/Platform/Testkit dependencies are test-only. The separate
-`qualification/consumer` executable uses Backup as a normal dependency and is
+`qualification/ic-backup-consumer` executable uses Backup as a normal dependency and is
 built alone with `cargo build --locked --offline --manifest-path
 qualification/Cargo.toml -p ic-backup-consumer`. The isolated fixture saves its
 normal graph (excluding Testkit/PocketIC), runs separate capture/restore step and
@@ -189,13 +189,21 @@ make testkit-server-check
 make test-qualification
 ```
 
+Native CI lints the qualification workspace on Linux x86-64 and both macOS
+hosts. Linux additionally prepares and admits the locked Testkit server, then
+runs the focused `ic-backup-qualification --test capture` target, including
+20 MiB transfer and separate-process recovery. Setup uses the existing bounded,
+sanitized failure diagnostics. Actual-IC hosted macOS coverage remains unproved.
+CI runs asynchronously; these checks add no requirement to await hosted results
+before publication. The existing local publication gate is unchanged.
+
 Actual-IC journeys use the optimized Cargo release profile under
 `qualification/target/release/`; native product tests retain their ordinary
 profile. This avoids measuring debug-mode crypto and payload replay as release
 performance. The 20 MiB fixture explicitly bounds both server lifetime and idle
 time at 30 minutes to accommodate long local source checks between IC calls.
 
-Setup builds the private `server` example against the locked Testkit 0.107.4
+Setup builds the private `server` example against the locked Testkit 0.108.0
 library. `make install-testkit-server` explicitly downloads the supplier-selected
 archive with a finite time/byte ceiling, then delegates checksum admission,
 bounded decompression and create-only publication to Testkit. It is an ordered
@@ -505,7 +513,7 @@ hosted retrieval until observed. Run `perl scripts/ci/test-setup.pl` after chang
 this wiring; the focused offline fixture covers early failure, hidden evidence,
 redaction/bounds, empty diagnostics, collector failure and symlink refusal.
 
-### Current partial Platform migration
+### Earlier partial Platform migration
 
 Protocol 0.2.8 owns product data/allocation/empty-response decoding for 0.104.0.
 The earlier qualification below used 0.2.7; 0.2.8 leaves this management codec unchanged. The
@@ -533,3 +541,78 @@ The selected 0.107.4 archive checksum is
 or lifecycle limits. Current migration logs are under
 `target/evidence/platform-recheck-current/`; the previous Host/Testkit qualification
 remains historical evidence under its original directory.
+
+### Platform 0.34.10 qualification continuation
+
+The private qualification manifest now requires Platform 0.34.10, matching the
+pre-existing lock update. Its archive SHA-256 is
+`7798e7684a2e857355408f2c4252d1187589380609b5f2ef259482e6e1a34571`, source
+`efdc02936dde0319ef32825a499fa28db20cb1ff`. Selected ingress and Ed25519 source
+are byte-identical to 0.34.9. Product Platform 0.33.7 / Protocol 0.2.8 remain
+unchanged because the full migration blockers are recorded in the handoff.
+
+The preserved qualification lock also selects Process 0.80.3 and related
+transitives. Strict qualification Clippy and the actual caller target
+`cargo test --release --manifest-path qualification/Cargo.toml --locked --offline
+-p ic-backup-qualification --test capture` pass all 11 journeys (105.24 seconds)
+with `IC_BACKUP_TESTKIT_DIRECTORY` selecting the existing prepared server.
+This includes 20 MiB, original-reply/observation recovery, process cleanup and
+the isolated normal consumer. Evidence: `target/evidence/platform-qualification-03410/`;
+original fixture bytes and server output remain under qualification target.
+Linux results do not qualify macOS-specific Process changes or the blocked
+product certificate/status migration. No full product suite or release gate
+was repeated for this qualification-only manifest change.
+
+### Current Protocol 0.3.3 / Platform 0.34.11 adoption
+
+All production management request encoding and reply decoding selects Protocol 0.3.3, source
+`64897c9c522ab6730620985b6d58607d9c593903`, archive SHA-256
+`4676f2fabfff6a9aab9d6cccdf2a5870059e88b21345bc1913818be621dc1f34`.
+Production ingress, direct-key and certificate verification, plus fixture signing use
+Platform 0.34.11, source `80a5b488666629dd28152f6bcb6d489091d55994`, archive SHA-256
+`6269645258c22c1cccbaaf62ec710b7a30fbbcfe879aff6a53ba53b8526c9c84`.
+
+Normal graphs select only Platform 0.34.11 and Types 0.21.2; neither lock retains
+Platform 0.33 or Types 0.20. Product test dependencies alone enable
+`management-snapshot-fixtures` and `certificate-fixture-signing`. Independent
+malformed schemas and request-codec comparisons use test-only Candid 0.10.40 and
+Management Canister Types 0.8.0, already selected by the actual-IC graph. They
+are not alternate production decoders. No sibling patches or copied codec source.
+
+Latest evidence is under `target/evidence/platform-full-port/`; earlier failed
+ports remain under `target/evidence/platform-next/`. The handoff owns results.
+
+### Testkit 0.108.0 qualification adoption
+
+The private workspace selects Testkit 0.108.0 from verified registry source
+`78f1d2fbfbda6cac3b39f49dfe8aaa3c26472135`, archive SHA-256
+`6fa2e6157d27d15ba1bc93923adc3221e1c09f9f28ec2f8bdde09b04b528cf80`.
+The selected server sources are byte-identical to 0.107.4; held-reply modules
+move to directory modules without content changes. The release raises its Process
+floor to 0.80.3 and optional Protocol floor to 0.3.2 and relaxes exact WAT/parser
+pins. Backup selects only `managed-server`; its qualification lock changes only
+the Testkit version/checksum. PocketIC remains 16.1.0 with thiserror 2.0.18.
+
+The pre-existing Platform 0.34.12 and Tokio 1.54.1 lock selections are retained.
+Both `make install-testkit-server` and `make testkit-server-check` admit the
+existing prepared server without replacing original assets. Qualification Clippy
+passes; the handoff owns actual-IC results. Evidence, archive and pre-update lock:
+`target/evidence/testkit-next/`. No product dependency or server setup API changes.
+
+### Platform package identity recheck
+
+The latest registry review selects Platform 0.34.13 / Protocol 0.3.5 / Types
+0.21.2 in both locks, already present when the recheck began. The two newer
+archives identify source `379789a1b9db1e9348a5673ed847896e5011f81c` and match
+registry SHA-256 checksums:
+
+- Platform: `d890bfa81018e07fe2fb9f2621ee89c181bd061a2e98f4f979c599501f239dc1`.
+- Protocol: `a2ae9adc784809f210d491f301a9b4549bf619dbbeac835dc7c8d49d1eb152b0`.
+
+Source diffs from Platform 0.34.12 / Protocol 0.3.3 affect only unselected
+features. Both locked metadata graphs contain one registry identity per Platform
+package; both all-target Clippy checks pass. Compatible minimum requirements stay
+unchanged because Backup needs none of the new APIs. Prior actual-IC evidence
+remains applicable; no fresh IC or hosted run is claimed. Archives, source diffs,
+saved locks, resolved graphs and logs: `target/evidence/platform-park-refresh/`.
+The handoff records the separate direct test-dependency cleanup on Platform #11.

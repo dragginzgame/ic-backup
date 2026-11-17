@@ -3,15 +3,15 @@ use super::{OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusEv
 use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_platform::certification::{
-    HashTree, LookupResult,
-    historical::{self, Limits, TimePolicy, TimeWindow},
+use ic_platform::certificate::{
+    self, AuthenticatedCertificate, CertificateDecodeLimits, DecodeError, PreparedRootKey,
+    TimePolicy, TimeWindow, VerificationLimits, VerifyError,
+    construction::{HashTree, LookupResult},
 };
 use thiserror::Error;
 
 const OBSERVATION: &[u8] = b"ic-backup/status-certificate/1\n";
-const LIMITS: Limits = Limits {
-    certificate_bytes: crate::store::limits::CERTIFICATE_BYTES,
+const LIMITS: VerificationLimits = VerificationLimits {
     delegation_bytes: 1024 * 1024,
     tree_nodes: 8192,
     tree_depth: 64,
@@ -34,7 +34,10 @@ pub enum StatusCertificateError {
     TrustRoot,
     /// Platform refused bounded certificate authentication.
     #[error("status certificate authentication failed")]
-    Certificate(#[source] historical::Error),
+    Certificate(#[source] VerifyError),
+    /// Platform refused the bounded complete certificate encoding.
+    #[error("status certificate decoding failed")]
+    Decode(#[source] DecodeError),
     /// No supported certified terminal outcome matches the retained outcome flag.
     #[error("original request has no matching certified terminal outcome")]
     Outcome,
@@ -281,7 +284,7 @@ fn validate_certificate_request(
 
 /// Original certificate authority only; callers admit request identity and full frame bounds.
 pub(in crate::store) struct CertificateRequirements {
-    pub canister: ic_platform::Principal,
+    pub canister: ic_platform_types::Principal,
     pub trust_root: BackupDigest,
 }
 impl CertificateRequirements {
@@ -318,20 +321,32 @@ impl CertificateRequirements {
             .ok_or(StatusCertificateError::Admission(
                 OperationStoreError::StatusAdmission,
             ))?;
-        let authenticated = historical::authenticate_certificate_at(
+        let authenticated = authenticate(
             certificate,
             root_key_der,
             self.canister,
             observation(&prepared.observation)?,
-            LIMITS,
-        )
-        .map_err(StatusCertificateError::Certificate)?;
-        terminal_response(
-            &authenticated.certificate.tree,
-            &prepared.request_id,
-            maximum,
-        )
+        )?;
+        terminal_response(authenticated.tree(), &prepared.request_id, maximum)
     }
+}
+
+fn authenticate<'a>(
+    bytes: &'a [u8],
+    root: &[u8],
+    canister: ic_platform_types::Principal,
+    time: TimePolicy,
+) -> Result<AuthenticatedCertificate<'a>, StatusCertificateError> {
+    let root = PreparedRootKey::from_der(root).map_err(StatusCertificateError::Certificate)?;
+    let decoded = certificate::decode_certificate(
+        bytes,
+        CertificateDecodeLimits {
+            bytes: crate::store::limits::CERTIFICATE_BYTES,
+        },
+    )
+    .map_err(StatusCertificateError::Decode)?;
+    certificate::authenticate_certificate(decoded, &root, canister, time, LIMITS)
+        .map_err(StatusCertificateError::Certificate)
 }
 
 fn terminal_response(

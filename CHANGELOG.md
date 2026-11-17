@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.105.0] - 2026-11-17
+
+### ⚠️ Breaking
+
+- Complete the public Platform type migration: identities use Types 0.21 and
+  snapshot requests/metadata use Protocol 0.3. Read regions contain explicit
+  extents; globals use bounded u128 and exact float-bit wrappers. See the
+  [consumer migration](crates/ic-backup/README.md).
+- Status/list/take/metadata decode errors now carry Protocol errors. Empty
+  snapshot IDs fail snapshot policy; oversized IDs, hashes and globals fail
+  codec limits. Remove the unreachable typed GlobalRange error. Status errors
+  no longer implement Copy. Certificate errors separate decode and verification
+  failures, and root admission validates BLS points. Stored formats are unchanged.
+
+### 🔧 Changed
+
+- Adopt Testkit 0.108.0 in the private qualification workspace, retaining locked
+  PocketIC 16.1 and the existing authenticated server setup.
+
+- Add qualification-workspace linting to native CI and installed-Testkit
+  capture/recovery journeys on Linux. Hosted CI remains asynchronous.
+
+- Adopt Platform 0.34.13, Protocol 0.3.5 and Types 0.21.2 throughout production
+  and qualification. Remove Platform 0.33 and the private snapshot/metadata
+  traversal code. Keep original request bytes, recovery bindings and finite
+  budgets. Native malformed schemas use test-only independent Candid/SDK DTOs;
+  normal fixtures use Platform encoders and signing primitives.
+
+- Move the restore test module into `tests/mod.rs`, removing the overlapping
+  file/directory module layout while retaining its original fixture bytes.
+
+- Rename the private consumer directory to `qualification/ic-backup-consumer`
+  to match its package name; update workspace, archive checks and documentation.
+
+- Qualify all 11 actual-IC journeys with the new production certificate and
+  management boundaries, including 20 MiB and separate-process recovery.
+
 ## [0.104.0] - 2026-11-16
 
 ### ⚠️ Breaking

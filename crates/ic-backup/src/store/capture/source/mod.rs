@@ -4,7 +4,7 @@ use super::{
     BackupStore, CaptureOperation, OperationReplayError, OperationStoreError, same_identity,
 };
 use crate::store::{BackupSummary, PayloadReadError, PayloadSource, StoreError};
-use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
+use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use std::{fmt, num::NonZeroU64};
 use thiserror::Error;
 pub use transfer::{RestoreTransfer, RestoreTransferError, RestoreTransferRequest};
@@ -12,7 +12,7 @@ pub use transfer::{RestoreTransfer, RestoreTransferError, RestoreTransferRequest
 pub struct CaptureSource<'capture, 'store> {
     _capture: &'capture CaptureOperation,
     payload: PayloadSource<'store>,
-    metadata: ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult,
+    metadata: ic_platform_protocol::management_snapshots::SnapshotMetadata,
 }
 /// Source selection, original evidence or held byte custody refused without repair.
 #[derive(Debug, Error)]
@@ -80,13 +80,13 @@ impl<'store> CaptureSource<'_, 'store> {
         self,
     ) -> (
         PayloadSource<'store>,
-        ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult,
+        ic_platform_protocol::management_snapshots::SnapshotMetadata,
     ) {
         (self.payload, self.metadata)
     }
     pub(in crate::store) fn metadata(
         &self,
-    ) -> &ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult {
+    ) -> &ic_platform_protocol::management_snapshots::SnapshotMetadata {
         &self.metadata
     }
     pub(in crate::store) fn maximum_member_bytes(&self) -> u64 {
@@ -116,10 +116,7 @@ impl<'store> CaptureSource<'_, 'store> {
     /// # Errors
     /// Invalid requests leave the source usable. IO, integrity or custody failures
     /// invalidate payload reads; reacquisition is explicit and never repairs files.
-    pub fn read_data(
-        &mut self,
-        request: &ReadCanisterSnapshotDataArgs,
-    ) -> Result<Vec<u8>, PayloadReadError> {
+    pub fn read_data(&mut self, request: &ReadDataArgs) -> Result<Vec<u8>, PayloadReadError> {
         self.payload.read_data(request)
     }
 }

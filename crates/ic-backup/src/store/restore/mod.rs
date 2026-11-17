@@ -12,7 +12,7 @@ use crate::store::{
         intent::{Error as IntentError, Intent, Plan, ProfileRecord},
     },
 };
-use ic_platform::Principal;
+use ic_platform_types::Principal;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 pub(in crate::store) mod persistence;

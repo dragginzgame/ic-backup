@@ -8,7 +8,7 @@ use crate::store::capture::advance::{
     CaptureObservationError, CaptureObservationPolicy, authenticate_capture_lookup,
     observe_capture_certificate, status_certificate_observation,
 };
-use ic_platform::ic_protocol::decode_read_state_response;
+use ic_platform::ingress::decode_read_state_response;
 #[cfg(test)]
 use thiserror::Error;
 
@@ -127,7 +127,7 @@ impl BackupHttpTransport {
     // The owning operation admits the exact signed lookup and durable reservation.
     pub(in crate::store) async fn read_state_certificate(
         &self,
-        canister: ic_platform::Principal,
+        canister: ic_platform_types::Principal,
         lookup: &[u8],
         request_id: [u8; 32],
         deadline: u64,
@@ -143,6 +143,7 @@ impl BackupHttpTransport {
             .await?;
         let certificate = decode_read_state_response(&bytes, maximum)
             .map_err(|_| BackupHttpError::Response)?
+            .value
             .certificate;
         remaining(deadline)
             .map_err(|error| error.after_response(request_id, certificate.clone()))?;

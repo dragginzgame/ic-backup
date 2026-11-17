@@ -1,45 +1,30 @@
 //! Re-authored frozen legacy lifecycle cases; see the capture-intent contract.
-use super::super::tests::{plan, status};
+use super::super::tests::plan;
 use super::*;
 use crate::store::BackupDigest;
-use ic_platform::candid_codec::{self, Reserved, Writer, arguments::encode_args};
+use candid::{CandidType, Principal, Reserved};
+use ic_management_canister_types::{
+    CanisterStatusResult, CanisterStatusType, DefiniteCanisterSettings, MemoryMetrics, QueryStats,
+};
 use serde::Deserialize;
 
-fn encode(value: &impl Encode) -> Vec<u8> {
-    candid_codec::encode_one(value, MAX_REPLY_BYTES).unwrap()
+fn encode(value: &impl CandidType) -> Vec<u8> {
+    candid::encode_one(value).unwrap()
 }
 
 // Test-only wire alternatives with independently specified protocol labels.
+#[derive(CandidType, serde::Deserialize)]
 struct Settings<C, P> {
     controllers: C,
     padding: P,
 }
-impl<C: Encode, P: Encode> Encode for Settings<C, P> {
-    const TYPE: &'static Type = &Type::Record(&[(570880087, C::TYPE), (3497875921, P::TYPE)]);
-    fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.controllers.write(out)?;
-        self.padding.write(out)
-    }
-}
+#[derive(CandidType, serde::Deserialize)]
 struct Status<S, C, H, P> {
     status: S,
     settings: C,
+    #[serde(rename = "module_hash")]
     hash: H,
     padding: P,
-}
-impl<S: Encode, C: Encode, H: Encode, P: Encode> Encode for Status<S, C, H, P> {
-    const TYPE: &'static Type = &Type::Record(&[
-        (100394802, S::TYPE),
-        (2336062691, C::TYPE),
-        (2928387969, H::TYPE),
-        (3497875921, P::TYPE),
-    ]);
-    fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.status.write(out)?;
-        self.settings.write(out)?;
-        self.hash.write(out)?;
-        self.padding.write(out)
-    }
 }
 fn minimal<H>(hash: H) -> Status<CanisterStatusType, Settings<Vec<Principal>, ()>, H, ()> {
     Status {
@@ -96,7 +81,15 @@ fn frozen_legacy_vectors_keep_exact_bytes_and_do_not_gain_missing_module_authori
         let expected = if case.status == CanisterStatusType::Stopped {
             CaptureStatusError::ModuleMismatch
         } else {
-            CaptureStatusError::NotStopped(case.status)
+            CaptureStatusError::NotStopped(match case.status {
+                CanisterStatusType::Running => {
+                    ic_platform_protocol::management_snapshots::Status::Running
+                }
+                CanisterStatusType::Stopping => {
+                    ic_platform_protocol::management_snapshots::Status::Stopping
+                }
+                CanisterStatusType::Stopped => unreachable!(),
+            })
         };
         assert_eq!(
             plan().validate_status_reply(&raw),
@@ -122,12 +115,30 @@ fn wire_admission_keeps_original_state_module_and_caller_checks() {
         alter(&mut v);
         assert_eq!(
             p.validate_status_reply(&encode(&v)),
-            p.validate_status(&v)
-                .map_err(CaptureStatusReplyError::Status)
+            p.validate_status(&ic_platform_protocol::management_snapshots::CaptureStatus {
+                status: match v.status {
+                    CanisterStatusType::Stopped =>
+                        ic_platform_protocol::management_snapshots::Status::Stopped,
+                    CanisterStatusType::Running =>
+                        ic_platform_protocol::management_snapshots::Status::Running,
+                    CanisterStatusType::Stopping =>
+                        ic_platform_protocol::management_snapshots::Status::Stopping,
+                },
+                settings: ic_platform_protocol::management_snapshots::Settings {
+                    controllers: v
+                        .settings
+                        .controllers
+                        .iter()
+                        .map(|p| ic_platform_types::Principal::from_slice(p.as_slice()))
+                        .collect()
+                },
+                module_hash: v.module_hash.clone(),
+            })
+            .map_err(CaptureStatusReplyError::Status)
         );
     }
     let mut request = p.request().clone();
-    request.sender = Principal::from_slice(&[17, 1]);
+    request.sender = ic_platform_types::Principal::from_slice(&[17, 1]);
     let selected = CapturePolicy::new(request).unwrap();
     assert_eq!(
         selected.validate_status_reply(&encode(&status(&p))),
@@ -155,11 +166,16 @@ fn controllers_are_bounded_before_elements_and_hash_length_before_bytes() {
         Err(CaptureStatusReplyError::Decode(DecodeError::Limit))
     );
     struct HostileControllers;
-    impl Encode for HostileControllers {
-        const TYPE: &'static Type = <Vec<Principal>>::TYPE;
-        fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-            // u32::MAX controllers, without any elements.
-            out.bytes(&[0xff, 0xff, 0xff, 0xff, 0x0f])
+    impl CandidType for HostileControllers {
+        fn _ty() -> candid::types::Type {
+            <Vec<Principal>>::ty()
+        }
+        fn idl_serialize<S: candid::types::Serializer>(
+            &self,
+            serializer: S,
+        ) -> Result<(), S::Error> {
+            let _ = serializer.serialize_vec(u32::MAX as usize)?;
+            Ok(())
         }
     }
     let raw = encode(&Status {
@@ -176,20 +192,32 @@ fn controllers_are_bounded_before_elements_and_hash_length_before_bytes() {
         Err(CaptureStatusReplyError::Decode(DecodeError::Limit))
     );
     struct HostileHash;
-    impl Encode for HostileHash {
-        const TYPE: &'static Type = <Vec<u8>>::TYPE;
-        fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-            out.bytes(&[0xff, 0xff, 0xff, 0xff, 0x0f])
+    impl CandidType for HostileHash {
+        fn _ty() -> candid::types::Type {
+            <Vec<u8>>::ty()
+        }
+        fn idl_serialize<S: candid::types::Serializer>(
+            &self,
+            serializer: S,
+        ) -> Result<(), S::Error> {
+            let _ = serializer.serialize_vec(u32::MAX as usize)?;
+            Ok(())
         }
     }
     assert_eq!(
         p.validate_status_reply(&encode(&minimal(Some(HostileHash)))),
-        Err(CaptureStatusReplyError::Decode(DecodeError::Malformed))
+        Err(CaptureStatusReplyError::Decode(DecodeError::Limit))
     );
-    for len in [0, 31, 33] {
+    assert_eq!(
+        p.validate_status_reply(&encode(&minimal(Some(vec![0x44_u8; 33])))),
+        Err(CaptureStatusReplyError::Decode(DecodeError::Limit))
+    );
+    for len in [0, 31] {
         assert_eq!(
             p.validate_status_reply(&encode(&minimal(Some(vec![0x44_u8; len])))),
-            Err(CaptureStatusReplyError::Decode(DecodeError::Malformed))
+            Err(CaptureStatusReplyError::Status(
+                CaptureStatusError::ModuleMismatch
+            ))
         );
     }
 }
@@ -213,27 +241,34 @@ fn hash_option_promotion_and_absence_never_invent_the_approved_hash() {
 
 #[test]
 fn required_status_settings_controllers_and_known_status_variant_cannot_disappear() {
-    struct Empty;
-    ic_platform::candid_record!(Empty {});
+    #[derive(candid::CandidType, serde::Deserialize)]
+    struct Empty {}
+
+    #[derive(candid::CandidType, serde::Deserialize)]
+
     struct SettingsOnly {
         settings: DefiniteCanisterSettings,
     }
-    ic_platform::candid_record!(SettingsOnly { 2336062691 => settings: DefiniteCanisterSettings });
+
+    #[derive(candid::CandidType, serde::Deserialize)]
+
     struct StatusOnly {
         status: CanisterStatusType,
     }
-    ic_platform::candid_record!(StatusOnly { 100394802 => status: CanisterStatusType });
+
+    #[derive(candid::CandidType, serde::Deserialize)]
+
     enum Unknown {
         Deleted,
     }
-    ic_platform::candid_variant!(Unknown { 315581913 => Deleted });
+
     let p = plan();
     let settings = || Settings {
         controllers: status(&p).settings.controllers,
         padding: (),
     };
     for raw in [
-        encode(&Empty),
+        encode(&Empty {}),
         encode(&SettingsOnly {
             settings: status(&p).settings,
         }),
@@ -242,7 +277,7 @@ fn required_status_settings_controllers_and_known_status_variant_cannot_disappea
         }),
         encode(&Status {
             status: CanisterStatusType::Stopped,
-            settings: Empty,
+            settings: Empty {},
             hash: Some([0x44_u8; 32]),
             padding: (),
         }),
@@ -322,7 +357,7 @@ fn malformed_prefixes_extra_arguments_trailing_and_raw_header_limits_refuse() {
     );
     for raw in [
         b"DIDL\0\0".to_vec(),
-        encode_args(&(&v, 0_u8), MAX_REPLY_BYTES).unwrap(),
+        candid::encode_args((&v, 0_u8)).unwrap(),
     ] {
         assert_eq!(
             p.validate_status_reply(&raw),
@@ -339,4 +374,83 @@ fn malformed_prefixes_extra_arguments_trailing_and_raw_header_limits_refuse() {
             Err(CaptureStatusReplyError::Decode(DecodeError::Limit))
         );
     }
+}
+
+pub(in crate::store) fn status(plan: &CapturePolicy) -> CanisterStatusResult {
+    CanisterStatusResult {
+        status: CanisterStatusType::Stopped,
+        ready_for_migration: false,
+        version: 23,
+        settings: DefiniteCanisterSettings {
+            controllers: vec![Principal::from_slice(plan.request().sender.as_slice())],
+            ..DefiniteCanisterSettings::default()
+        },
+        module_hash: Some(plan.request().module_sha256.as_bytes().to_vec()),
+        memory_size: 0_u64.into(),
+        memory_metrics: MemoryMetrics {
+            wasm_memory_size: 0_u64.into(),
+            stable_memory_size: 0_u64.into(),
+            global_memory_size: 0_u64.into(),
+            wasm_binary_size: 0_u64.into(),
+            custom_sections_size: 0_u64.into(),
+            canister_history_size: 0_u64.into(),
+            wasm_chunk_store_size: 0_u64.into(),
+            snapshots_size: 0_u64.into(),
+            log_memory_store_size: 0_u64.into(),
+        },
+        cycles: 0_u64.into(),
+        reserved_cycles: 0_u64.into(),
+        idle_cycles_burned_per_day: 0_u64.into(),
+        query_stats: QueryStats {
+            num_calls_total: 0_u64.into(),
+            num_instructions_total: 0_u64.into(),
+            request_payload_bytes_total: 0_u64.into(),
+            response_payload_bytes_total: 0_u64.into(),
+        },
+    }
+}
+
+#[test]
+fn resource_statistics_and_version_do_not_become_extra_capture_policy() {
+    let p = plan();
+    let mut observed = status(&p);
+    observed.version = u64::MAX;
+    observed.cycles = u128::MAX.into();
+    observed.ready_for_migration = true;
+    observed.settings.compute_allocation = u128::MAX.into();
+    let original = observed.clone();
+    assert_eq!(p.validate_status_reply(&encode(&observed)), Ok(()));
+    assert_eq!(observed, original);
+}
+
+#[test]
+fn status_visibility_does_not_grant_management_controller_authority() {
+    #[derive(CandidType, serde::Deserialize)]
+    enum Visibility {
+        #[serde(rename = "allowed_viewers")]
+        AllowedViewers(Vec<Principal>),
+    }
+    #[derive(CandidType)]
+    struct VisibleSettings {
+        controllers: Vec<Principal>,
+        status_visibility: Visibility,
+    }
+    let p = plan();
+    let observed = Status {
+        status: CanisterStatusType::Stopped,
+        settings: VisibleSettings {
+            controllers: vec![],
+            status_visibility: Visibility::AllowedViewers(vec![Principal::from_slice(
+                p.request().sender.as_slice(),
+            )]),
+        },
+        hash: Some(p.request().module_sha256.as_bytes().to_vec()),
+        padding: (),
+    };
+    assert_eq!(
+        p.validate_status_reply(&encode(&observed)),
+        Err(CaptureStatusReplyError::Status(
+            CaptureStatusError::NotController
+        ))
+    );
 }

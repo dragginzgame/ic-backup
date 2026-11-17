@@ -2,7 +2,8 @@
 use super::{BackupStore, BackupSummary, PayloadDirectory, StoreError, unchanged_file};
 use crate::store::BackupDigest;
 use ic_host_artifacts::Length;
-use ic_platform::management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind};
+use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
+use ic_platform_protocol::management_snapshots::{ReadDataArgs, ReadKind};
 use std::{
     fmt,
     fs::{File, Metadata},
@@ -50,12 +51,12 @@ impl BackupStore {
     /// ```no_run
     /// use ic_backup::store::BackupStore;
     /// use ic_backup::store::BackupDigest;
-    /// use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
+    /// use ic_platform_protocol::management_snapshots::ReadDataArgs;
     /// use std::num::NonZeroU64;
     ///
     /// fn read_extent(
     ///     store: &BackupStore, bundle: &str, trusted_manifest: BackupDigest,
-    ///     source_request: &ReadCanisterSnapshotDataArgs,
+    ///     source_request: &ReadDataArgs,
     /// ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     ///     let mut source = store.open_payload(
     ///         bundle, trusted_manifest, NonZeroU64::new(1 << 30).unwrap(),
@@ -141,10 +142,7 @@ impl PayloadSource<'_> {
     /// # Errors
     /// Refuses wrong identities, unknown/malformed hashes, empty/overflowing/outside
     /// ranges, an invalidated handle, changed custody and length/hash/IO failures.
-    pub fn read_data(
-        &mut self,
-        request: &ReadCanisterSnapshotDataArgs,
-    ) -> Result<Vec<u8>, PayloadReadError> {
+    pub fn read_data(&mut self, request: &ReadDataArgs) -> Result<Vec<u8>, PayloadReadError> {
         if !self.active {
             return Err(PayloadReadError::Inactive);
         }
@@ -155,10 +153,7 @@ impl PayloadSource<'_> {
         Ok(result)
     }
 
-    fn select(
-        &self,
-        request: &ReadCanisterSnapshotDataArgs,
-    ) -> Result<(usize, u64, usize), PayloadReadError> {
+    fn select(&self, request: &ReadDataArgs) -> Result<(usize, u64, usize), PayloadReadError> {
         if request.canister_id != self.summary().target.canister
             || !(1..=256).contains(&request.snapshot_id.len())
             || request
@@ -171,16 +166,16 @@ impl PayloadSource<'_> {
             return Err(PayloadReadError::Request);
         }
         let (name, range) = match &request.kind {
-            SnapshotDataKind::WasmModule { offset, size } => {
+            ReadKind::WasmModule(Extent { offset, size }) => {
                 ("module.wasm".to_owned(), Some((*offset, *size)))
             }
-            SnapshotDataKind::WasmMemory { offset, size } => {
+            ReadKind::WasmMemory(Extent { offset, size }) => {
                 ("heap.bin".to_owned(), Some((*offset, *size)))
             }
-            SnapshotDataKind::StableMemory { offset, size } => {
+            ReadKind::StableMemory(Extent { offset, size }) => {
                 ("stable.bin".to_owned(), Some((*offset, *size)))
             }
-            SnapshotDataKind::WasmChunk { hash } => {
+            ReadKind::WasmChunk(SnapshotChunk { hash }) => {
                 let hash = BackupDigest::from_bytes(
                     hash.as_slice()
                         .try_into()

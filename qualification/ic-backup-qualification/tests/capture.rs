@@ -1,15 +1,14 @@
-//! Actual-IC public-API tests, including a separately built normal-dependency consumer.
 //! All keys, application permissions, fixture memory and proxying remain test-only.
+//! Actual-IC public-API tests, including a separately built normal-dependency consumer.
 use ic_backup::store::BackupDigest;
 use ic_backup::store::{
     BackupConnection, BackupHttpTransport, BackupStore, BackupSummary, BackupTarget,
     CaptureRequest, CaptureTiming, OperationLimits, OperationOptions, OperationPlan,
     OperationProgress, OperationStep, RestoreRequest, ScanLimits,
 };
-use ic_platform_legacy::{
-    Principal,
-    management_canister_types::{ReadCanisterSnapshotDataArgs, SnapshotDataKind},
-};
+use ic_platform_protocol::management_snapshots::{ReadDataArgs, ReadKind};
+use ic_platform_types::Principal;
+
 use ic_testkit::{
     pocket_ic::{CanisterSettings, PocketIcBuilder, common::rest::BlobCompression},
     server::PreparedServer,
@@ -538,13 +537,13 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         .collect();
     assert_eq!(
         source
-            .read_data(&ReadCanisterSnapshotDataArgs {
+            .read_data(&ReadDataArgs {
                 canister_id: receipt.target.canister,
                 snapshot_id,
-                kind: SnapshotDataKind::WasmModule {
+                kind: ReadKind::WasmModule(ic_platform_protocol::management_snapshots::Extent {
                     offset: 0,
                     size: wasm.len() as u64
-                }
+                })
             })
             .unwrap(),
         wasm

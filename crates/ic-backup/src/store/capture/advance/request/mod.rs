@@ -6,11 +6,12 @@ use crate::store::StatusAdmissionRecord;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
 use ic_platform::{
-    Principal, ecdsa,
+    ecdsa,
     ecdsa::PrehashVerifier,
     ed25519,
-    ic_protocol::{Envelope, EnvelopeContent, decode_envelope},
+    ingress::{Content as EnvelopeContent, Envelope, decode_envelope},
 };
+use ic_platform_types::Principal;
 use thiserror::Error;
 
 // Exact SPKI profiles from RFC 8410 / RFC 5480 and the IC signature specification.
@@ -118,12 +119,13 @@ pub(in crate::store) fn authenticate_direct_request(
         .validate_direct_call(sender, method, arguments)
         .map_err(StatusRequestError::Admission)?;
     let envelope = decode_envelope(&prepared.envelope, request_bytes as usize)
-        .map_err(|_| StatusRequestError::Envelope)?;
+        .map_err(|_| StatusRequestError::Envelope)?
+        .value;
     let EnvelopeContent::Call {
         sender,
         sender_info,
         ..
-    } = envelope.content.as_ref()
+    } = &envelope.content
     else {
         return Err(StatusRequestError::Envelope);
     };
@@ -134,7 +136,7 @@ pub(in crate::store) fn authenticate_direct_request(
 }
 
 fn authenticate_direct_envelope(
-    envelope: &Envelope<'_>,
+    envelope: &Envelope,
     sender: &[u8],
 ) -> Result<(), StatusRequestError> {
     if envelope.sender_delegation.is_some() {
@@ -149,7 +151,10 @@ fn authenticate_direct_envelope(
         .as_deref()
         .and_then(|bytes| bytes.try_into().ok())
         .ok_or(StatusRequestError::Signature)?;
-    let message = envelope.content.to_request_id().signable();
+    let message = envelope
+        .content
+        .signable()
+        .map_err(|_| StatusRequestError::Envelope)?;
     if let Some(raw) = der.strip_prefix(ED25519_DER).filter(|raw| raw.len() == 32) {
         verify_sender(der, sender)?;
         let raw = raw.try_into().map_err(|_| StatusRequestError::Identity)?;

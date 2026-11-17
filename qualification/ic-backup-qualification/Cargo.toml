@@ -17,7 +17,8 @@ ic-backup.workspace = true
 ic-backup-consumer.workspace = true
 ic-host-process.workspace = true
 ic-platform.workspace = true
-ic-platform-legacy.workspace = true
+ic-platform-protocol.workspace = true
+ic-platform-types.workspace = true
 ic-testkit.workspace = true
 tokio.workspace = true
 

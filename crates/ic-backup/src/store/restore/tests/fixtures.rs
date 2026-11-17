@@ -6,9 +6,9 @@ pub(in crate::store) fn declaration(
         operation_id: "cd".repeat(16),
         target: source.summary().target,
         trust_root: source.original_plan().request().trust_root,
-        initiator: ic_platform::Principal::from_text("2vxsx-fae").unwrap(),
+        initiator: ic_platform_types::Principal::from_text("2vxsx-fae").unwrap(),
         release: source.summary().release,
-        sender: ic_platform::Principal::from_text("aaaaa-aa").unwrap(),
+        sender: ic_platform_types::Principal::from_text("aaaaa-aa").unwrap(),
         limits: OperationLimits {
             payload_bytes: 10,
             extent_bytes: 3,

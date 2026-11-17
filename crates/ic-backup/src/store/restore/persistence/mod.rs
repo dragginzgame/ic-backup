@@ -15,7 +15,7 @@ use crate::store::{
     operation::{FactRecord, Journal, custody::Recorder, intent::Intent},
 };
 use ic_host_fs::Directory;
-use ic_platform::management_canister_types::ReadCanisterSnapshotMetadataResult;
+use ic_platform_protocol::management_snapshots::SnapshotMetadata;
 use std::ffi::OsStr;
 
 /// Original immutable approval, source custody or local publication refused.
@@ -50,7 +50,7 @@ pub enum RestorePersistenceError {
 pub(in crate::store) struct Source<'store> {
     pub capture: CaptureOperation,
     pub payload: PayloadSource<'store>,
-    pub metadata: ReadCanisterSnapshotMetadataResult,
+    pub metadata: SnapshotMetadata,
 }
 impl Source<'_> {
     pub(in crate::store) fn check(&self) -> Result<(), OperationStoreError> {

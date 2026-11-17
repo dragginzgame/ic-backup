@@ -1,16 +1,21 @@
 //! Re-authored cases from the frozen legacy metadata tests; fixture provenance
 //! is recorded in docs/architecture/capture-transfer.md.
+use super::super::MAX_GLOBALS;
 use super::super::tests::{chunk, metadata, plan};
 use super::*;
 use crate::store::BackupDigest;
-use ic_platform::{
-    candid_codec::Nat,
-    management_canister_types::{CanisterTimer, OnLowWasmMemoryHookStatus},
-};
+use candid::Nat;
+use candid::{CandidType, Reserved};
+use ic_platform_protocol::management_snapshots::{Float32Bits, Float64Bits};
+use ic_platform_protocol::management_snapshots::{Global, SnapshotSource, fixtures};
+use ic_platform_protocol::management_snapshots::{LowMemoryHook, Timer};
 use serde::Deserialize;
 
-fn encode(value: &impl Encode) -> Vec<u8> {
-    candid_codec::encode_one(value, MAX_REPLY_BYTES).unwrap()
+fn encode(value: &SnapshotMetadata) -> Vec<u8> {
+    fixtures::snapshot_metadata(value, MAX_REPLY_BYTES).unwrap()
+}
+fn schema(value: &impl CandidType) -> Vec<u8> {
+    candid::encode_one(value).unwrap()
 }
 fn hex(value: &str) -> Vec<u8> {
     value
@@ -21,23 +26,25 @@ fn hex(value: &str) -> Vec<u8> {
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect()
 }
-fn round_trip_metadata() -> ReadCanisterSnapshotMetadataResult {
+fn round_trip_metadata() -> SnapshotMetadata {
     let mut m = metadata(3, 5, 7);
     m.globals = vec![
-        Some(SnapshotMetadataGlobal::I32(i32::MIN)),
-        Some(SnapshotMetadataGlobal::I64(i64::MIN)),
-        Some(SnapshotMetadataGlobal::F32(f32::from_bits(0x7fc0_0042))),
-        Some(SnapshotMetadataGlobal::F64(f64::from_bits(
-            0x8000_0000_0000_0000,
+        Some(Global::I32(i32::MIN)),
+        Some(Global::I64(i64::MIN)),
+        Some(Global::F32(Float32Bits(
+            (f32::from_bits(0x7fc0_0042)).to_bits(),
         ))),
-        Some(SnapshotMetadataGlobal::V128(Nat::from(u128::MAX))),
+        Some(Global::F64(Float64Bits(
+            (f64::from_bits(0x8000_0000_0000_0000)).to_bits(),
+        ))),
+        Some(Global::V128(u128::MAX)),
     ];
     m.wasm_chunk_store = vec![chunk(b"second"), chunk(b"")];
     m.canister_version = 11;
     m.taken_at_timestamp = 13;
     m.certified_data = vec![17; 32];
-    m.global_timer = Some(CanisterTimer::Active(19));
-    m.on_low_wasm_memory_hook_status = Some(OnLowWasmMemoryHookStatus::Executed);
+    m.global_timer = Some(Timer::Active(19));
+    m.on_low_wasm_memory_hook_status = Some(LowMemoryHook::Executed);
     m
 }
 
@@ -50,7 +57,7 @@ fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
         payload_checksum: String,
     }
     let cases: Vec<Case> = serde_json::from_str(include_str!("golden.json")).unwrap();
-    let maximum = Nat::from(u128::MAX);
+    let maximum = u128::MAX;
     for case in cases {
         let raw = hex(&case.reply_hex);
         assert_eq!(
@@ -72,31 +79,16 @@ fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
             value.source,
             Some(SnapshotSource::TakenFromCanister(_))
         ));
-        assert!(matches!(
-            value.global_timer,
-            Some(CanisterTimer::Active(u64::MAX))
-        ));
+        assert!(matches!(value.global_timer, Some(Timer::Active(u64::MAX))));
         assert!(matches!(
             value.on_low_wasm_memory_hook_status,
-            Some(OnLowWasmMemoryHookStatus::Executed)
+            Some(LowMemoryHook::Executed)
         ));
-        assert!(matches!(
-            value.globals[0],
-            Some(SnapshotMetadataGlobal::I32(i32::MIN))
-        ));
-        assert!(matches!(
-            value.globals[1],
-            Some(SnapshotMetadataGlobal::I64(i64::MIN))
-        ));
-        assert!(
-            matches!(value.globals[2], Some(SnapshotMetadataGlobal::F32(v)) if v.to_bits() == 0x7fc0_0042)
-        );
-        assert!(
-            matches!(value.globals[3], Some(SnapshotMetadataGlobal::F64(v)) if v.to_bits() == 0x8000_0000_0000_0000)
-        );
-        assert!(
-            matches!(&value.globals[4], Some(SnapshotMetadataGlobal::V128(v)) if *v == maximum)
-        );
+        assert!(matches!(value.globals[0], Some(Global::I32(i32::MIN))));
+        assert!(matches!(value.globals[1], Some(Global::I64(i64::MIN))));
+        assert!(matches!(value.globals[2], Some(Global::F32(v)) if v.0 == 0x7fc0_0042));
+        assert!(matches!(value.globals[3], Some(Global::F64(v)) if v.0 == 0x8000_0000_0000_0000));
+        assert!(matches!(&value.globals[4], Some(Global::V128(v)) if *v == maximum));
         assert_eq!(
             value.globals.len(),
             if case.name == "sdk-optional" { 6 } else { 5 }
@@ -124,10 +116,11 @@ fn public_decoder_preserves_bytes_and_flows_into_original_schedule() {
         transfer
             .decode_data(
                 0,
-                &encode(
-                    &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
+                &crate::store::capture::test_fixtures::wire::encode(
+                    &ic_platform_protocol::management_snapshots::SnapshotData {
                         chunk: b"abc".to_vec()
-                    }
+                    },
+                    4096
                 )
             )
             .unwrap(),
@@ -139,13 +132,15 @@ fn public_decoder_preserves_bytes_and_flows_into_original_schedule() {
 fn valid_absence_is_unsupported_capture_instead_of_fabricated_state() {
     let p = plan(8);
     for alter in [
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.source = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| {
-            m.source = Some(SnapshotSource::MetadataUpload(Reserved))
+        |m: &mut SnapshotMetadata| m.source = None,
+        |m: &mut SnapshotMetadata| {
+            m.source = Some(SnapshotSource::MetadataUpload(
+                ic_platform_protocol::management_snapshots::Reserved,
+            ))
         },
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.global_timer = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.on_low_wasm_memory_hook_status = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.globals.push(None),
+        |m: &mut SnapshotMetadata| m.global_timer = None,
+        |m: &mut SnapshotMetadata| m.on_low_wasm_memory_hook_status = None,
+        |m: &mut SnapshotMetadata| m.globals.push(None),
     ] {
         let mut m = round_trip_metadata();
         alter(&mut m);
@@ -185,15 +180,15 @@ fn original_limits_and_invalid_snapshot_ids_are_not_bypassed_by_decoding() {
 fn admitted_maxima_and_oversized_collections_hashes_and_globals() {
     let p = plan(64);
     let mut m = metadata(1, 0, 0);
-    m.globals = vec![Some(SnapshotMetadataGlobal::I32(1)); MAX_GLOBALS];
+    m.globals = vec![Some(Global::I32(1)); MAX_GLOBALS];
     m.certified_data = vec![0; 32];
     m.wasm_chunk_store = (0..1024_u32).map(|n| chunk(&n.to_be_bytes())).collect();
     assert!(p.decode_metadata(&[1], &encode(&m)).is_ok());
     for alter in [
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.globals.push(None),
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.certified_data.push(0),
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.wasm_chunk_store.push(chunk(b"extra")),
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.wasm_chunk_store[0].hash.push(0),
+        |m: &mut SnapshotMetadata| m.globals.push(None),
+        |m: &mut SnapshotMetadata| m.certified_data.push(0),
+        |m: &mut SnapshotMetadata| m.wasm_chunk_store.push(chunk(b"extra")),
+        |m: &mut SnapshotMetadata| m.wasm_chunk_store[0].hash.push(0),
     ] {
         let mut oversized = m.clone();
         alter(&mut oversized);
@@ -213,13 +208,20 @@ fn admitted_maxima_and_oversized_collections_hashes_and_globals() {
         Err(TransferMetadataError::Transfer(TransferError::ChunkHash))
     ));
     m.wasm_chunk_store.clear();
-    m.globals = vec![Some(SnapshotMetadataGlobal::V128(Nat(Nat::from(
-        u128::MAX,
-    )
-    .0 + 1_u8)))];
+    // The typed API cannot hold 129 bits; preserve the hostile original wire case.
+    let raw = schema(&shape(
+        ic_management_canister_types::SnapshotSource::TakenFromCanister(Reserved),
+        vec![Some(
+            ic_management_canister_types::SnapshotMetadataGlobal::V128(Nat(
+                Nat::from(u128::MAX).0 + 1_u8
+            )),
+        )],
+        ic_management_canister_types::CanisterTimer::Inactive,
+        ic_management_canister_types::OnLowWasmMemoryHookStatus::Ready,
+    ));
     assert!(matches!(
-        p.decode_metadata(&[1], &encode(&m)),
-        Err(TransferMetadataError::Transfer(TransferError::GlobalRange))
+        p.decode_metadata(&[1], &raw),
+        Err(TransferMetadataError::Decode(DecodeError::Limit))
     ));
 }
 
@@ -254,39 +256,21 @@ fn malformed_truncated_trailing_arity_and_header_limits_refuse() {
 }
 
 // Test-only wire alternatives; no replacement management declarations in production.
+#[derive(CandidType, serde::Deserialize)]
 struct Shape<S, G, T, H> {
     source: S,
     globals: Vec<G>,
+    #[serde(rename = "global_timer")]
     timer: T,
+    #[serde(rename = "on_low_wasm_memory_hook_status")]
     hook: H,
-}
-impl<S: Encode, G: Encode, T: Encode, H: Encode> Encode for Shape<S, G, T, H> {
-    const TYPE: &'static Type = &Type::Record(&[
-        (339281328, <Vec<G>>::TYPE),
-        (783802816, u64::TYPE),
-        (842117339, S::TYPE),
-        (864574658, <Vec<u8>>::TYPE),
-        (903275689, T::TYPE),
-        (1282538240, H::TYPE),
-        (1299009433, u64::TYPE),
-        (1710030651, u64::TYPE),
-        (1767008372, <Vec<ChunkHash>>::TYPE),
-        (3569147778, u64::TYPE),
-        (3598099748, u64::TYPE),
-    ]);
-    fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.globals.write(out)?;
-        2_u64.write(out)?;
-        self.source.write(out)?;
-        Vec::<u8>::new().write(out)?;
-        self.timer.write(out)?;
-        self.hook.write(out)?;
-        1_u64.write(out)?;
-        0_u64.write(out)?;
-        Vec::<ChunkHash>::new().write(out)?;
-        3_u64.write(out)?;
-        0_u64.write(out)
-    }
+    canister_version: u64,
+    certified_data: Vec<u8>,
+    wasm_module_size: u64,
+    stable_memory_size: u64,
+    wasm_chunk_store: Vec<ic_management_canister_types::ChunkHash>,
+    taken_at_timestamp: u64,
+    wasm_memory_size: u64,
 }
 fn shape<S, G, T, H>(source: S, globals: Vec<G>, timer: T, hook: H) -> Shape<S, G, T, H> {
     Shape {
@@ -294,14 +278,21 @@ fn shape<S, G, T, H>(source: S, globals: Vec<G>, timer: T, hook: H) -> Shape<S, 
         globals,
         timer,
         hook,
+        canister_version: 2,
+        certified_data: vec![],
+        wasm_module_size: 1,
+        stable_memory_size: 0,
+        wasm_chunk_store: vec![],
+        taken_at_timestamp: 3,
+        wasm_memory_size: 0,
     }
 }
 
 #[test]
 fn null_and_reserved_absence_and_bare_promotion_remain_valid_wire() {
     for raw in [
-        encode(&shape((), vec![()], (), ())),
-        encode(&shape(Reserved, vec![Reserved], Reserved, Reserved)),
+        schema(&shape((), vec![()], (), ())),
+        schema(&shape(Reserved, vec![Reserved], Reserved, Reserved)),
     ] {
         let m = decode(&raw).unwrap();
         assert!(m.source.is_none());
@@ -316,55 +307,59 @@ fn null_and_reserved_absence_and_bare_promotion_remain_valid_wire() {
             ))
         ));
     }
-    let raw = encode(&shape(
-        SnapshotSource::TakenFromCanister(Reserved),
-        vec![SnapshotMetadataGlobal::I32(7)],
-        CanisterTimer::Inactive,
-        OnLowWasmMemoryHookStatus::Ready,
+    let raw = schema(&shape(
+        ic_management_canister_types::SnapshotSource::TakenFromCanister(Reserved),
+        vec![ic_management_canister_types::SnapshotMetadataGlobal::I32(7)],
+        ic_management_canister_types::CanisterTimer::Inactive,
+        ic_management_canister_types::OnLowWasmMemoryHookStatus::Ready,
     ));
     assert!(plan(4).decode_metadata(&[1], &raw).is_ok());
 }
 
 #[test]
 fn unknown_optional_variants_and_non_reserved_source_payloads_cannot_disappear() {
+    #[derive(candid::CandidType, serde::Deserialize)]
     enum Future {
         Value(()),
     }
-    ic_platform::candid_variant!(Future { 1 => Value(()) });
+
+    #[derive(candid::CandidType, serde::Deserialize)]
+
     enum BadSource {
+        #[serde(rename = "taken_from_canister")]
         Taken(()),
     }
-    ic_platform::candid_variant!(BadSource { 2359638948 => Taken(()) });
+
     for raw in [
-        encode(&shape(
+        schema(&shape(
             Some(Future::Value(())),
-            Vec::<Option<SnapshotMetadataGlobal>>::new(),
-            None::<CanisterTimer>,
-            None::<OnLowWasmMemoryHookStatus>,
+            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
+            None::<ic_management_canister_types::CanisterTimer>,
+            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
         )),
-        encode(&shape(
-            None::<SnapshotSource>,
+        schema(&shape(
+            None::<ic_management_canister_types::SnapshotSource>,
             vec![Some(Future::Value(()))],
-            None::<CanisterTimer>,
-            None::<OnLowWasmMemoryHookStatus>,
+            None::<ic_management_canister_types::CanisterTimer>,
+            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
         )),
-        encode(&shape(
-            None::<SnapshotSource>,
-            Vec::<Option<SnapshotMetadataGlobal>>::new(),
+        schema(&shape(
+            None::<ic_management_canister_types::SnapshotSource>,
+            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
             Some(Future::Value(())),
-            None::<OnLowWasmMemoryHookStatus>,
+            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
         )),
-        encode(&shape(
-            None::<SnapshotSource>,
-            Vec::<Option<SnapshotMetadataGlobal>>::new(),
-            None::<CanisterTimer>,
+        schema(&shape(
+            None::<ic_management_canister_types::SnapshotSource>,
+            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
+            None::<ic_management_canister_types::CanisterTimer>,
             Some(Future::Value(())),
         )),
-        encode(&shape(
+        schema(&shape(
             Some(BadSource::Taken(())),
-            Vec::<Option<SnapshotMetadataGlobal>>::new(),
-            None::<CanisterTimer>,
-            None::<OnLowWasmMemoryHookStatus>,
+            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
+            None::<ic_management_canister_types::CanisterTimer>,
+            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
         )),
     ] {
         assert!(matches!(
@@ -376,65 +371,63 @@ fn unknown_optional_variants_and_non_reserved_source_payloads_cannot_disappear()
 
 #[test]
 fn declared_global_limit_wins_before_elements_are_read() {
-    struct GlobalsOnly;
-    impl Encode for GlobalsOnly {
-        const TYPE: &'static Type = &Type::Record(&[(339281328, <Vec<()>>::TYPE)]);
-        fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-            // 4097 null elements consume no payload bytes.
-            vec![(); MAX_GLOBALS + 1].write(out)
-        }
+    #[derive(CandidType, serde::Deserialize)]
+    struct GlobalsOnly {
+        globals: Vec<()>,
     }
     assert!(matches!(
-        decode(&encode(&GlobalsOnly)),
+        decode(&schema(&GlobalsOnly {
+            globals: vec![(); MAX_GLOBALS + 1]
+        })),
         Err(TransferMetadataError::Decode(DecodeError::Limit))
     ));
 }
 
 #[test]
 fn unknown_zero_byte_field_and_missing_required_field_refuse() {
-    struct Extra;
-    ic_platform::candid_record!(Extra {});
+    #[derive(candid::CandidType, serde::Deserialize)]
+    struct Extra {}
+
     // The empty record cannot default required metadata fields.
     assert!(matches!(
-        decode(&encode(&Extra)),
+        decode(&schema(&Extra {})),
         Err(TransferMetadataError::Decode(DecodeError::Type))
     ));
+    #[derive(candid::CandidType, serde::Deserialize)]
     struct Unknown {
+        #[serde(rename = "")]
         extra: (),
     }
-    ic_platform::candid_record!(Unknown { 0 => extra: () });
+
     assert!(matches!(
-        decode(&encode(&Unknown { extra: () })),
+        decode(&schema(&Unknown { extra: () })),
         Err(TransferMetadataError::Decode(DecodeError::Limit))
     ));
 }
 
 #[test]
 fn missing_optional_fields_are_absent_but_never_capture_defaults() {
-    struct RequiredOnly;
-    impl Encode for RequiredOnly {
-        const TYPE: &'static Type = &Type::Record(&[
-            (339281328, <Vec<Option<SnapshotMetadataGlobal>>>::TYPE),
-            (783802816, u64::TYPE),
-            (864574658, <Vec<u8>>::TYPE),
-            (1299009433, u64::TYPE),
-            (1710030651, u64::TYPE),
-            (1767008372, <Vec<ChunkHash>>::TYPE),
-            (3569147778, u64::TYPE),
-            (3598099748, u64::TYPE),
-        ]);
-        fn write(&self, out: &mut Writer) -> Result<(), candid_codec::Error> {
-            Vec::<Option<SnapshotMetadataGlobal>>::new().write(out)?;
-            1_u64.write(out)?;
-            Vec::<u8>::new().write(out)?;
-            2_u64.write(out)?;
-            3_u64.write(out)?;
-            Vec::<ChunkHash>::new().write(out)?;
-            4_u64.write(out)?;
-            5_u64.write(out)
-        }
+    #[derive(CandidType, serde::Deserialize)]
+    struct RequiredOnly {
+        globals: Vec<Option<ic_management_canister_types::SnapshotMetadataGlobal>>,
+        canister_version: u64,
+        certified_data: Vec<u8>,
+        wasm_module_size: u64,
+        stable_memory_size: u64,
+        wasm_chunk_store: Vec<ic_management_canister_types::ChunkHash>,
+        taken_at_timestamp: u64,
+        wasm_memory_size: u64,
     }
-    let raw = encode(&RequiredOnly);
+    let raw = schema(&RequiredOnly {
+        globals: vec![],
+        canister_version: 1,
+        certified_data: vec![],
+        wasm_module_size: 2,
+        stable_memory_size: 3,
+        wasm_chunk_store: vec![],
+        taken_at_timestamp: 4,
+        wasm_memory_size: 5,
+    });
     let value = decode(&raw).unwrap();
     assert!(value.source.is_none());
     assert!(value.global_timer.is_none());
@@ -445,4 +438,38 @@ fn missing_optional_fields_are_absent_but_never_capture_defaults() {
             TransferError::UnsupportedProfile
         ))
     ));
+}
+
+#[test]
+fn restore_upload_arguments_match_independent_sdk_float_bits_and_full_integer_range() {
+    use ic_management_canister_types::{
+        CanisterTimer, OnLowWasmMemoryHookStatus, SnapshotMetadataGlobal,
+        UploadCanisterSnapshotMetadataArgs,
+    };
+    let metadata = round_trip_metadata();
+    let target = plan(8).request().target.canister;
+    let bytes = crate::store::restore::procedure::upload_metadata_arguments(
+        target,
+        &metadata,
+        MAX_REPLY_BYTES,
+    )
+    .unwrap();
+    let independent = UploadCanisterSnapshotMetadataArgs {
+        canister_id: candid::Principal::from_slice(target.as_slice()),
+        replace_snapshot: None,
+        wasm_module_size: 3,
+        wasm_memory_size: 5,
+        stable_memory_size: 7,
+        globals: vec![
+            SnapshotMetadataGlobal::I32(i32::MIN),
+            SnapshotMetadataGlobal::I64(i64::MIN),
+            SnapshotMetadataGlobal::F32(f32::from_bits(0x7fc0_0042)),
+            SnapshotMetadataGlobal::F64(f64::from_bits(0x8000_0000_0000_0000)),
+            SnapshotMetadataGlobal::V128(Nat::from(u128::MAX)),
+        ],
+        certified_data: vec![17; 32],
+        global_timer: Some(CanisterTimer::Active(19)),
+        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::Executed),
+    };
+    assert_eq!(bytes, candid::encode_one(independent).unwrap());
 }

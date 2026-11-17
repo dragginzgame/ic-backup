@@ -1,5 +1,5 @@
-//! Native custody and recovery regressions, not physical-power-loss or IC qualification.
 //! Re-authored from frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
+//! Native custody and recovery regressions, not physical-power-loss or IC qualification.
 //! ops/persistence/attempt_journal/tests and agent tests/http_boundary/recovery.
 use super::super::{
     procedure_tests::{expected_request, reply, selected},
@@ -212,7 +212,7 @@ fn observe(recorder: &mut CaptureOperation, original: &PreparedStatus, outcome: 
         .append_fixture(FactRecord::ObservationSubmitted { step }, None)
         .unwrap();
     // Keep canonical IC time LEB128 and real BLS signing; no protocol decoder is faked.
-    use ic_platform::certification::{fork, labeled, leaf};
+    use ic_platform::certificate::construction::{fork, labeled, leaf};
     let tree = fork(
         labeled(
             b"request_status",

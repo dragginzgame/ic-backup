@@ -1,10 +1,9 @@
 //! Re-authored legacy extent/metadata regressions; no IC effects or wire decoding.
 use super::*;
 use crate::store::BackupDigest;
-use ic_platform::{
-    candid_codec::{Nat, Reserved},
-    management_canister_types::{CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus},
-};
+use ic_platform_protocol::management_snapshots::{Extent, Float32Bits, Float64Bits};
+use ic_platform_protocol::management_snapshots::{Global, Reserved};
+use ic_platform_protocol::management_snapshots::{LowMemoryHook, SnapshotChunk, Timer};
 
 pub(super) fn plan(extent: u32) -> CapturePolicy {
     let original =
@@ -16,8 +15,8 @@ pub(super) fn plan(extent: u32) -> CapturePolicy {
     request.limits.signing_requests = 8192;
     CapturePolicy::new(request).unwrap()
 }
-pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> ReadCanisterSnapshotMetadataResult {
-    ReadCanisterSnapshotMetadataResult {
+pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> SnapshotMetadata {
+    SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
         taken_at_timestamp: 100,
         wasm_module_size: module,
@@ -27,12 +26,12 @@ pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> ReadCanisterSnaps
         wasm_chunk_store: vec![],
         canister_version: 1,
         certified_data: vec![],
-        global_timer: Some(CanisterTimer::Inactive),
-        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::ConditionNotSatisfied),
+        global_timer: Some(Timer::Inactive),
+        on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     }
 }
-pub(super) fn chunk(bytes: &[u8]) -> ChunkHash {
-    ChunkHash {
+pub(super) fn chunk(bytes: &[u8]) -> SnapshotChunk {
+    SnapshotChunk {
         hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
     }
 }
@@ -40,10 +39,10 @@ fn kinds(transfer: &CaptureTransfer<'_>) -> Vec<String> {
     transfer
         .requests()
         .map(|request| match request.kind {
-            SnapshotDataKind::WasmModule { offset, size } => format!("module:{offset}:{size}"),
-            SnapshotDataKind::WasmMemory { offset, size } => format!("heap:{offset}:{size}"),
-            SnapshotDataKind::StableMemory { offset, size } => format!("stable:{offset}:{size}"),
-            SnapshotDataKind::WasmChunk { hash } => format!("chunk:{hash:?}"),
+            ReadKind::WasmModule(Extent { offset, size }) => format!("module:{offset}:{size}"),
+            ReadKind::WasmMemory(Extent { offset, size }) => format!("heap:{offset}:{size}"),
+            ReadKind::StableMemory(Extent { offset, size }) => format!("stable:{offset}:{size}"),
+            ReadKind::WasmChunk(SnapshotChunk { hash }) => format!("chunk:{hash:?}"),
         })
         .collect()
 }
@@ -85,10 +84,10 @@ fn exact_region_order_extents_and_original_request_identity() {
         let mut covered = [0; 3];
         for request in transfer.requests() {
             let (region, offset, size) = match request.kind {
-                SnapshotDataKind::WasmModule { offset, size } => (0, offset, size),
-                SnapshotDataKind::WasmMemory { offset, size } => (1, offset, size),
-                SnapshotDataKind::StableMemory { offset, size } => (2, offset, size),
-                SnapshotDataKind::WasmChunk { .. } => unreachable!(),
+                ReadKind::WasmModule(Extent { offset, size }) => (0, offset, size),
+                ReadKind::WasmMemory(Extent { offset, size }) => (1, offset, size),
+                ReadKind::StableMemory(Extent { offset, size }) => (2, offset, size),
+                ReadKind::WasmChunk(SnapshotChunk { .. }) => unreachable!(),
             };
             assert_eq!(offset, covered[region]);
             assert!((1..=u64::from(extent)).contains(&size));
@@ -111,7 +110,7 @@ fn chunk_order_is_canonical_without_rewriting_metadata_and_empty_chunk_counts() 
         .requests()
         .skip(1)
         .map(|r| match r.kind {
-            SnapshotDataKind::WasmChunk { hash } => hash,
+            ReadKind::WasmChunk(SnapshotChunk { hash }) => hash,
             _ => unreachable!(),
         })
         .collect();
@@ -175,7 +174,7 @@ fn checked_size_overflow_and_large_fragmented_input_refuse_before_expansion() {
     let transfer = p.plan_transfer(&[1], &m).unwrap();
     assert_eq!(transfer.data_calls(), 1024);
     assert!(matches!(transfer.requests().last().unwrap().kind,
-        SnapshotDataKind::WasmModule { offset, size }
+        ReadKind::WasmModule(Extent { offset, size })
             if offset == (1 << 30) - (1 << 20) && size == 1 << 20));
 }
 
@@ -207,7 +206,7 @@ fn malformed_duplicate_and_excessive_chunks_refuse() {
     let p = plan(1);
     let mut m = metadata(1, 0, 0);
     for size in [0, 31, 33] {
-        m.wasm_chunk_store = vec![ChunkHash {
+        m.wasm_chunk_store = vec![SnapshotChunk {
             hash: vec![0; size],
         }];
         assert!(matches!(
@@ -233,14 +232,12 @@ fn malformed_duplicate_and_excessive_chunks_refuse() {
 fn missing_round_trip_fields_are_unsupported_and_never_defaulted() {
     let p = plan(4);
     for change in [
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.source = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| {
-            m.source = Some(SnapshotSource::MetadataUpload(Reserved))
-        },
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.wasm_module_size = 0,
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.global_timer = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.on_low_wasm_memory_hook_status = None,
-        |m: &mut ReadCanisterSnapshotMetadataResult| m.globals = vec![None],
+        |m: &mut SnapshotMetadata| m.source = None,
+        |m: &mut SnapshotMetadata| m.source = Some(SnapshotSource::MetadataUpload(Reserved)),
+        |m: &mut SnapshotMetadata| m.wasm_module_size = 0,
+        |m: &mut SnapshotMetadata| m.global_timer = None,
+        |m: &mut SnapshotMetadata| m.on_low_wasm_memory_hook_status = None,
+        |m: &mut SnapshotMetadata| m.globals = vec![None],
     ] {
         let mut m = metadata(1, 0, 0);
         change(&mut m);
@@ -255,10 +252,10 @@ fn missing_round_trip_fields_are_unsupported_and_never_defaulted() {
 fn metadata_bounds_and_v128_range_are_explicit() {
     let p = plan(4);
     let mut m = metadata(1, 0, 0);
-    m.globals = vec![Some(SnapshotMetadataGlobal::I32(0)); 4096];
+    m.globals = vec![Some(Global::I32(0)); 4096];
     m.certified_data = vec![0; 32];
     p.plan_transfer(&[1], &m).unwrap();
-    m.globals.push(Some(SnapshotMetadataGlobal::I32(0)));
+    m.globals.push(Some(Global::I32(0)));
     assert!(matches!(
         p.plan_transfer(&[1], &m),
         Err(TransferError::MetadataBounds)
@@ -270,16 +267,9 @@ fn metadata_bounds_and_v128_range_are_explicit() {
         Err(TransferError::MetadataBounds)
     ));
     m.certified_data.clear();
-    m.globals = vec![Some(SnapshotMetadataGlobal::V128(Nat::from(u128::MAX)))];
+    m.globals = vec![Some(Global::V128(u128::MAX))];
     p.plan_transfer(&[1], &m).unwrap();
-    m.globals = vec![Some(SnapshotMetadataGlobal::V128(Nat(Nat::from(
-        u128::MAX,
-    )
-    .0 + 1_u8)))];
-    assert!(matches!(
-        p.plan_transfer(&[1], &m),
-        Err(TransferError::GlobalRange)
-    ));
+    // Values above u128 are unrepresentable; raw-wire refusal lives in metadata tests.
 }
 
 #[test]
@@ -287,20 +277,20 @@ fn float_bits_and_source_provenance_remain_borrowed_and_unchanged() {
     let p = plan(4);
     let mut m = metadata(1, 0, 0);
     m.globals = vec![
-        Some(SnapshotMetadataGlobal::F32(f32::from_bits(0x7fc0_0042))),
-        Some(SnapshotMetadataGlobal::F64(f64::from_bits(
-            0x8000_0000_0000_0000,
+        Some(Global::F32(Float32Bits(
+            (f32::from_bits(0x7fc0_0042)).to_bits(),
+        ))),
+        Some(Global::F64(Float64Bits(
+            (f64::from_bits(0x8000_0000_0000_0000)).to_bits(),
         ))),
     ];
     m.taken_at_timestamp = u64::MAX;
     m.canister_version = u64::MAX;
     let transfer = p.plan_transfer(&[0, 255], &m).unwrap();
     assert!(std::ptr::eq(transfer.metadata(), &m));
+    assert!(matches!(transfer.metadata().globals[0], Some(Global::F32(v)) if v.0 == 0x7fc0_0042));
     assert!(
-        matches!(transfer.metadata().globals[0], Some(SnapshotMetadataGlobal::F32(v)) if v.to_bits() == 0x7fc0_0042)
-    );
-    assert!(
-        matches!(transfer.metadata().globals[1], Some(SnapshotMetadataGlobal::F64(v)) if v.to_bits() == 0x8000_0000_0000_0000)
+        matches!(transfer.metadata().globals[1], Some(Global::F64(v)) if v.0 == 0x8000_0000_0000_0000)
     );
     assert_eq!(transfer.metadata().taken_at_timestamp, u64::MAX);
     assert_eq!(transfer.metadata().canister_version, u64::MAX);

@@ -11,8 +11,11 @@ fn snapshot(id: Vec<u8>) -> Snapshot {
         total_size: u64::MAX,
     }
 }
-fn encode(value: &impl Encode) -> Vec<u8> {
-    candid_codec::encode_one(value, MAX_REPLY_BYTES).unwrap()
+fn schema(value: &impl candid::CandidType) -> Vec<u8> {
+    candid::encode_one(value).unwrap()
+}
+fn encode(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::test_fixtures::wire::encode(value, MAX_REPLY_BYTES)
 }
 fn hex(value: &str) -> Vec<u8> {
     let (pairs, rest) = value.as_bytes().as_chunks::<2>();
@@ -61,12 +64,14 @@ fn exact_inventory_and_identifier_caps_preserve_full_numeric_ranges() {
         total_size: u64::MAX,
     };
     assert_eq!(decode_taken_snapshot(&encode(&max), &[]).unwrap(), max);
-    for id in [vec![], vec![0; MAX_ID_BYTES + 1]] {
-        assert!(matches!(
-            decode_taken_snapshot(&encode(&snapshot(id)), &[]),
-            Err(SnapshotReplyError::Decode(_))
-        ));
-    }
+    assert_eq!(
+        decode_taken_snapshot(&encode(&snapshot(vec![])), &[]).unwrap_err(),
+        SnapshotReplyError::SnapshotId
+    );
+    assert_eq!(
+        decode_taken_snapshot(&encode(&snapshot(vec![0; MAX_ID_BYTES + 1])), &[]).unwrap_err(),
+        SnapshotReplyError::Decode(DecodeError::Limit)
+    );
     let mut values: Vec<_> = (0..MAX_SNAPSHOTS)
         .map(|index| {
             let mut id = vec![0; MAX_ID_BYTES];
@@ -117,8 +122,12 @@ fn refuses_partial_extra_wrong_shape_and_trailing_replies() {
     trailing.push(0);
     for invalid in [
         trailing,
-        encode(&vec![value.clone()]),
-        candid_codec::arguments::encode_args(&(value, 0_u64), MAX_REPLY_BYTES).unwrap(),
+        encode(&vec![value]),
+        candid::encode_args((
+            candid::decode_one::<ic_management_canister_types::Snapshot>(&raw).unwrap(),
+            0_u64,
+        ))
+        .unwrap(),
         b"DIDL\0\0".to_vec(),
     ] {
         assert!(matches!(
@@ -167,41 +176,41 @@ fn hostile_declared_counts_refuse_before_missing_elements_are_read() {
 
 #[test]
 fn unknown_missing_and_wrong_typed_fields_refuse() {
+    #[derive(candid::CandidType)]
     struct Extra {
         id: Vec<u8>,
         total_size: u64,
         extra: bool,
         taken_at_timestamp: u64,
     }
-    ic_platform::candid_record!(Extra {
-        23515 => id: Vec<u8>, 1926775388 => total_size: u64,
-        3356999015 => extra: bool, 3569147778 => taken_at_timestamp: u64,
-    });
+
+    #[derive(candid::CandidType)]
+
     struct Missing {
         id: Vec<u8>,
         taken_at_timestamp: u64,
     }
-    ic_platform::candid_record!(Missing {23515 => id: Vec<u8>, 3569147778 => taken_at_timestamp: u64});
+
+    #[derive(candid::CandidType)]
+
     struct Wrong {
         id: Vec<u8>,
         total_size: u64,
         taken_at_timestamp: i64,
     }
-    ic_platform::candid_record!(Wrong {
-        23515 => id: Vec<u8>, 1926775388 => total_size: u64, 3569147778 => taken_at_timestamp: i64,
-    });
+
     for raw in [
-        encode(&Extra {
+        schema(&Extra {
             id: vec![1],
             total_size: 0,
             extra: true,
             taken_at_timestamp: 0,
         }),
-        encode(&Missing {
+        schema(&Missing {
             id: vec![1],
             taken_at_timestamp: 0,
         }),
-        encode(&Wrong {
+        schema(&Wrong {
             id: vec![1],
             total_size: 0,
             taken_at_timestamp: -1,
@@ -218,7 +227,7 @@ fn unknown_missing_and_wrong_typed_fields_refuse() {
 fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
     let p = plan();
     let inventory = vec![snapshot(vec![0, 255])];
-    let expected = TakeCanisterSnapshotArgs {
+    let expected = TakeSnapshotArgs {
         canister_id: p.request().target.canister,
         replace_snapshot: None,
         uninstall_code: Some(false),
@@ -228,8 +237,14 @@ fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
     assert_eq!(p.take_snapshot_arguments(&inventory, 2).unwrap(), expected);
     let encoded = encode(&expected);
     assert_eq!(
-        decode::<TakeCanisterSnapshotArgs>(&encoded).unwrap(),
-        expected
+        candid::decode_one::<ic_management_canister_types::TakeCanisterSnapshotArgs>(&encoded)
+            .unwrap(),
+        ic_management_canister_types::TakeCanisterSnapshotArgs {
+            canister_id: candid::Principal::from_slice(expected.canister_id.as_slice()),
+            replace_snapshot: None,
+            uninstall_code: Some(false),
+            sender_canister_version: None
+        }
     );
     assert_eq!(inventory, [snapshot(vec![0, 255])]);
     assert_eq!(

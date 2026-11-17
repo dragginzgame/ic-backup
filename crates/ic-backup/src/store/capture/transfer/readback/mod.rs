@@ -1,9 +1,8 @@
 //! Pure uploaded-state comparison; no authentication, persistence or load authority.
 
 use super::{CaptureTransfer, TransferMetadataError, metadata};
-use ic_platform::management_canister_types::{
-    CanisterTimer, OnLowWasmMemoryHookStatus, ReadCanisterSnapshotMetadataResult,
-    SnapshotMetadataGlobal, SnapshotSource,
+use ic_platform_protocol::management_snapshots::{
+    Global, LowMemoryHook, SnapshotMetadata, SnapshotSource, Timer,
 };
 use thiserror::Error;
 
@@ -32,7 +31,7 @@ impl CaptureTransfer<'_> {
     pub fn decode_uploaded_metadata(
         &self,
         reply: &[u8],
-    ) -> Result<ReadCanisterSnapshotMetadataResult, ReadbackMetadataError> {
+    ) -> Result<SnapshotMetadata, ReadbackMetadataError> {
         let destination = metadata::decode(reply)?;
         if !matches!(destination.source, Some(SnapshotSource::MetadataUpload(_))) {
             return Err(ReadbackMetadataError::Origin);
@@ -57,16 +56,14 @@ impl CaptureTransfer<'_> {
             return Err(ReadbackMetadataError::CertifiedData);
         }
         let equal_timer = match (&source.global_timer, &destination.global_timer) {
-            (Some(CanisterTimer::Inactive), Some(CanisterTimer::Inactive)) => true,
-            (Some(CanisterTimer::Active(left)), Some(CanisterTimer::Active(right))) => {
-                left == right
-            }
+            (Some(Timer::Inactive), Some(Timer::Inactive)) => true,
+            (Some(Timer::Active(left)), Some(Timer::Active(right))) => left == right,
             _ => false,
         };
         if !equal_timer {
             return Err(ReadbackMetadataError::GlobalTimer);
         }
-        use OnLowWasmMemoryHookStatus::{ConditionNotSatisfied, Executed, Ready};
+        use LowMemoryHook::{ConditionNotSatisfied, Executed, Ready};
         if !matches!(
             (
                 &source.on_low_wasm_memory_hook_status,
@@ -97,13 +94,13 @@ impl CaptureTransfer<'_> {
     }
 }
 
-fn equal_global(left: &SnapshotMetadataGlobal, right: &SnapshotMetadataGlobal) -> bool {
-    use SnapshotMetadataGlobal::{F32, F64, I32, I64, V128};
+fn equal_global(left: &Global, right: &Global) -> bool {
+    use Global::{F32, F64, I32, I64, V128};
     match (left, right) {
         (I32(left), I32(right)) => left == right,
         (I64(left), I64(right)) => left == right,
-        (F32(left), F32(right)) => left.to_bits() == right.to_bits(),
-        (F64(left), F64(right)) => left.to_bits() == right.to_bits(),
+        (F32(left), F32(right)) => left == right,
+        (F64(left), F64(right)) => left == right,
         (V128(left), V128(right)) => left == right,
         _ => false,
     }

@@ -1,9 +1,10 @@
 //! Real signatures over external protocol envelopes; no signing service or IC effects.
 use super::*;
 use ic_platform::{
-    Principal, ecdsa, ed25519,
-    ic_protocol::{Envelope, decode_envelope, encode_envelope},
+    ecdsa, ed25519,
+    ingress::{Envelope, decode_envelope, encode_envelope},
 };
+use ic_platform_types::Principal;
 
 #[derive(Clone, Copy)]
 pub(in crate::store) enum Scheme {
@@ -65,11 +66,11 @@ pub(in crate::store) fn fixture(scheme: Scheme) -> (CapturePolicy, PreparedStatu
     if let EnvelopeContent::Call { sender: caller, .. } = &mut content {
         *caller = sender.as_slice().try_into().unwrap();
     }
-    let id = content.to_request_id();
+    let id = content.request_id().unwrap();
     // Independent literal request domain, rather than using the verifier's signable method.
     let message = [b"\x0aic-request".as_slice(), id.as_slice()].concat();
     let envelope = Envelope {
-        content: Cow::Owned(content),
+        content,
         sender_pubkey: Some(der),
         sender_sig: Some(scheme.sign(&message)),
         sender_delegation: None,
@@ -77,19 +78,16 @@ pub(in crate::store) fn fixture(scheme: Scheme) -> (CapturePolicy, PreparedStatu
     (
         plan,
         PreparedStatus {
-            request_id: *id,
+            request_id: id,
             expires_ns: 21,
             envelope: encode_envelope(&envelope, 4096).unwrap(),
             observation: vec![1],
         },
     )
 }
-pub(in crate::store) fn change(
-    prepared: &mut PreparedStatus,
-    action: impl FnOnce(&mut Envelope<'static>),
-) {
-    let mut envelope = decode_envelope(&prepared.envelope, 4096).unwrap();
+pub(in crate::store) fn change(prepared: &mut PreparedStatus, action: impl FnOnce(&mut Envelope)) {
+    let mut envelope = decode_envelope(&prepared.envelope, 4096).unwrap().value;
     action(&mut envelope);
-    prepared.request_id = *envelope.content.to_request_id();
+    prepared.request_id = envelope.content.request_id().unwrap();
     prepared.envelope = encode_envelope(&envelope, 8192).unwrap();
 }

@@ -11,7 +11,7 @@ use crate::store::capture::{
 use crate::store::operation::Step;
 use crate::store::operation::intent::Intent;
 use crate::store::{PreparedStatus, StatusEvidence};
-use ic_platform::{candid_codec, ic_protocol::EnvelopeContent};
+use ic_platform::ingress::Content as EnvelopeContent;
 
 pub(in crate::store) fn profile() -> ProfileRecord {
     ProfileRecord {
@@ -38,7 +38,7 @@ fn input() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     request.limits.evidence_bytes = 8 * 1024 * 1024;
     let intent = CapturePlan::new(request, profile()).unwrap();
     let (method, args) = Procedure::new(&intent).unwrap().request().unwrap();
-    let response = candid_codec::encode_one(&status(intent.plan()), 4096).unwrap();
+    let response = crate::store::capture::test_fixtures::wire::encode(&status(intent.plan()), 4096);
     let (prepared, evidence) = signed_reply(&intent, 0, method, args, response);
     (intent, prepared, evidence)
 }
@@ -58,7 +58,7 @@ pub(in crate::store) fn signed_reply(
             arg,
             nonce,
             ..
-        } = envelope.content.to_mut()
+        } = &mut envelope.content
         {
             *ingress_expiry = 120;
             *method_name = method.into();
@@ -67,7 +67,7 @@ pub(in crate::store) fn signed_reply(
         }
         let message = [
             b"\x0aic-request".as_slice(),
-            envelope.content.to_request_id().as_slice(),
+            envelope.content.request_id().unwrap().as_slice(),
         ]
         .concat();
         envelope.sender_sig = Some(Scheme::Ed25519.sign(&message));
@@ -221,7 +221,7 @@ fn changed_time_request_or_proof_blocks_the_same_original_procedure() {
             7 | 8 => change(&mut prepared, |envelope| {
                 if let EnvelopeContent::Call {
                     method_name, arg, ..
-                } = envelope.content.to_mut()
+                } = &mut envelope.content
                 {
                     if mutation == 7 {
                         *method_name = "list_canister_snapshots".into();
@@ -231,7 +231,7 @@ fn changed_time_request_or_proof_blocks_the_same_original_procedure() {
                 }
                 let message = [
                     b"\x0aic-request".as_slice(),
-                    envelope.content.to_request_id().as_slice(),
+                    envelope.content.request_id().unwrap().as_slice(),
                 ]
                 .concat();
                 envelope.sender_sig = Some(Scheme::Ed25519.sign(&message));
@@ -258,7 +258,7 @@ fn changed_time_request_or_proof_blocks_the_same_original_procedure() {
 #[test]
 fn certified_rejection_is_terminal_evidence_and_never_unlocks_next_step() {
     use crate::store::capture::advance::status_certificate_evidence;
-    use ic_platform::certification::{fork, labeled, leaf};
+    use ic_platform::certificate::construction::{fork, labeled, leaf};
     let (intent, prepared, _) = input();
     let tree = fork(
         labeled(

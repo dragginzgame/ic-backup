@@ -47,7 +47,14 @@ Supplier work is tracked in [Platform #11 — snapshot/status codecs](https://gi
 and [Platform #12 — signed ingress/recovery](https://github.com/dragginzgame/ic-platform/issues/12).
 These own implementation acceptance; the evidence below records the reviewed consumer boundary.
 
-Registry trial of **Platform 0.34.7 / Protocol 0.2.6 / Types 0.21.2** now passes.
+Current adoption (2026-11-17) is complete: Platform 0.34.11 owns ingress,
+direct-key and certificate verification; Protocol 0.3.3 owns management request
+encoding and reply decoding; Types 0.21.2 owns public identities. Old Platform
+and Types versions are removed from both locks and test dependencies. The
+[handoff](../status/current.md#current-platform-adoption--2026-11-17) owns current
+consumer qualification; the following probes are historical.
+
+Registry trial of **Platform 0.34.7 / Protocol 0.2.6 / Types 0.21.2** passed.
 Platform/Protocol source is `a813d4ea5378515984a547a9f4e9d37f2124cf14`; archives
 match their registry checksums. Protocol now supplies `management-snapshots`.
 The isolated public-API probe uses no old Platform implementation: it reads the
@@ -416,7 +423,7 @@ wire schema were added.
 
 The subsequent coordinated adoption review found a remaining construction gap in
 that same 0.34.7 archive: `ingress` has no public bounded encoder for an externally
-signed envelope. The unchanged `qualification/consumer/src/authority/mod.rs`
+signed envelope. The unchanged `qualification/ic-backup-consumer/src/authority/mod.rs`
 needs both Call and ReadState before Backup records its original bytes. Platform's
 `native::Ed25519Identity::prepare_update` covers calls only; its
 `ReadClient::observe_request` creates and sends a read-state internally and adds

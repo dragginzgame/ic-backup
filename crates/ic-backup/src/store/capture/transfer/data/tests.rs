@@ -1,11 +1,11 @@
 //! Re-authored legacy data-admission cases against the extracted implementation.
 use super::super::tests::{chunk, metadata, plan};
 use super::*;
-use ic_platform::management_canister_types::ReadCanisterSnapshotDataResult;
+use ic_platform_protocol::management_snapshots::{SnapshotData, fixtures};
 
 fn reply(bytes: &[u8]) -> Vec<u8> {
-    candid_codec::encode_one(
-        &ReadCanisterSnapshotDataResult {
+    fixtures::snapshot_data(
+        &SnapshotData {
             chunk: bytes.to_vec(),
         },
         MAX_REPLY_BYTES,

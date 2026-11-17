@@ -11,18 +11,15 @@ use crate::store::capture::{
     status::tests::status,
     test_fixtures::signatures::{Scheme, fixture},
 };
-use ic_platform::{
-    candid_codec::{self, Encode, Reserved},
-    management_canister_types::{
-        CanisterIdRecord, CanisterTimer, ChunkHash, OnLowWasmMemoryHookStatus,
-        ReadCanisterSnapshotDataArgs, ReadCanisterSnapshotDataResult,
-        ReadCanisterSnapshotMetadataArgs, ReadCanisterSnapshotMetadataResult, Snapshot,
-        SnapshotDataKind, SnapshotSource, TakeCanisterSnapshotArgs,
-    },
+use ic_platform_protocol::management_snapshots::Extent;
+use ic_platform_protocol::management_snapshots::Reserved;
+use ic_platform_protocol::management_snapshots::{
+    CanisterArgs, LowMemoryHook, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs, SnapshotChunk,
+    SnapshotData, SnapshotMetadata, SnapshotSource, TakeSnapshotArgs, Timer,
 };
 
-fn encode(value: &impl Encode) -> Vec<u8> {
-    candid_codec::encode_one(value, 4096).unwrap()
+fn encode(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::test_fixtures::wire::encode(value, 4096)
 }
 pub(in crate::store) fn selected() -> CapturePlan {
     let mut request = fixture(Scheme::Ed25519).0.request().clone();
@@ -54,8 +51,8 @@ fn snapshot(id: u8) -> Snapshot {
         total_size: u64::MAX,
     }
 }
-fn metadata() -> ReadCanisterSnapshotMetadataResult {
-    ReadCanisterSnapshotMetadataResult {
+fn metadata() -> SnapshotMetadata {
+    SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
         taken_at_timestamp: 100,
         wasm_module_size: 10,
@@ -66,15 +63,15 @@ fn metadata() -> ReadCanisterSnapshotMetadataResult {
         certified_data: vec![1, 2],
         wasm_chunk_store: vec![b"chk".as_slice(), b""]
             .into_iter()
-            .map(|bytes| ChunkHash {
+            .map(|bytes| SnapshotChunk {
                 hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
             })
             .collect(),
-        global_timer: Some(CanisterTimer::Inactive),
-        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::ConditionNotSatisfied),
+        global_timer: Some(Timer::Inactive),
+        on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     }
 }
-fn data() -> Vec<(SnapshotDataKind, Vec<u8>)> {
+fn data() -> Vec<(ReadKind, Vec<u8>)> {
     let mut result = Vec::new();
     for (region, bytes) in [b"abcdefghij".as_slice(), b"heap!", b"state"]
         .into_iter()
@@ -83,9 +80,9 @@ fn data() -> Vec<(SnapshotDataKind, Vec<u8>)> {
         for (n, bytes) in bytes.chunks(4).enumerate() {
             let (offset, size) = ((n * 4) as u64, bytes.len() as u64);
             let kind = match region {
-                0 => SnapshotDataKind::WasmModule { offset, size },
-                1 => SnapshotDataKind::WasmMemory { offset, size },
-                _ => SnapshotDataKind::StableMemory { offset, size },
+                0 => ReadKind::WasmModule(Extent { offset, size }),
+                1 => ReadKind::WasmMemory(Extent { offset, size }),
+                _ => ReadKind::StableMemory(Extent { offset, size }),
             };
             result.push((kind, bytes.to_vec()));
         }
@@ -94,9 +91,9 @@ fn data() -> Vec<(SnapshotDataKind, Vec<u8>)> {
     chunks.sort_by_key(|bytes| *BackupDigest::compute(bytes).as_bytes());
     result.extend(chunks.map(|bytes| {
         (
-            SnapshotDataKind::WasmChunk {
+            ReadKind::WasmChunk(SnapshotChunk {
                 hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
-            },
+            }),
             bytes.to_vec(),
         )
     }));
@@ -108,7 +105,7 @@ pub(in crate::store) fn reply(plan: &CapturePlan, step: Step) -> Vec<u8> {
         Step::ListSnapshots => encode(&vec![snapshot(9)]),
         Step::TakeSnapshot => encode(&snapshot(8)),
         Step::Metadata => encode(&metadata()),
-        Step::Data(n) => encode(&ReadCanisterSnapshotDataResult {
+        Step::Data(n) => encode(&SnapshotData {
             chunk: data()[n as usize].1.clone(),
         }),
         _ => panic!("capture fixture received restore step"),
@@ -121,15 +118,15 @@ pub(in crate::store) fn expected_request(
     let canister_id = plan.plan().request().target.canister;
     match step {
         Step::InitialStatus | Step::FinalStatus => {
-            ("canister_status", encode(&CanisterIdRecord { canister_id }))
+            ("canister_status", encode(&CanisterArgs { canister_id }))
         }
         Step::ListSnapshots => (
             "list_canister_snapshots",
-            encode(&CanisterIdRecord { canister_id }),
+            encode(&CanisterArgs { canister_id }),
         ),
         Step::TakeSnapshot => (
             "take_canister_snapshot",
-            encode(&TakeCanisterSnapshotArgs {
+            encode(&TakeSnapshotArgs {
                 canister_id,
                 replace_snapshot: None,
                 uninstall_code: Some(false),
@@ -138,14 +135,14 @@ pub(in crate::store) fn expected_request(
         ),
         Step::Metadata => (
             "read_canister_snapshot_metadata",
-            encode(&ReadCanisterSnapshotMetadataArgs {
+            encode(&SnapshotArgs {
                 canister_id,
                 snapshot_id: vec![8],
             }),
         ),
         Step::Data(n) => (
             "read_canister_snapshot_data",
-            encode(&ReadCanisterSnapshotDataArgs {
+            encode(&ReadDataArgs {
                 canister_id,
                 snapshot_id: vec![8],
                 kind: data()[n as usize].0.clone(),
@@ -291,7 +288,7 @@ fn invalid_settled_payload_stays_spent_and_never_unlocks_another_call() {
     let mut flow = Procedure::new(&plan).unwrap();
     let mut bytes = Journal::create(&plan).unwrap();
     let mut running = status(plan.plan());
-    running.status = ic_platform::management_canister_types::CanisterStatusType::Running;
+    running.status = ic_platform_protocol::management_snapshots::Status::Running;
     let response = encode(&running);
     let step = Step::InitialStatus;
     append(
@@ -373,7 +370,7 @@ fn snapshot_data_and_final_status_prerequisites_are_not_optional_phases() {
             false,
             Step::Data(0),
             [2; 32],
-            &encode(&ReadCanisterSnapshotDataResult { chunk: vec![0] })
+            &encode(&SnapshotData { chunk: vec![0] })
         ),
         Err(ProcedureError::Data(_))
     ));
@@ -405,7 +402,7 @@ fn snapshot_data_and_final_status_prerequisites_are_not_optional_phases() {
     assert!(flow.request().is_err());
     let mut flow = through(&plan, Step::FinalStatus);
     let mut running = status(plan.plan());
-    running.status = ic_platform::management_canister_types::CanisterStatusType::Running;
+    running.status = ic_platform_protocol::management_snapshots::Status::Running;
     assert!(matches!(
         flow.accept(false, Step::FinalStatus, [3; 32], &encode(&running)),
         Err(ProcedureError::Status(_))
@@ -429,7 +426,7 @@ fn whole_module_hash_is_required_after_all_valid_length_replies() {
             false,
             Step::Data(n),
             [2; 32],
-            &encode(&ReadCanisterSnapshotDataResult { chunk: bytes }),
+            &encode(&SnapshotData { chunk: bytes }),
         );
         if n == 8 {
             assert!(matches!(result, Err(ProcedureError::ModuleHash)));

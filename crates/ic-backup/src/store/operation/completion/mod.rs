@@ -23,10 +23,9 @@ use crate::store::{
 };
 use ic_host_artifacts::Length;
 use ic_host_fs::Kind as EntryKind;
-use ic_platform::{
-    ic_protocol::{EnvelopeContent, decode_call_content_strict},
-    management_canister_types::SnapshotDataKind,
-};
+use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
+use ic_platform_protocol::management_snapshots::ReadKind;
+use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 use std::{
     ffi::OsStr,
     io::{Read, Write},
@@ -261,10 +260,10 @@ impl CaptureOperation {
             .collect();
         for (n, request) in transfer.requests().enumerate() {
             let index = match request.kind {
-                SnapshotDataKind::WasmModule { .. } => 0,
-                SnapshotDataKind::WasmMemory { .. } => 1,
-                SnapshotDataKind::StableMemory { .. } => 2,
-                SnapshotDataKind::WasmChunk { hash } => {
+                ReadKind::WasmModule(Extent { .. }) => 0,
+                ReadKind::WasmMemory(Extent { .. }) => 1,
+                ReadKind::StableMemory(Extent { .. }) => 2,
+                ReadKind::WasmChunk(SnapshotChunk { hash }) => {
                     let hash = BackupDigest::from_bytes(
                         hash.as_slice()
                             .try_into()
@@ -468,11 +467,13 @@ impl CaptureOperation {
             call.update.reference_ns,
             self.read_role(call, Role::Request)?,
         )?;
-        let EnvelopeContent::Call { arg, .. } = decode_call_content_strict(
+        let EnvelopeContent::Call { arg, .. } = decode_envelope(
             &request.envelope,
             self.intent.profile().request_bytes as usize,
         )
         .map_err(|_| OperationStoreError::Changed)?
+        .value
+        .content
         else {
             return Err(Error::History);
         };

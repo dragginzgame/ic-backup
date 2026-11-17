@@ -7,9 +7,9 @@ pub use data::{DataReadError, TransferDataError};
 pub use metadata::TransferMetadataError;
 
 use super::CapturePolicy;
-use ic_platform::management_canister_types::{
-    ReadCanisterSnapshotDataArgs, ReadCanisterSnapshotMetadataResult, SnapshotDataKind,
-    SnapshotMetadataGlobal, SnapshotSource,
+use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
+use ic_platform_protocol::management_snapshots::{
+    ReadDataArgs, ReadKind, SnapshotMetadata, SnapshotSource,
 };
 use std::fmt;
 use thiserror::Error;
@@ -25,7 +25,7 @@ const MAX_GLOBALS: usize = 4096;
 /// [`Self::decode_data`] validates individual data replies without recording progress.
 pub struct CaptureTransfer<'a> {
     plan: &'a CapturePolicy,
-    metadata: &'a ReadCanisterSnapshotMetadataResult,
+    metadata: &'a SnapshotMetadata,
     snapshot_id: &'a [u8],
     chunks: Vec<[u8; 32]>,
     region_calls: [u64; 3],
@@ -54,7 +54,7 @@ impl CapturePolicy {
     pub fn plan_transfer<'a>(
         &'a self,
         snapshot_id: &'a [u8],
-        metadata: &'a ReadCanisterSnapshotMetadataResult,
+        metadata: &'a SnapshotMetadata,
     ) -> Result<CaptureTransfer<'a>, TransferError> {
         if !(1..=256).contains(&snapshot_id.len()) {
             return Err(TransferError::SnapshotId);
@@ -164,7 +164,7 @@ impl CaptureTransfer<'_> {
 
     /// The unchanged borrowed metadata, retaining wire order, optional values and float bits.
     #[must_use]
-    pub const fn metadata(&self) -> &ReadCanisterSnapshotMetadataResult {
+    pub const fn metadata(&self) -> &SnapshotMetadata {
         self.metadata
     }
 
@@ -172,15 +172,15 @@ impl CaptureTransfer<'_> {
     ///
     /// Every request uses the original plan's target and exact supplied snapshot ID.
     /// Producing a DTO grants no signature, reservation or dispatch permission.
-    pub fn requests(&self) -> impl ExactSizeIterator<Item = ReadCanisterSnapshotDataArgs> + '_ {
-        (0..self.data_calls).map(|ordinal| ReadCanisterSnapshotDataArgs {
+    pub fn requests(&self) -> impl ExactSizeIterator<Item = ReadDataArgs> + '_ {
+        (0..self.data_calls).map(|ordinal| ReadDataArgs {
             canister_id: self.plan.request().target.canister,
             snapshot_id: self.snapshot_id.to_vec(),
             kind: self.kind(u64::from(ordinal)),
         })
     }
 
-    fn kind(&self, ordinal: u64) -> SnapshotDataKind {
+    fn kind(&self, ordinal: u64) -> ReadKind {
         data_kind(
             [
                 self.metadata.wasm_module_size,
@@ -202,25 +202,25 @@ pub(in crate::store::capture) fn data_kind(
     extent: u64,
     chunks: &[[u8; 32]],
     mut ordinal: u64,
-) -> SnapshotDataKind {
+) -> ReadKind {
     for (region, count) in region_calls.into_iter().enumerate() {
         if ordinal < count {
             let offset = ordinal * extent;
             let size = extent.min(sizes[region] - offset);
             return match region {
-                0 => SnapshotDataKind::WasmModule { offset, size },
-                1 => SnapshotDataKind::WasmMemory { offset, size },
-                _ => SnapshotDataKind::StableMemory { offset, size },
+                0 => ReadKind::WasmModule(Extent { offset, size }),
+                1 => ReadKind::WasmMemory(Extent { offset, size }),
+                _ => ReadKind::StableMemory(Extent { offset, size }),
             };
         }
         ordinal -= count;
     }
-    SnapshotDataKind::WasmChunk {
+    ReadKind::WasmChunk(SnapshotChunk {
         hash: chunks[ordinal as usize].to_vec(),
-    }
+    })
 }
 
-fn admit_metadata(metadata: &ReadCanisterSnapshotMetadataResult) -> Result<(), TransferError> {
+fn admit_metadata(metadata: &SnapshotMetadata) -> Result<(), TransferError> {
     if metadata.wasm_chunk_store.len() > MAX_CHUNKS
         || metadata.globals.len() > MAX_GLOBALS
         || metadata.certified_data.len() > 32
@@ -234,13 +234,6 @@ fn admit_metadata(metadata: &ReadCanisterSnapshotMetadataResult) -> Result<(), T
         || metadata.globals.iter().any(Option::is_none)
     {
         return Err(TransferError::UnsupportedProfile);
-    }
-    for global in metadata.globals.iter().flatten() {
-        if let SnapshotMetadataGlobal::V128(value) = global
-            && value.0.bits() > 128
-        {
-            return Err(TransferError::GlobalRange);
-        }
     }
     Ok(())
 }
@@ -267,9 +260,6 @@ pub enum TransferError {
     /// Valid external metadata lacks required round-trip information or a nonempty module.
     #[error("snapshot is outside the supported capture profile")]
     UnsupportedProfile,
-    /// A v128 global is not representable in 128 bits.
-    #[error("snapshot vector global exceeds 128 bits")]
-    GlobalRange,
     /// A chunk identity is malformed or duplicated.
     #[error("snapshot chunks must have unique 32-byte hashes")]
     ChunkHash,

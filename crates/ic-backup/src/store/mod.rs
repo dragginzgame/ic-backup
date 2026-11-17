@@ -64,7 +64,7 @@ pub use payload::{PayloadReadError, PayloadSource};
 
 use ic_host_artifacts::{Error as ArtifactError, Length};
 use ic_host_fs::{Access, Directory, FilePolicy, Kind as EntryKind};
-use ic_platform::Principal;
+use ic_platform_types::Principal;
 use std::{ffi::OsStr, fs::File, io, num::NonZeroUsize, path::Path};
 use thiserror::Error;
 

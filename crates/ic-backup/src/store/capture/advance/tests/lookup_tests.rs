@@ -1,7 +1,7 @@
 //! Signed read-state policy checks; no signing service, remote lookup or IC effects.
 use super::fixtures::signatures::{Scheme, change, fixture};
 use super::*;
-use ic_platform::ic_protocol::{Envelope, decode_envelope, encode_envelope};
+use ic_platform::ingress::{Envelope, decode_envelope, encode_envelope};
 
 fn policy() -> CaptureLookupPolicy {
     CaptureLookupPolicy {
@@ -14,12 +14,12 @@ fn original(scheme: Scheme, call: CaptureCall) -> (CapturePolicy, PreparedStatus
     change(&mut r, |envelope| {
         if let EnvelopeContent::Call {
             method_name, arg, ..
-        } = envelope.content.to_mut()
+        } = &mut envelope.content
         {
             *method_name = call.method_name().into();
             *arg = call.arguments(&p).unwrap();
         }
-        envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+        envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     });
     (p, r)
 }
@@ -28,19 +28,16 @@ fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
     let content = EnvelopeContent::ReadState {
         ingress_expiry: 200,
         sender: sender.as_slice().try_into().unwrap(),
-        paths: vec![vec![
-            b"request_status".to_vec().into(),
-            r.request_id.to_vec().into(),
-        ]],
+        paths: vec![vec![b"request_status".to_vec(), r.request_id.to_vec()]],
     };
     let message = [
         b"\x0aic-request".as_slice(),
-        content.to_request_id().as_slice(),
+        content.request_id().unwrap().as_slice(),
     ]
     .concat();
     encode_envelope(
         &Envelope {
-            content: Cow::Owned(content),
+            content,
             sender_pubkey: Some(scheme.key()),
             sender_sig: Some(scheme.sign(&message)),
             sender_delegation: None,
@@ -50,9 +47,9 @@ fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
     .unwrap()
 }
 fn modify(bytes: &[u8], scheme: Scheme, action: impl FnOnce(&mut EnvelopeContent)) -> Vec<u8> {
-    let mut envelope = decode_envelope(bytes, 4096).unwrap();
-    action(envelope.content.to_mut());
-    envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+    let mut envelope = decode_envelope(bytes, 4096).unwrap().value;
+    action(&mut envelope.content);
+    envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     encode_envelope(&envelope, 4096).unwrap()
 }
 fn authenticate(
@@ -75,10 +72,12 @@ fn lookup_binds_all_original_calls_and_preserves_both_signed_envelopes() {
             let before = r.encode(4096).unwrap();
             let bytes = lookup(&p, &r, scheme);
             let copy = bytes.clone();
-            let expected = *decode_envelope(&bytes, 4096)
+            let expected = decode_envelope(&bytes, 4096)
                 .unwrap()
+                .value
                 .content
-                .to_request_id();
+                .request_id()
+                .unwrap();
             assert_ne!(expected, r.request_id);
             let exact = CaptureLookupPolicy {
                 envelope_bytes: bytes.len().try_into().unwrap(),
@@ -110,10 +109,12 @@ fn lookup_accepts_approved_request_ceilings_through_two_mib() {
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         let (p, r) = original(scheme, CaptureCall::Status);
         let bytes = lookup(&p, &r, scheme);
-        let expected = *decode_envelope(&bytes, 4096)
+        let expected = decode_envelope(&bytes, 4096)
             .unwrap()
+            .value
             .content
-            .to_request_id();
+            .request_id()
+            .unwrap();
         for envelope_bytes in [
             bytes.len() as u32,
             1024 * 1024,
@@ -188,11 +189,11 @@ fn valid_lookup_signatures_cannot_expand_or_replace_the_original_status_path() {
                     2 => {
                         paths[0].pop();
                     }
-                    3 => paths[0][0] = b"time".to_vec().into(),
-                    4 => paths[0][1] = vec![77; 32].into(),
-                    5 => paths[0].push(b"reply".to_vec().into()),
+                    3 => paths[0][0] = b"time".to_vec(),
+                    4 => paths[0][1] = vec![77; 32],
+                    5 => paths[0].push(b"reply".to_vec()),
                     6 => paths.push(paths[0].clone()),
-                    7 => paths.push(vec![b"time".to_vec().into()]),
+                    7 => paths.push(vec![b"time".to_vec()]),
                     _ => unreachable!(),
                 }
             });
@@ -286,12 +287,12 @@ fn lookup_uses_the_existing_direct_key_signature_and_identity_profile() {
         let (p, r) = original(scheme, CaptureCall::Status);
         let bytes = lookup(&p, &r, scheme);
         for case in 0..7 {
-            let mut envelope = decode_envelope(&bytes, 4096).unwrap();
+            let mut envelope = decode_envelope(&bytes, 4096).unwrap().value;
             match case {
                 0 => envelope.sender_sig.as_mut().unwrap()[0] ^= 1,
                 1 => {
                     envelope.sender_sig =
-                        Some(scheme.sign(envelope.content.to_request_id().as_slice()))
+                        Some(scheme.sign(envelope.content.request_id().unwrap().as_slice()))
                 }
                 2 => envelope.sender_sig = None,
                 3 => envelope.sender_sig.as_mut().unwrap().push(0),

@@ -11,11 +11,14 @@ repository = "https://github.com/dragginzgame/ic-backup"
 publish = ["crates-io"]
 
 [workspace.dependencies]
+candid = "0.10.40"
 ic-host-artifacts = "0.80.2"
 ic-host-fs = "0.80.2"
 ic-host-http = "0.80.0"
-ic-platform = { version = "0.33.7", default-features = false, features = ["certification-verify", "ecdsa", "ed25519", "ic-protocol", "management-canister-types", "principal-self-authenticating"] }
-ic-platform-protocol = { version = "0.2.8", default-features = false, features = ["management-snapshots"] }
+ic-management-canister-types = "0.8.0"
+ic-platform = { version = "0.34.11", default-features = false, features = ["ingress-packets", "ed25519", "ecdsa", "certificate-authentication", "certificate-construction"] }
+ic-platform-protocol = { version = "0.3.3", default-features = false, features = ["management-snapshots"] }
+ic-platform-types = { version = "0.21.2", default-features = false, features = ["principal-self-authenticating"] }
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"

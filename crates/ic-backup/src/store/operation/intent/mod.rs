@@ -14,7 +14,8 @@ use crate::store::{
         authenticate_direct_request, certificate_observation,
     },
 };
-use ic_platform::{Principal, canister_sig_creation::extract_raw_root_pk_from_der};
+use ic_platform::certificate::PreparedRootKey;
+use ic_platform_types::Principal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -124,7 +125,7 @@ impl<'a> Plan<'a> {
         if !limits.valid()
             || !(1..=1024).contains(&p.snapshot_capacity)
             || p.root_der.len() != 133
-            || extract_raw_root_pk_from_der(&p.root_der).is_err()
+            || PreparedRootKey::from_der(&p.root_der).is_err()
             || BackupDigest::compute(&p.root_der) != self.trust_root()
             || p.prepare_duration_ns == 0
             || p.prepare_duration_ns > p.submit_duration_ns
@@ -182,17 +183,19 @@ impl<'a> Plan<'a> {
         reference: u64,
         envelope: Vec<u8>,
     ) -> Result<PreparedStatus, Error> {
-        use ic_platform::ic_protocol::{EnvelopeContent, decode_call_content_strict};
+        use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
         if envelope.len() > self.profile().request_bytes as usize {
             return Err(Error::Profile);
         }
-        let content =
-            decode_call_content_strict(&envelope, envelope.len()).map_err(|_| Error::Profile)?;
+        let content = decode_envelope(&envelope, envelope.len())
+            .map_err(|_| Error::Profile)?
+            .value
+            .content;
         let EnvelopeContent::Call { ingress_expiry, .. } = &content else {
             return Err(Error::Profile);
         };
         Ok(PreparedStatus {
-            request_id: *content.to_request_id(),
+            request_id: content.request_id().map_err(|_| Error::Profile)?,
             expires_ns: *ingress_expiry,
             envelope,
             observation: self.observation(reference)?,

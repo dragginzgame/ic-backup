@@ -1,5 +1,5 @@
-//! Source and succession regressions at the operation boundary. Native signatures,
 //! files and locks do not qualify management effects or Canic authority.
+//! Source and succession regressions at the operation boundary. Native signatures,
 //! Preserves the source/custody lessons from frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651
 //! and original source-pass binding fix 9f7b886a824eec67dda8f81792a560436419bb2a.
 use super::*;

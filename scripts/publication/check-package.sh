@@ -16,9 +16,9 @@ package="$evidence/archive/package/ic-backup-$version"
 cmp crates/ic-backup/README.md "$package/README.md"
 test -s "$package/LICENSE.md"
 yq -p toml -o json '.' qualification/Cargo.toml > "$evidence/workspace.json"
-yq -p toml -o json '.' qualification/consumer/Cargo.toml > "$evidence/consumer.json"
+yq -p toml -o json '.' qualification/ic-backup-consumer/Cargo.toml > "$evidence/consumer.json"
 perl -MJSON::PP - "$evidence/workspace.json" "$evidence/consumer.json" \
-    "$package" "$version" "$root/qualification/consumer/src/main.rs" > "$evidence/Cargo.toml" <<'PERL'
+    "$package" "$version" "$root/qualification/ic-backup-consumer/src/main.rs" > "$evidence/Cargo.toml" <<'PERL'
 use strict;
 use warnings;
 sub read_json {

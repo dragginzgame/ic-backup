@@ -1,13 +1,14 @@
 //! Shared real BLS signatures over synthetic certificate trees; no IC effects.
 use crate::store::{PreparedStatus, StatusEvidence};
+use ic_platform::certificate::{TimePolicy, TimeWindow};
 use ic_platform::{
-    bls::PrivateKey,
-    canister_sig_creation::IC_ROOT_PK_DER_PREFIX,
-    certification::{
-        Certificate, Delegation, HashTree, cbor, fork,
-        historical::{TimePolicy, TimeWindow},
-        labeled, leaf,
+    certificate::{
+        PreparedRootKey,
+        construction::{
+            Certificate, Delegation, HashTree, encode_certificate, fork, labeled, leaf,
+        },
     },
+    fixture_signing::PrivateKey,
 };
 fn key(value: u8) -> PrivateKey {
     let mut bytes = [0; 32];
@@ -15,11 +16,10 @@ fn key(value: u8) -> PrivateKey {
     PrivateKey::deserialize(&bytes).unwrap()
 }
 pub(in crate::store) fn der(value: u8) -> Vec<u8> {
-    [
-        IC_ROOT_PK_DER_PREFIX.as_slice(),
-        &key(value).public_key().serialize(),
-    ]
-    .concat()
+    PreparedRootKey::from_raw(&key(value).public_key().serialize())
+        .unwrap()
+        .as_der()
+        .to_vec()
 }
 pub(in crate::store) fn times() -> TimePolicy {
     TimePolicy {
@@ -41,7 +41,7 @@ pub(in crate::store) fn signed(
     delegation: Option<Delegation>,
 ) -> Vec<u8> {
     let message = [b"\x0dic-state-root".as_slice(), &tree.digest()].concat();
-    cbor::encode_certificate(
+    encode_certificate(
         &Certificate {
             tree,
             signature: key(signer).sign(&message).serialize().to_vec(),

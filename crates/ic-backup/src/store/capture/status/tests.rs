@@ -1,11 +1,7 @@
 //! Re-authored legacy controller/status cases against the current plan boundary.
 use super::*;
-use ic_platform::{
-    Principal,
-    management_canister_types::{
-        DefiniteCanisterSettings, MemoryMetrics, QueryStats, StatusVisibility,
-    },
-};
+use ic_platform_protocol::management_snapshots::{CaptureStatus, Settings};
+use ic_platform_types::Principal;
 
 pub(in crate::store) fn plan() -> CapturePolicy {
     CapturePolicy::decode(include_bytes!("../../tests/fixtures/capture-plan.json")).unwrap()
@@ -13,37 +9,13 @@ pub(in crate::store) fn plan() -> CapturePolicy {
 fn sender(plan: &CapturePolicy) -> Principal {
     plan.request().sender
 }
-pub(in crate::store) fn status(plan: &CapturePolicy) -> CanisterStatusResult {
-    CanisterStatusResult {
-        status: CanisterStatusType::Stopped,
-        ready_for_migration: false,
-        version: 23,
-        settings: DefiniteCanisterSettings {
+pub(in crate::store) fn status(plan: &CapturePolicy) -> CaptureStatus {
+    CaptureStatus {
+        status: Status::Stopped,
+        settings: Settings {
             controllers: vec![sender(plan)],
-            ..DefiniteCanisterSettings::default()
         },
         module_hash: Some(plan.request().module_sha256.as_bytes().to_vec()),
-        memory_size: 0_u64.into(),
-        memory_metrics: MemoryMetrics {
-            wasm_memory_size: 0_u64.into(),
-            stable_memory_size: 0_u64.into(),
-            global_memory_size: 0_u64.into(),
-            wasm_binary_size: 0_u64.into(),
-            custom_sections_size: 0_u64.into(),
-            canister_history_size: 0_u64.into(),
-            wasm_chunk_store_size: 0_u64.into(),
-            snapshots_size: 0_u64.into(),
-            log_memory_store_size: 0_u64.into(),
-        },
-        cycles: 0_u64.into(),
-        reserved_cycles: 0_u64.into(),
-        idle_cycles_burned_per_day: 0_u64.into(),
-        query_stats: QueryStats {
-            num_calls_total: 0_u64.into(),
-            num_instructions_total: 0_u64.into(),
-            request_payload_bytes_total: 0_u64.into(),
-            response_payload_bytes_total: 0_u64.into(),
-        },
     }
 }
 
@@ -66,12 +38,12 @@ fn stopped_matching_status_preserves_input_order_and_original_plan() {
 #[test]
 fn running_and_stopping_are_refused_without_implicit_stop() {
     let p = plan();
-    for state in [CanisterStatusType::Running, CanisterStatusType::Stopping] {
+    for state in [Status::Running, Status::Stopping] {
         let mut observed = status(&p);
-        observed.status = state;
+        observed.status = state.clone();
         assert_eq!(
             p.validate_status(&observed),
-            Err(CaptureStatusError::NotStopped(state))
+            Err(CaptureStatusError::NotStopped(state.clone()))
         );
         assert_eq!(observed.status, state);
     }
@@ -107,7 +79,6 @@ fn empty_initiator_target_and_visible_status_do_not_grant_sender_authority() {
     ] {
         let mut observed = status(&p);
         observed.settings.controllers = controllers;
-        observed.settings.status_visibility = StatusVisibility::AllowedViewers(vec![sender(&p)]);
         assert_eq!(
             p.validate_status(&observed),
             Err(CaptureStatusError::NotController)
@@ -154,17 +125,4 @@ fn canonical_duplicates_and_excessive_sets_refuse_even_with_the_sender_present()
         p.validate_status(&observed),
         Err(CaptureStatusError::ControllerLimit)
     );
-}
-
-#[test]
-fn resource_statistics_and_version_do_not_become_extra_capture_policy() {
-    let p = plan();
-    let mut observed = status(&p);
-    observed.version = u64::MAX;
-    observed.cycles = u128::MAX.into();
-    observed.ready_for_migration = true;
-    observed.settings.minimum_incoming_canister_call_cycles = u128::MAX.into();
-    let original = observed.clone();
-    assert_eq!(p.validate_status(&observed), Ok(()));
-    assert_eq!(observed, original);
 }

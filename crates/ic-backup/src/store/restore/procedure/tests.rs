@@ -11,14 +11,16 @@ use crate::store::{
     },
     restore::tests::fixtures::declaration,
 };
-use ic_platform::{
-    candid_codec::{Reserved, arguments::encode_args},
-    management_canister_types::{
-        CanisterStatusType, SnapshotSource, UploadCanisterSnapshotMetadataResult,
-    },
-};
-fn encoded(value: &impl Encode) -> Vec<u8> {
-    candid_codec::encode_one(value, 2 * 1024 * 1024).unwrap()
+use ic_platform_protocol::management_snapshots::Reserved;
+use ic_platform_protocol::management_snapshots::{SnapshotAllocation, fixtures};
+use ic_platform_protocol::management_snapshots::{SnapshotSource, Status};
+
+fn allocation(value: &SnapshotAllocation) -> Vec<u8> {
+    fixtures::snapshot_allocation(value, 4096).unwrap()
+}
+
+fn encoded(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::test_fixtures::wire::encode(value, 2 * 1024 * 1024)
 }
 fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8> {
     match step {
@@ -33,10 +35,10 @@ fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8
             taken_at_timestamp: 1,
             total_size: 0,
         }]),
-        Step::AllocateSnapshot => encoded(&UploadCanisterSnapshotMetadataResult {
+        Step::AllocateSnapshot => allocation(&SnapshotAllocation {
             snapshot_id: vec![10],
         }),
-        Step::Upload(_) | Step::LoadSnapshot => encode_args(&(), 4096).unwrap(),
+        Step::Upload(_) | Step::LoadSnapshot => fixtures::empty_response(4096).unwrap(),
         Step::ReadbackMetadata => {
             let mut metadata = source.metadata.clone();
             metadata.source = Some(SnapshotSource::MetadataUpload(Reserved));
@@ -44,14 +46,12 @@ fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8
             metadata.canister_version += 1;
             encoded(&metadata)
         }
-        Step::Readback(n) => encoded(
-            &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
-                chunk: source
-                    .payload
-                    .read_data(&flow.source_request(n).unwrap())
-                    .unwrap(),
-            },
-        ),
+        Step::Readback(n) => encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
+            chunk: source
+                .payload
+                .read_data(&flow.source_request(n).unwrap())
+                .unwrap(),
+        }),
         _ => panic!("unexpected capture step"),
     }
 }
@@ -122,7 +122,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                         crate::store::capture::status::tests::status(source.capture.plan().plan());
                     status.settings.controllers = vec![plan.request().sender];
                     if fault == "running" {
-                        status.status = CanisterStatusType::Running;
+                        status.status = Status::Running;
                     } else {
                         status.settings.controllers.clear();
                     }
@@ -148,7 +148,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                     "empty-allocation" | "long-allocation" | "old-allocation" | "source-allocation",
                     Step::AllocateSnapshot,
                 ) => {
-                    bytes = encoded(&UploadCanisterSnapshotMetadataResult {
+                    bytes = allocation(&SnapshotAllocation {
                         snapshot_id: match fault {
                             "empty-allocation" => vec![],
                             "long-allocation" => vec![1; 257],
@@ -159,7 +159,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                     true
                 }
                 ("unit-arity", Step::Upload(0)) => {
-                    bytes = encoded(&0u8);
+                    bytes = candid::encode_one(0u8).unwrap();
                     true
                 }
                 ("metadata-origin", Step::ReadbackMetadata) => {
@@ -167,22 +167,18 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                     true
                 }
                 ("readback-bytes", Step::Readback(0)) => {
-                    bytes = encoded(
-                        &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
-                            chunk: vec![255u8; 3],
-                        },
-                    );
+                    bytes = encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
+                        chunk: vec![255u8; 3],
+                    });
                     true
                 }
                 ("order", Step::Upload(0))
                 | ("early-load" | "skip-readback", Step::Readback(0))
                 | ("repeat-readback", Step::Readback(1)) => true,
                 ("short-readback" | "long-readback", Step::Readback(0)) => {
-                    bytes = encoded(
-                        &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
-                            chunk: vec![0; if fault == "short-readback" { 2 } else { 4 }],
-                        },
-                    );
+                    bytes = encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
+                        chunk: vec![0; if fault == "short-readback" { 2 } else { 4 }],
+                    });
                     true
                 }
                 _ => false,
@@ -269,25 +265,26 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             let (method, args) = flow.request(&mut source).unwrap();
             if let Step::Readback(ordinal) = step {
                 assert_eq!(method, "read_canister_snapshot_data");
-                let request: ReadCanisterSnapshotDataArgs =
-                    ic_platform::candid_codec::decoder::decode_one_with_skip_limit(
-                        &args,
-                        ic_platform::candid_codec::decoder::Limits {
-                            bytes: 4096,
-                            header: 2048,
-                            types: 16,
-                            work: 8192,
-                            allocation: 4096,
-                        },
-                        0,
-                    )
-                    .unwrap();
+                let request: ic_management_canister_types::ReadCanisterSnapshotDataArgs =
+                    candid::decode_one(&args).unwrap();
                 assert_eq!(request.snapshot_id, [10]);
-                assert_eq!(request.canister_id, plan.request().target.canister);
                 assert_eq!(
-                    encoded(&request.kind),
-                    encoded(&flow.source_request(ordinal).unwrap().kind)
+                    request.canister_id.as_slice(),
+                    plan.request().target.canister.as_slice()
                 );
+                use ic_management_canister_types::SnapshotDataKind as WireKind;
+                use ic_platform_protocol::management_snapshots::ReadKind;
+                match (request.kind, flow.source_request(ordinal).unwrap().kind) {
+                    (WireKind::WasmModule { offset, size }, ReadKind::WasmModule(e))
+                    | (WireKind::WasmMemory { offset, size }, ReadKind::WasmMemory(e))
+                    | (WireKind::StableMemory { offset, size }, ReadKind::StableMemory(e)) => {
+                        assert_eq!((offset, size), (e.offset, e.size))
+                    }
+                    (WireKind::WasmChunk { hash }, ReadKind::WasmChunk(c)) => {
+                        assert_eq!(hash, c.hash)
+                    }
+                    _ => panic!("readback region differs from original source"),
+                }
             }
             let mut bytes = response(&flow, &mut source, step);
             if step == Step::Readback(corrupt) {
@@ -300,11 +297,8 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
                 } else {
                     chunk.push(1);
                 }
-                bytes = encoded(
-                    &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
-                        chunk,
-                    },
-                );
+                bytes =
+                    encoded(&ic_platform_protocol::management_snapshots::SnapshotData { chunk });
             }
             let result = flow.accept(
                 step,
@@ -330,7 +324,7 @@ fn protocol_allocation_bounds_and_exact_empty_results_preserve_legacy_refusals()
     // Empty/reused/source IDs remain policy checks in the fixed-procedure matrix.
     for length in [1, 256] {
         let id = vec![21; length];
-        let raw = encoded(&UploadCanisterSnapshotMetadataResult {
+        let raw = allocation(&SnapshotAllocation {
             snapshot_id: id.clone(),
         });
         assert_eq!(
@@ -347,7 +341,7 @@ fn protocol_allocation_bounds_and_exact_empty_results_preserve_legacy_refusals()
             Err(DecodeError::Trailing)
         );
     }
-    let excessive = encoded(&UploadCanisterSnapshotMetadataResult {
+    let excessive = allocation(&SnapshotAllocation {
         snapshot_id: vec![1; 257],
     });
     assert_eq!(
@@ -360,7 +354,7 @@ fn protocol_allocation_bounds_and_exact_empty_results_preserve_legacy_refusals()
         Err(Error::Reply(DecodeError::Trailing))
     ));
     assert!(matches!(
-        unit(&encoded(&())),
+        unit(&candid::encode_one(()).unwrap()),
         Err(Error::Reply(DecodeError::Arity))
     ));
 }

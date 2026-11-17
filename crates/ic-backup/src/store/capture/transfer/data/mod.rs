@@ -1,5 +1,6 @@
 //! Bounded Platform-schema data replies and exact scheduled byte admission.
 use super::CaptureTransfer;
+use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 /// Data ordinal or bounded request encoding refused.
 #[derive(Debug, thiserror::Error)]
 pub enum DataReadError {
@@ -21,21 +22,19 @@ impl CaptureTransfer<'_> {
         if ordinal >= self.data_calls() {
             return Err(TransferDataError::Ordinal.into());
         }
-        candid_codec::encode_one(
-            &ReadCanisterSnapshotDataArgs {
-                canister_id: self.plan.request().target.canister,
-                snapshot_id: self.snapshot_id.to_vec(),
-                kind: self.kind(u64::from(ordinal)),
-            },
-            1024,
-        )
+        (ReadDataArgs {
+            canister_id: self.plan.request().target.canister,
+            snapshot_id: self.snapshot_id.to_vec(),
+            kind: self.kind(u64::from(ordinal)),
+        })
+        .encode(1024)
         .map_err(|_| OperationStoreError::StatusAdmission.into())
     }
 }
 use super::super::OperationStoreError;
 use crate::store::BackupDigest;
-use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
-use ic_platform::{candid_codec, management_canister_types::SnapshotDataKind};
+use ic_platform_protocol::management_snapshots::ReadDataArgs;
+use ic_platform_protocol::management_snapshots::ReadKind;
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
     management_snapshots::decode_snapshot_data,
@@ -81,9 +80,9 @@ impl CaptureTransfer<'_> {
             return Err(TransferDataError::Ordinal);
         }
         match self.kind(u64::from(ordinal)) {
-            SnapshotDataKind::WasmModule { size, .. }
-            | SnapshotDataKind::WasmMemory { size, .. }
-            | SnapshotDataKind::StableMemory { size, .. } => {
+            ReadKind::WasmModule(Extent { size, .. })
+            | ReadKind::WasmMemory(Extent { size, .. })
+            | ReadKind::StableMemory(Extent { size, .. }) => {
                 if bytes.len() as u64 != size {
                     return Err(TransferDataError::Length {
                         expected: size,
@@ -91,7 +90,7 @@ impl CaptureTransfer<'_> {
                     });
                 }
             }
-            SnapshotDataKind::WasmChunk { hash } => {
+            ReadKind::WasmChunk(SnapshotChunk { hash }) => {
                 let limit = self.plan.request().limits.extent_bytes as usize;
                 if bytes.len() > limit {
                     return Err(TransferDataError::ChunkLimit {

@@ -259,3 +259,57 @@ and full 20 MiB recovery. This is mixed-cohort acceptance, not qualification of
 the still-unported new product certificate/metadata/status boundary. Logs remain
 under `target/evidence/platform-recheck-current/`; failed preparation and original
 IC evidence remain preserved. Neither Platform issue is closed.
+
+### Protocol 0.3.2 continuation
+
+The selected data/allocation/exact-empty production decoders now use Protocol
+0.3.2. Its response fixture encoders replace the old generic encoder in the nine
+owning data regressions and allocation/acknowledgement cases of the three restore
+procedure tests. The latter still exercise empty/reused/source/257-byte IDs and
+actual fixed-cursor policy. Independent malformed/truncated/trailing/arity vectors
+remain; no round-trip-only replacement or regression deletion occurred.
+The `management-snapshot-fixtures` feature is selected only on the test dependency
+and is absent from the normal product feature graph. The legacy data/upload
+source and test provenance recorded above still applies; no stored format changes.
+Protocol's public error identity moves to 0.3, requiring the next minor Backup
+release. At that point full status/metadata/request/authentication migration
+remained unfinished; the completed port below supersedes this interim state.
+
+## Full Platform port — 2026-11-17
+
+Platform 0.34.11, Protocol 0.3.3 and Types 0.21.2 now own all implemented
+management request/reply types and wire traversal. The old Platform dependency
+is absent from both workspaces, including tests. `ReadDataArgs`/`ReadKind` expose
+explicit `Extent` and `SnapshotChunk` records; metadata uses `SnapshotMetadata`
+and globals use bounded `u128` plus exact `Float32Bits`/`Float64Bits`. Backup keeps
+schedule geometry, identity/uniqueness, provenance, readback and custody policy.
+The private snapshot and metadata schema walkers are removed. Original framing,
+header/type/work/allocation/skipping budgets and collection caps remain unchanged.
+
+Focused read-only review revisited frozen legacy
+`4ae087fad8c23de712aa60bf569bde4b2b932651`:
+`model/ic_snapshot_reply/wire/mod.rs`, its identifier/count/full-u64/malformed
+regressions, and `model/ic_snapshot_metadata/wire/mod.rs` with its promotion,
+absence, float-bit, collection/hash, unknown-variant and skipped-work tests.
+Relevant history: `1af7e219c3073395992c316ecaa5e83e74b1aecc`,
+`94b94db89f77968eb4b480ef6d0576d41f6472e2`,
+`6220eb7d89b9349eaf3254d256fd283ac75335e3`. Their checks prevent invented
+round-trip values, unbounded allocations, ambiguous source identity and changed
+numeric state. Those guarantees remain; only their wire owner moves to Protocol.
+No legacy source or recovery artifacts were imported.
+
+Retained literal goldens and checksums are unchanged. Normal replies use Protocol
+fixture encoders; deliberately malformed schemas and independently decoded
+requests use test-only Candid 0.10.40 and Management Canister Types 0.8.0. Full
+status fixtures still demonstrate discarded resource statistics, while a separate
+authored status-visibility schema demonstrates that visibility grants no controller
+authority. No old codec, generic decoder fallback or replacement production DTO
+remains. Envelope and certificate fixtures use new Platform construction/signing.
+
+A typed value above 128 bits is now impossible: its former typed scheduling and
+readback cases converge on the retained 129-bit raw-wire refusal at metadata
+admission. `GlobalRange` is removed; the codec returns `Limit`. Empty snapshot IDs
+now return `SnapshotId` after bounded decode; excessive IDs still return `Limit`.
+These are explicit pending 0.105.0 public type/error changes, not changes to stored
+schemas, authority or spending. The packaged README owns consumer migration.
+The handoff records fresh native/IC acceptance and pre-port retained-store replay.

@@ -1,11 +1,8 @@
 //! Real BLS signatures over synthetic certificates. No network or IC effects.
 use super::fixtures::certificates::{delegated, der, reply_tree, signed, times};
 use super::*;
-use ic_platform::certification::{
-    cbor, fork,
-    historical::{self, TimePolicy, TimeWindow},
-    labeled, leaf, pruned,
-};
+use ic_platform::certificate::construction::{encode_certificate, fork, labeled, leaf, pruned};
+use ic_platform::certificate::{TimePolicy, TimeWindow};
 
 pub(in crate::store) fn fixture() -> (CapturePolicy, PreparedStatus, StatusEvidence) {
     let mut request = plan().request().clone();
@@ -32,13 +29,12 @@ fn authenticate(
 #[test]
 fn full_extent_certificate_fits_explicit_new_profile_but_never_enlarges_old_allowance() {
     let (p, r, _) = fixture();
-    let reply = ic_platform::candid_codec::encode_one(
-        &ic_platform::management_canister_types::ReadCanisterSnapshotDataResult {
+    let reply = crate::store::capture::test_fixtures::wire::encode(
+        &ic_platform_protocol::management_snapshots::SnapshotData {
             chunk: vec![0xa5; 1024 * 1024],
         },
         2 * 1024 * 1024,
-    )
-    .unwrap();
+    );
     let certificate = signed(reply_tree(&r.request_id, &reply, b"replied"), 1, None);
     assert!(certificate.len() > 1024 * 1024);
     let requirements = super::super::CertificateRequirements {
@@ -116,7 +112,7 @@ fn exact_original_request_id_call_and_root_are_required() {
             &malformed
         ),
         Err(StatusCertificateError::Certificate(
-            historical::Error::InvalidKey
+            ic_platform::certificate::VerifyError::InvalidRootKey
         ))
     ));
 }
@@ -130,22 +126,26 @@ fn changed_response_signature_and_trailing_proof_refuse() {
         Err(StatusCertificateError::Response)
     ));
     let (p, r, mut e) = fixture();
-    let mut certificate = cbor::decode_certificate(&e.proof, 4096).unwrap();
+    let mut certificate = ic_platform::certificate::decode_certificate(
+        &e.proof,
+        ic_platform::certificate::CertificateDecodeLimits { bytes: 4096 },
+    )
+    .unwrap()
+    .unverified()
+    .clone();
     certificate.signature[0] ^= 1;
-    e.proof = cbor::encode_certificate(&certificate, 4096).unwrap();
+    e.proof = encode_certificate(&certificate, 4096).unwrap();
     assert!(matches!(
         authenticate(&p, &r, &e),
         Err(StatusCertificateError::Certificate(
-            historical::Error::Signature
+            ic_platform::certificate::VerifyError::Signature
         ))
     ));
     let (p, r, mut e) = fixture();
     e.proof.push(0);
     assert!(matches!(
         authenticate(&p, &r, &e),
-        Err(StatusCertificateError::Certificate(
-            historical::Error::Decode(_)
-        ))
+        Err(StatusCertificateError::Decode(_))
     ));
 }
 
@@ -218,7 +218,7 @@ fn original_observation_is_strict_and_time_arithmetic_never_wraps() {
     assert!(matches!(
         authenticate(&p, &r, &e),
         Err(StatusCertificateError::Certificate(
-            historical::Error::TimeOutsideWindow
+            ic_platform::certificate::VerifyError::TimeOutsideWindow
         ))
     ));
     for window in [
@@ -268,7 +268,7 @@ fn delegated_authority_uses_plan_canister_and_separate_retained_time() {
     assert!(matches!(
         authenticate(&p, &r, &e),
         Err(StatusCertificateError::Certificate(
-            historical::Error::TimeOutsideWindow
+            ic_platform::certificate::VerifyError::TimeOutsideWindow
         ))
     ));
     r.observation = status_certificate_observation(times()).unwrap();
@@ -276,7 +276,7 @@ fn delegated_authority_uses_plan_canister_and_separate_retained_time() {
     assert!(matches!(
         authenticate(&p, &r, &e),
         Err(StatusCertificateError::Certificate(
-            historical::Error::NotAuthorized
+            ic_platform::certificate::VerifyError::NotAuthorized
         ))
     ));
 }
@@ -310,9 +310,7 @@ fn original_complete_frame_caps_apply_before_certificate_decoding() {
     };
     assert!(matches!(
         authenticate_status_evidence(&p, &a, &r, &oversized, &der(1)),
-        Err(StatusCertificateError::Certificate(
-            historical::Error::Decode(_)
-        ))
+        Err(StatusCertificateError::Decode(_))
     ));
 }
 
@@ -340,7 +338,7 @@ fn certificate_combined_node_limit_is_enforced_by_selected_platform_boundary() {
     assert!(matches!(
         authenticate_status_evidence(&p, &a, &r, &e, &der(1)),
         Err(StatusCertificateError::Certificate(
-            historical::Error::TreeLimit
+            ic_platform::certificate::VerifyError::TreeLimit
         ))
     ));
 }

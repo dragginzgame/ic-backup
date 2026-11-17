@@ -6,10 +6,8 @@ use super::{
 use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_platform::{
-    canister_sig_creation::extract_raw_root_pk_from_der,
-    ic_protocol::{TransportCallResponse, decode_call_response},
-};
+use ic_platform::certificate::PreparedRootKey;
+use ic_platform::ingress::{CallResponse as TransportCallResponse, decode_call_response};
 use reqwest::{Client, Url, header};
 use std::{
     net::IpAddr,
@@ -183,7 +181,7 @@ impl BackupHttpTransport {
         let origin = origin(endpoint)?;
         if timeout.is_zero()
             || timeout > Duration::from_secs(300)
-            || extract_raw_root_pk_from_der(&root_key_der).is_err()
+            || PreparedRootKey::from_der(&root_key_der).is_err()
         {
             return Err(BackupHttpError::Configuration);
         }
@@ -345,7 +343,7 @@ impl BackupHttpTransport {
     // Caller admits exact signed call, original authority and durable reservation.
     pub(in crate::store) async fn call_certificate(
         &self,
-        canister: ic_platform::Principal,
+        canister: ic_platform_types::Principal,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
     ) -> Result<Vec<u8>, BackupHttpError> {
@@ -356,8 +354,9 @@ impl BackupHttpTransport {
         let bytes = self
             .post_cbor(url, prepared.envelope.clone(), deadline, maximum)
             .await?;
-        let TransportCallResponse::Replied { certificate } =
-            decode_call_response(&bytes, maximum).map_err(|_| BackupHttpError::Response)?
+        let TransportCallResponse::Replied { certificate } = decode_call_response(&bytes, maximum)
+            .map_err(|_| BackupHttpError::Response)?
+            .value
         else {
             return Err(BackupHttpError::NoCertificate);
         };

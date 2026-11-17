@@ -2,8 +2,9 @@
 use super::CapturePolicy;
 use crate::store::BackupDigest;
 #[cfg(test)]
-use ic_platform::management_canister_types::CanisterStatusResult;
-use ic_platform::{Principal, management_canister_types::CanisterStatusType};
+use ic_platform_protocol::management_snapshots::CaptureStatus;
+use ic_platform_protocol::management_snapshots::Status;
+use ic_platform_types::Principal;
 mod wire;
 use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
@@ -36,10 +37,7 @@ impl CapturePolicy {
     /// Refuses excessive/duplicate controllers, running/stopping state, an absent
     /// or different module hash, or a controller set lacking the original sender.
     #[cfg(test)]
-    pub fn validate_status(
-        &self,
-        observed: &CanisterStatusResult,
-    ) -> Result<(), CaptureStatusError> {
+    pub fn validate_status(&self, observed: &CaptureStatus) -> Result<(), CaptureStatusError> {
         self.status_requirements().validate_status(observed)
     }
 
@@ -55,10 +53,10 @@ impl StatusRequirements {
     #[cfg(test)]
     pub(in crate::store) fn validate_status(
         &self,
-        observed: &CanisterStatusResult,
+        observed: &CaptureStatus,
     ) -> Result<(), CaptureStatusError> {
         self.validate_status_fields(
-            observed.status,
+            observed.status.clone(),
             observed.module_hash.as_deref(),
             &observed.settings.controllers,
         )
@@ -66,7 +64,7 @@ impl StatusRequirements {
 
     fn validate_status_fields(
         &self,
-        status: CanisterStatusType,
+        status: Status,
         module_hash: Option<&[u8]>,
         controllers: &[Principal],
     ) -> Result<(), CaptureStatusError> {
@@ -78,7 +76,7 @@ impl StatusRequirements {
                 return Err(CaptureStatusError::DuplicateController);
             }
         }
-        if status != CanisterStatusType::Stopped {
+        if status != Status::Stopped {
             return Err(CaptureStatusError::NotStopped(status));
         }
         if module_hash != Some(self.module_sha256.as_bytes().as_slice()) {
@@ -92,7 +90,7 @@ impl StatusRequirements {
 }
 
 /// A decoded status fails an original capture or restore precondition; no effect is authorized.
-#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+#[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum CaptureStatusError {
     /// The declared controller set exceeds the supported ten-controller boundary.
     #[error("capture status exceeds ten controllers")]
@@ -102,7 +100,7 @@ pub enum CaptureStatusError {
     DuplicateController,
     /// Running and stopping are both outside the already-stopped capture profile.
     #[error("capture requires stopped status, observed {0:?}")]
-    NotStopped(CanisterStatusType),
+    NotStopped(Status),
     /// The installed module hash is absent, malformed or different from the plan.
     #[error("capture status module hash differs from the approved plan")]
     ModuleMismatch,

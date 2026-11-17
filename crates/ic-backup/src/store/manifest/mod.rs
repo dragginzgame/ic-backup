@@ -2,7 +2,7 @@
 
 use super::{BackupSummary, BackupTarget};
 use crate::store::BackupDigest;
-use ic_platform::Principal;
+use ic_platform_types::Principal;
 use serde::{
     Deserialize, Deserializer,
     de::{self, SeqAccess, Visitor},

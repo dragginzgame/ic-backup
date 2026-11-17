@@ -3,8 +3,7 @@ use super::*;
 use crate::store::BackupDigest;
 use crate::store::capture::status::tests::{plan, status};
 pub(in crate::store) use crate::store::capture::test_fixtures as fixtures;
-use ic_platform::{candid_codec, ic_protocol::EnvelopeContent};
-use std::borrow::Cow;
+use ic_platform::ingress::Content as EnvelopeContent;
 pub(in crate::store) fn admission() -> StatusAdmissionRecord {
     StatusAdmissionRecord {
         provider: [1; 32],
@@ -34,12 +33,15 @@ pub(in crate::store) fn call_content() -> EnvelopeContent {
     }
 }
 pub(in crate::store) fn prepared_content(content: EnvelopeContent) -> PreparedStatus {
-    let request_id = *content.to_request_id();
-    let expires_ns = content.ingress_expiry();
+    let request_id = content.request_id().unwrap();
+    let expires_ns = match &content {
+        EnvelopeContent::Call { ingress_expiry, .. }
+        | EnvelopeContent::ReadState { ingress_expiry, .. } => *ingress_expiry,
+    };
     // Correct wire shape, deliberately unauthenticated. No IC effect is simulated.
-    let envelope = ic_platform::ic_protocol::encode_envelope(
-        &ic_platform::ic_protocol::Envelope {
-            content: Cow::Owned(content),
+    let envelope = ic_platform::ingress::encode_envelope(
+        &ic_platform::ingress::Envelope {
+            content,
             sender_pubkey: Some(vec![1]),
             sender_sig: Some(vec![2]),
             sender_delegation: None,
@@ -57,7 +59,7 @@ pub(in crate::store) fn prepared_content(content: EnvelopeContent) -> PreparedSt
 pub(in crate::store) fn evidence() -> StatusEvidence {
     StatusEvidence {
         rejected: false,
-        response: candid_codec::encode_one(&status(&plan()), 4096).unwrap(),
+        response: crate::store::capture::test_fixtures::wire::encode(&status(&plan()), 4096),
         proof: b"native ordering fixture; not a certificate".to_vec(),
     }
 }

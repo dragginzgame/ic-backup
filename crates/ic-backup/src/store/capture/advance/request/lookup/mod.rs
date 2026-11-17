@@ -5,9 +5,7 @@ use super::StatusRequestError;
 #[cfg(test)]
 use super::{CapturePolicy, PreparedStatus, StatusAdmissionRecord};
 use crate::store::limits::REQUEST_BYTES;
-use ic_platform::ic_protocol::{
-    EnvelopeContent, decode_envelope, decode_read_state_content_strict,
-};
+use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
 use thiserror::Error;
 
 /// Explicit constraints for one lookup envelope, not remote attempt authority.
@@ -86,7 +84,7 @@ pub fn authenticate_capture_lookup(
 
 // The operation owner has already authenticated the original derived call.
 pub(in crate::store) fn authenticate_lookup_envelope(
-    sender: ic_platform::Principal,
+    sender: ic_platform_types::Principal,
     request_id: [u8; 32],
     bytes: &[u8],
     policy: CaptureLookupPolicy,
@@ -99,13 +97,15 @@ pub(in crate::store) fn authenticate_lookup_envelope(
         return Err(CaptureLookupError::Bounds);
     }
     let expected = sender;
-    let content = decode_read_state_content_strict(bytes, policy.envelope_bytes as usize)
-        .map_err(|_| CaptureLookupError::Envelope)?;
+    let envelope = decode_envelope(bytes, policy.envelope_bytes as usize)
+        .map_err(|_| CaptureLookupError::Envelope)?
+        .value;
+    let content = &envelope.content;
     let EnvelopeContent::ReadState {
         sender,
         ingress_expiry,
         paths,
-    } = &content
+    } = content
     else {
         return Err(CaptureLookupError::Envelope);
     };
@@ -113,19 +113,15 @@ pub(in crate::store) fn authenticate_lookup_envelope(
         || *ingress_expiry != policy.expires_ns
         || paths.len() != 1
         || paths[0].len() != 2
-        || paths[0][0].as_bytes() != b"request_status"
-        || paths[0][1].as_bytes() != request_id
+        || paths[0][0].as_slice() != b"request_status"
+        || paths[0][1].as_slice() != request_id
     {
         return Err(CaptureLookupError::Binding);
     }
-    let envelope = decode_envelope(bytes, policy.envelope_bytes as usize)
+    let id = content
+        .request_id()
         .map_err(|_| CaptureLookupError::Envelope)?;
-    let id = content.to_request_id();
-    // Both supplier projections must agree on every signed content field.
-    if envelope.content.to_request_id() != id {
-        return Err(CaptureLookupError::Binding);
-    }
     super::authenticate_direct_envelope(&envelope, sender.as_slice())
         .map_err(CaptureLookupError::Authentication)?;
-    Ok(*id)
+    Ok(id)
 }

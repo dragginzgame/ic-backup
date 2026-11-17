@@ -3,7 +3,8 @@ use super::{
     fixtures::signatures::{Scheme, change, fixture},
     *,
 };
-use ic_platform::{Principal, ecdsa};
+use ic_platform::ecdsa;
+use ic_platform_types::Principal;
 
 fn authenticate(plan: &CapturePolicy, prepared: &PreparedStatus) -> Result<(), StatusRequestError> {
     authenticate_status_request(plan, &admission(), prepared)
@@ -30,15 +31,15 @@ fn invalid_signature_key_domain_and_changed_signed_content_refuse() {
                 0 => envelope.sender_sig.as_mut().unwrap()[0] ^= 1,
                 1 => {
                     envelope.sender_sig =
-                        Some(scheme.sign(envelope.content.to_request_id().as_slice()))
+                        Some(scheme.sign(envelope.content.request_id().unwrap().as_slice()))
                 }
                 2 => {
-                    if let EnvelopeContent::Call { nonce, .. } = envelope.content.to_mut() {
+                    if let EnvelopeContent::Call { nonce, .. } = &mut envelope.content {
                         *nonce = Some(vec![44]);
                     }
                 }
                 3 => {
-                    let id = envelope.content.to_request_id();
+                    let id = envelope.content.request_id().unwrap();
                     let wrong = [b"\x0dic-state-root".as_slice(), id.as_slice()].concat();
                     envelope.sender_sig = Some(scheme.sign(&wrong));
                 }
@@ -74,10 +75,10 @@ fn valid_signature_cannot_substitute_a_different_original_sender() {
         request.sender = sender;
         let changed = CapturePolicy::new(request).unwrap();
         change(&mut prepared, |envelope| {
-            if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {
+            if let EnvelopeContent::Call { sender: caller, .. } = &mut envelope.content {
                 *caller = sender.as_slice().try_into().unwrap();
             }
-            envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+            envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
         });
         assert!(matches!(
             authenticate(&changed, &prepared),
@@ -91,27 +92,38 @@ fn unsupported_key_profiles_and_delegations_refuse_without_fallback() {
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         for case in 0..8 {
             let (plan, mut prepared) = fixture(scheme);
-            change(&mut prepared, |envelope| {
-                match case {
+            change(&mut prepared, |envelope| match case {
                 0 => envelope.sender_pubkey = None,
                 1 => envelope.sender_pubkey.as_mut().unwrap().push(0),
-                2 => { envelope.sender_pubkey.as_mut().unwrap().pop(); }
+                2 => {
+                    envelope.sender_pubkey.as_mut().unwrap().pop();
+                }
                 3 => envelope.sender_pubkey.as_mut().unwrap()[1] ^= 1,
                 4 => envelope.sender_delegation = Some(vec![]),
-                5 => envelope.sender_delegation = Some(serde_json::from_value(serde_json::json!([
-                    {"delegation": {"pubkey": [1], "expiration": 999, "targets": null}, "signature": [2]}
-                ])).unwrap()),
+                5 => {
+                    envelope.sender_delegation =
+                        Some(vec![ic_platform::ingress::SignedDelegation {
+                            delegation: ic_platform::ingress::Delegation {
+                                pubkey: vec![1],
+                                expiration: 999,
+                                targets: None,
+                                permissions: None,
+                            },
+                            signature: vec![2],
+                        }])
+                }
                 6 => envelope.sender_pubkey = Some(vec![0; 88]),
                 7 => {
-                    if let EnvelopeContent::Call { sender_info, .. } = envelope.content.to_mut() {
-                        *sender_info = Some(serde_json::from_value(serde_json::json!(
-                            {"info": [1], "signer": "aaaaa-aa", "sig": [2]}
-                        )).unwrap());
+                    if let EnvelopeContent::Call { sender_info, .. } = &mut envelope.content {
+                        *sender_info = Some(ic_platform::ingress::SenderInfo {
+                            info: vec![1],
+                            signer: vec![],
+                            sig: vec![2],
+                        });
                     }
-                    envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+                    envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
                 }
                 _ => unreachable!(),
-            }
             });
             assert!(
                 matches!(
@@ -143,12 +155,12 @@ fn complete_request_limits_and_original_content_are_checked_before_signatures() 
             2 => prepared.observation.clear(),
             3 => prepared.envelope.push(0),
             4 => change(&mut prepared, |e| {
-                if let EnvelopeContent::Call { method_name, .. } = e.content.to_mut() {
+                if let EnvelopeContent::Call { method_name, .. } = &mut e.content {
                     *method_name = "start_canister".into();
                 }
             }),
             5 => change(&mut prepared, |e| {
-                if let EnvelopeContent::Call { arg, .. } = e.content.to_mut() {
+                if let EnvelopeContent::Call { arg, .. } = &mut e.content {
                     arg.push(0);
                 }
             }),
@@ -176,7 +188,7 @@ fn weak_ed25519_and_high_s_secp256k1_signatures_refuse() {
     let plan = CapturePolicy::new(request).unwrap();
     change(&mut prepared, |envelope| {
         envelope.sender_pubkey = Some(weak_der);
-        if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {
+        if let EnvelopeContent::Call { sender: caller, .. } = &mut envelope.content {
             *caller = sender.as_slice().try_into().unwrap();
         }
         let mut signature = vec![0; 64];
@@ -204,7 +216,7 @@ fn weak_ed25519_and_high_s_secp256k1_signatures_refuse() {
 }
 
 #[test]
-fn malformed_authentication_field_refuses_after_valid_content_inspection() {
+fn malformed_authentication_field_refuses_during_complete_envelope_admission() {
     let (plan, mut prepared) = fixture(Scheme::Ed25519);
     // Corrupt only the external authentication field: valid CBOR integer instead of blob.
     let marker = b"\x6asender_sig\x58\x40";
@@ -215,11 +227,18 @@ fn malformed_authentication_field_refuses_after_valid_content_inspection() {
         .unwrap();
     let start = offset + marker.len() - 2;
     prepared.envelope.splice(start..start + 66, [0]);
-    prepared.validate_call(&plan).unwrap();
+    let original = prepared.envelope.clone();
+    assert!(matches!(
+        prepared.validate_call(&plan),
+        Err(OperationStoreError::StatusAdmission)
+    ));
     assert!(matches!(
         authenticate(&plan, &prepared),
-        Err(StatusRequestError::Envelope)
+        Err(StatusRequestError::Admission(
+            OperationStoreError::StatusAdmission
+        ))
     ));
+    assert_eq!(prepared.envelope, original);
 }
 
 #[test]
@@ -243,7 +262,7 @@ fn malformed_signature_scalars_and_public_points_refuse() {
     let plan = CapturePolicy::new(request).unwrap();
     change(&mut prepared, |envelope| {
         envelope.sender_pubkey = Some(bad_der);
-        if let EnvelopeContent::Call { sender: caller, .. } = envelope.content.to_mut() {
+        if let EnvelopeContent::Call { sender: caller, .. } = &mut envelope.content {
             *caller = sender.as_slice().try_into().unwrap();
         }
     });

@@ -1,5 +1,5 @@
-//! Replacement facts only: no fake IC effects, filesystem durability or certificate claims.
 //! Spent/uncertain reservation cases adapt the retained submission lesson from
+//! Replacement facts only: no fake IC effects, filesystem durability or certificate claims.
 //! frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651, submission/mod.rs and
 //! tests/http_boundary/mod.rs. The actual transport matrix remains with that owner.
 use super::*;

@@ -16,11 +16,9 @@ use crate::store::StatusEvidence;
 use crate::store::operation::Step;
 #[cfg(test)]
 use crate::store::operation::intent::Intent;
-use ic_platform::{
-    candid_codec,
-    management_canister_types::{
-        CanisterIdRecord, ReadCanisterSnapshotMetadataResult, Snapshot, SnapshotDataKind,
-    },
+use ic_platform_protocol::management_snapshots::Extent;
+use ic_platform_protocol::management_snapshots::{
+    CanisterArgs, ReadKind, Snapshot, SnapshotMetadata,
 };
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -40,7 +38,7 @@ pub(in crate::store) struct Procedure<'a> {
     initial_request: Option<[u8; 32]>,
     inventory: Vec<Snapshot>,
     snapshot: Option<Snapshot>,
-    metadata: Option<ReadCanisterSnapshotMetadataResult>,
+    metadata: Option<SnapshotMetadata>,
     module: Option<(Sha256, u64)>,
 }
 
@@ -128,23 +126,19 @@ impl<'a> Procedure<'a> {
                 } else {
                     "canister_status"
                 },
-                candid_codec::encode_one(
-                    &CanisterIdRecord {
-                        canister_id: self.intent.plan().request().target.canister,
-                    },
-                    256,
-                )
+                (CanisterArgs {
+                    canister_id: self.intent.plan().request().target.canister,
+                })
+                .encode(256)
                 .map_err(|_| Error::Arguments)?,
             ),
             Step::TakeSnapshot => (
                 "take_canister_snapshot",
-                candid_codec::encode_one(
-                    &self.intent.plan().take_snapshot_arguments(
-                        &self.inventory,
-                        self.intent.profile().snapshot_capacity,
-                    )?,
-                    512,
-                )
+                (self.intent.plan().take_snapshot_arguments(
+                    &self.inventory,
+                    self.intent.profile().snapshot_capacity,
+                )?)
+                .encode(512)
                 .map_err(|_| Error::Arguments)?,
             ),
             Step::Metadata => (
@@ -258,7 +252,7 @@ impl<'a> Procedure<'a> {
                         .nth(n as usize)
                         .ok_or(Error::Order)?
                         .kind,
-                    SnapshotDataKind::WasmModule { .. }
+                    ReadKind::WasmModule(Extent { .. })
                 );
                 let last = n + 1 == transfer.data_calls();
                 if module {

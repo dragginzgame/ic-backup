@@ -2,7 +2,7 @@
 use super::CaptureSource;
 use crate::store::BackupDigest;
 use crate::store::{BackupSummary, BackupTarget};
-use ic_platform::management_canister_types::ReadCanisterSnapshotDataArgs;
+use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use thiserror::Error;
 
 /// Explicit same-target/release selection and bounds for a restore transfer calculation.
@@ -197,10 +197,8 @@ impl RestoreTransfer {
         self.management_calls
     }
     /// Generate original-source read DTOs lazily. These are not upload requests.
-    pub fn source_requests(
-        &self,
-    ) -> impl ExactSizeIterator<Item = ReadCanisterSnapshotDataArgs> + '_ {
-        (0..self.data_calls).map(|n| ReadCanisterSnapshotDataArgs {
+    pub fn source_requests(&self) -> impl ExactSizeIterator<Item = ReadDataArgs> + '_ {
+        (0..self.data_calls).map(|n| ReadDataArgs {
             canister_id: self.source.target.canister,
             snapshot_id: self.snapshot_id.clone(),
             kind: super::super::transfer::data_kind(

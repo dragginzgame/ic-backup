@@ -26,8 +26,10 @@ fn certificate_survives_closing_deadline_without_relaxing_original_admission() {
         Duration::from_secs(1),
     )
     .unwrap();
-    let ic_platform::ic_protocol::TransportCallResponse::Replied { certificate } =
-        ic_platform::ic_protocol::decode_call_response(&body, a.result_bytes as usize).unwrap()
+    let ic_platform::ingress::CallResponse::Replied { certificate } =
+        ic_platform::ingress::decode_call_response(&body, a.result_bytes as usize)
+            .unwrap()
+            .value
     else {
         panic!("certificate")
     };
@@ -392,7 +394,7 @@ fn chunked_certificate_authenticates_but_tampering_and_truncation_do_not() {
 
 #[test]
 fn http_success_with_certified_rejection_is_a_rejected_result() {
-    use ic_platform::certification::{fork, labeled, leaf};
+    use ic_platform::certificate::construction::{fork, labeled, leaf};
     let (p, r, a, _) = input();
     let tree = fork(
         labeled(

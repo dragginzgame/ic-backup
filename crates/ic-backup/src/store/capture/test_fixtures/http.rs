@@ -66,7 +66,7 @@ pub(in crate::store) fn input_for(
     let p = CapturePolicy::new(request).unwrap();
     set_expiry(&mut r, now() + 30_000_000_000, scheme);
     r.observation = old.observation;
-    let response = candid_codec::encode_one(&status(&p), 4096).unwrap();
+    let response = crate::store::capture::test_fixtures::wire::encode(&status(&p), 4096);
     let mut a = admission();
     a.prepare_deadline_ns = now() + 10_000_000_000;
     a.submit_deadline_ns = a.prepare_deadline_ns + 10_000_000_000;
@@ -80,10 +80,10 @@ pub(in crate::store) fn input_for(
 
 pub(in crate::store) fn set_expiry(request: &mut PreparedStatus, expiry: u64, scheme: Scheme) {
     change(request, |envelope| {
-        if let EnvelopeContent::Call { ingress_expiry, .. } = envelope.content.to_mut() {
+        if let EnvelopeContent::Call { ingress_expiry, .. } = &mut envelope.content {
             *ingress_expiry = expiry;
         }
-        envelope.sender_sig = Some(scheme.sign(&envelope.content.to_request_id().signable()));
+        envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     });
     request.expires_ns = expiry;
 }

@@ -107,6 +107,74 @@ allocation 2 MiB each; skipped-work allowance 64 KiB. Required fields/types and
 single-argument/trailing-byte checks are independent of signature/certificate
 authentication. Resource statistics are skipped, never synthesized into a full DTO.
 
+On 2026-11-17, the full migration probe against published Protocol 0.3.0
+(source `efdc02936dde0319ef32825a499fa28db20cb1ff`, archive SHA-256
+`86ff8ba66bf3212d37cc5d5120f4cae5f1e968cb5c98c9d92bdfa980d53cc628`)
+found that its new required status `version` field narrows this projection.
+A minimal stopped/controller/hash reply and all three existing status goldens
+decode under Protocol 0.2.8 but refuse with `Type` under 0.3.0. Five independent
+snapshot/metadata controls still decode. The existing native test
+`full_supplier_dto_and_minimal_projection_apply_the_same_original_policy` passes
+against Backup's selected reader. No migration or actual-IC result is claimed.
+
+Focused legacy review at `4ae087fad8c23de712aa60bf569bde4b2b932651` revisited
+`model/ic_lifecycle_reply/wire/mod.rs`, its minimal-projection and bounded-skipping
+tests, and codec migration `1af7e219c3073395992c316ecaa5e83e74b1aecc`. Legacy
+projects stopped state/controllers; Backup additionally owns original module-hash
+admission. Neither needs a canister-version precondition. Keep that distinction
+from upgrade-proof consumers, which may require version; do not synthesize values
+or weaken their admission to fit Backup. A supported bounded projection and the
+still-missing response-fixture encoders are requested in
+[Platform #11](https://github.com/dragginzgame/ic-platform/issues/11#issuecomment-6932128252).
+Probe source, locks, checked archives and logs remain under
+`target/evidence/platform-full-migration/`. No supplier source was copied.
+
+Protocol 0.3.2 subsequently supplied the version-independent capture reader and
+response fixtures (source `80a5b488666629dd28152f6bcb6d489091d55994`). A production
+reader port passed 13/15 owning status tests, including all three frozen status
+goldens, but rejected known option promotion of a bare 32-byte module-hash vector
+in `hash_option_promotion_and_absence_never_invent_the_approved_hash`. Preserve
+that acceptance with the exact original module check; do not normalize retained
+wire bytes or silently change the test. The additional oversized-hash
+Limit/Malformed mismatch is only a forwarded error-class change. That initial port was
+removed and the original reader's 15 tests passed.
+[Platform #11](https://github.com/dragginzgame/ic-platform/issues/11#issuecomment-6944243819)
+records that supplier projection defect; `target/evidence/platform-next/`
+retains the attempted patch and failing output.
+
+Protocol 0.3.3 (source `64897c9c522ab6730620985b6d58607d9c593903`)
+fixes known optional-byte promotion. The initial production port passed all 15 status
+regressions, including minimal replies, frozen goldens, hostile bounds and absent
+hash policy. Platform owns traversal; Backup retains its exact status/controller/
+hash policy. The completed port uses Types 0.21 identities throughout, removing
+the temporary controller identity conversion. Oversized hashes now forward `Limit`; short or empty
+hashes fail module policy. These public error changes are pending 0.105.0.
+
+Production ingress parsing and direct-key verification now use Platform 0.34.11.
+Whole-envelope admission rejects malformed authentication fields earlier; original
+bytes and request IDs remain retained unchanged. One envelope projection supplies
+lookup binding and signature admission, removing the old dual-projection check.
+Focused legacy review at `4ae087fad8c23de712aa60bf569bde4b2b932651` covered
+`ic-backup-agent/src/submission/mod.rs` and history
+`1af7e219c3073395992c316ecaa5e83e74b1aecc` /
+`278016b369f4312b4311410bbb7a0ad770ba3de6`: preserve the signed original before
+one dispatch and retain its reply without blind retry. Here the external signer
+and operation recorder own those obligations; the legacy Agent lifecycle is not
+copied. Native regressions retain direct-key profiles, duplicate/unknown fields,
+exact lookup binding, deadline/cancellation and original-call recovery. No source
+was copied. Certificate and management DTO migration are now complete.
+
+Certificate verification now uses Platform 0.34.11 bounded decode and checked
+`PreparedRootKey`, followed by explicit effective-target and historical time
+authentication. Compared with the previously selected 0.33.7 historical reader,
+retain 2 MiB outer/1 MiB delegation caps, 8192 combined nodes, depth 64, 1024
+ranges, separate original windows, exact trust commitment and original request
+path/reply projection. Root admission additionally rejects invalid BLS points
+before use. Decode and verification refusals are distinct public error variants.
+Native cases retain invalid root/signature/time/range/tree, delegated authority,
+pruned/absent paths, certified rejection and complete-result caps. No certificate
+normalization, implicit current time, alternate verifier or new recovery path.
+
 ## Direct-key status request authentication
 
 Platform owns standard Ed25519/secp256k1 verification, IC domains, Principal
@@ -298,7 +366,7 @@ observation, original payload-reply settlement after shutdown and offline replay
 It also qualifies a full 1 MiB whole chunk and a load result whose local write
 fails: the returned error supplies the certificate for offline settlement, without
 a proxy recovery copy. The separate normal-dependency
-[consumer executable](../../qualification/consumer/src/main.rs) is built alone
+[consumer executable](../../qualification/ic-backup-consumer/src/main.rs) is built alone
 without Testkit/PocketIC in its graph and continues capture/restore in fresh
 processes, then replays completed operations after server shutdown. Fixture
 signing/authority does not qualify Canic process or maintenance adapters.

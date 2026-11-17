@@ -6,8 +6,7 @@ use super::{
     OperationSigningRequest, PreparedStatus, StatusAdmissionRecord,
 };
 use crate::store::BackupDigest;
-use ic_platform::{candid_codec, ic_protocol::EnvelopeContent};
-use std::borrow::Cow;
+use ic_platform::ingress::Content as EnvelopeContent;
 pub(in crate::store) mod certificates;
 pub(in crate::store) mod completion;
 pub(in crate::store) mod data;
@@ -15,6 +14,7 @@ pub(in crate::store) mod http;
 pub(in crate::store) mod lookup;
 pub(in crate::store) mod signatures;
 pub(in crate::store) mod source;
+pub(in crate::store) mod wire;
 
 fn plan() -> CapturePolicy {
     super::status::tests::plan()
@@ -37,13 +37,13 @@ pub(in crate::store) fn reply(
     step: super::OperationStep,
     mixed: bool,
 ) -> Vec<u8> {
-    use ic_platform::{candid_codec::Reserved, management_canister_types::*};
+    use ic_platform_protocol::management_snapshots::*;
     let snapshot = || Snapshot {
         id: vec![8],
         taken_at_timestamp: 100,
         total_size: u64::MAX,
     };
-    let metadata = ReadCanisterSnapshotMetadataResult {
+    let metadata = SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
         taken_at_timestamp: 100,
         canister_version: 41,
@@ -55,36 +55,36 @@ pub(in crate::store) fn reply(
         wasm_chunk_store: if mixed {
             [b"".as_slice(), b"chunk"]
                 .into_iter()
-                .map(|bytes| ChunkHash {
+                .map(|bytes| SnapshotChunk {
                     hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
                 })
                 .collect()
         } else {
             vec![]
         },
-        global_timer: Some(CanisterTimer::Inactive),
-        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::ConditionNotSatisfied),
+        global_timer: Some(Timer::Inactive),
+        on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     };
     match step {
         super::OperationStep::InitialStatus | super::OperationStep::FinalStatus => {
-            candid_codec::encode_one(&super::status::tests::status(plan.plan()), 4096).unwrap()
+            wire::encode(&super::status::tests::status(plan.plan()), 4096)
         }
         super::OperationStep::ListSnapshots => {
             let mut old = snapshot();
             old.id = vec![9];
-            candid_codec::encode_one(&vec![old], 4096).unwrap()
+            wire::encode(&vec![old], 4096)
         }
-        super::OperationStep::TakeSnapshot => candid_codec::encode_one(&snapshot(), 4096).unwrap(),
-        super::OperationStep::Metadata => candid_codec::encode_one(&metadata, 4096).unwrap(),
+        super::OperationStep::TakeSnapshot => wire::encode(&snapshot(), 4096),
+        super::OperationStep::Metadata => wire::encode(&metadata, 4096),
         super::OperationStep::Data(n) => {
             let transfer = plan.plan().plan_transfer(&[8], &metadata).unwrap();
             let bytes = match transfer.requests().nth(n as usize).unwrap().kind {
-                SnapshotDataKind::WasmModule { offset: 0, .. } => b"hello".as_slice(),
-                SnapshotDataKind::WasmModule { .. } => b"world",
-                SnapshotDataKind::WasmMemory { offset: 0, .. } => b"abcde",
-                SnapshotDataKind::WasmMemory { .. } => b"f",
-                SnapshotDataKind::StableMemory { .. } => b"xyz",
-                SnapshotDataKind::WasmChunk { hash } => {
+                ReadKind::WasmModule(Extent { offset: 0, .. }) => b"hello".as_slice(),
+                ReadKind::WasmModule(Extent { .. }) => b"world",
+                ReadKind::WasmMemory(Extent { offset: 0, .. }) => b"abcde",
+                ReadKind::WasmMemory(Extent { .. }) => b"f",
+                ReadKind::StableMemory(Extent { .. }) => b"xyz",
+                ReadKind::WasmChunk(SnapshotChunk { hash }) => {
                     if hash == BackupDigest::compute(b"").as_bytes() {
                         b"".as_slice()
                     } else {
@@ -92,13 +92,12 @@ pub(in crate::store) fn reply(
                     }
                 }
             };
-            candid_codec::encode_one(
-                &ReadCanisterSnapshotDataResult {
+            wire::encode(
+                &SnapshotData {
                     chunk: bytes.to_vec(),
                 },
                 4096,
             )
-            .unwrap()
         }
         _ => panic!("capture fixture received restore step"),
     }

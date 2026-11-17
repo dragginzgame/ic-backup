@@ -69,7 +69,8 @@ legacy recovery material read-only and under its original authority.
 
 ## Dependency selection
 
-Host FS/Artifacts 0.80.2 and HTTP 0.80.0 are selected from verified registry archives.
+Host FS/Artifacts and HTTP are selected from verified registry archives; the
+handoff records the current locked versions and qualification evidence.
 Backup owns its Reqwest 0.13.5 client; Host bounds complete response bodies. The
 maintainer-authorized temporary sibling overrides have been removed after
 consumer qualification. Keep dependencies registry-backed and builds in this
@@ -77,13 +78,22 @@ repository's target directory; do not add sibling patches or shared targets.
 
 ## Local development
 
+For the 0.105.0 delivery, the maintainer's 2026-11-17 deployment instruction
+following disclosure of the remaining test dependency debt authorizes retaining
+the existing dev-only `candid` and `ic-management-canister-types` declarations.
+This is a scoped exception to the baseline's external-IC dependency boundary
+(which includes development dependencies), preserving malformed-wire and
+independent argument regressions pending cleanup tracked in
+[Platform #11](https://github.com/dragginzgame/ic-platform/issues/11).
+It grants no production use, new direct SDK dependencies or sibling edits.
+
 [Setup](docs/development/setup.md) owns commands and validation. Production
 libraries belong under `crates/`. Add a separate `qualification/` workspace only
 when actual test-only packages justify one; product must never depend on it.
 Use directory modules with `mod.rs` when modules exist. Keep tests with owners.
 
 The private `qualification/` workspace owns actual management ingress through
-Testkit 0.107.4 and its native `ic_testkit::pocket_ic` boundary. Product dependencies
+the locked Testkit library and its native `ic_testkit::pocket_ic` boundary. Product dependencies
 never point back into it. Its independent lock selects PocketIC 16.1 and that
 client's exact `thiserror` 2.0.18 constraint; the product lock retains 2.0.21.
 The compatible product requirement admits both. Revisit this constraint when

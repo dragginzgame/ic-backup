@@ -1,9 +1,24 @@
 # IC Backup
 
+Version 0.105.0 completes the Platform migration. Import public identities from
+`ic_platform_types::Principal` (0.21), and snapshot request/metadata types from
+`ic_platform_protocol::management_snapshots` (0.3). `ReadDataArgs` and
+`ReadKind` replace the old read DTOs; region variants contain an `Extent`,
+and whole-chunk variants contain a `SnapshotChunk`. Globals use `u128` and
+explicit `Float32Bits` / `Float64Bits` wrappers.
+
+Status, snapshot and metadata decode errors now carry Protocol errors. Empty
+snapshot IDs fail `SnapshotId`; excessive IDs/hashes/globals report codec
+`Limit`. The unreachable typed `GlobalRange` error is removed. Status errors
+carry Protocol's `Status` and no longer implement `Copy`. Certificate errors
+separate bounded `Decode` from `Certificate(VerifyError)`; key admission now
+checks BLS point validity. Stored formats and original evidence remain unchanged.
+Platform 0.33 is absent from both workspaces, including test dependencies.
+
 In 0.104.0, snapshot-data and restore-reply decode errors carry
 `ic_platform_protocol::candid::Error`. Consumers matching these errors must update
-their imports and patterns. The remaining public Platform types still use 0.33.7;
-this is partial Platform adoption. Stored formats and retained evidence are unchanged.
+their imports and patterns. That release retained other public Platform types on 0.33.7;
+0.105.0 completes their migration. Stored formats and retained evidence are unchanged.
 
 In 0.103.0, commitment arguments and results use
 `ic_backup::store::BackupDigest`. Replace the former Host `Sha256Digest` import;
@@ -24,7 +39,7 @@ product and is still unfinished. A host controlling a manager canister does not
 thereby control that manager's children. No manager route is implemented here.
 
 This incompatible restart replaces legacy `ic-backup`/`ic-backup-agent` APIs.
-Version 0.104.0 remains an experimental restart release. Rust 1.100 or later is
+Version 0.105.0 remains an experimental restart release. Rust 1.100 or later is
 required. Native checks target Linux x86-64 and macOS ARM64/x86-64;
 actual-IC qualification currently runs locally on Linux using PocketIC.
 

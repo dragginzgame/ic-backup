@@ -1,6 +1,6 @@
 //! Certified rejection projection and durable terminal replay, without IC effects.
 use super::*;
-use ic_platform::certification::HashTree;
+use ic_platform::certificate::construction::HashTree;
 fn rejected_tree(
     id: &[u8; 32],
     code: Option<&[u8]>,
@@ -229,6 +229,6 @@ fn builder_checks_complete_result_size_and_rejects_http_errors_without_certifica
         br#"{"status":"non_replicated_rejection","reject_code":4,"reject_message":"denied"}"#;
     assert!(matches!(
         build(&p, &r, unsigned),
-        Err(StatusCertificateError::Certificate(_))
+        Err(StatusCertificateError::Decode(_))
     ));
 }

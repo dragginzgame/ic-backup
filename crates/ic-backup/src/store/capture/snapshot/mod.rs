@@ -1,11 +1,10 @@
 //! Bounded list/take replies and non-destructive capture arguments; no IC effects.
 use super::CapturePolicy;
-use ic_platform::{
-    candid_codec::{
-        self, Encode, Type, Writer,
-        decoder::{Decode, Error as DecodeError, Limits, Reader, decode_one_with_skip_limit},
+use ic_platform_protocol::{
+    candid::{Error as DecodeError, Limits},
+    management_snapshots::{
+        Snapshot, TakeSnapshotArgs, decode_list_snapshots, decode_take_snapshot,
     },
-    management_canister_types::{Snapshot, TakeCanisterSnapshotArgs},
 };
 use std::collections::BTreeSet;
 use thiserror::Error;
@@ -25,7 +24,8 @@ const MAX_ID_BYTES: usize = 256;
 /// # Errors
 /// Refuses malformed/excessive replies, unknown/missing fields and duplicate IDs.
 pub fn decode_snapshot_list(reply: &[u8]) -> Result<Vec<Snapshot>, SnapshotReplyError> {
-    let Inventory(snapshots) = decode(reply)?;
+    let snapshots =
+        decode_list_snapshots(reply, limits(reply)?).map_err(SnapshotReplyError::Decode)?;
     validate_inventory(&snapshots)?;
     Ok(snapshots)
 }
@@ -44,7 +44,9 @@ pub fn decode_taken_snapshot(
     prior: &[Snapshot],
 ) -> Result<Snapshot, SnapshotReplyError> {
     validate_inventory(prior)?;
-    let BoundedSnapshot(snapshot) = decode(reply)?;
+    let snapshot =
+        decode_take_snapshot(reply, limits(reply)?).map_err(SnapshotReplyError::Decode)?;
+    validate_inventory(std::slice::from_ref(&snapshot))?;
     if prior.iter().any(|existing| existing.id == snapshot.id) {
         return Err(SnapshotReplyError::AlreadyExisted);
     }
@@ -72,7 +74,7 @@ impl CapturePolicy {
         &self,
         inventory: &[Snapshot],
         capacity: u32,
-    ) -> Result<TakeCanisterSnapshotArgs, SnapshotReplyError> {
+    ) -> Result<TakeSnapshotArgs, SnapshotReplyError> {
         if !(1..=MAX_SNAPSHOTS as u32).contains(&capacity) {
             return Err(SnapshotReplyError::CapacityLimit);
         }
@@ -80,7 +82,7 @@ impl CapturePolicy {
         if inventory.len() >= capacity as usize {
             return Err(SnapshotReplyError::NoCapacity);
         }
-        Ok(TakeCanisterSnapshotArgs {
+        Ok(TakeSnapshotArgs {
             canister_id: self.request().target.canister,
             replace_snapshot: None,
             uninstall_code: Some(false),
@@ -105,81 +107,19 @@ fn validate_inventory(snapshots: &[Snapshot]) -> Result<(), SnapshotReplyError> 
     Ok(())
 }
 
-fn decode<'a, T: Decode<'a>>(reply: &'a [u8]) -> Result<T, SnapshotReplyError> {
+fn limits(reply: &[u8]) -> Result<Limits, SnapshotReplyError> {
     if reply.len() > MAX_REPLY_BYTES {
         return Err(SnapshotReplyError::ReplyTooLarge);
     }
-    decode_one_with_skip_limit(
-        reply,
-        Limits {
-            bytes: MAX_REPLY_BYTES,
-            header: 64 * 1024,
-            types: 16,
-            work: 2 * 1024 * 1024,
-            allocation: 2 * 1024 * 1024,
-        },
-        0,
-    )
-    .map_err(SnapshotReplyError::Decode)
-}
-
-// Private bounds over the supplier's schema, not replacement management DTOs.
-struct BoundedSnapshot(Snapshot);
-impl Encode for BoundedSnapshot {
-    const TYPE: &'static Type = Snapshot::TYPE;
-    fn write(&self, output: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.0.write(output)
-    }
-}
-impl<'a> Decode<'a> for BoundedSnapshot {
-    fn read(reader: &mut Reader<'a>, wire: i64) -> Result<Self, DecodeError> {
-        let Type::Record(fields) = Snapshot::TYPE
-            .resolved()
-            .map_err(|_| DecodeError::Unsupported)?
-        else {
-            return Err(DecodeError::Unsupported);
-        };
-        if fields.len() != 3 {
-            return Err(DecodeError::Unsupported);
-        }
-        let (mut id, mut size, mut timestamp) = (None, None, None);
-        reader.record(wire, false, |label, inner, reader| {
-            if label == fields[0].0 {
-                let bytes = reader.bounded_vec(inner, MAX_ID_BYTES)?;
-                if bytes.is_empty() {
-                    return Err(DecodeError::Type);
-                }
-                id = Some(bytes);
-            } else if label == fields[1].0 {
-                size = Some(reader.value(inner)?);
-            } else if label == fields[2].0 {
-                timestamp = Some(reader.value(inner)?);
-            } else {
-                return Ok(false);
-            }
-            Ok(true)
-        })?;
-        Ok(Self(Snapshot {
-            id: id.ok_or(DecodeError::Type)?,
-            total_size: size.ok_or(DecodeError::Type)?,
-            taken_at_timestamp: timestamp.ok_or(DecodeError::Type)?,
-        }))
-    }
-}
-struct Inventory(Vec<Snapshot>);
-impl Encode for Inventory {
-    const TYPE: &'static Type = <Vec<Snapshot> as Encode>::TYPE;
-    fn write(&self, output: &mut Writer) -> Result<(), candid_codec::Error> {
-        self.0.write(output)
-    }
-}
-impl<'a> Decode<'a> for Inventory {
-    fn read(reader: &mut Reader<'a>, wire: i64) -> Result<Self, DecodeError> {
-        let snapshots = reader.bounded_vec::<BoundedSnapshot>(wire, MAX_SNAPSHOTS)?;
-        Ok(Self(
-            snapshots.into_iter().map(|snapshot| snapshot.0).collect(),
-        ))
-    }
+    Ok(Limits {
+        bytes: MAX_REPLY_BYTES,
+        header: 64 * 1024,
+        types: 16,
+        work: 2 * 1024 * 1024,
+        allocation: 2 * 1024 * 1024,
+        vector: MAX_REPLY_BYTES,
+        skipping: 0,
+    })
 }
 
 /// Snapshot wire or non-destructive preflight refusal; no raw bytes in diagnostics.

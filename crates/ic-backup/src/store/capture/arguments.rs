@@ -1,9 +1,6 @@
 //! Fixed metadata request arguments; no independent acquisition workflow.
 use super::{CapturePolicy, OperationStoreError};
-use ic_platform::{
-    candid_codec,
-    management_canister_types::{ReadCanisterSnapshotMetadataArgs, Snapshot},
-};
+use ic_platform_protocol::management_snapshots::{Snapshot, SnapshotArgs};
 use thiserror::Error;
 /// Metadata identity or bounded request encoding refused.
 #[derive(Debug, Error)]
@@ -30,13 +27,11 @@ impl CapturePolicy {
         if !(1..=256).contains(&snapshot.id.len()) {
             return Err(MetadataReadError::SnapshotId);
         }
-        candid_codec::encode_one(
-            &ReadCanisterSnapshotMetadataArgs {
-                canister_id: self.request().target.canister,
-                snapshot_id: snapshot.id.clone(),
-            },
-            512,
-        )
+        (SnapshotArgs {
+            canister_id: self.request().target.canister,
+            snapshot_id: snapshot.id.clone(),
+        })
+        .encode(512)
         .map_err(|_| MetadataReadError::Admission(OperationStoreError::StatusAdmission))
     }
 }

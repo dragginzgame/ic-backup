@@ -16,14 +16,10 @@ use crate::store::{
 };
 use ic_host_fs::Directory;
 use ic_platform::{
-    certification::{fork, labeled, leaf},
-    ic_protocol::{
-        Envelope, EnvelopeContent, decode_call_content_strict, decode_read_state_content_strict,
-        encode_envelope,
-    },
+    certificate::construction::{fork, labeled, leaf},
+    ingress::{Content as EnvelopeContent, Envelope, decode_envelope, encode_envelope},
 };
 use std::{
-    borrow::Cow,
     fs,
     path::PathBuf,
     sync::{
@@ -68,7 +64,7 @@ impl Signer for ExternalSigner {
         let sender = request.plan.sender();
         let content = match request.signing {
             Signing::Call { method, arguments } => EnvelopeContent::Call {
-                canister_id: ic_platform::Principal::management_canister()
+                canister_id: ic_platform_types::Principal::management_canister()
                     .as_slice()
                     .try_into()
                     .unwrap(),
@@ -82,16 +78,13 @@ impl Signer for ExternalSigner {
             Signing::Observation { request_id } => EnvelopeContent::ReadState {
                 sender: sender.as_slice().try_into().unwrap(),
                 ingress_expiry: request.expires_ns,
-                paths: vec![vec![
-                    b"request_status".to_vec().into(),
-                    request_id.to_vec().into(),
-                ]],
+                paths: vec![vec![b"request_status".to_vec(), request_id.to_vec()]],
             },
         };
-        let signature = Scheme::Ed25519.sign(&content.to_request_id().signable());
+        let signature = Scheme::Ed25519.sign(&content.signable().unwrap());
         Ok(encode_envelope(
             &Envelope {
-                content: Cow::Owned(content),
+                content,
                 sender_pubkey: Some(Scheme::Ed25519.key()),
                 sender_sig: Some(signature),
                 sender_delegation: None,
@@ -212,7 +205,10 @@ fn envelope(request: &[u8]) -> &[u8] {
 }
 fn response(request: &[u8], n: usize) -> Vec<u8> {
     let intent = selected();
-    let content = decode_call_content_strict(envelope(request), 4096).unwrap();
+    let content = decode_envelope(envelope(request), 4096)
+        .unwrap()
+        .value
+        .content;
     let EnvelopeContent::Call {
         method_name, arg, ..
     } = &content
@@ -247,7 +243,11 @@ fn response(request: &[u8], n: usize) -> Vec<u8> {
         )
     );
     certificate_body(
-        &terminal_certificate(&content.to_request_id(), reply(&intent, step), b"replied"),
+        &terminal_certificate(
+            &content.request_id().unwrap(),
+            reply(&intent, step),
+            b"replied",
+        ),
         true,
     )
 }
@@ -459,10 +459,13 @@ fn original_reply_import_is_local_after_shutdown_and_revoked_authority() {
     let captured = Arc::clone(&retained);
     let (_, parent, mut recorder, mut connection, server) =
         fixture(Response::Computed(Box::new(move |request, _| {
-            let content = decode_call_content_strict(envelope(request), 4096).unwrap();
+            let content = decode_envelope(envelope(request), 4096)
+                .unwrap()
+                .value
+                .content;
             let response = reply(&selected(), Step::InitialStatus);
             let proof =
-                terminal_certificate(&content.to_request_id(), response.clone(), b"replied");
+                terminal_certificate(&content.request_id().unwrap(), response.clone(), b"replied");
             *captured.lock().unwrap() = Some(StatusEvidence {
                 rejected: false,
                 response,
@@ -497,16 +500,21 @@ fn one_observation_resolves_pending_update_and_preserves_original_submission_cou
     let captured = Arc::clone(&original_id);
     let (_, parent, mut recorder, mut connection, server) =
         fixture(Response::Computed(Box::new(move |request, _| {
-            if let Ok(content) = decode_call_content_strict(envelope(request), 4096) {
-                *captured.lock().unwrap() = Some(*content.to_request_id());
+            if let Ok(parsed) = decode_envelope(envelope(request), 4096)
+                && let content @ EnvelopeContent::Call { .. } = parsed.value.content
+            {
+                *captured.lock().unwrap() = Some(content.request_id().unwrap());
                 None
             } else {
-                let content = decode_read_state_content_strict(envelope(request), 4096).unwrap();
+                let content = decode_envelope(envelope(request), 4096)
+                    .unwrap()
+                    .value
+                    .content;
                 let EnvelopeContent::ReadState { paths, .. } = content else {
                     panic!("lookup")
                 };
                 let id = captured.lock().unwrap().unwrap();
-                assert_eq!(paths[0][1].as_bytes(), id);
+                assert_eq!(paths[0][1].as_slice(), id);
                 Some(certificate_body(
                     &terminal_certificate(&id, reply(&selected(), Step::InitialStatus), b"replied"),
                     false,
@@ -640,12 +648,15 @@ fn changed_transport_profile_refuses_before_reservation_or_signing() {
 fn certified_policy_failure_is_retained_and_blocks_cold_continuation() {
     let (_, parent, mut recorder, mut connection, server) =
         fixture(Response::Computed(Box::new(|request, _| {
-            let content = decode_call_content_strict(envelope(request), 4096).unwrap();
+            let content = decode_envelope(envelope(request), 4096)
+                .unwrap()
+                .value
+                .content;
             let mut running = crate::store::capture::status::tests::status(selected().plan());
-            running.status = ic_platform::management_canister_types::CanisterStatusType::Running;
-            let response = ic_platform::candid_codec::encode_one(&running, 4096).unwrap();
+            running.status = ic_platform_protocol::management_snapshots::Status::Running;
+            let response = crate::store::capture::test_fixtures::wire::encode(&running, 4096);
             Some(certificate_body(
-                &terminal_certificate(&content.to_request_id(), response, b"replied"),
+                &terminal_certificate(&content.request_id().unwrap(), response, b"replied"),
                 true,
             ))
         })));
@@ -691,13 +702,16 @@ fn process_child() {
 fn certified_rejection_remains_settled_without_replacement_or_live_replay() {
     let (path, parent, mut operation, mut connection, server) =
         fixture(Response::Computed(Box::new(|request, _| {
-            let content = decode_call_content_strict(envelope(request), 4096).unwrap();
+            let content = decode_envelope(envelope(request), 4096)
+                .unwrap()
+                .value
+                .content;
             let certificate = signed(
                 fork(
                     labeled(
                         b"request_status",
                         labeled(
-                            content.to_request_id().to_vec(),
+                            content.request_id().unwrap().to_vec(),
                             fork(
                                 fork(
                                     labeled(b"reject_code", leaf(vec![5])),
@@ -866,8 +880,10 @@ fn failed_result_write_returns_original_evidence_for_offline_import_without_new_
         let wire_id = Arc::clone(&original);
         let (path, parent, mut operation, mut connection, server) =
             fixture(Response::Computed(Box::new(move |request, _| {
-                if let Ok(content) = decode_call_content_strict(envelope(request), 4096) {
-                    *wire_id.lock().unwrap() = Some(*content.to_request_id());
+                if let Ok(parsed) = decode_envelope(envelope(request), 4096)
+                    && let content @ EnvelopeContent::Call { .. } = parsed.value.content
+                {
+                    *wire_id.lock().unwrap() = Some(content.request_id().unwrap());
                     if observation {
                         return None;
                     }
@@ -945,12 +961,17 @@ fn nonterminal_lookup_is_spent_and_surviving_original_reply_can_still_resolve() 
     let captured = Arc::clone(&retained);
     let (_, parent, mut recorder, mut connection, server) =
         fixture(Response::Computed(Box::new(move |request, _| {
-            if let Ok(content) = decode_call_content_strict(envelope(request), 4096) {
+            if let Ok(parsed) = decode_envelope(envelope(request), 4096)
+                && let content @ EnvelopeContent::Call { .. } = parsed.value.content
+            {
                 let response = reply(&selected(), Step::InitialStatus);
-                let proof =
-                    terminal_certificate(&content.to_request_id(), response.clone(), b"replied");
+                let proof = terminal_certificate(
+                    &content.request_id().unwrap(),
+                    response.clone(),
+                    b"replied",
+                );
                 *captured.lock().unwrap() = Some((
-                    *content.to_request_id(),
+                    content.request_id().unwrap(),
                     StatusEvidence {
                         rejected: false,
                         response,

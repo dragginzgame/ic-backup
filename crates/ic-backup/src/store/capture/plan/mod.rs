@@ -2,7 +2,7 @@
 use super::{OperationLimits, OperationStoreError};
 use crate::store::BackupDigest;
 use crate::store::{BackupTarget, manifest::lower_hex};
-use ic_platform::Principal;
+use ic_platform_types::Principal;
 pub(in crate::store) const PLAN_LIMIT: usize = 1024 * 1024;
 /// Passive input for a single stopped-canister capture plan.
 #[derive(Clone, Debug)]

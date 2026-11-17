@@ -84,7 +84,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-15, macos-15-intel]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       # actions/checkout v6
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
@@ -105,6 +105,19 @@ jobs:
         run: perl scripts/ci/setup.pl dependencies make fetch-dependencies
       - name: Qualify native scaffold offline
         run: make clippy rustdoc test
+      - name: Lint qualification callers offline
+        run: cargo clippy --manifest-path qualification/Cargo.toml --locked --offline --all-targets -- -D warnings
+      - name: Prepare locked Testkit server
+        if: matrix.os == 'ubuntu-24.04'
+        run: perl scripts/ci/setup.pl testkit-server make install-testkit-server
+      - name: Admit installed Testkit server offline
+        if: matrix.os == 'ubuntu-24.04'
+        run: make testkit-server-check
+      - name: Qualify actual-IC capture and recovery offline
+        if: matrix.os == 'ubuntu-24.04'
+        env:
+          IC_BACKUP_TESTKIT_DIRECTORY: ${{ github.workspace }}/.tools/testkit-server
+        run: cargo test --release --manifest-path qualification/Cargo.toml --locked --offline -p ic-backup-qualification --test capture
       - name: Retain sanitized setup diagnostics
         if: failure()
         id: setup-evidence

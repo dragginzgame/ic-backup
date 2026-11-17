@@ -7,7 +7,8 @@ use crate::store::{
         source::{extent, maximum},
     },
 };
-use ic_platform::management_canister_types::SnapshotDataKind;
+use ic_platform_protocol::management_snapshots::ReadKind;
+use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 use std::fs;
 
 fn selection(receipt: &BackupSummary) -> RestoreTransferRequest {
@@ -41,7 +42,7 @@ fn exact_region_schedule_uses_new_extent_and_preserves_original_authority() {
         assert_eq!(request.canister_id, receipt.target.canister);
         assert_eq!(request.snapshot_id, extent(&receipt).snapshot_id);
         assert!(
-            matches!(&request.kind, SnapshotDataKind::WasmModule { offset: actual_offset, size: actual_size } if (*actual_offset, *actual_size) == (offset, size))
+            matches!(&request.kind, ReadKind::WasmModule(Extent { offset: actual_offset, size: actual_size }) if (*actual_offset, *actual_size) == (offset, size))
         );
     }
     let bytes: Vec<_> = requests
@@ -136,7 +137,7 @@ fn mixed_regions_and_empty_whole_chunks_use_actual_lengths_and_sorted_order() {
     hashes.sort_by_key(|hash| *hash.as_bytes());
     for (request, hash) in requests[4..].iter().zip(hashes) {
         assert!(
-            matches!(&request.kind, SnapshotDataKind::WasmChunk { hash: actual } if actual.as_slice() == hash.as_bytes())
+            matches!(&request.kind, ReadKind::WasmChunk(SnapshotChunk { hash: actual }) if actual.as_slice() == hash.as_bytes())
         );
     }
     let parts: Vec<_> = requests

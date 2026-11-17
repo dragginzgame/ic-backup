@@ -3,7 +3,7 @@
 use super::super::CaptureCall;
 #[cfg(test)]
 use super::CapturePolicy;
-use super::{BackupDigest, LIMITS, LookupResult, StatusCertificateError, TimePolicy, historical};
+use super::{BackupDigest, LookupResult, StatusCertificateError, TimePolicy};
 #[cfg(test)]
 use super::{PreparedStatus, StatusAdmissionRecord};
 use crate::store::StatusRequestError;
@@ -126,15 +126,9 @@ pub(in crate::store) fn observe_authenticated_request(
     if root_key_der.len() != 133 || BackupDigest::compute(root_key_der) != authority.trust_root {
         return Err(StatusCertificateError::TrustRoot.into());
     }
-    let authenticated = historical::authenticate_certificate_at(
-        certificate,
-        root_key_der,
-        authority.canister,
-        policy.time,
-        LIMITS,
-    )
-    .map_err(StatusCertificateError::Certificate)?;
-    let tree = &authenticated.certificate.tree;
+    let authenticated =
+        super::authenticate(certificate, root_key_der, authority.canister, policy.time)?;
+    let tree = authenticated.tree();
     let path = [b"request_status".as_slice(), &request_id, b"status"];
     Ok(match tree.lookup_path(path) {
         LookupResult::Found(b"replied" | b"rejected") => {

@@ -1,6 +1,6 @@
 [package]
 name = "ic-backup"
-version = "0.104.0"
+version = "0.105.0"
 description = "Host-side capture, restore and local backup inventory for Internet Computer canisters"
 readme = "README.md"
 edition.workspace = true
@@ -15,6 +15,7 @@ ic-host-fs.workspace = true
 ic-host-http.workspace = true
 ic-platform.workspace = true
 ic-platform-protocol.workspace = true
+ic-platform-types.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -25,11 +26,15 @@ tokio.workspace = true
 [target.'cfg(any())'.dev-dependencies]
 toko-tooling.workspace = true
 
+[target.'cfg(unix)'.dev-dependencies]
+candid.workspace = true
+ic-management-canister-types.workspace = true
+ic-platform = { workspace = true, features = ["certificate-fixture-signing"] }
+ic-platform-protocol = { workspace = true, features = ["management-snapshot-fixtures"] }
+tokio = { workspace = true, features = ["rt", "net"] }
+
 [package.metadata.cargo-machete]
 ignored = ["toko-tooling"]
-
-[target.'cfg(unix)'.dev-dependencies]
-tokio = { workspace = true, features = ["rt", "net"] }
 
 [lints]
 workspace = true

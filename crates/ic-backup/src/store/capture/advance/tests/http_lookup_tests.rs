@@ -33,13 +33,13 @@ fn read_state_uses_exact_original_route_and_bytes_for_all_calls_and_direct_keys(
                     arg,
                     ingress_expiry,
                     ..
-                } = e.content.to_mut()
+                } = &mut e.content
                 {
                     *method_name = call.method_name().into();
                     *arg = call.arguments(&p).unwrap();
                     *ingress_expiry = 21;
                 }
-                e.sender_sig = Some(scheme.sign(&e.content.to_request_id().signable()));
+                e.sender_sig = Some(scheme.sign(&e.content.signable().unwrap()));
             });
             original.expires_ns = 21; // Valid historical original, expired for submission.
             let cert = signed(
