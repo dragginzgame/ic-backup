@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.105.1] - 2026-11-17
+
+### 🧹 Cleanup
+
+- Keep digest regression tests in their owning test module so source tooling can
+  distinguish test code from production code.
+
 ## [0.105.0] - 2026-11-17
 
 ### ⚠️ Breaking

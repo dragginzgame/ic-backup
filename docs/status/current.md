@@ -1,5 +1,16 @@
 # Current handoff — 2026-11-17
 
+## Local test-layout cleanup
+
+Moved the digest module's sole inline unit-test body to its owning `digest/tests.rs`,
+leaving ordinary `#[cfg(test)] mod tests;` wiring. Assertions, test identity,
+visibility and production behavior are unchanged. A maintained-source scan found
+no other inline test module bodies. The dev-only SDK exception remains unchanged.
+The maintainer authorized deployment as 0.105.1. Release metadata is prepared;
+publication is pending. Both locks already selected zeroize 1.9.2 at the start of
+release preparation; that compatible patch is retained and qualified in the gate.
+The owning digest test, formatting, documentation links and diff checks pass.
+
 ## 0.105.0 published
 
 **[ic-backup 0.105.0](https://crates.io/crates/ic-backup/0.105.0) is published.**
