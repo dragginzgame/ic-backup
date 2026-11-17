@@ -14,29 +14,17 @@ backlog, caches, build outputs, journals or release state wholesale.
 
 ## Learn from Backup Legacy before subsystem work
 
-Before substantive subsystem design, implementation or refactoring:
-
-- Inspect the relevant `ic-backup-legacy` implementation, regression tests and
-  Git history, including the fixes that explain its current checks. Start from
-  the revision pinned in [the legacy assessment](docs/design/legacy-assessment.md);
-  record any other exact revision consulted. The broad assessment does not replace
-  this focused review.
-- Identify the concrete problem each relevant solution solved, its safety and
-  recovery guarantees, and which assumptions have changed in the new library.
-  Do not dismiss a check as legacy sediment without understanding its purpose.
-- Reuse or adapt sound solutions where they fit the selected scope and current
-  Platform/Host ownership. Prefer the simplest mechanism that preserves the
-  required guarantee; do not copy legacy architecture or dependencies wholesale.
-- Bring applicable regression cases into the owning new tests and run them
-  against the new implementation. Preserve source revision and test provenance,
-  plus licenses when copying code. Adapt cases to changed contracts and explain
-  material exclusions; historical passes are not new qualification. IC effects
-  still require an actual IC backend, not native filesystem tests or fakes.
-
-Record concise source/test anchors, changed assumptions and reuse decisions in
-the relevant existing contract or design document. Apply this review to the
-already implemented inventory and payload checks before extending them. Keep
-legacy recovery material read-only and under its original authority.
+Before substantive subsystem work, inspect the relevant `ic-backup-legacy`
+implementation, regressions and explanatory history read-only, starting from the
+revision in [the legacy assessment](docs/design/legacy-assessment.md). Identify
+the original failure, safety/recovery guarantee and changed assumptions. Reuse
+sound solutions within current Platform/Host ownership; do not import old
+architecture, dependencies or recovery authority wholesale. Carry applicable
+regressions into the owning tests and run them against the replacement, preserving
+revision/licence provenance and explaining exclusions. IC effects require an
+actual IC backend; native filesystem tests or fakes are insufficient.
+Record concise decisions in the existing owning contract/design, including before
+extending the implemented inventory and payload checks.
 
 ## Product boundaries
 
@@ -44,8 +32,8 @@ legacy recovery material read-only and under its original authority.
   Canic-owned adapter consumes the public contract; Backup production must not
   depend on Canic runtime/control-plane crates. Read the concrete boundaries in
   [the sibling review](docs/design/sibling-integration.md) before selecting providers.
-- The implemented local slice covers initialization, inventory, payload checks and capture intent;
-  read [its implemented contract](docs/architecture/local-inventory.md) before changes.
+- Current implemented capability and qualification status belong in the handoff.
+  Read [the inventory contract](docs/architecture/local-inventory.md) before changes.
   Read the [capture-intent contract](docs/architecture/capture-intent.md) before changing
   plan, ownership or operation persistence, and the
   [transfer contract](docs/architecture/capture-transfer.md) before metadata/schedule work.
@@ -58,14 +46,15 @@ legacy recovery material read-only and under its original authority.
   original integration, IDs, authority and evidence. The restart grants no reset,
   destructive cleanup or permission to interpret old records under new schemas.
 - Keep integrations responsible for membership, routing, application quiescence
-  and external-effect settlement. Exact new authority/custody contracts remain
-  to be designed before effects are implemented.
+  and external-effect settlement. Follow the implemented direct-controller
+  authority/custody contracts; the manager-route proposal remains separate and
+  must not be treated as an enabled provider.
 - The maintainer authorized the experimental direct-controller release on
   2026-11-16. Root workspace metadata admits only `crates-io`; the product inherits
   it with `publish.workspace = true`. Qualification and any future independent
   workspace or canister package remain non-publishable unless separately authorized.
-- `0.100.0` began the unpublished incompatible restart. Preserve historical
-  release identities and review consumer migration before publication.
+- Preserve historical release identities and review consumer migration before
+  publication; the changelog owns restart history and delivered versions.
 
 ## Dependency selection
 
