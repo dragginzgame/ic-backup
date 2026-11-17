@@ -1,14 +1,34 @@
 # Current handoff — 2026-11-17
 
-## 0.105.0 release preparation
+## 0.105.0 published
 
-The maintainer authorized deployment of the pending full Platform port, Testkit
-adoption and qualification CI on 2026-11-17. Manifests and both locks now identify
-0.105.0; its changelog and consumer migration notes are finalized. The disclosed
-dev-only SDK fixture debt remains on Platform #11 under the release-scoped
-exception in AGENTS.md. Product source and stored formats are unchanged by release
-preparation. The complete publication gate and single upload remain to execute;
-no 0.105.0 publication is claimed here. Hosted CI will not be awaited.
+**[ic-backup 0.105.0](https://crates.io/crates/ic-backup/0.105.0) is published.**
+Release commit `76f0adfef047e205741c824388f85bc4408156a9` and tag `v0.105.0`
+are pushed to `origin/main`. This completes the Platform consumer port with
+Platform 0.34.13 / Protocol 0.3.5 / Types 0.21.2 and private Testkit 0.108.0.
+The packaged README records the breaking public type/error migration; stored
+formats and original evidence are unchanged. Canic remains unqualified.
+
+The complete local publication gate passes: **239 native tests**, five doctests,
+**11 actual-IC journeys (104.93 seconds)**, both strict Clippy checks, Rustdoc,
+format/link/tool admission, archive/isolated consumer and publication-adapter
+regressions. Hosted CI was not awaited. The single successful upload attempt is
+`target/publication/publish.selection.WRRZlm`; release evidence is under
+`target/evidence/release-0.105.0/`.
+
+Independent registry readback matches SHA-256
+`396a9b42064405de02c88ff3ebea3153f66cbe16078a66002517efc628782596`.
+The embedded commit matches the tag and all 96 tracked package source files match.
+A fresh registry-backed normal consumer builds without Testkit/PocketIC, then
+successfully reopens pre-port isolated and 20 MiB capture/restore stores offline
+using their original IDs and approvals. No server or live authority is needed.
+
+Post-push review of the delivered migration and directly affected callers found
+no new competing recovery path, journal or authority input. The disclosed dev-only
+SDK fixture debt remains on Platform #11 under the release-scoped exception in
+AGENTS.md; signing, manager execution and fenced recovery remain Canic work.
+Backup can remain parked at this released direct-controller scope pending those
+concrete consumers.
 
 The sections below retain the preceding development and 0.104.0 release evidence.
 
