@@ -80,7 +80,7 @@ repository's target directory; do not add sibling patches or shared targets.
 
 For the 0.105.0 and test-layout-only 0.105.1 deliveries, the maintainer's
 2026-11-17 deployment instructions
-following disclosure of the remaining test dependency debt authorizes retaining
+following disclosure of the remaining test dependency debt authorize retaining
 the existing dev-only `candid` and `ic-management-canister-types` declarations.
 This is a scoped exception to the baseline's external-IC dependency boundary
 (which includes development dependencies), preserving malformed-wire and

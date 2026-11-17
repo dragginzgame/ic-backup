@@ -1,14 +1,30 @@
 # Current handoff — 2026-11-17
 
-## Local test-layout cleanup
+## 0.105.1 published
+
+**[ic-backup 0.105.1](https://crates.io/crates/ic-backup/0.105.1) is published.**
+Commit `dba14cd3dda9c0d1eff32414b57b86b11f69a97c` and tag `v0.105.1` are
+pushed to `origin/main`. The complete local gate passes: 239 native tests, five
+doctests, 11 actual-IC journeys (103.14 seconds), both strict Clippy checks,
+Rustdoc, tool/format/link checks, archive/isolated consumer and publication-adapter
+regressions. Hosted CI was not awaited.
+
+Single successful publication: `target/publication/publish.selection.MlBegG`.
+Registry readback matches SHA-256
+`577733b324a255c92e711cd27ca0f509c85b1baac794030f52e254c48ae7f06e`,
+the embedded release commit and 97 tracked package source files. A fresh
+registry-backed normal consumer builds without Testkit/PocketIC. Evidence is
+under `target/evidence/release-0.105.1/`.
 
 Moved the digest module's sole inline unit-test body to its owning `digest/tests.rs`,
 leaving ordinary `#[cfg(test)] mod tests;` wiring. Assertions, test identity,
 visibility and production behavior are unchanged. A maintained-source scan found
 no other inline test module bodies. The dev-only SDK exception remains unchanged.
-The maintainer authorized deployment as 0.105.1. Release metadata is prepared;
-publication is pending. Both locks already selected zeroize 1.9.2 at the start of
-release preparation; that compatible patch is retained and qualified in the gate.
+Both locks already selected zeroize 1.9.2 at the start of release preparation;
+that compatible patch is retained and qualified in the gate. Post-push review
+confirmed the test body and assertions were preserved with ordinary module
+discovery; no new recovery path, journal or authority input was introduced.
+Backup remains parked pending the existing Canic integration work.
 The owning digest test, formatting, documentation links and diff checks pass.
 
 ## 0.105.0 published
