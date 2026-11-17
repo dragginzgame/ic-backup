@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.105.3] - 2026-11-17
+
+### 🔧 Changed
+
+- Make publication dry-run a linted archive/registry preflight; upload runs the
+  full product and installed-IC gate once. Move publication-caller regression
+  checks to CI and changed-tooling qualification
+  ([Backup #3 — Avoid repeating full qualification for dry-run and upload](https://github.com/dragginzgame/ic-backup/issues/3)).
+
 ## [0.105.2] - 2026-11-17
 
 ### 🧪 Testing

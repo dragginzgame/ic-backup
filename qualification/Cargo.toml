@@ -9,7 +9,7 @@ license-file = "../LICENSE.md"
 publish = false
 
 [workspace.dependencies]
-ic-backup = { path = "../crates/ic-backup", version = "0.105.2" }
+ic-backup = { path = "../crates/ic-backup", version = "0.105.3" }
 ic-backup-consumer = { path = "ic-backup-consumer" }
 ic-host-process = "0.80.2"
 ic-platform = { version = "0.34.11", default-features = false, features = ["ed25519", "ingress-packets"] }

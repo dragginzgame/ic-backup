@@ -40,6 +40,10 @@ jobs:
         run: perl scripts/ci/setup.pl rust-tools make install-rust-tools
       - name: Check formatting
         run: make fmt-check
+      - name: Prepare publication fixture dependencies
+        run: perl scripts/ci/setup.pl dependencies make fetch-dependencies
+      - name: Qualify publication caller wiring
+        run: make test-publication-adapter
       - name: Prepare the pinned secret scanner
         shell: bash
         run: |

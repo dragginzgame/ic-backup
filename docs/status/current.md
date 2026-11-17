@@ -1,5 +1,42 @@
 # Current handoff — 2026-11-17
 
+## 0.105.3 release preparation
+
+The maintainer authorized deployment of Backup #3's publication-workflow change.
+Product/qualification metadata and both locks identify 0.105.3; its changelog is
+finalized. Changed-caller qualification precedes the single full publication gate.
+The upload and release delivery remain pending; no publication is claimed here.
+Hosted CI will not be awaited. Earlier local evidence is retained below.
+
+## Backup #3 local completion
+
+The full publication gate no longer runs for optional Cargo dry-run. `publish-check`
+selects a linted archive/registry preflight; `publish` retains complete product and
+actual-IC qualification, archive/normal-consumer checks and fresh upload admission.
+Check-plus-upload therefore runs one complete gate. The local caller-regression
+fixture moves from every release to scaffold CI and explicit changed-tooling
+qualification. The publication guide maps leaf commands, guarantees and triggers.
+
+This removes unnecessary work before adding reuse: no proof cache or skip flag is
+introduced. Earlier check output cannot authorize skipping upload checks; a full
+standalone `publication-verify` followed by `publish` still repeats that explicit
+readiness check. Normal delivery calls `publish` directly. Installed Toko 0.44.11
+and managed bytes are unchanged; no sibling source edits or supplier blocker.
+
+Real preflight tool admission/product Clippy passes. Disposable actual Make/shared
+dispatch under `--jobs=2` passes fixed selection/policy, missing/tampered check
+records, dirty/changed source, failed gates, retained failed dispatch and surviving
+lock checks. The warm simulated check/upload pair measured 0.115 / 0.117 seconds;
+validation cost and Cargo effects are substituted, so no native/IC runtime or
+delivery speedup is claimed. Product APIs/algorithms/tests are unchanged; existing
+240-native/11-IC release evidence remains applicable, not a fresh execution.
+ShellCheck, Actionlint, formatting, links and diff checks pass. Evidence is under
+`target/evidence/publication-flow/` and the owning disposable fixture directories.
+Pending 0.105.3 records the compatible contributor-workflow change; manifests stay
+0.105.2. Work remains uncommitted and unpublished; hosted CI was not awaited.
+[Backup #3](https://github.com/dragginzgame/ic-backup/issues/3) is closed after
+local implementation and qualification; its comment preserves delivery status.
+
 ## 0.105.2 published
 
 **[ic-backup 0.105.2](https://crates.io/crates/ic-backup/0.105.2) is published.**

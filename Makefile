@@ -7,6 +7,8 @@ FORMAT_RUST_ARGS := --extra-workspace qualification
 override CARGO_PUBLISH_PACKAGES := ic-backup
 override CARGO_PUBLISH_REGISTRY := crates-io
 override CARGO_PUBLISH_VERIFY_TARGETS := publication-verify
+# Cargo dry-run checks archive/registry admission, not product qualification.
+publish-check: override CARGO_PUBLISH_VERIFY_TARGETS := publication-preflight
 include $(TOKO_TOOLING_ROOT)/make/consumer.mk
 include $(TOKO_TOOLING_ROOT)/make/cargo-dependencies.mk
 
@@ -29,7 +31,7 @@ help:
 	  'testkit-server-check  Admit the prepared server without downloads' \
 	  'package-check       Verify archive, packaged README and isolated consumer' \
 	  'publication-verify  Complete local publication gate, without upload' \
-	  'publish-check       Shared Cargo publication dry run (requires eligibility)' \
+	  'publish-check       Linted archive/registry preflight (no product tests)' \
 	  'publish             One explicitly authorized crates.io attempt' \
 	  'toko-tooling-check  Admit Cargo pin, members, lockfile and snapshot'
 	@printf '\n%s\n' 'LOC report (PATH command): toko-cloc [-d N] [directory | crate[::module]]'
@@ -54,12 +56,16 @@ doc-links-check: toko-tooling-check
 	@perl "$(TOKO_TOOLING_ROOT)/scripts/ci/check-documentation-links.pl" \
 	  --root "$(REPO_ROOT)" README.md AGENTS.md CHANGELOG.md docs crates/ic-backup/README.md
 
-.PHONY: package-check publication-verify test-publication-adapter
+.PHONY: package-check publication-preflight publication-verify test-publication-adapter
 package-check: toko-tooling-check
 	bash scripts/publication/check-package.sh
 
 # Keep the complete gate ordered even under parallel Make. Publication dispatch
 # subsequently requires a clean, unchanged source through the shared runner.
+publication-preflight:
+	$(MAKE) host-tools-check rust-tools-check
+	$(MAKE) clippy
+
 publication-verify:
 	$(MAKE) tools-check
 	$(MAKE) clippy
@@ -68,7 +74,6 @@ publication-verify:
 	$(MAKE) test
 	$(MAKE) test-qualification
 	$(MAKE) package-check
-	$(MAKE) test-publication-adapter
 
 test-publication-adapter: toko-tooling-check
 	bash scripts/publication/test-adapter.sh

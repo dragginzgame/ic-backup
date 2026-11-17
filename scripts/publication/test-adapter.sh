@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Nested publication validation must not write synthetic events into its parent's
-# attempt journal. Each fixture owns its own publication directory below.
+# Caller qualification must not write synthetic events into a parent's attempt
+# journal. Each fixture owns its own publication directory below.
 unset RELEASE_TIMING_JOURNAL RELEASE_TIMING_PARENT
 # Exercise Backup's actual Make declaration and shared caller. Only the expensive
 # validation command and Cargo publication effect are substituted, never uploaded.
 root="$(git rev-parse --show-toplevel)"
+export PATH="$root/.tools/host/bin:$PATH"
 real_cargo="$(command -v cargo)"
 real_make="$(command -v make)"
 mkdir -p "$root/target/publication-fixtures"
@@ -32,16 +33,21 @@ cat > target/bin/cargo <<'CARGO'
 set -euo pipefail
 if [[ "$1" != publish ]]; then exec "$PUBLICATION_REAL_CARGO" "$@"; fi
 printf '%s\n' "$*" >> target/effects
-[[ "$*" == "publish --locked --registry crates-io --package ic-backup@$PUBLICATION_VERSION --dry-run" ]]
+case "$*" in
+    "publish --locked --registry crates-io --package ic-backup@$PUBLICATION_VERSION --dry-run" | "publish --locked --registry crates-io --package ic-backup@$PUBLICATION_VERSION") ;;
+    *) exit 2 ;;
+esac
 exit "${PUBLICATION_COMMAND_STATUS:-0}"
 CARGO
 cat > target/bin/verify <<'VERIFY'
 #!/usr/bin/env bash
 set -euo pipefail
-if [[ "$*" != '--no-print-directory publication-verify' ]]; then
-    exec "$PUBLICATION_REAL_MAKE" "$@"
-fi
-printf '%s\n' verified >> target/effects
+case "$*" in
+    '--no-print-directory publication-preflight') stage=preflight ;;
+    '--no-print-directory publication-verify') stage=qualified ;;
+    *) exec "$PUBLICATION_REAL_MAKE" "$@" ;;
+esac
+printf '%s\n' "$stage" >> target/effects
 case "${PUBLICATION_GATE:-pass}" in
     pass) ;;
     fail) exit 19 ;;
@@ -53,10 +59,14 @@ chmod +x target/bin/cargo target/bin/verify
 export PUBLICATION_REAL_CARGO="$real_cargo"
 export PUBLICATION_REAL_MAKE="$real_make"
 export PATH="$fixture/target/bin:$PATH"
-publication_check() {
-    make --no-print-directory "MAKE_COMMAND=$fixture/target/bin/verify" \
-        "CARGO_PUBLISH_EVIDENCE_ROOT=$fixture/target/publication" publish-check "$@"
+publication() {
+    local action="$1"
+    shift
+    make --jobs=2 --no-print-directory "MAKE_COMMAND=$fixture/target/bin/verify" \
+        "CARGO_PUBLISH_EVIDENCE_ROOT=$fixture/target/publication" "$action" "$@"
 }
+publication_check() { publication publish-check "$@"; }
+publication_upload() { publication publish "$@"; }
 expect_failure() {
     if "$@" > target/refusal.log 2>&1; then
         echo 'expected publication refusal' >&2
@@ -79,16 +89,20 @@ for selection in '' 'ic-backup ic-backup' 'ic-backup-consumer'; do
     expect_failure publication_check "PACKAGE=$selection"
     test ! -s target/effects
 done
+# Direct upload needs no earlier check evidence and always qualifies the product.
+publication_upload > target/direct-upload.log 2>&1
+[[ "$(cat target/effects)" == "$(printf 'qualified\npublish --locked --registry crates-io --package ic-backup@%s' "$PUBLICATION_VERSION")" ]]
+: > target/effects
 PUBLICATION_GATE=fail expect_failure publication_check
-[[ "$(cat target/effects)" == verified ]]
+[[ "$(cat target/effects)" == preflight ]]
 : > target/effects
 PUBLICATION_GATE=changed expect_failure publication_check
-[[ "$(cat target/effects)" == verified ]]
+[[ "$(cat target/effects)" == preflight ]]
 git show HEAD:README.md > README.md
 : > target/effects
 # Environment cannot redirect the declared registry or widen the package roster.
 CARGO_PUBLISH_REGISTRY=other CARGO_PUBLISH_PACKAGES=other publication_check PACKAGE=ic-backup > target/success.log 2>&1
-[[ "$(cat target/effects)" == "$(printf 'verified\npublish --locked --registry crates-io --package ic-backup@%s --dry-run' "$PUBLICATION_VERSION")" ]]
+[[ "$(cat target/effects)" == "$(printf 'preflight\npublish --locked --registry crates-io --package ic-backup@%s --dry-run' "$PUBLICATION_VERSION")" ]]
 : > target/effects
 PUBLICATION_COMMAND_STATUS=23 expect_failure publication_check
 [[ "$(wc -l < target/effects | tr -d ' ')" == 2 ]]
@@ -99,9 +113,48 @@ for status in target/publication/check.*/cargo-status; do
     if [[ "$(cat "$status")" == 23 ]]; then found=true; fi
 done
 [[ "$found" == true && -z "$(git status --porcelain)" ]]
+# A prior dry-run is never an input proof: even missing/tampered records cannot
+# bypass upload's full gate. Cargo publication still executes afresh each time.
+: > target/effects
+for status in target/publication/check.*/status; do printf 'tampered\n' > "$status"; done
+CARGO_PUBLISH_VERIFY_TARGETS=publication-preflight publication_upload \
+    CARGO_PUBLISH_VERIFY_TARGETS=publication-preflight > target/upload.log 2>&1
+[[ "$(cat target/effects)" == "$(printf 'qualified\npublish --locked --registry crates-io --package ic-backup@%s' "$PUBLICATION_VERSION")" ]]
+: > target/effects
+PUBLICATION_GATE=fail expect_failure publication_upload
+[[ "$(cat target/effects)" == qualified ]]
+: > target/effects
+PUBLICATION_GATE=changed expect_failure publication_upload
+[[ "$(cat target/effects)" == qualified ]]
+: > target/effects
+printf '\nfixture dirty source\n' >> README.md
+expect_failure publication_upload
+[[ "$(cat target/effects)" == qualified ]]
+git show HEAD:README.md > README.md
+: > target/effects
+PUBLICATION_COMMAND_STATUS=29 expect_failure publication_upload
+[[ "$(wc -l < target/effects | tr -d ' ')" == 2 ]]
+# Preserve the failed upload and original command status, without a retry.
+found=false
+for status in target/publication/publish.*/cargo-status; do
+    [[ -f "$status" ]] || continue
+    if [[ "$(cat "$status")" == 29 ]]; then found=true; fi
+done
+[[ "$found" == true ]]
+# Check+upload runs exactly one full qualification, without a receipt/cache.
+: > target/effects
+start="$(perl -MTime::HiRes=time -e 'print time')"
+publication_check > target/preflight-timed.log 2>&1
+middle="$(perl -MTime::HiRes=time -e 'print time')"
+publication_upload > target/upload-timed.log 2>&1
+end="$(perl -MTime::HiRes=time -e 'print time')"
+[[ "$(grep -c '^qualified$' target/effects)" == 1 ]]
+[[ "$(grep -c '^preflight$' target/effects)" == 1 ]]
+[[ "$(grep -c '^publish ' target/effects)" == 2 ]]
+perl -e 'printf "Simulated warm preflight %.3fs, upload %.3fs; one full qualification; effects substituted.\n", $ARGV[1]-$ARGV[0], $ARGV[2]-$ARGV[1]' "$start" "$middle" "$end"
 : > target/effects
 mkdir target/publication/.cargo-publication.lock
 expect_failure publication_check
-[[ "$(cat target/effects)" == verified ]]
+[[ "$(cat target/effects)" == preflight ]]
 test -d target/publication/.cargo-publication.lock
-printf 'Publication caller: eligibility, selection, gates, source drift and single-attempt failure PASS\n'
+printf 'Publication caller: preflight/full-gate selection, fresh dispatch, drift and failure custody PASS\n'
