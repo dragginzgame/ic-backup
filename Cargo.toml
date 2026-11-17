@@ -11,11 +11,9 @@ repository = "https://github.com/dragginzgame/ic-backup"
 publish = ["crates-io"]
 
 [workspace.dependencies]
-candid = "0.10.40"
 ic-host-artifacts = "0.80.2"
 ic-host-fs = "0.80.2"
 ic-host-http = "0.80.0"
-ic-management-canister-types = "0.8.0"
 ic-platform = { version = "0.34.11", default-features = false, features = ["ingress-packets", "ed25519", "ecdsa", "certificate-authentication", "certificate-construction"] }
 ic-platform-protocol = { version = "0.3.3", default-features = false, features = ["management-snapshots"] }
 ic-platform-types = { version = "0.21.2", default-features = false, features = ["principal-self-authenticating"] }

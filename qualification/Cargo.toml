@@ -9,13 +9,13 @@ license-file = "../LICENSE.md"
 publish = false
 
 [workspace.dependencies]
-ic-backup = { path = "../crates/ic-backup", version = "0.105.1" }
+ic-backup = { path = "../crates/ic-backup", version = "0.105.2" }
 ic-backup-consumer = { path = "ic-backup-consumer" }
 ic-host-process = "0.80.2"
 ic-platform = { version = "0.34.11", default-features = false, features = ["ed25519", "ingress-packets"] }
 ic-platform-protocol = { version = "0.3.3", default-features = false, features = ["management-snapshots"] }
 ic-platform-types = { version = "0.21.2", default-features = false, features = ["principal-self-authenticating"] }
-ic-testkit = { version = "0.108.0", default-features = false, features = ["managed-server"] }
+ic-testkit = { version = "0.109.0", default-features = false, features = ["managed-server"] }
 tokio = { version = "1.53.3", default-features = false, features = ["rt", "net", "time"] }
 
 toko-tooling = "=0.44.11"

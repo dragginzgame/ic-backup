@@ -313,3 +313,40 @@ now return `SnapshotId` after bounded decode; excessive IDs still return `Limit`
 These are explicit pending 0.105.0 public type/error changes, not changes to stored
 schemas, authority or spending. The packaged README owns consumer migration.
 The handoff records fresh native/IC acceptance and pre-port retained-store replay.
+
+### Direct SDK test dependency retirement — 2026-11-17
+
+[Backup #2 — Remove direct test-only SDK dependencies](https://github.com/dragginzgame/ic-backup/issues/2)
+replaces the temporary test declarations above with 68 finite retained binary
+inputs (156,998 bytes), their lengths/hashes and original source/schema provenance.
+The catalog lives under `capture/test_fixtures/wire/tests/fixtures/`; the owning
+README pins Backup v0.105.1 and the original Candid 0.10.40 / management SDK 0.8.0
+projections. Normal policy setup still uses Protocol fixture encoders; malformed
+schemas no longer require runtime SDK types. Literal legacy goldens are unchanged.
+
+Focused review again read frozen legacy
+`4ae087fad8c23de712aa60bf569bde4b2b932651` snapshot reply wire/tests and metadata
+wire/tests, with history `1af7e219c3073395992c316ecaa5e83e74b1aecc`,
+`94b94db89f77968eb4b480ef6d0576d41f6472e2` and
+`6220eb7d89b9349eaf3254d256fd283ac75335e3`. Original count-first refusal,
+required/optional distinctions, reserved-source strictness and numeric-bit
+preservation remain necessary. The changed assumption is finite fixture replay
+instead of per-test schema construction; no production algorithm changes.
+
+Status retains full/minimal replies, controller/state/module policy, hostile
+counts without element bodies, option promotion/absence, unknown/required fields,
+cumulative skipped work, visibility, prefixes/arity/trailing/limits. Metadata
+retains 129-bit refusal, unknown source/global/timer/hook, bare/null/reserved and
+missing options, required fields and zero-byte unknown fields. Exact take and
+seven readback request bytes preserve target/snapshot/kind/offset/size/hash
+bindings, independently checked with SDK decoding and re-encoding before removal.
+Upload metadata still compares independent exact bytes for integer extremes,
+NaN payloads and negative zero. Readback extra/wrong arguments and null versus
+empty results retain their refusal cases. Fixture length/digest admission prevents
+accidental changes. No case was dropped to satisfy dependency ownership.
+
+Both workspace graphs have no direct consumer Candid/management SDK declarations
+of any kind or target. Transitive Candid through Platform and SDK dependencies
+owned by native Testkit remain valid; removing those is not this work. The local
+SDK exception is retired. New production APIs, wire formats and journals are
+unchanged. The handoff owns focused and actual-IC results.

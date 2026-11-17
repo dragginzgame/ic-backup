@@ -203,7 +203,7 @@ profile. This avoids measuring debug-mode crypto and payload replay as release
 performance. The 20 MiB fixture explicitly bounds both server lifetime and idle
 time at 30 minutes to accommodate long local source checks between IC calls.
 
-Setup builds the private `server` example against the locked Testkit 0.108.0
+Setup builds the private `server` example against the locked Testkit 0.109.0
 library. `make install-testkit-server` explicitly downloads the supplier-selected
 archive with a finite time/byte ceiling, then delegates checksum admission,
 bounded decompression and create-only publication to Testkit. It is an ordered
@@ -616,3 +616,17 @@ unchanged because Backup needs none of the new APIs. Prior actual-IC evidence
 remains applicable; no fresh IC or hosted run is claimed. Archives, source diffs,
 saved locks, resolved graphs and logs: `target/evidence/platform-park-refresh/`.
 The handoff records the separate direct test-dependency cleanup on Platform #11.
+
+### Testkit 0.109.0 qualification adoption
+
+The qualification workspace now selects Testkit 0.109.0, source
+`1fdd03705377c1a74211ec1f4ca9a15440adc0a0`, verified registry archive SHA-256
+`6405078e5332b34ab898d4c32c41f39b358655bb3d4aae508d3ff17f781cf66c`.
+The lock already selected 0.108.1 before this adoption; only Testkit's version and
+checksum changed. PocketIC 16.1, thiserror 2.0.18 and other selections remain.
+
+The new bounded held-reply clock API is outside Backup's selected features.
+Server sources and manifest dependencies are unchanged from 0.108.1; the selected
+library root differs only in documentation. Existing actual-IC evidence remains
+applicable. The handoff records fresh focused qualification, with archive/source
+diffs, saved lock and logs under `target/evidence/testkit-refresh/`.

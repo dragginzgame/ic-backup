@@ -1,6 +1,7 @@
 //! Re-authored fixed-policy cases from legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
 //! workflow/ic_snapshot_restore/tests/mod.rs::failure_boundaries_retain_pending_or_applied_and_never_repeat_provider; actual effects require qualification.
 use super::*;
+use crate::store::capture::test_fixtures::wire::frozen;
 use crate::store::{
     capture::{
         intent::tests::profile,
@@ -159,7 +160,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                     true
                 }
                 ("unit-arity", Step::Upload(0)) => {
-                    bytes = candid::encode_one(0u8).unwrap();
+                    bytes = frozen("unit-u8-argument");
                     true
                 }
                 ("metadata-origin", Step::ReadbackMetadata) => {
@@ -265,26 +266,19 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
             let (method, args) = flow.request(&mut source).unwrap();
             if let Step::Readback(ordinal) = step {
                 assert_eq!(method, "read_canister_snapshot_data");
-                let request: ic_management_canister_types::ReadCanisterSnapshotDataArgs =
-                    candid::decode_one(&args).unwrap();
-                assert_eq!(request.snapshot_id, [10]);
+                let expected = [
+                    frozen("restore-readback-0"),
+                    frozen("restore-readback-1"),
+                    frozen("restore-readback-2"),
+                    frozen("restore-readback-3"),
+                    frozen("restore-readback-4"),
+                    frozen("restore-readback-5"),
+                    frozen("restore-readback-6"),
+                ];
                 assert_eq!(
-                    request.canister_id.as_slice(),
-                    plan.request().target.canister.as_slice()
+                    args, expected[ordinal as usize],
+                    "original readback ordinal {ordinal}"
                 );
-                use ic_management_canister_types::SnapshotDataKind as WireKind;
-                use ic_platform_protocol::management_snapshots::ReadKind;
-                match (request.kind, flow.source_request(ordinal).unwrap().kind) {
-                    (WireKind::WasmModule { offset, size }, ReadKind::WasmModule(e))
-                    | (WireKind::WasmMemory { offset, size }, ReadKind::WasmMemory(e))
-                    | (WireKind::StableMemory { offset, size }, ReadKind::StableMemory(e)) => {
-                        assert_eq!((offset, size), (e.offset, e.size))
-                    }
-                    (WireKind::WasmChunk { hash }, ReadKind::WasmChunk(c)) => {
-                        assert_eq!(hash, c.hash)
-                    }
-                    _ => panic!("readback region differs from original source"),
-                }
             }
             let mut bytes = response(&flow, &mut source, step);
             if step == Step::Readback(corrupt) {
@@ -354,7 +348,7 @@ fn protocol_allocation_bounds_and_exact_empty_results_preserve_legacy_refusals()
         Err(Error::Reply(DecodeError::Trailing))
     ));
     assert!(matches!(
-        unit(&candid::encode_one(()).unwrap()),
+        unit(&frozen("unit-null-argument")),
         Err(Error::Reply(DecodeError::Arity))
     ));
 }

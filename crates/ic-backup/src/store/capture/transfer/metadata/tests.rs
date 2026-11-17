@@ -4,8 +4,7 @@ use super::super::MAX_GLOBALS;
 use super::super::tests::{chunk, metadata, plan};
 use super::*;
 use crate::store::BackupDigest;
-use candid::Nat;
-use candid::{CandidType, Reserved};
+use crate::store::capture::test_fixtures::wire::frozen;
 use ic_platform_protocol::management_snapshots::{Float32Bits, Float64Bits};
 use ic_platform_protocol::management_snapshots::{Global, SnapshotSource, fixtures};
 use ic_platform_protocol::management_snapshots::{LowMemoryHook, Timer};
@@ -13,9 +12,6 @@ use serde::Deserialize;
 
 fn encode(value: &SnapshotMetadata) -> Vec<u8> {
     fixtures::snapshot_metadata(value, MAX_REPLY_BYTES).unwrap()
-}
-fn schema(value: &impl CandidType) -> Vec<u8> {
-    candid::encode_one(value).unwrap()
 }
 fn hex(value: &str) -> Vec<u8> {
     value
@@ -209,16 +205,7 @@ fn admitted_maxima_and_oversized_collections_hashes_and_globals() {
     ));
     m.wasm_chunk_store.clear();
     // The typed API cannot hold 129 bits; preserve the hostile original wire case.
-    let raw = schema(&shape(
-        ic_management_canister_types::SnapshotSource::TakenFromCanister(Reserved),
-        vec![Some(
-            ic_management_canister_types::SnapshotMetadataGlobal::V128(Nat(
-                Nat::from(u128::MAX).0 + 1_u8
-            )),
-        )],
-        ic_management_canister_types::CanisterTimer::Inactive,
-        ic_management_canister_types::OnLowWasmMemoryHookStatus::Ready,
-    ));
+    let raw = frozen("metadata-global-129-bits");
     assert!(matches!(
         p.decode_metadata(&[1], &raw),
         Err(TransferMetadataError::Decode(DecodeError::Limit))
@@ -256,43 +243,12 @@ fn malformed_truncated_trailing_arity_and_header_limits_refuse() {
 }
 
 // Test-only wire alternatives; no replacement management declarations in production.
-#[derive(CandidType, serde::Deserialize)]
-struct Shape<S, G, T, H> {
-    source: S,
-    globals: Vec<G>,
-    #[serde(rename = "global_timer")]
-    timer: T,
-    #[serde(rename = "on_low_wasm_memory_hook_status")]
-    hook: H,
-    canister_version: u64,
-    certified_data: Vec<u8>,
-    wasm_module_size: u64,
-    stable_memory_size: u64,
-    wasm_chunk_store: Vec<ic_management_canister_types::ChunkHash>,
-    taken_at_timestamp: u64,
-    wasm_memory_size: u64,
-}
-fn shape<S, G, T, H>(source: S, globals: Vec<G>, timer: T, hook: H) -> Shape<S, G, T, H> {
-    Shape {
-        source,
-        globals,
-        timer,
-        hook,
-        canister_version: 2,
-        certified_data: vec![],
-        wasm_module_size: 1,
-        stable_memory_size: 0,
-        wasm_chunk_store: vec![],
-        taken_at_timestamp: 3,
-        wasm_memory_size: 0,
-    }
-}
 
 #[test]
 fn null_and_reserved_absence_and_bare_promotion_remain_valid_wire() {
     for raw in [
-        schema(&shape((), vec![()], (), ())),
-        schema(&shape(Reserved, vec![Reserved], Reserved, Reserved)),
+        frozen("metadata-null-fields"),
+        frozen("metadata-reserved-fields"),
     ] {
         let m = decode(&raw).unwrap();
         assert!(m.source.is_none());
@@ -307,60 +263,18 @@ fn null_and_reserved_absence_and_bare_promotion_remain_valid_wire() {
             ))
         ));
     }
-    let raw = schema(&shape(
-        ic_management_canister_types::SnapshotSource::TakenFromCanister(Reserved),
-        vec![ic_management_canister_types::SnapshotMetadataGlobal::I32(7)],
-        ic_management_canister_types::CanisterTimer::Inactive,
-        ic_management_canister_types::OnLowWasmMemoryHookStatus::Ready,
-    ));
+    let raw = frozen("metadata-bare-promotion");
     assert!(plan(4).decode_metadata(&[1], &raw).is_ok());
 }
 
 #[test]
 fn unknown_optional_variants_and_non_reserved_source_payloads_cannot_disappear() {
-    #[derive(candid::CandidType, serde::Deserialize)]
-    enum Future {
-        Value(()),
-    }
-
-    #[derive(candid::CandidType, serde::Deserialize)]
-
-    enum BadSource {
-        #[serde(rename = "taken_from_canister")]
-        Taken(()),
-    }
-
     for raw in [
-        schema(&shape(
-            Some(Future::Value(())),
-            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
-            None::<ic_management_canister_types::CanisterTimer>,
-            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
-        )),
-        schema(&shape(
-            None::<ic_management_canister_types::SnapshotSource>,
-            vec![Some(Future::Value(()))],
-            None::<ic_management_canister_types::CanisterTimer>,
-            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
-        )),
-        schema(&shape(
-            None::<ic_management_canister_types::SnapshotSource>,
-            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
-            Some(Future::Value(())),
-            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
-        )),
-        schema(&shape(
-            None::<ic_management_canister_types::SnapshotSource>,
-            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
-            None::<ic_management_canister_types::CanisterTimer>,
-            Some(Future::Value(())),
-        )),
-        schema(&shape(
-            Some(BadSource::Taken(())),
-            Vec::<Option<ic_management_canister_types::SnapshotMetadataGlobal>>::new(),
-            None::<ic_management_canister_types::CanisterTimer>,
-            None::<ic_management_canister_types::OnLowWasmMemoryHookStatus>,
-        )),
+        frozen("metadata-unknown-source"),
+        frozen("metadata-unknown-global"),
+        frozen("metadata-unknown-timer"),
+        frozen("metadata-unknown-hook"),
+        frozen("metadata-nonreserved-source"),
     ] {
         assert!(matches!(
             decode(&raw),
@@ -371,63 +285,29 @@ fn unknown_optional_variants_and_non_reserved_source_payloads_cannot_disappear()
 
 #[test]
 fn declared_global_limit_wins_before_elements_are_read() {
-    #[derive(CandidType, serde::Deserialize)]
-    struct GlobalsOnly {
-        globals: Vec<()>,
-    }
     assert!(matches!(
-        decode(&schema(&GlobalsOnly {
-            globals: vec![(); MAX_GLOBALS + 1]
-        })),
+        decode(&frozen("metadata-global-count-over-limit")),
         Err(TransferMetadataError::Decode(DecodeError::Limit))
     ));
 }
 
 #[test]
 fn unknown_zero_byte_field_and_missing_required_field_refuse() {
-    #[derive(candid::CandidType, serde::Deserialize)]
-    struct Extra {}
-
     // The empty record cannot default required metadata fields.
     assert!(matches!(
-        decode(&schema(&Extra {})),
+        decode(&frozen("metadata-missing-required")),
         Err(TransferMetadataError::Decode(DecodeError::Type))
     ));
-    #[derive(candid::CandidType, serde::Deserialize)]
-    struct Unknown {
-        #[serde(rename = "")]
-        extra: (),
-    }
 
     assert!(matches!(
-        decode(&schema(&Unknown { extra: () })),
+        decode(&frozen("metadata-unknown-zero-field")),
         Err(TransferMetadataError::Decode(DecodeError::Limit))
     ));
 }
 
 #[test]
 fn missing_optional_fields_are_absent_but_never_capture_defaults() {
-    #[derive(CandidType, serde::Deserialize)]
-    struct RequiredOnly {
-        globals: Vec<Option<ic_management_canister_types::SnapshotMetadataGlobal>>,
-        canister_version: u64,
-        certified_data: Vec<u8>,
-        wasm_module_size: u64,
-        stable_memory_size: u64,
-        wasm_chunk_store: Vec<ic_management_canister_types::ChunkHash>,
-        taken_at_timestamp: u64,
-        wasm_memory_size: u64,
-    }
-    let raw = schema(&RequiredOnly {
-        globals: vec![],
-        canister_version: 1,
-        certified_data: vec![],
-        wasm_module_size: 2,
-        stable_memory_size: 3,
-        wasm_chunk_store: vec![],
-        taken_at_timestamp: 4,
-        wasm_memory_size: 5,
-    });
+    let raw = frozen("metadata-missing-optionals");
     let value = decode(&raw).unwrap();
     assert!(value.source.is_none());
     assert!(value.global_timer.is_none());
@@ -442,10 +322,6 @@ fn missing_optional_fields_are_absent_but_never_capture_defaults() {
 
 #[test]
 fn restore_upload_arguments_match_independent_sdk_float_bits_and_full_integer_range() {
-    use ic_management_canister_types::{
-        CanisterTimer, OnLowWasmMemoryHookStatus, SnapshotMetadataGlobal,
-        UploadCanisterSnapshotMetadataArgs,
-    };
     let metadata = round_trip_metadata();
     let target = plan(8).request().target.canister;
     let bytes = crate::store::restore::procedure::upload_metadata_arguments(
@@ -454,22 +330,5 @@ fn restore_upload_arguments_match_independent_sdk_float_bits_and_full_integer_ra
         MAX_REPLY_BYTES,
     )
     .unwrap();
-    let independent = UploadCanisterSnapshotMetadataArgs {
-        canister_id: candid::Principal::from_slice(target.as_slice()),
-        replace_snapshot: None,
-        wasm_module_size: 3,
-        wasm_memory_size: 5,
-        stable_memory_size: 7,
-        globals: vec![
-            SnapshotMetadataGlobal::I32(i32::MIN),
-            SnapshotMetadataGlobal::I64(i64::MIN),
-            SnapshotMetadataGlobal::F32(f32::from_bits(0x7fc0_0042)),
-            SnapshotMetadataGlobal::F64(f64::from_bits(0x8000_0000_0000_0000)),
-            SnapshotMetadataGlobal::V128(Nat::from(u128::MAX)),
-        ],
-        certified_data: vec![17; 32],
-        global_timer: Some(CanisterTimer::Active(19)),
-        on_low_wasm_memory_hook_status: Some(OnLowWasmMemoryHookStatus::Executed),
-    };
-    assert_eq!(bytes, candid::encode_one(independent).unwrap());
+    assert_eq!(bytes, frozen("upload-metadata-numeric-extremes"));
 }

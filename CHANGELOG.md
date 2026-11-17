@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.105.2] - 2026-11-17
+
+### 🧪 Testing
+
+- Adopt Testkit 0.109.0 for private qualification, retaining the selected managed
+  server boundary and PocketIC 16.1.
+
+- Remove direct test-only Candid and management SDK dependencies while preserving
+  independent malformed-wire fixtures and exact restore argument comparisons
+  ([Backup #2 — Remove direct test-only SDK dependencies](https://github.com/dragginzgame/ic-backup/issues/2)).
+
 ## [0.105.1] - 2026-11-17
 
 ### 🧹 Cleanup

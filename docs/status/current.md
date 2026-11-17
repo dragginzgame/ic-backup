@@ -1,5 +1,52 @@
 # Current handoff — 2026-11-17
 
+## 0.105.2 release preparation
+
+Deployment of the completed SDK-test cleanup and Testkit 0.109.0 adoption is
+authorized. Product/qualification metadata and both locks identify 0.105.2;
+the changelog is finalized. Complete local publication validation and upload
+remain to execute. The sections below preserve preceding development evidence.
+No 0.105.2 publication is claimed yet; hosted CI will not be awaited.
+
+## Testkit 0.109.0 adoption
+
+The private qualification workspace selects Testkit 0.109.0. Verified archive
+provenance and source comparison are recorded in setup. The working lock already
+selected 0.108.1; this update changes only Testkit's version/checksum. The new
+held-reply clock feature is unselected; server code and dependencies are unchanged.
+The pending Backup #2 cleanup is preserved. Product version remains 0.105.1;
+pending 0.105.2 notes include both test-only changes. No commit or publication.
+Qualification all-target Clippy, prepared-server setup/offline admission and the
+actual-IC interrupted-take/observation/offline-replay case pass (1.40 seconds).
+Formatting, documentation links and diff checks pass. The preceding 11-journey
+101.75-second result is retained, not reported as a fresh full-suite run; selected
+server sources are unchanged. Evidence: `target/evidence/testkit-refresh/`.
+
+## Backup #2 local completion
+
+Removed direct Candid/management SDK test declarations and imports. Independent
+malformed/schema inputs and expected request bytes now use 68 retained fixtures
+with original source/test/schema provenance and length/SHA-256 admission. Normal
+policy fixtures use published Platform encoders. Legacy literal goldens remain
+unchanged. The transfer contract records focused legacy review and case mapping.
+The release-scoped SDK exception is removed from AGENTS.md.
+
+All 42 focused checks pass (status 10, snapshots 8, metadata 12, readback 8,
+restore procedure 3 and retained-fixture integrity 1). Both workspace Clippy
+checks pass; all 11 actual-IC journeys pass in 101.75 seconds, including 20 MiB
+and separate-process recovery. Locked metadata admits both graphs with no direct
+consumer SDK declarations; no supplier version changed. Package-file admission
+includes all 68 vectors. Formatting, documentation links and diff checks pass.
+Evidence is under `target/evidence/sdk-fixture-retirement/`; the first golden
+replay exposed lowercase JSON status versus Protocol's Rust variant spelling,
+resolved with an explicit fixture-label mapping before the passing recheck.
+
+[Backup #2](https://github.com/dragginzgame/ic-backup/issues/2) is closed after
+local implementation and qualification; its comment records the delivery status.
+Pending 0.105.2 notes describe this compatible test-only cleanup; package versions
+remain 0.105.1. Work is local, uncommitted and unpublished. Backup #1 / Canic
+manager execution and fenced recovery remain the integration work.
+
 ## 0.105.1 published
 
 **[ic-backup 0.105.1](https://crates.io/crates/ic-backup/0.105.1) is published.**
@@ -211,7 +258,7 @@ No sibling edits, commit or publication were made.
 The locks currently select Host FS/Artifacts 0.80.3, HTTP 0.80.0, Protocol 0.3.5,
 Platform 0.34.13 and Types 0.21.2. Backup owns Reqwest 0.13.5 and its original
 TLS/no-retry/redirect/proxy/deadline policy; Host bounds complete response bodies.
-Qualification selects Testkit 0.108.0 and Process 0.80.4; both locks select Tokio
+Qualification selects Testkit 0.109.0 and Process 0.80.4; both locks select Tokio
 1.54.1. Platform 0.34.12 and Tokio were already selected before the Testkit update.
 These Host selections
 were present in the working locks during the port and are covered by its caller

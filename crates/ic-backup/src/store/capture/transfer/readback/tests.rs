@@ -1,5 +1,6 @@
 //! Source/readback regressions derived from the frozen metadata/upload contracts.
 use super::*;
+use crate::store::capture::test_fixtures::wire::frozen;
 use crate::store::capture::transfer::tests::{chunk, metadata, plan};
 use ic_platform_protocol::management_snapshots::{Float32Bits, Float64Bits};
 use ic_platform_protocol::{
@@ -320,15 +321,8 @@ fn truncated_wrong_shape_extra_and_oversized_replies_never_compare_as_success() 
     }
     for invalid in [
         [raw.as_slice(), &[0]].concat(),
-        candid::encode_args((
-            candid::decode_one::<ic_management_canister_types::ReadCanisterSnapshotMetadataResult>(
-                &encode(&destination),
-            )
-            .unwrap(),
-            0_u64,
-        ))
-        .unwrap(),
-        candid::encode_one(0_u64).unwrap(),
+        frozen("readback-metadata-extra-argument"),
+        frozen("readback-u64-instead-of-record"),
     ] {
         assert!(matches!(
             transfer.decode_uploaded_metadata(&invalid),

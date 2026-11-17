@@ -763,13 +763,11 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.105.1"
+version = "0.105.2"
 dependencies = [
- "candid",
  "ic-host-artifacts",
  "ic-host-fs",
  "ic-host-http",
- "ic-management-canister-types",
  "ic-platform",
  "ic-platform-protocol",
  "ic-platform-types",
@@ -823,17 +821,6 @@ checksum = "81c55b5294ff4c4bcab841ca6b72140796abd5c095651bf7e44e77ac2f5f843a"
 dependencies = [
  "reqwest",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "ic-management-canister-types"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3187ba94198a8df0e38a478f289812fcead6a86c658b9552b00f1f8081f06bb3"
-dependencies = [
- "candid",
- "serde",
- "serde_bytes",
 ]
 
 [[package]]

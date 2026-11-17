@@ -965,7 +965,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.105.1"
+version = "0.105.2"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1051,9 +1051,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.80.4"
+version = "0.80.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a88492b7a656509c3664f4f4ea68d5cf5303c3ec1c22bc64d6f4c41ded6128a3"
+checksum = "73930a7f8d56062e7fa5c8821b5259b355ea841e9137842644619bfbbe8927b2"
 dependencies = [
  "errno",
  "libproc",
@@ -1118,9 +1118,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.108.0"
+version = "0.109.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fa2e6157d27d15ba1bc93923adc3221e1c09f9f28ec2f8bdde09b04b528cf80"
+checksum = "6405078e5332b34ab898d4c32c41f39b358655bb3d4aae508d3ff17f781cf66c"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
