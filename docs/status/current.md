@@ -1,12 +1,30 @@
 # Current handoff — 2026-11-17
 
-## 0.105.3 release preparation
+## 0.105.3 published
 
-The maintainer authorized deployment of Backup #3's publication-workflow change.
-Product/qualification metadata and both locks identify 0.105.3; its changelog is
-finalized. Changed-caller qualification precedes the single full publication gate.
-The upload and release delivery remain pending; no publication is claimed here.
-Hosted CI will not be awaited. Earlier local evidence is retained below.
+**[ic-backup 0.105.3](https://crates.io/crates/ic-backup/0.105.3) is published.**
+Release commit `709d8eeb686c62d8181b6a0b00cb51252df6f5e4` and tag `v0.105.3`
+are pushed to `origin/main`. Backup #3's one-pass publication flow is delivered;
+product APIs, algorithms, stored formats and recovery evidence are unchanged.
+
+The changed-caller fixture passed before the full release gate. That gate ran
+once and passed **240 native tests**, five doctests, **11 actual-IC journeys
+(105.65 seconds)**, both strict Clippy checks, Rustdoc, tools/format/links and
+archive/isolated normal-consumer admission. The caller fixture is no longer nested
+in that gate. Hosted CI was not awaited. The single successful upload is
+`target/publication/publish.selection.apASRP`; release evidence is under
+`target/evidence/release-0.105.3/`.
+
+Independent registry readback matches SHA-256
+`6fa09c8c9e54b0b44ba86f65b63aef6e022198b563638625b93161b4f84bc041`,
+the embedded release commit and 168 tracked package files. A fresh registry-backed
+normal consumer builds without Testkit/PocketIC.
+
+Post-push review of the delivered Make/CI/caller/documentation changes found no
+new recovery path, journal, skip flag or proof cache. Upload retains the full
+product gate and fresh archive/source/registry admission; caller regressions have
+one CI owner. Backup #3 is complete and delivered. Backup #1 / Canic integration
+remains the outstanding product work. Earlier development evidence follows.
 
 ## Backup #3 local completion
 
