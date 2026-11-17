@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.105.4] - 2026-11-17
+
+### 🧪 Testing
+
+- Adopt Testkit 0.110.0 and align qualification with Process 0.81 so retained
+  server reports use one supplier type identity. PocketIC remains 16.1.
+
+### 🔧 Changed
+
+- Adopt Toko Tooling 0.45.0 in both workspaces through the canonical exporter,
+  retaining the existing publication flow and managed executable selection.
+
 ## [0.105.3] - 2026-11-17
 
 ### 🔧 Changed

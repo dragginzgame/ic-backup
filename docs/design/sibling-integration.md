@@ -441,3 +441,191 @@ optional distinctions, exact floating-point bits and v128 bounds remain required
 New Protocol owns those decoders; Backup retains capture/restore policy and
 original evidence. Existing independent golden vectors remain the regression
 source; no legacy implementation or historical pass was imported as qualification.
+
+## Manager exchange proposal — 2026-11-17
+
+Status: Backup-owned semantic proposal for
+[Backup #1 — Manager-route admission and retained-result replay](https://github.com/dragginzgame/ic-backup/issues/1),
+for agreement with [Canic #6 — Manager executor and original-result lookup](https://github.com/dragginzgame/canic/issues/6).
+This is not an implemented route, a frozen wire ABI or actual-IC qualification.
+It supplies the concrete next contract before either repository adds effects.
+
+### Current evidence and ownership
+
+Backup 0.105.3 at `709d8eeb686c62d8181b6a0b00cb51252df6f5e4` binds
+`CaptureRequest::sender`, direct envelope authentication, controller policy and
+certificate target to one management caller/target pair. `operation/runtime`,
+`operation/intent` and the fixed capture/restore procedures have no manager join.
+Repurposing `sender` would conflate the host signer with the controlling manager.
+Existing direct intent/receipt bytes must continue to select their original reader.
+
+Read-only Canic review used base `d652c55e4cc455a642f44645bf2e16a6d08baefc`
+and its active working source. `canic-management-protocol/src/lib.rs` exposes
+bounded staging/status/reconciliation for creation and upgrades, with no Backup
+snapshot exchange. Engine creation/status checks still select the manager as sole
+child controller; upgrade observation is separate from dispatch. The inspected
+engine files are dirty relative to that base, with these SHA-256 identities:
+
+| `canic-management/src/engine/` file | Reviewed working bytes |
+| --- | --- |
+| `mod.rs` | `473ef3545e8cc310bfc14e480e0d24102d441ec2850af532d91aede0e50e4f30` |
+| `upgrade.rs` | `b43a43000b1fc1cc0709088d76ead8a9a54040ddb294106edf5a3fb6087b071f` |
+| `delivery.rs` | `0e031124d09cc8526048578c49ca4f41f060316596900646576e49f1e8fe552e` |
+
+These observations do not claim committed supplier support. No sibling file was
+edited. Canic owns its endpoint schema, handler, stable effect ledger and adapter;
+Backup owns host admission, original evidence and fixed procedure interpretation.
+The new owned endpoint exchange uses the `ic-wire` application boundary; inner
+management bytes remain published Platform DTO/Candid bytes. Final schema,
+method/endpoint identifiers and a portable dependency arrangement must be agreed
+before coding. Backup must acquire no Canic runtime/control-plane dependency,
+key/process owner, generic workflow callback or private management DTO copy.
+
+### Immutable identity and one effect slot
+
+An approved manager route must bind network/trust root, exact manager principal,
+protocol revision, provisioned manager implementation/authority policy, original
+surviving authority generation and application witness. Host envelope signer and
+inner management caller are separate: the latter is exactly the manager principal.
+The target remains the existing child, with its original release/module and source.
+Changing any route authority requires a new approval, never rebinding old work.
+
+The following is the semantic request record, not a Serde representation:
+
+| Binding | Required meaning |
+| --- | --- |
+| Operation | Capture/restore kind, original 16-byte operation ID and exact 32-byte Backup approval digest. Restore approval already binds its source. |
+| Step | Closed capture/restore step tag and ordinal where applicable; derived by the fixed procedure, never supplied as arbitrary dispatch authority. |
+| Route | Network identity, manager principal, protocol revision and original authority generation. |
+| Effect | Existing child principal, allowed management method, complete argument length, SHA-256 and original raw argument bytes. |
+| Allowance | Absolute last inner-dispatch time, one inner-call reservation, finite cycles, reply/retention bounds and other immutable manager liabilities. |
+
+The manager first pins one approval/target/route binding per
+`(network, operation kind, operation ID)`, then one record per fixed step/ordinal.
+Generation, approval or argument differences are conflicts, not new lookup keys.
+This prevents a changed generation or digest from opening a second slot for the
+same original operation. There is no attempt counter that authorizes retries.
+A separately approved new operation has a new ID and cannot adopt an unresolved
+old target obligation. The manager authenticates the actual caller and validates
+membership/controller authority before accepting new work.
+
+The manager checks argument length/digest and the selected method's DTO/target,
+then reserves its liabilities before dispatch. All admissions that can change
+across awaits are rechecked at dispatch. `sender_canister_version`, if present,
+means the executing manager's version, never the child's version; its exact
+original argument bytes cannot be rewritten at continuation. Unknown methods,
+steps, schemas and oversized inputs refuse before effects.
+
+### Execute, lookup and terminal evidence
+
+Use two finite semantic operations: execute the exact original slot once, and
+lookup the retained record for that same binding. Names/endpoint IDs are pending
+Canic agreement. Lookup is an authenticated update producing an ingress-certified
+reply; an ordinary uncertified query is not recovery evidence. Lookup never issues
+an inner management call, repairs a missing record or refreshes old authority.
+Duplicate execute returns the original record or a conflict; it never redispatches.
+Backup itself still sends its original execute only once.
+
+| Manager record | Backup interpretation |
+| --- | --- |
+| No record / unavailable | Unresolved. Neither absence nor ingress expiry proves no inner effect. |
+| Reserved / dispatched / continuation lost | Pending with original spending retained. No second management call. |
+| Completed reply | Exact original bounded raw management reply plus its complete immutable binding. Only this payload enters the owning management decoder/policy. |
+| Completed management rejection | Exact original bounded management rejection code/message and binding; terminal rejection, no refund or retry. |
+| Refused before inner dispatch | Distinct retained manager refusal with no issued inner call. It blocks the operation; it is not a fabricated management rejection or retry grant. |
+
+A callback trap, lost continuation, upgrade, oversized unretained result or failed
+result persistence leaves the inner effect unresolved. Terminal success/rejection
+requires durable original outcome custody; uncertainty is not turned into a
+success/refusal flag. A completed record cannot regress or change bytes. The
+manager's ledger remains outside the restored child and survives manager upgrades;
+rollback/replacement of that ledger is outside this profile.
+
+Backup authenticates the original outer envelope and its IC certificate against
+the **manager** principal and original root/time policy. It then strictly decodes
+the bounded manager record and compares every binding above against its own
+derived step and arguments. The original outer request ID lives in host evidence:
+putting it in its own signed arguments would create a circular request-ID binding.
+A lookup's distinct outer request ID is retained separately; matching the original
+logical slot and argument commitment correlates its result to execute.
+
+Outer success is only a manager reply, not management success. Crucially, outer
+**rejection** also does not establish inner rejection: the handler may have issued
+an inner effect before an outer callback/trap failure. Both cases require the
+retained inner record or remain unresolved. Backup must not feed the outer result
+flag directly into the existing direct-call rejection policy.
+
+An IC certificate authenticates the manager's statement, not an independently
+certified management response or proof of the manager's implementation correctness.
+The integration must provision trust in that manager implementation and surviving
+ledger policy. Protocol/generation fields alone cannot establish that trust. Fresh
+application authority is required for dependent effects; retained completed replay
+continues to use original evidence without requiring a live signer or guard.
+
+### Finite recovery and bytes
+
+Separate three recovery facts: original execute ingress status, manager inner
+outcome lookup, and any original lookup-ingress status. They have distinct original
+requests, timing and spending. Propose at most one explicit manager lookup per
+pending step for the initial profile, with at most one original-request status
+observation per admitted outer request. Missing replies remain unresolved after
+those slots are spent. No hidden polling, fresh-lookup loop or renewal is permitted.
+
+Approve and reserve host signing/transport/observation liabilities separately from
+manager inner-call/cycle/result liabilities. Each execute includes one host hop
+and one manager-to-management hop; a manager lookup adds a host hop but zero inner
+calls. Signer-service network use is also finite. Lookup success never refunds
+execute or manager spending. Manager dispatch uses its retained original deadline;
+expired or revoked work can expose retained evidence but cannot dispatch anew.
+For the initial proposal, the inner-dispatch deadline equals the exact original
+execute-ingress expiry; host admission checks that equality before signing.
+
+Encode bounds must include both the complete outer protocol frame and inner raw
+Candid result, request signatures/certificates, decoded allocations, journals and
+manager retention. Existing 2 MiB request / 4 MiB HTTP result / 2 MiB certificate
+ceilings are independent caps, not a guarantee that arbitrary nested replies fit.
+Keep the 1 MiB extent cap and 8,192 total request ceiling; derive two-hop counts
+and reject an unrepresentable manager plan. No automatic extent reduction or
+profile enlargement occurs during recovery. The direct route's 20 MiB evidence
+does not qualify this manager route's capacity.
+Canic's inspected general observation limit is 4 KiB, and its artifact staging
+limit is 512 KiB plus framing. Neither admits a full 1 MiB snapshot-data result;
+the snapshot protocol needs its own explicit bounds, not reuse of staging limits.
+
+### Implementation seam and acceptance
+
+Once the exchange and actual Canic consumer are fixed, extend the existing host
+recorder's admission/projection for the explicit manager profile. Keep one public
+advance/reconcile loop and the same capture/restore policy, schedule, custody and
+publication owners. New route-aware intent/evidence needs an explicit format
+boundary: old direct records must never be reinterpreted or migrated on open.
+No new public phase commands, dynamic executor registry or second recovery engine.
+
+| Required case | Owning proof |
+| --- | --- |
+| Host signer differs from sole child controller | Actual manager/child capture/restore; child status must admit manager, while outer signing admits the host. |
+| Same slot, changed target/method/arguments/digest/generation | Manager refuses conflict and Backup rejects mismatched certified record; zero additional inner dispatches. |
+| Lost execute outer reply, including certified outer rejection after inner dispatch | Explicit lookup imports the original inner result; no resubmission or inferred failure. |
+| Lost lookup reply / lookup-ingress observation | Original lookup evidence and its own finite slots survive host restart; no new lookup allowance. |
+| Callback trap or manager upgrade while inner outcome is pending | Surviving ledger cannot reissue; terminal original bytes remain importable if retained. |
+| Completed record rewritten/regressed or unknown schema | Bounded strict refusal with all original evidence retained. |
+| Late/revoked/generation-changed dependent work | No new effect; original completed offline replay still authenticates its own evidence. |
+| Result/frame/cycle/request/evidence ceiling reached | Refuse before the next effect, or retain uncertainty after an already-issued effect; no enlarged budget. |
+| Full normal consumer path | Real IC take/read, allocate/upload/readback/load, stopped completion, offline replay and direct-route regressions. |
+
+The first executable qualification belongs with Canic's real manager/worker and
+published protocol, not a native fake claiming IC effects. Canic #7 separately
+owns the continuous fence, stop/start-fenced/reconcile/accept/open lifecycle.
+Until that supplier exists, this review does not add an unsupported production
+route enum or a success-returning adapter stub. Backup #1 remains open.
+
+Focused legacy review used frozen `4ae087fad8c23de712aa60bf569bde4b2b932651`:
+`ic-backup-agent/src/submission/mod.rs` retains the original envelope before one
+dispatch and treats failed reply retention as indeterminate. Attempt-journal
+observation and persistence tests retain exact request/authority/limits across
+reopen and uncertain observation. Relevant submission history is
+`1af7e219c3073395992c316ecaa5e83e74b1aecc` and
+`278016b369f4312b4311410bbb7a0ad770ba3de6`. Reuse those invariants; the new
+assumption is a second effect owner whose inner outcome is not the outer ingress
+outcome. Legacy's direct transport cannot supply that missing proof. No code or
+legacy recovery artifacts were copied, and no new qualification is claimed here.

@@ -1,5 +1,72 @@
 # Current handoff — 2026-11-17
 
+## 0.105.4 release preparation
+
+The maintainer authorized delivery of the Tooling/Testkit adoption and retained
+manager-contract proposal. Metadata and both locks identify 0.105.4; its changelog
+is finalized. The full gate and single publication attempt remain to execute.
+Backup #1 remains open: delivering a proposal adds no manager execution route.
+Hosted CI will not be awaited. Prior development evidence follows.
+
+## Toko Tooling 0.45.0 / Testkit 0.110.0 adoption
+
+Both workspaces select exact Toko Tooling 0.45.0. Canonical preview/update and
+offline admission pass with the same ten entrypoints / 59 managed files. Only
+the baseline document changes; managed executables and tool selectors are
+byte-identical. The delivered Backup #3 flow already matches the new consistent
+validation/delivery policy. No new release runner, evidence cache or skip flag.
+
+Qualification selects Testkit 0.110.0 and Process 0.81.0. Testkit source is
+byte-identical to 0.109.0, but its server report exposes the new Process identity;
+the direct Process declaration must align. Its finite-stdin addition is not used
+by Backup's null-input server path. PocketIC remains 16.1 and qualification
+thiserror remains 2.0.18. Setup records verified archives/source provenance.
+Saved-lock comparison shows only Tooling changed in root, and Tooling/Testkit/
+Process in qualification; other supplier selections are preserved.
+
+Offline tool/snapshot admission, qualification all-target Clippy, authenticated
+existing-server setup/check and the actual publication-caller fixture pass.
+All 11 actual-IC journeys pass (105.39 seconds), including 20 MiB, separate-process
+recovery and retained server cleanup reports. Both locked metadata graphs admit
+one Tooling identity; qualification has one Testkit and one Process identity.
+Formatting, documentation links and diff checks pass. Evidence is under
+`target/evidence/tooling-testkit-adoption/`. No macOS or live publication claim.
+
+The manager-contract proposal and pre-existing Platform 0.34.15 / bytes 1.12.2
+locks remain preserved. Product source/APIs/formats are unchanged. Pending
+0.105.4 describes these compatible development/qualification changes; manifests
+remain 0.105.3. Work is uncommitted/unpublished, and no hosted CI was awaited.
+
+## Backup #1 manager-contract proposal
+
+The maintainer requested progress on the remaining manager route. A concrete
+semantic proposal is now in the sibling integration contract under
+`Manager exchange proposal — 2026-11-17`. Read-only review of Canic base
+`d652c55e4cc455a642f44645bf2e16a6d08baefc` and identified dirty engine bytes
+found no snapshot executor/receipt endpoint. The proposal separates host signer
+from manager controller, pins operation/approval/step/arguments and generation,
+defines execute versus finite lookup and exact retained inner outcomes, and
+records trust, wire ownership, byte/cycle/request accounting and IC acceptance.
+
+Two essential refusal rules: outer rejection is not proof of inner rejection,
+and changed generation/approval must not create another slot for the original
+operation/step. The proposed initial profile allows one explicit manager lookup
+per pending step, with separate original-ingress observation accounting. No
+production route/API, format, dependency or effect is added before the actual
+Canic protocol and consumer exist. The agreement, endpoint/schema and portable
+protocol ownership remain outstanding on Backup #1 / Canic #6; neither issue is
+complete. Canic #7 owns the separate fence/reopening journey.
+The concrete proposal is posted on
+[Backup #1](https://github.com/dragginzgame/ic-backup/issues/1#issuecomment-6961354980)
+with its protocol-owner action on
+[Canic #6](https://github.com/dragginzgame/canic/issues/6#issuecomment-6961355422).
+
+Focused legacy submission/attempt-journal review and exact source provenance are
+recorded with the proposal. Documentation checks pass; no runtime tests were
+activated for this design-only work and no IC qualification is claimed. Work is
+uncommitted/unpublished. The pre-existing Platform 0.34.15 / bytes 1.12.2 lock
+updates are preserved, outside this design work and not newly qualified here.
+
 ## 0.105.3 published
 
 **[ic-backup 0.105.3](https://crates.io/crates/ic-backup/0.105.3) is published.**
@@ -329,9 +396,9 @@ No sibling edits, commit or publication were made.
 ## Selected suppliers and adoption evidence
 
 The locks currently select Host FS/Artifacts 0.80.3, HTTP 0.80.0, Protocol 0.3.5,
-Platform 0.34.13 and Types 0.21.2. Backup owns Reqwest 0.13.5 and its original
+Platform 0.34.15 and Types 0.21.2. Backup owns Reqwest 0.13.5 and its original
 TLS/no-retry/redirect/proxy/deadline policy; Host bounds complete response bodies.
-Qualification selects Testkit 0.109.0 and Process 0.80.4; both locks select Tokio
+Qualification selects Testkit 0.110.0 and Process 0.81.0; both locks select Tokio
 1.54.1. Platform 0.34.12 and Tokio were already selected before the Testkit update.
 These Host selections
 were present in the working locks during the port and are covered by its caller
@@ -358,7 +425,7 @@ blocker was found, and no sibling source was edited. The
 [transfer contract](../architecture/capture-transfer.md#full-platform-port--2026-11-17)
 records decoder and regression provenance.
 
-Toko Tooling 0.44.11 is installed through its canonical exporter in both workspaces.
+Toko Tooling 0.45.0 is installed through its canonical exporter in both workspaces.
 Its 59-file snapshot is admitted. CI setup retains bounded sanitized diagnostics
 with original failure status and seven-day artifacts; local failure-path tests
 pass, while hosted artifact retrieval remains unobserved.

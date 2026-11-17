@@ -40,10 +40,10 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.44.11 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.45.0 is adopted from its registry
 archive with SHA-256
-`7d16b815ae322ae3f88580ee6af1611bdafde08b77592cd886bfa0eece0f1be8`,
-source `08d63df7661910554ef72980037f55edd914aba0`. Both workspaces declare
+`3789a925c1165317eff84cc80436195b66c0478b0c2b441bc2f1a755caf6a23a`,
+source `53c0eba3b1b207e0cd9e747eece438e21b693261`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
 The canonical exporter installs ten selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -203,7 +203,7 @@ profile. This avoids measuring debug-mode crypto and payload replay as release
 performance. The 20 MiB fixture explicitly bounds both server lifetime and idle
 time at 30 minutes to accommodate long local source checks between IC calls.
 
-Setup builds the private `server` example against the locked Testkit 0.109.0
+Setup builds the private `server` example against the locked Testkit 0.110.0
 library. `make install-testkit-server` explicitly downloads the supplier-selected
 archive with a finite time/byte ceiling, then delegates checksum admission,
 bounded decompression and create-only publication to Testkit. It is an ordered
@@ -630,3 +630,33 @@ Server sources and manifest dependencies are unchanged from 0.108.1; the selecte
 library root differs only in documentation. Existing actual-IC evidence remains
 applicable. The handoff records fresh focused qualification, with archive/source
 diffs, saved lock and logs under `target/evidence/testkit-refresh/`.
+
+### Toko Tooling 0.45 / Testkit 0.110 adoption
+
+Tooling 0.45.0 uses source `53c0eba3b1b207e0cd9e747eece438e21b693261` and
+registry archive SHA-256
+`3789a925c1165317eff84cc80436195b66c0478b0c2b441bc2f1a755caf6a23a`.
+Both workspaces inherit the exact new pin. The canonical preview/update retains
+all ten selected entrypoints and 59 managed files; only the baseline bytes change.
+No managed receipt/file was edited by hand. Installed executable bytes and tool
+selectors are unchanged. The new consistent-flow policy matches the delivered
+Backup #3 command/guarantee/trigger map; no new release runner or proof reuse is
+activated by updating this snapshot.
+
+Testkit 0.110.0 uses source `23f80e236343d7ff8ec070536863daecb89c77ec` and
+registry archive SHA-256
+`16709c74c5c169ea786224ea8e10a8b45446219000c18c441e8aa73bd1409252`.
+Its source tree is byte-identical to 0.109.0; the manifest raises Process to 0.81.
+Qualification consumes `Stopped::process.failure`, so its direct Process catalog
+also selects 0.81.0. Keeping 0.80 would create incompatible public report types.
+
+Process 0.81.0 uses source `0908efd0a94e1284f8f79c81902c1ee75db9d497`, archive
+SHA-256 `1b81431d49e906feee6812a4fa8539feea57803f9937b926472ae947fa9bf6c5`.
+It adds finite stdin bytes and removes Copy from input/policy. Testkit retains its
+null-input server path; Backup adds no process or credential handling. PocketIC
+16.1 and qualification thiserror 2.0.18 remain selected. Relative to saved starting
+locks, root changes only Tooling; qualification changes Tooling, Testkit and Process.
+The starting Process selection was 0.80.5. Pre-existing Platform/bytes selections
+are preserved. Provenance, preview/export, lock snapshots, source diffs and caller
+checks are under `target/evidence/tooling-testkit-adoption/`; the handoff owns
+current execution results and qualification limits.
