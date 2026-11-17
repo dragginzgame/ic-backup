@@ -1,12 +1,30 @@
 # Current handoff — 2026-11-17
 
-## 0.105.2 release preparation
+## 0.105.2 published
 
-Deployment of the completed SDK-test cleanup and Testkit 0.109.0 adoption is
-authorized. Product/qualification metadata and both locks identify 0.105.2;
-the changelog is finalized. Complete local publication validation and upload
-remain to execute. The sections below preserve preceding development evidence.
-No 0.105.2 publication is claimed yet; hosted CI will not be awaited.
+**[ic-backup 0.105.2](https://crates.io/crates/ic-backup/0.105.2) is published.**
+Release commit `fbfda5f22923a8fe96cf58f199273ac1fbcefaa8` and tag `v0.105.2`
+are pushed to `origin/main`. This releases Backup #2's direct test-SDK removal,
+independent fixture preservation and private Testkit 0.109.0 adoption. Production
+behavior, public APIs, stored formats and original recovery evidence are unchanged.
+
+The complete local gate passes: **240 native tests**, five doctests, **11 actual-IC
+journeys (101.97 seconds)**, both strict Clippy checks, Rustdoc, tool/format/link
+admission, archive/isolated normal consumer and publication-adapter regressions.
+Hosted CI was not awaited. The single successful upload attempt is
+`target/publication/publish.selection.2my56T`; release evidence is under
+`target/evidence/release-0.105.2/`.
+
+Independent registry readback matches SHA-256
+`120ff34287bb1e3987bbe788ea9068aaefb6fc248507a9287248f232c6ae639a`,
+its embedded release commit and 168 tracked package files. A fresh registry-backed
+normal consumer builds without Testkit/PocketIC. All 68 independent fixtures and
+their original provenance are included in the archive.
+
+Post-push review of the delivered changes and directly affected test callers found
+no new recovery path, journal, authority input or production SDK dependency.
+Backup #2 is complete and delivered; Backup #1 / Canic integration remains.
+The following sections preserve preceding development and release evidence.
 
 ## Testkit 0.109.0 adoption
 
