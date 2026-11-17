@@ -1,12 +1,34 @@
 # Current handoff — 2026-11-17
 
-## 0.105.4 release preparation
+## 0.105.4 published
 
-The maintainer authorized delivery of the Tooling/Testkit adoption and retained
-manager-contract proposal. Metadata and both locks identify 0.105.4; its changelog
-is finalized. The full gate and single publication attempt remain to execute.
-Backup #1 remains open: delivering a proposal adds no manager execution route.
-Hosted CI will not be awaited. Prior development evidence follows.
+**[ic-backup 0.105.4](https://crates.io/crates/ic-backup/0.105.4) is published.**
+Release commit `0e7358b4c9e5def07fe96a69d493aa76fbf78dbf` and tag `v0.105.4`
+are pushed to `origin/main`. Tooling 0.45.0 and private Testkit 0.110.0 /
+Process 0.81.0 are delivered. The retained Platform 0.34.15 / bytes 1.12.2 locks
+are covered by this release's caller checks. The manager-contract proposal is
+delivered as a proposal; Backup #1 / Canic #6 remain open and no manager route
+is enabled. Product APIs, stored formats and recovery evidence are unchanged.
+
+The complete local gate ran once: **240 native tests**, five doctests,
+**11 actual-IC journeys (104.17 seconds)**, both strict Clippy checks, Rustdoc,
+tool/snapshot/format/link admission and archive/isolated normal-consumer checks
+pass. Earlier changed-tooling caller qualification remains retained separately.
+Hosted CI was not awaited. Single successful upload attempt:
+`target/publication/publish.selection.p044da`; release evidence:
+`target/evidence/release-0.105.4/`.
+
+Independent registry readback matches SHA-256
+`c7682b24dc23d1214ad9fba17595dfefc10bb1260a887d9429558b58e8c2cbe7`,
+its embedded release commit and all 168 tracked package files. A fresh
+registry-backed normal consumer builds without Testkit/PocketIC.
+
+Post-push review of the adoption and manager proposal found no new production
+path, journal or authority input. Canonical export changed only managed baseline
+bytes; executable selectors and publication dispatch remain unchanged. The
+proposal explicitly separates signer/controller, original outer/inner outcomes
+and both-hop spending without adding an unsupported API or qualification claim.
+Earlier development evidence follows.
 
 ## Toko Tooling 0.45.0 / Testkit 0.110.0 adoption
 
