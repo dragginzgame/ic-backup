@@ -1,5 +1,13 @@
 # Current handoff — 2026-11-18
 
+## Published Canic integration — selected persistent counter
+
+Canic v0.224.0 qualifies the published host adapter with Backup 0.105.6 and IC Host Sign 0.1.0. The installed direct route passed with a disposable keyring-backed secp256k1 identity. The Root-managed route recovered the original take and load after lost replies and host restart. With Root as sole controller, the selected counter was restored stopped, accepted under a fresh authorization and explicitly opened. The consumer scope is one same-release persistent counter without timers, external work or additional participants. These are installed test results; deployment of a live application with operator credentials is a separate operational step. See [external signer qualification](https://github.com/dragginzgame/canic/issues/5), [Root executor delivery](https://github.com/dragginzgame/canic/issues/6) and [application fencing qualification](https://github.com/dragginzgame/canic/issues/7).
+
+## Toko Tooling 0.45.8 adopted locally
+
+Both workspace pins, lockfiles and the 62-file managed snapshot agree on 0.45.8. The hygiene pass grouped Rust imports, separated adjacent functions, and moved test declarations and shared fixtures beside their owning tests. All 70 relocated wire fixture files matched the previous revision byte for byte. The publication caller now accepts unstaged file moves and checks the exact package and version in the timing journal. Local validation evidence is under `target/evidence/tooling-0.45.8/`.
+
 ## 0.105.6 published with Toko Tooling 0.45.2
 
 [ic-backup 0.105.6](https://crates.io/crates/ic-backup/0.105.6) and tag `v0.105.6` select release commit `b1bda32b882f44146b03d6b222b1c86428db4d40`. Both workspaces pin Toko Tooling 0.45.2. The canonical exporter retained twelve entrypoints and 62 managed files. Post-push review confirmed that the only changed managed helper is `SetupDiagnostics.pm`. The Backup caller regression exercises assignment, URL fragment and access-key redaction while preserving the original failure status.
@@ -43,8 +51,8 @@ and `b062e14bc119ee14f194eac36b1819cc68e3d29574815676410075de2957a922`.
 The working protocol module SHA-256 was
 `7db42d24c980e1313c0f2e31754d98b2ac25ab3528be2f4af1cad5ec3b362d60`
 at Canic base `d652c55e4cc455a642f44645bf2e16a6d08baefc`. Qualification used
-fixture signing and application permission. The published supplier, production
-signer and application fencing are separate delivery work. This Root witness
+fixture signing and application permission. The later Canic v0.224.0 consumer qualification above covers the published
+supplier, external signer and selected application fence. This Root witness
 is local and outside hosted CI. Backup shipped the host boundary in 0.105.5.
 
 Five small test fixtures retain the approved intent, both signed Take/lookup

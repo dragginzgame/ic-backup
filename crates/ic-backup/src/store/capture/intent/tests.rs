@@ -1,16 +1,17 @@
 //! Real signatures and synthetic certificate trees; these tests do not qualify IC effects.
 use super::*;
-use crate::store::capture::{
-    procedure::{Error as ProcedureError, Next, Procedure},
-    status::tests::status,
-    test_fixtures::{
-        certificates::{der, reply_tree, signed},
-        signatures::{Scheme, change, fixture},
+use crate::store::{
+    PreparedStatus, StatusEvidence,
+    capture::{
+        procedure::{Error as ProcedureError, Next, Procedure},
+        status::tests::status,
+        tests::{
+            certificates::{der, reply_tree, signed},
+            signatures::{Scheme, change, fixture},
+        },
     },
+    operation::{Step, intent::Intent},
 };
-use crate::store::operation::Step;
-use crate::store::operation::intent::Intent;
-use crate::store::{PreparedStatus, StatusEvidence};
 use ic_platform::ingress::Content as EnvelopeContent;
 
 pub(in crate::store) fn profile() -> ProfileRecord {
@@ -33,6 +34,7 @@ pub(in crate::store) fn profile() -> ProfileRecord {
         result_bytes: 4096,
     }
 }
+
 fn input() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     let (plan, _) = fixture(Scheme::Ed25519);
     let mut request = plan.request().clone();
@@ -40,7 +42,7 @@ fn input() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     request.limits.evidence_bytes = 8 * 1024 * 1024;
     let intent = CapturePlan::new(request, profile()).unwrap();
     let (method, args) = Procedure::new(&intent).unwrap().request().unwrap();
-    let response = crate::store::capture::test_fixtures::wire::encode(&status(intent.plan()), 4096);
+    let response = crate::store::capture::tests::wire::encode(&status(intent.plan()), 4096);
     let (prepared, evidence) = signed_reply(&intent, 0, method, args, response);
     (intent, prepared, evidence)
 }

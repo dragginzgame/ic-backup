@@ -1,11 +1,15 @@
 //! Real signatures over synthetic certificates; no remote observation is performed.
 use super::{
-    fixtures::certificates::{delegated, der, signed},
-    fixtures::signatures::{Scheme, change, fixture as signed_request},
+    fixtures::{
+        certificates::{delegated, der, signed},
+        signatures::{Scheme, change, fixture as signed_request},
+    },
     *,
 };
-use ic_platform::certificate::construction::{HashTree, empty, fork, labeled, leaf, pruned};
-use ic_platform::certificate::{TimePolicy, TimeWindow};
+use ic_platform::certificate::{
+    TimePolicy, TimeWindow,
+    construction::{HashTree, empty, fork, labeled, leaf, pruned},
+};
 
 fn window(reference_ns: u64) -> TimeWindow {
     TimeWindow {
@@ -14,6 +18,7 @@ fn window(reference_ns: u64) -> TimeWindow {
         max_future_skew_ns: 0,
     }
 }
+
 fn policy() -> CaptureObservationPolicy {
     CaptureObservationPolicy {
         time: TimePolicy {
@@ -23,6 +28,7 @@ fn policy() -> CaptureObservationPolicy {
         evidence_bytes: 4096,
     }
 }
+
 fn original(
     call: CaptureCall,
     scheme: Scheme,
@@ -56,6 +62,7 @@ fn original(
     a.submit_deadline_ns = 150;
     (p, a, r)
 }
+
 fn certificate(id: &[u8; 32], branch: HashTree) -> Vec<u8> {
     signed(
         fork(
@@ -66,6 +73,7 @@ fn certificate(id: &[u8; 32], branch: HashTree) -> Vec<u8> {
         None,
     )
 }
+
 fn replied(id: &[u8; 32], reply: &[u8]) -> Vec<u8> {
     certificate(
         id,
@@ -75,6 +83,7 @@ fn replied(id: &[u8; 32], reply: &[u8]) -> Vec<u8> {
         ),
     )
 }
+
 fn observe(
     p: &CapturePolicy,
     a: &StatusAdmissionRecord,

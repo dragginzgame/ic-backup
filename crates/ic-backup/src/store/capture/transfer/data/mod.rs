@@ -1,4 +1,7 @@
 //! Bounded Platform-schema data replies and exact scheduled byte admission.
+#[cfg(test)]
+mod tests;
+
 use super::CaptureTransfer;
 use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 /// Data ordinal or bounded request encoding refused.
@@ -30,11 +33,9 @@ impl CaptureTransfer<'_> {
     }
 }
 use crate::store::BackupDigest;
-use ic_platform_protocol::management_snapshots::ReadDataArgs;
-use ic_platform_protocol::management_snapshots::ReadKind;
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
-    management_snapshots::decode_snapshot_data,
+    management_snapshots::{ReadDataArgs, ReadKind, decode_snapshot_data},
 };
 use thiserror::Error;
 
@@ -156,6 +157,3 @@ pub enum TransferDataError {
     #[error("capture chunk does not match its original hash")]
     ChunkHash,
 }
-
-#[cfg(test)]
-mod tests;

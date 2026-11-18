@@ -305,6 +305,7 @@ impl CertificateRequirements {
         }
         Ok(())
     }
+
     pub(in crate::store) fn response(
         &self,
         admission: &StatusAdmissionRecord,

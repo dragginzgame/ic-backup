@@ -1,20 +1,23 @@
 use super::*;
-use crate::store::BackupDigest;
 use crate::store::{
+    BackupDigest,
     capture::{
-        advance::tests::{
-            fixtures::certificates::{der, signed},
-            fixtures::{
-                http::{Response, Server, http, input, input_for, now, runtime, set_expiry},
-                signatures::{Scheme, change},
-            },
+        advance::tests::fixtures::{
+            certificates::{der, signed},
+            http::{Response, Server, http, input, input_for, now, runtime, set_expiry},
+            signatures::{Scheme, change},
         },
         status::tests::plan,
     },
     tests::root,
 };
-use std::io::Write;
-use std::{fs, io::Read, net::TcpListener, thread, time::Duration};
+use std::{
+    fs,
+    io::{Read, Write},
+    net::TcpListener,
+    thread,
+    time::Duration,
+};
 
 #[test]
 fn certificate_survives_closing_deadline_without_relaxing_original_admission() {
@@ -545,7 +548,7 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
 #[test]
 fn root_updates_route_and_verify_delegation_for_root() {
     use super::super::IngressRequirements;
-    use crate::store::capture::test_fixtures::certificates::delegated;
+    use crate::store::capture::tests::certificates::delegated;
     use ic_platform_types::Principal;
 
     let root = Principal::from_slice(&[8, 1]);

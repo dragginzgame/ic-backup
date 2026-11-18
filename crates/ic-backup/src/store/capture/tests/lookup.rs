@@ -1,7 +1,9 @@
 use super::*;
 use crate::store::capture::advance::tests::fixtures::{http::now, signatures::Scheme};
-use ic_platform::certificate::{TimePolicy, TimeWindow};
-use ic_platform::ingress::{Envelope, encode_envelope};
+use ic_platform::{
+    certificate::{TimePolicy, TimeWindow},
+    ingress::{Envelope, encode_envelope},
+};
 
 pub(in crate::store) fn policy() -> CaptureLookupHttpPolicy {
     CaptureLookupHttpPolicy {

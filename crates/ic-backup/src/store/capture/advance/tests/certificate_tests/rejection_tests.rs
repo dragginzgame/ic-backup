@@ -1,6 +1,7 @@
 //! Certified rejection projection and durable terminal replay, without IC effects.
 use super::*;
 use ic_platform::certificate::construction::HashTree;
+
 fn rejected_tree(
     id: &[u8; 32],
     code: Option<&[u8]>,
@@ -39,6 +40,7 @@ fn rejection_proof(id: &[u8; 32], code: &[u8], message: &[u8], error: Option<&[u
         None,
     )
 }
+
 fn build(
     p: &CapturePolicy,
     r: &PreparedStatus,

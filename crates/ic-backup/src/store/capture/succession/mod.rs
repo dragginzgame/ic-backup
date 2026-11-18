@@ -3,8 +3,10 @@ use super::{
     BackupStore, CaptureOperation, CapturePlan, OperationReplayError, OperationStoreError, PRIVATE,
     child, exact, lock_target, target_for,
 };
-use crate::store::BackupDigest;
-use crate::store::operation::intent::{Intent, Plan};
+use crate::store::{
+    BackupDigest,
+    operation::intent::{Intent, Plan},
+};
 use std::ffi::OsStr;
 use thiserror::Error;
 /// Succession never removes predecessor evidence or refunds its original authority.

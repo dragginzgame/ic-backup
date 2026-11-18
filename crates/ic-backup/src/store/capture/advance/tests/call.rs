@@ -1,5 +1,5 @@
 //! Finite capture calls; no arbitrary management dispatch.
-use super::{CapturePolicy, OperationStoreError, arguments};
+use super::super::{CapturePolicy, OperationStoreError, arguments};
 use serde::{Deserialize, Serialize};
 
 /// The management calls currently implemented by the capture workflow.
@@ -24,6 +24,7 @@ impl CaptureCall {
             Self::TakeSnapshot => "take_canister_snapshot",
         }
     }
+
     pub(in crate::store::capture) fn arguments(
         self,
         plan: &CapturePolicy,

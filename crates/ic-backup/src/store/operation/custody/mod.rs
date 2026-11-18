@@ -1,4 +1,7 @@
 //! Held original files for the common recorder. No caller-selected evidence paths.
+#[cfg(test)]
+pub(in crate::store) mod tests;
+
 use super::{Call, FactRecord, Journal, ReferenceRecord, Step};
 use crate::store::{CapturePlan, operation::intent::Intent};
 /// Held capture approval and original files over the shared recorder.
@@ -10,9 +13,8 @@ impl<P> Recorder<P> {
         &self.intent
     }
 }
-use crate::store::BackupDigest;
 use crate::store::{
-    LedgerError, PRIVATE, StoreError,
+    BackupDigest, LedgerError, PRIVATE, StoreError,
     capture::{
         acquire, child, exact, lock_target, owner_bytes, retain, same_directory, same_identity,
         target_for,
@@ -143,6 +145,7 @@ impl<P: Intent> Recorder<P> {
         self.directory.sync()?;
         Ok(())
     }
+
     pub(in crate::store) fn create(
         store: &Directory,
         intent: P,
@@ -220,6 +223,7 @@ impl<P: Intent> Recorder<P> {
     pub(in crate::store) fn open(store: &Directory, id: &str) -> Result<Self, OperationStoreError> {
         Self::open_with_codec(store, id, None)
     }
+
     pub(in crate::store) fn open_with_codec(
         store: &Directory,
         id: &str,
@@ -532,9 +536,6 @@ impl<P: Intent> Recorder<P> {
         self.append_with(&original, fact, evidence, write)
     }
 }
-
-#[cfg(test)]
-pub(in crate::store) mod tests;
 
 /// Original operation admission or local persistence refusal. No error authorizes retrying effects.
 #[derive(Debug, Error)]

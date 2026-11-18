@@ -4,6 +4,7 @@ use crate::store::{BackupDigest, MANIFEST_LIMIT, StoreError, payload::unchanged_
 use ic_host_artifacts::{Identity, Length};
 use ic_host_fs::Directory;
 use std::ffi::OsStr;
+
 pub(in crate::store) fn publish_manifest_file(
     bundle: &Directory,
     bytes: &[u8],
@@ -49,6 +50,7 @@ pub(in crate::store) fn publish_manifest_file(
     crate::store::commit(written.seal().map_err(StoreError::from)?)?;
     Ok(())
 }
+
 pub(in crate::store) fn verify_manifest_file(
     bundle: &Directory,
     name: &str,

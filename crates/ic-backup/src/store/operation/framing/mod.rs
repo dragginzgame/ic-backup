@@ -1,4 +1,7 @@
 //! Bounded hash-chained framing shared by the capture recorder and retained restore status contract.
+#[cfg(test)]
+mod tests;
+
 use crate::store::BackupDigest;
 use std::io::{self, Read};
 use thiserror::Error;
@@ -13,13 +16,16 @@ pub(in crate::store) struct Bounds {
     pub(in crate::store) frames: u32,
     pub(in crate::store) bytes: u64,
 }
+
 #[cfg(test)]
 fn seed(plan: &[u8]) -> BackupDigest {
     BackupDigest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
 }
+
 fn chain(previous: BackupDigest, length: &[u8; 4], payload: &[u8]) -> BackupDigest {
     BackupDigest::compute(&[previous.as_bytes().as_slice(), length, payload].concat())
 }
+
 #[cfg(test)]
 pub(in crate::store) fn initial_bytes(
     plan: &[u8],
@@ -33,6 +39,7 @@ pub(in crate::store) fn initial_bytes(
     }
     Ok(bytes)
 }
+
 pub(in crate::store) fn encode_frame(
     head: BackupDigest,
     payload: &[u8],
@@ -111,6 +118,7 @@ impl<R: Read> Frames<R> {
         Ok(Some(payload))
     }
 }
+
 fn read_exact(reader: &mut impl Read, bytes: &mut [u8]) -> Result<(), LedgerError> {
     reader.read_exact(bytes).map_err(|error| {
         if error.kind() == io::ErrorKind::UnexpectedEof {
@@ -149,6 +157,3 @@ pub enum LedgerError {
     #[error(transparent)]
     Io(#[from] io::Error),
 }
-
-#[cfg(test)]
-mod tests;

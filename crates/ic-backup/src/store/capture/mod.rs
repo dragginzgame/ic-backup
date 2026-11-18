@@ -1,4 +1,7 @@
 //! Fixed direct-host capture with immutable approval, original custody and one-shot calls.
+#[cfg(test)]
+pub(in crate::store) mod tests;
+
 pub(in crate::store) mod advance;
 mod arguments;
 pub(in crate::store) mod assembly;
@@ -17,12 +20,11 @@ pub(in crate::store) mod transfer;
 use super::{BackupStore, PRIVATE, manifest::lower_hex, open_optional, read_optional};
 use crate::store::BackupDigest;
 pub(in crate::store) use crate::store::OperationLimits;
-pub use crate::store::operation::framing::LedgerError;
-pub use crate::store::operation::intent::Error as OperationPlanError;
 pub use crate::store::operation::{
     BackupApplicationGuard, BackupConnection, BackupSigner, CaptureOperation, OperationAction,
     OperationAdvanceError, OperationOptions, OperationProgress, OperationReplayError,
     OperationSigningContent, OperationSigningRequest, OperationStep, OperationView,
+    framing::LedgerError, intent::Error as OperationPlanError,
 };
 pub use advance::{
     BackupHttpError, BackupHttpTransport, CaptureLookupError, CaptureObservationError,
@@ -49,6 +51,7 @@ use std::{
 };
 pub use succession::CaptureSuccessionError;
 pub use transfer::{DataReadError, TransferDataError, TransferError, TransferMetadataError};
+
 pub(in crate::store) fn child(
     parent: &Directory,
     name: &str,
@@ -60,6 +63,7 @@ pub(in crate::store) fn child(
         None => Err(OperationStoreError::Incomplete),
     }
 }
+
 pub(in crate::store) fn target_for(
     root: &Directory,
     target: super::BackupTarget,
@@ -69,6 +73,7 @@ pub(in crate::store) fn target_for(
     let network = child(&targets, &target.network.to_string(), create)?;
     child(&network, &target.canister.to_text(), create)
 }
+
 pub(in crate::store) fn acquire(file: std::fs::File) -> Result<Lock, OperationStoreError> {
     Lock::acquire(file).map_err(|error| {
         if error.kind() == io::ErrorKind::WouldBlock {
@@ -78,6 +83,7 @@ pub(in crate::store) fn acquire(file: std::fs::File) -> Result<Lock, OperationSt
         }
     })
 }
+
 pub(in crate::store) fn lock_target(
     target: &Directory,
 ) -> Result<(Lock, bool), OperationStoreError> {
@@ -92,6 +98,7 @@ pub(in crate::store) fn lock_target(
     file.sync_all()?;
     Ok((acquire(file)?, true))
 }
+
 pub(in crate::store) fn retain(
     directory: &Directory,
     name: &str,
@@ -102,6 +109,7 @@ pub(in crate::store) fn retain(
     file.sync_all()?;
     Ok(())
 }
+
 pub(in crate::store) fn exact(
     directory: &Directory,
     name: &str,
@@ -114,6 +122,7 @@ pub(in crate::store) fn exact(
     }
     Ok(())
 }
+
 pub(in crate::store) fn same_identity(
     first: &Directory,
     second: &Directory,
@@ -123,6 +132,7 @@ pub(in crate::store) fn same_identity(
     }
     Ok(())
 }
+
 pub(in crate::store) fn same_directory(
     parent: &Directory,
     name: &str,
@@ -137,9 +147,11 @@ struct OwnerRecord<'a> {
     operation_id: &'a str,
     plan_sha256: String,
 }
+
 pub(in crate::store) fn owner(plan: &CapturePlan) -> Result<Vec<u8>, OperationStoreError> {
     owner_bytes(&plan.request().operation_id, plan.digest())
 }
+
 pub(in crate::store) fn owner_bytes(
     id: &str,
     digest: BackupDigest,
@@ -151,8 +163,5 @@ pub(in crate::store) fn owner_bytes(
     })?)
 }
 pub use crate::store::operation::custody::OperationStoreError;
-
-#[cfg(test)]
-pub(in crate::store) mod test_fixtures;
 
 pub(in crate::store) use advance::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};

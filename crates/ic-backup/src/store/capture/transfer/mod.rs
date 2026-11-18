@@ -1,5 +1,8 @@
 //! Pure bounded transfer planning over Platform metadata; no dispatch authority.
 
+#[cfg(test)]
+mod tests;
+
 pub(in crate::store) mod data;
 mod metadata;
 pub(in crate::store) mod readback;
@@ -7,9 +10,8 @@ pub use data::{DataReadError, TransferDataError};
 pub use metadata::TransferMetadataError;
 
 use super::CapturePolicy;
-use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 use ic_platform_protocol::management_snapshots::{
-    ReadDataArgs, ReadKind, SnapshotMetadata, SnapshotSource,
+    Extent, ReadDataArgs, ReadKind, SnapshotChunk, SnapshotMetadata, SnapshotSource,
 };
 use std::fmt;
 use thiserror::Error;
@@ -135,6 +137,7 @@ impl CaptureTransfer<'_> {
     pub(in crate::store) fn snapshot_id(&self) -> &[u8] {
         self.snapshot_id
     }
+
     /// Number of data reads, including every named chunk regardless of its length.
     #[must_use]
     pub const fn data_calls(&self) -> u32 {
@@ -298,6 +301,3 @@ pub enum TransferError {
         original: u32,
     },
 }
-
-#[cfg(test)]
-mod tests;

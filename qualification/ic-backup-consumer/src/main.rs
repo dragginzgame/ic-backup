@@ -1,6 +1,7 @@
 //! Test-only public-API consumer, built alone without Testkit/PocketIC in its graph.
-use ic_backup::store::BackupDigest;
-use ic_backup::store::{BackupConnection, BackupHttpTransport, BackupStore, OperationProgress};
+use ic_backup::store::{
+    BackupConnection, BackupDigest, BackupHttpTransport, BackupStore, OperationProgress,
+};
 use std::{
     path::Path,
     sync::{

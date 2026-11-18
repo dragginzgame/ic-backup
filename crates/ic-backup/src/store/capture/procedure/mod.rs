@@ -3,21 +3,18 @@
 //! Retained calls are authenticated against the exact request and original
 //! intent before reply policy derives the next request;
 //! it grants no signing, filesystem, submission or application authority.
-use super::intent::CapturePlan;
 use super::{
     CaptureStatusReplyError, DataReadError, MetadataReadError, SnapshotReplyError,
     TransferDataError, TransferError, TransferMetadataError, decode_snapshot_list,
-    decode_taken_snapshot,
+    decode_taken_snapshot, intent::CapturePlan,
 };
 #[cfg(test)]
 use crate::store::PreparedStatus;
 #[cfg(test)]
 use crate::store::StatusEvidence;
-use crate::store::operation::intent::Intent;
-use crate::store::operation::{Step, effect::Effect};
-use ic_platform_protocol::management_snapshots::Extent;
+use crate::store::operation::{Step, effect::Effect, intent::Intent};
 use ic_platform_protocol::management_snapshots::{
-    CanisterArgs, ReadKind, Snapshot, SnapshotMetadata,
+    CanisterArgs, Extent, ReadKind, Snapshot, SnapshotMetadata,
 };
 use sha2::{Digest, Sha256};
 use thiserror::Error;

@@ -1,6 +1,8 @@
 //! Fixed source-bound allocation/upload/readback/load policy, without call mechanics.
-use super::RestorePlan;
-use super::persistence::Source;
+#[cfg(test)]
+mod tests;
+
+use super::{RestorePlan, persistence::Source};
 use crate::store::{
     CapturePlan, CaptureStatusReplyError, OperationStoreError, PayloadReadError, RestoreTransfer,
     TransferDataError,
@@ -11,10 +13,9 @@ use crate::store::{
     operation::{Step, effect::Effect},
 };
 use ic_platform_protocol::management_snapshots::{
-    CanisterArgs, LoadSnapshotArgs, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs,
-    SnapshotMetadata, UploadDataArgs, UploadMetadataArgs, WriteKind,
+    CanisterArgs, Extent, LoadSnapshotArgs, Offset, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs,
+    SnapshotChunk, SnapshotMetadata, UploadDataArgs, UploadMetadataArgs, WriteKind,
 };
-use ic_platform_protocol::management_snapshots::{Extent, Offset, SnapshotChunk};
 use ic_platform_types::Principal;
 
 use ic_platform_protocol::{
@@ -97,6 +98,7 @@ impl<'a> Procedure<'a> {
             destination: None,
         })
     }
+
     pub(in crate::store) fn next(&self) -> Result<Option<Step>, Error> {
         if self.failed {
             Err(Error::Order)
@@ -104,18 +106,22 @@ impl<'a> Procedure<'a> {
             Ok(self.next)
         }
     }
+
     pub(in crate::store) fn destination(&self) -> Result<&[u8], Error> {
         self.destination.as_deref().ok_or(Error::Order)
     }
+
     pub(in crate::store) fn data_calls(&self) -> u32 {
         self.transfer.data_calls()
     }
+
     fn source_request(&self, n: u32) -> Result<ReadDataArgs, Error> {
         self.transfer
             .source_requests()
             .nth(n as usize)
             .ok_or(Error::Order)
     }
+
     #[cfg(test)]
     pub(in crate::store) fn request(
         &self,
@@ -124,6 +130,7 @@ impl<'a> Procedure<'a> {
         let (effect, limit) = self.effect(source)?;
         effect.encode(limit).map_err(|_| Error::Encoding)
     }
+
     pub(in crate::store) fn effect(
         &self,
         source: &mut Source<'_>,
@@ -183,6 +190,7 @@ impl<'a> Procedure<'a> {
         };
         Ok((effect, crate::store::limits::REQUEST_BYTES as usize))
     }
+
     pub(in crate::store) fn accept(
         &mut self,
         step: Step,
@@ -197,6 +205,7 @@ impl<'a> Procedure<'a> {
         }
         result
     }
+
     fn accept_reply(
         &mut self,
         step: Step,
@@ -292,6 +301,7 @@ impl<'a> Procedure<'a> {
         Ok(())
     }
 }
+
 pub(in crate::store) fn upload_metadata_arguments(
     canister_id: Principal,
     metadata: &SnapshotMetadata,
@@ -301,6 +311,7 @@ pub(in crate::store) fn upload_metadata_arguments(
         .encode(limit)
         .map_err(|_| Error::Encoding)
 }
+
 fn upload_metadata(
     canister_id: Principal,
     metadata: &SnapshotMetadata,
@@ -323,6 +334,7 @@ fn upload_metadata(
         on_low_wasm_memory_hook_status: metadata.on_low_wasm_memory_hook_status.clone(),
     })
 }
+
 fn limits() -> Limits {
     Limits {
         bytes: 4096,
@@ -334,6 +346,7 @@ fn limits() -> Limits {
         skipping: 0,
     }
 }
+
 fn unit(reply: &[u8]) -> Result<(), Error> {
     decode_empty_response(reply, limits()).map_err(Error::from)
 }
@@ -342,6 +355,3 @@ impl From<DecodeError> for Error {
         Self::Reply(error)
     }
 }
-
-#[cfg(test)]
-mod tests;

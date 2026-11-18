@@ -20,21 +20,20 @@
 //!     }
 //! }
 //! ```
+#[cfg(test)]
+mod tests;
+
 use super::{
     Step,
     custody::{CaptureOperation, Role},
     replay::Error,
     runtime::{Connection, Guard, Signer},
 };
-use crate::store::BackupDigest;
-use crate::store::operation::intent::ProfileRecord;
 use crate::store::{
-    BackupStore, BackupSummary,
+    BackupDigest, BackupStore, BackupSummary,
     capture::{CaptureRequest, CaptureTiming, OperationStoreError, intent::CapturePlan},
+    operation::intent::ProfileRecord,
 };
-
-#[cfg(test)]
-mod tests;
 
 /// Per-invocation costs and timing to approve once with the capture declaration.
 #[derive(Clone, Copy, Debug)]
@@ -97,6 +96,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         self.manager = Some((manager, codec));
         self
     }
+
     /// Bind an immutable approval to this actual connection and its finite policy.
     ///
     /// No clock, signing, filesystem or network work occurs. A changed connection
@@ -113,6 +113,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
             .map_err(|_| crate::store::OperationPlanError::Profile)?;
         CapturePlan::new(request, self.profile(options))
     }
+
     fn profile(&self, options: OperationOptions) -> ProfileRecord {
         ProfileRecord {
             manager: self.manager.as_ref().map(|(manager, _)| manager.clone()),
@@ -133,6 +134,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
             result_bytes: options.result_bytes,
         }
     }
+
     /// Approve a same-canister restore from an authenticated held capture source.
     /// # Errors
     /// Refuses mismatched source, trust, geometry, finite allowance or request capacity.
@@ -186,6 +188,7 @@ impl CaptureOperation {
     pub(in crate::store) fn check_custody(&self) -> Result<(), OperationStoreError> {
         self.check().map(|_| ())
     }
+
     /// Authenticate retained progress without clock, signer, guard, HTTP or writes.
     /// # Errors
     /// Refuses incomplete/changed custody, invalid evidence or settled policy failures.
@@ -206,6 +209,7 @@ impl CaptureOperation {
         self.verified_completion(expected)
             .map(|(summary, _)| summary)
     }
+
     pub(in crate::store) fn verified_completion(
         &self,
         expected: BackupDigest,

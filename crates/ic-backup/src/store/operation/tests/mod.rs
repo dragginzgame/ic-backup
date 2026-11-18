@@ -2,6 +2,8 @@
 //! Replacement facts only: no fake IC effects, filesystem durability or certificate claims.
 //! frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651, submission/mod.rs and
 //! tests/http_boundary/mod.rs. The actual transport matrix remains with that owner.
+pub(in crate::store) mod fixtures;
+
 use super::*;
 
 const INTENT: &[u8] = b"approved intent";
@@ -17,20 +19,24 @@ fn allowance() -> Allowance {
         result_bytes: 4096,
     }
 }
+
 fn reference(bytes: &[u8]) -> ReferenceRecord {
     ReferenceRecord {
         bytes: bytes.len().try_into().unwrap(),
         sha256: *BackupDigest::compute(bytes).as_bytes(),
     }
 }
+
 fn read(bytes: &[u8], a: Allowance) -> Journal {
     Journal::read(bytes, INTENT, a).unwrap()
 }
+
 fn append(bytes: &mut Vec<u8>, a: Allowance, fact: FactRecord) -> Journal {
     let frame = read(bytes, a).candidate(fact).unwrap();
     bytes.extend(frame);
     read(bytes, a)
 }
+
 fn facts(step: Step) -> [FactRecord; 4] {
     [
         FactRecord::CallReserved {
@@ -48,6 +54,7 @@ fn facts(step: Step) -> [FactRecord; 4] {
         },
     ]
 }
+
 fn complete_history(a: Allowance) -> Vec<u8> {
     let mut bytes = Journal::initial(INTENT, a).unwrap();
     for step in [

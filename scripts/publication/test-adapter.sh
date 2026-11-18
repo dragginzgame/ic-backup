@@ -14,6 +14,8 @@ fixture="$(mktemp -d "$root/target/publication-fixtures/caller.XXXXXX")"
 printf 'Publication caller fixture: %s\n' "$fixture"
 git -C "$root" ls-files --cached --others --exclude-standard -z > "$fixture/paths"
 while IFS= read -r -d '' path; do
+    # A working-tree rename leaves the old tracked path in ls-files until staged.
+    [[ -e "$root/$path" || -L "$root/$path" ]] || continue
     [[ -f "$root/$path" && ! -L "$root/$path" ]]
     mkdir -p "$fixture/$(dirname "$path")"
     cp -p "$root/$path" "$fixture/$path"
@@ -90,7 +92,10 @@ for selection in '' 'ic-backup ic-backup' 'ic-backup-consumer'; do
     test ! -s target/effects
 done
 # Direct upload needs no earlier check evidence and always qualifies the product.
-publication_upload > target/direct-upload.log 2>&1
+RELEASE_TIMING_JOURNAL="$fixture/target/direct-upload.jsonl" publication_upload > target/direct-upload.log 2>&1
+jq -es --arg expected "packages=ic-backup@$PUBLICATION_VERSION" '
+    [.[] | select(.event == "started" and .phase == "cargo-publish") | .origin] == [$expected]
+' target/direct-upload.jsonl > /dev/null
 [[ "$(cat target/effects)" == "$(printf 'qualified\npublish --locked --registry crates-io --package ic-backup@%s' "$PUBLICATION_VERSION")" ]]
 : > target/effects
 PUBLICATION_GATE=fail expect_failure publication_check

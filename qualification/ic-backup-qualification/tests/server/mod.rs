@@ -32,9 +32,11 @@ impl RetainedServer {
             evidence: evidence.to_owned(),
         }
     }
+
     pub fn server(&self) -> &Server {
         self.server.as_ref().unwrap()
     }
+
     fn stop(&mut self) -> Stopped {
         let stopped = self.server.as_mut().unwrap().stop().unwrap();
         self.server = None;
@@ -65,11 +67,13 @@ impl Drop for RetainedServer {
         }
     }
 }
+
 fn retain(evidence: &Path, stopped: &Stopped) {
     fs::write(evidence.join("server.stdout"), &stopped.output.stdout).unwrap();
     fs::write(evidence.join("server.stderr"), &stopped.output.stderr).unwrap();
     fs::write(evidence.join("server.process"), format!("{stopped:?}\n")).unwrap();
 }
+
 pub async fn close(instance: server::Instance, server: &mut RetainedServer) {
     let deletion = instance.close(Duration::from_secs(30)).await;
     let stopped = server.stop();

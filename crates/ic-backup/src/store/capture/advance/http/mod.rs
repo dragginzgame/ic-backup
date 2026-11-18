@@ -6,8 +6,10 @@ use super::{
 use crate::store::BackupDigest;
 #[cfg(test)]
 use crate::store::capture::CapturePolicy;
-use ic_platform::certificate::PreparedRootKey;
-use ic_platform::ingress::{CallResponse as TransportCallResponse, decode_call_response};
+use ic_platform::{
+    certificate::PreparedRootKey,
+    ingress::{CallResponse as TransportCallResponse, decode_call_response},
+};
 use reqwest::{Client, Url, header};
 use std::{
     net::IpAddr,
@@ -28,6 +30,7 @@ impl ReceivedCertificate {
     pub fn request_id(&self) -> [u8; 32] {
         self.request_id
     }
+
     /// Exact received certificate; it may have failed authentication or retention.
     #[must_use]
     pub fn certificate(&self) -> &[u8] {
@@ -111,6 +114,7 @@ impl BackupHttpError {
             _ => None,
         }
     }
+
     pub(in crate::store) fn after_response(
         self,
         request_id: [u8; 32],

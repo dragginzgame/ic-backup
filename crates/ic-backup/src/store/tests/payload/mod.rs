@@ -1,6 +1,7 @@
+mod source_tests;
+
 use super::*;
 use std::num::NonZeroU64;
-mod source_tests;
 
 struct Fixture {
     store: BackupStore,

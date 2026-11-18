@@ -84,11 +84,13 @@ impl<'store> CaptureSource<'_, 'store> {
     ) {
         (self.payload, self.metadata)
     }
+
     pub(in crate::store) fn metadata(
         &self,
     ) -> &ic_platform_protocol::management_snapshots::SnapshotMetadata {
         &self.metadata
     }
+
     pub(in crate::store) fn maximum_member_bytes(&self) -> u64 {
         self.payload
             .member_lengths()

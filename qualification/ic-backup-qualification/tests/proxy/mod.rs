@@ -148,6 +148,7 @@ impl Proxy {
             worker: Some(worker),
         }
     }
+
     pub fn finish(mut self) {
         self.stop.store(true, Ordering::SeqCst);
         self.worker.take().unwrap().join().unwrap();
@@ -186,6 +187,7 @@ fn read_request(stream: &mut TcpStream) -> Vec<u8> {
         }
     }
 }
+
 fn body(response: &[u8]) -> Vec<u8> {
     let split = response.windows(4).position(|b| b == b"\r\n\r\n").unwrap();
     let head = std::str::from_utf8(&response[..split]).unwrap();

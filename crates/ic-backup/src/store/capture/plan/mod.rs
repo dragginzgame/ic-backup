@@ -1,7 +1,6 @@
 //! Immutable direct capture declaration and private bounded policy.
 use super::{OperationLimits, OperationStoreError};
-use crate::store::BackupDigest;
-use crate::store::{BackupTarget, manifest::lower_hex};
+use crate::store::{BackupDigest, BackupTarget, manifest::lower_hex};
 use ic_platform_types::Principal;
 pub(in crate::store) const PLAN_LIMIT: usize = 1024 * 1024;
 /// Passive input for a single stopped-canister capture plan.
@@ -34,6 +33,7 @@ impl CapturePolicy {
         validate(&request)?;
         Ok(Self { request })
     }
+
     pub(in crate::store) fn request(&self) -> &CaptureRequest {
         &self.request
     }
@@ -61,6 +61,7 @@ impl CapturePolicy {
         })
     }
 }
+
 fn validate(request: &CaptureRequest) -> Result<(), OperationStoreError> {
     if !lower_hex(&request.operation_id, 32) || !request.limits.valid() {
         return Err(OperationStoreError::InvalidPlan);
@@ -75,6 +76,7 @@ pub(super) fn principal(text: &str) -> Result<Principal, OperationStoreError> {
     }
     Ok(p)
 }
+
 pub(super) fn hash(text: &str) -> Result<BackupDigest, OperationStoreError> {
     if !lower_hex(text, 64) {
         return Err(OperationStoreError::InvalidPlan);

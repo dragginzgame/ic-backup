@@ -1,28 +1,29 @@
 //! Re-authored fixed-policy cases from legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
 //! workflow/ic_snapshot_restore/tests/mod.rs::failure_boundaries_retain_pending_or_applied_and_never_repeat_provider; actual effects require qualification.
 use super::*;
-use crate::store::capture::test_fixtures::wire::frozen;
 use crate::store::{
     capture::{
         intent::tests::profile,
-        test_fixtures::{
+        tests::{
             completion::{complete, settled},
             source::maximum,
+            wire::frozen,
         },
     },
     restore::tests::fixtures::declaration,
 };
-use ic_platform_protocol::management_snapshots::Reserved;
-use ic_platform_protocol::management_snapshots::{SnapshotAllocation, fixtures};
-use ic_platform_protocol::management_snapshots::{SnapshotSource, Status};
+use ic_platform_protocol::management_snapshots::{
+    Reserved, SnapshotAllocation, SnapshotSource, Status, fixtures,
+};
 
 fn allocation(value: &SnapshotAllocation) -> Vec<u8> {
     fixtures::snapshot_allocation(value, 4096).unwrap()
 }
 
-fn encoded(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
-    crate::store::capture::test_fixtures::wire::encode(value, 2 * 1024 * 1024)
+fn encoded(value: &impl crate::store::capture::tests::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::tests::wire::encode(value, 2 * 1024 * 1024)
 }
+
 fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8> {
     match step {
         Step::RestoreInitialStatus | Step::BeforeLoadStatus | Step::AfterLoadStatus => {
@@ -56,6 +57,7 @@ fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8
         _ => panic!("unexpected capture step"),
     }
 }
+
 #[test]
 fn exact_restore_policy_and_each_distinct_failure_boundary() {
     let (mut fixture, _, mut connection) = settled();
@@ -213,8 +215,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
 fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage() {
     // Replaces the retired ephemeral UploadedSnapshotReadback fixture. Geometry,
     // maximum reply bounds and source block/hash/length faults retain their owning tests.
-    let (mut fixture, _, mut connection) =
-        crate::store::capture::test_fixtures::completion::mixed();
+    let (mut fixture, _, mut connection) = crate::store::capture::tests::completion::mixed();
     let receipt = complete(&mut fixture, &mut connection).unwrap();
     let selected = fixture
         .store

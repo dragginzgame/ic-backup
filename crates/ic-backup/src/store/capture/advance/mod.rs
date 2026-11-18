@@ -1,35 +1,34 @@
 //! Exact direct call, certificate and bounded HTTP primitives. The recorder owns execution.
 #[cfg(test)]
+pub(in crate::store) mod tests;
+
+#[cfg(test)]
 use super::CapturePolicy;
 use super::OperationStoreError;
 use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
 #[cfg(test)]
 use ic_platform_protocol::management_snapshots::CanisterArgs;
 use serde::{Deserialize, Serialize};
-#[cfg(test)]
-mod call;
 mod certificate;
 mod direct;
 mod http;
 mod request;
-#[cfg(test)]
-pub(in crate::store) use call::CaptureCall;
-pub(in crate::store) use certificate::CaptureObservation;
-pub use certificate::CaptureObservationError;
-pub(in crate::store) use certificate::CaptureObservationPolicy;
-pub(in crate::store) use certificate::observe_authenticated_request;
 pub(in crate::store) use certificate::{
-    CertificateRequirements, observation as certificate_observation,
+    CaptureObservation, CaptureObservationPolicy, CertificateRequirements,
+    observation as certificate_observation, observe_authenticated_request,
 };
-pub use certificate::{StatusCertificateError, status_certificate_observation};
+pub use certificate::{
+    CaptureObservationError, StatusCertificateError, status_certificate_observation,
+};
 pub use direct::CaptureTiming;
 pub use http::{BackupHttpError, BackupHttpTransport, ReceivedCertificate};
-pub use request::CaptureLookupError;
-pub(in crate::store) use request::CaptureLookupPolicy;
-pub(in crate::store) use request::IngressRequirements;
-pub use request::StatusRequestError;
-pub(in crate::store) use request::authenticate_direct_request;
-pub(in crate::store) use request::authenticate_lookup_envelope;
+pub use request::{CaptureLookupError, StatusRequestError};
+pub(in crate::store) use request::{
+    CaptureLookupPolicy, IngressRequirements, authenticate_direct_request,
+    authenticate_lookup_envelope,
+};
+#[cfg(test)]
+pub(in crate::store) use tests::call::CaptureCall;
 /// Original finite call authority, retained before preparation.
 /// Capture derives this from its original profile; restore retains its status admission.
 /// Bindings identify the provider protocol and continuous application maintenance witness.
@@ -213,6 +212,7 @@ impl PreparedStatus {
         ]
         .concat())
     }
+
     #[cfg(test)]
     pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
         if bytes.len() < 46 {
@@ -242,6 +242,7 @@ impl StatusEvidence {
         let tail = pair(&self.response, &self.proof, limit.saturating_sub(1))?;
         Ok([&[u8::from(self.rejected)], tail.as_slice()].concat())
     }
+
     pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
         let Some((&kind, tail)) = bytes.split_first() else {
             return Err(OperationStoreError::Changed);
@@ -257,6 +258,7 @@ impl StatusEvidence {
         })
     }
 }
+
 fn pair(first: &[u8], second: &[u8], limit: u32) -> Result<Vec<u8>, OperationStoreError> {
     if first.is_empty()
         || second.is_empty()
@@ -270,6 +272,7 @@ fn pair(first: &[u8], second: &[u8], limit: u32) -> Result<Vec<u8>, OperationSto
     }
     Ok([&(first.len() as u32).to_le_bytes(), first, second].concat())
 }
+
 fn split(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), OperationStoreError> {
     let header = bytes.get(..4).ok_or(OperationStoreError::Changed)?;
     let length = u32::from_le_bytes(
@@ -283,8 +286,6 @@ fn split(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), OperationStoreError> {
     Ok((bytes[4..4 + length].to_vec(), bytes[4 + length..].to_vec()))
 }
 
-#[cfg(test)]
-pub(in crate::store) mod tests;
 #[cfg(test)]
 pub(in crate::store) use certificate::{
     authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,

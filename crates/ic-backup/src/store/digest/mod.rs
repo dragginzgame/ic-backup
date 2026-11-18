@@ -1,4 +1,7 @@
 //! Backup commitment encoding; SHA-256 itself remains owned by `sha2`.
+#[cfg(test)]
+mod tests;
+
 use sha2::{Digest, Sha256};
 use std::{fmt, str::FromStr};
 
@@ -19,6 +22,7 @@ impl BackupDigest {
             })
         }
     }
+
     /// Hash the complete supplied bytes without additional framing.
     #[must_use]
     pub fn compute(bytes: &[u8]) -> Self {
@@ -67,6 +71,3 @@ impl FromStr for BackupDigest {
         Ok(Self(bytes))
     }
 }
-
-#[cfg(test)]
-mod tests;

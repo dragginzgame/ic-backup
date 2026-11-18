@@ -1,4 +1,7 @@
 //! Bounded metadata field mappings over Platform's schema and owned decoder.
+#[cfg(test)]
+mod tests;
+
 use super::{CapturePolicy, TransferError};
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
@@ -69,6 +72,3 @@ pub enum TransferMetadataError {
     #[error(transparent)]
     Transfer(#[from] TransferError),
 }
-
-#[cfg(test)]
-mod tests;

@@ -55,6 +55,7 @@ impl Consumer {
             network,
         }
     }
+
     pub fn call(&self, mode: &str, id: &str, approval: BackupDigest, live: bool) {
         let mut process = Command::new(&self.binary);
         process

@@ -1,5 +1,8 @@
 //! Bounded projection; Platform owns wire traversal and management field labels.
 #[cfg(test)]
+mod tests;
+
+#[cfg(test)]
 use super::CapturePolicy;
 use super::{CaptureStatusError, StatusRequirements};
 use ic_platform_protocol::{
@@ -77,6 +80,3 @@ pub enum CaptureStatusReplyError {
     #[error(transparent)]
     Status(#[from] CaptureStatusError),
 }
-
-#[cfg(test)]
-mod tests;

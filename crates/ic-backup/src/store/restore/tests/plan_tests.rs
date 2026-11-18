@@ -1,10 +1,13 @@
 //! Strict original source-bound declaration; derived schedules are never persisted.
 use super::*;
-use crate::store::capture::intent::tests::profile;
-use crate::store::capture::test_fixtures::{
-    completion::{complete, settled},
-    source::maximum,
+use crate::store::capture::{
+    intent::tests::profile,
+    tests::{
+        completion::{complete, settled},
+        source::maximum,
+    },
 };
+
 #[test]
 fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
     let (mut f, server, mut connection) = settled();
@@ -161,6 +164,7 @@ fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
     assert_eq!(server.count(), 0);
     assert_eq!(std::fs::read(f.ledger()).unwrap(), original);
 }
+
 fn canonical(bytes: &[u8]) -> Vec<u8> {
     let record: super::super::PlanRecord = serde_json::from_slice(bytes).unwrap();
     serde_json::to_vec(&record).unwrap()

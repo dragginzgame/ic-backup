@@ -1,5 +1,8 @@
 //! Pure status preconditions; observation authentication stays with the caller.
 #[cfg(test)]
+pub(in crate::store) mod tests;
+
+#[cfg(test)]
 use super::CapturePolicy;
 use crate::store::BackupDigest;
 #[cfg(test)]
@@ -118,6 +121,3 @@ pub enum CaptureStatusError {
     #[error("capture management sender is not a declared controller")]
     NotController,
 }
-
-#[cfg(test)]
-pub(in crate::store) mod tests;

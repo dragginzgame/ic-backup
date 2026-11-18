@@ -1,10 +1,12 @@
 mod payload;
 
-use super::manifest::{ManifestRecord, MemberRecord};
-use super::*;
-use std::io::Write;
+use super::{
+    manifest::{ManifestRecord, MemberRecord},
+    *,
+};
 use std::{
     fs::{self, DirBuilder, OpenOptions},
+    io::Write,
     os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt, symlink},
     path::PathBuf,
     sync::{

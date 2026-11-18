@@ -1,13 +1,14 @@
 //! Semantic admission of retained call facts. No clock, signer, guard or network.
-use super::runtime::Applied;
-use super::{Journal, Step};
-use crate::store::capture::{
-    CaptureObservation, OperationStoreError,
-    advance::StatusEvidence,
-    intent::{self, CapturePlan},
-    procedure::{self, Next, Procedure},
+use super::{Journal, Step, runtime::Applied};
+use crate::store::{
+    capture::{
+        CaptureObservation, OperationStoreError,
+        advance::StatusEvidence,
+        intent::{self, CapturePlan},
+        procedure::{self, Next, Procedure},
+    },
+    operation::intent::{Intent, Plan},
 };
-use crate::store::operation::intent::{Intent, Plan};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -87,6 +88,7 @@ impl From<crate::store::restore::procedure::Error> for Error {
         Self::Restore(Box::new(e))
     }
 }
+
 pub(in crate::store) fn resolve_call(
     intent: Plan<'_>,
     call: &super::Call,

@@ -1,14 +1,12 @@
 //! Exact restore transfer bounds over authenticated sources; no restore effects.
-use crate::store::BackupDigest;
 use crate::store::{
-    BackupSummary, RestoreTransferError, RestoreTransferRequest,
-    capture::test_fixtures::{
+    BackupDigest, BackupSummary, RestoreTransferError, RestoreTransferRequest,
+    capture::tests::{
         completion::{complete, manifest, mixed, settled},
         source::{extent, maximum},
     },
 };
-use ic_platform_protocol::management_snapshots::ReadKind;
-use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
+use ic_platform_protocol::management_snapshots::{Extent, ReadKind, SnapshotChunk};
 use std::fs;
 
 fn selection(receipt: &BackupSummary) -> RestoreTransferRequest {

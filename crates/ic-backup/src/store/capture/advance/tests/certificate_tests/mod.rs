@@ -1,8 +1,14 @@
 //! Real BLS signatures over synthetic certificates. No network or IC effects.
-use super::fixtures::certificates::{delegated, der, reply_tree, signed, times};
-use super::*;
-use ic_platform::certificate::construction::{encode_certificate, fork, labeled, leaf, pruned};
-use ic_platform::certificate::{TimePolicy, TimeWindow};
+mod rejection_tests;
+
+use super::{
+    fixtures::certificates::{delegated, der, reply_tree, signed, times},
+    *,
+};
+use ic_platform::certificate::{
+    TimePolicy, TimeWindow,
+    construction::{encode_certificate, fork, labeled, leaf, pruned},
+};
 
 pub(in crate::store) fn fixture() -> (CapturePolicy, PreparedStatus, StatusEvidence) {
     let mut request = plan().request().clone();
@@ -18,6 +24,7 @@ pub(in crate::store) fn fixture() -> (CapturePolicy, PreparedStatus, StatusEvide
     );
     (plan, prepared, evidence)
 }
+
 fn authenticate(
     p: &CapturePolicy,
     r: &PreparedStatus,
@@ -29,7 +36,7 @@ fn authenticate(
 #[test]
 fn full_extent_certificate_fits_explicit_new_profile_but_never_enlarges_old_allowance() {
     let (p, r, _) = fixture();
-    let reply = crate::store::capture::test_fixtures::wire::encode(
+    let reply = crate::store::capture::tests::wire::encode(
         &ic_platform_protocol::management_snapshots::SnapshotData {
             chunk: vec![0xa5; 1024 * 1024],
         },
@@ -342,5 +349,3 @@ fn certificate_combined_node_limit_is_enforced_by_selected_platform_boundary() {
         ))
     ));
 }
-
-mod rejection_tests;

@@ -1,14 +1,11 @@
 //! Local materialization and exact publication under the same fixed procedure.
-use super::{FactRecord, Journal, Step};
 use super::{
+    FactRecord, Journal, Step,
     custody::{CaptureOperation, Role},
     replay::Error,
 };
-use crate::store::BackupDigest;
-use crate::store::operation::effect::Effect;
-use crate::store::operation::intent::Intent;
 use crate::store::{
-    BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError,
+    BackupDigest, BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError,
     capture::{
         CaptureTransfer, OperationStoreError,
         assembly::tree_members,
@@ -20,13 +17,12 @@ use crate::store::{
     },
     manifest::{self, CommitmentRecord, ManifestRecord, MemberRecord},
     open_optional,
+    operation::{effect::Effect, intent::Intent},
     payload::unchanged_file,
 };
 use ic_host_artifacts::Length;
 use ic_host_fs::Kind as EntryKind;
-use ic_platform_protocol::management_snapshots::ReadKind;
-use ic_platform_protocol::management_snapshots::SnapshotArgs;
-use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
+use ic_platform_protocol::management_snapshots::{Extent, ReadKind, SnapshotArgs, SnapshotChunk};
 use std::{
     ffi::OsStr,
     io::{Read, Write},
@@ -93,6 +89,7 @@ impl CaptureOperation {
         same_directory(&self.store, "bundles", &bundles)?;
         Ok(true)
     }
+
     pub(in crate::store) fn published(
         &self,
         journal: &Journal,
@@ -170,6 +167,7 @@ impl CaptureOperation {
         }
         Ok(summary)
     }
+
     pub(in crate::store) fn check_bundle_layout(
         &self,
         journal: &Journal,

@@ -1,6 +1,8 @@
 //! Signed read-state policy checks; no signing service, remote lookup or IC effects.
-use super::fixtures::signatures::{Scheme, change, fixture};
-use super::*;
+use super::{
+    fixtures::signatures::{Scheme, change, fixture},
+    *,
+};
 use ic_platform::ingress::{Envelope, decode_envelope, encode_envelope};
 
 fn policy() -> CaptureLookupPolicy {
@@ -9,6 +11,7 @@ fn policy() -> CaptureLookupPolicy {
         envelope_bytes: 4096,
     }
 }
+
 fn original(scheme: Scheme, call: CaptureCall) -> (CapturePolicy, PreparedStatus) {
     let (p, mut r) = fixture(scheme);
     change(&mut r, |envelope| {
@@ -23,6 +26,7 @@ fn original(scheme: Scheme, call: CaptureCall) -> (CapturePolicy, PreparedStatus
     });
     (p, r)
 }
+
 fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
     let sender = p.request().sender;
     let content = EnvelopeContent::ReadState {
@@ -46,12 +50,14 @@ fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
     )
     .unwrap()
 }
+
 fn modify(bytes: &[u8], scheme: Scheme, action: impl FnOnce(&mut EnvelopeContent)) -> Vec<u8> {
     let mut envelope = decode_envelope(bytes, 4096).unwrap().value;
     action(&mut envelope.content);
     envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     encode_envelope(&envelope, 4096).unwrap()
 }
+
 fn authenticate(
     p: &CapturePolicy,
     r: &PreparedStatus,

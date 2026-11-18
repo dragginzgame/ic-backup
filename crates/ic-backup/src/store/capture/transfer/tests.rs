@@ -1,9 +1,9 @@
 //! Re-authored legacy extent/metadata regressions; no IC effects or wire decoding.
 use super::*;
 use crate::store::BackupDigest;
-use ic_platform_protocol::management_snapshots::{Extent, Float32Bits, Float64Bits};
-use ic_platform_protocol::management_snapshots::{Global, Reserved};
-use ic_platform_protocol::management_snapshots::{LowMemoryHook, SnapshotChunk, Timer};
+use ic_platform_protocol::management_snapshots::{
+    Extent, Float32Bits, Float64Bits, Global, LowMemoryHook, Reserved, SnapshotChunk, Timer,
+};
 
 pub(super) fn plan(extent: u32) -> CapturePolicy {
     let original =
@@ -15,6 +15,7 @@ pub(super) fn plan(extent: u32) -> CapturePolicy {
     request.limits.signing_requests = 8192;
     CapturePolicy::new(request).unwrap()
 }
+
 pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> SnapshotMetadata {
     SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
@@ -30,11 +31,13 @@ pub(super) fn metadata(module: u64, heap: u64, stable: u64) -> SnapshotMetadata 
         on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     }
 }
+
 pub(super) fn chunk(bytes: &[u8]) -> SnapshotChunk {
     SnapshotChunk {
         hash: BackupDigest::compute(bytes).as_bytes().to_vec(),
     }
 }
+
 fn kinds(transfer: &CaptureTransfer<'_>) -> Vec<String> {
     transfer
         .requests()

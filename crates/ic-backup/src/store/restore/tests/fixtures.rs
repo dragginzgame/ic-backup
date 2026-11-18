@@ -1,4 +1,5 @@
 use crate::store::{OperationLimits, RestoreRequest};
+
 pub(in crate::store) fn declaration(
     source: &crate::store::CaptureSource<'_, '_>,
 ) -> RestoreRequest {

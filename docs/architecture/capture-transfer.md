@@ -319,7 +319,7 @@ The handoff records fresh native/IC acceptance and pre-port retained-store repla
 [Backup #2 — Remove direct test-only SDK dependencies](https://github.com/dragginzgame/ic-backup/issues/2)
 replaces the temporary test declarations above with 68 finite retained binary
 inputs (156,998 bytes), their lengths/hashes and original source/schema provenance.
-The catalog lives under `capture/test_fixtures/wire/tests/fixtures/`; the owning
+The catalog lives under `capture/tests/wire/tests/fixtures/`; the owning
 README pins Backup v0.105.1 and the original Candid 0.10.40 / management SDK 0.8.0
 projections. Normal policy setup still uses Protocol fixture encoders; malformed
 schemas no longer require runtime SDK types. Literal legacy goldens are unchanged.

@@ -1,9 +1,20 @@
 //! Exact protocol and HTTP regressions. Call lifecycle tests live with the recorder.
+pub(super) mod call;
+pub(in crate::store) mod certificate_tests;
+mod http_lookup_tests;
+mod http_tests;
+mod lookup_tests;
+mod observation_tests;
+mod request_tests;
+
 use super::*;
-use crate::store::BackupDigest;
-use crate::store::capture::status::tests::{plan, status};
-pub(in crate::store) use crate::store::capture::test_fixtures as fixtures;
+pub(in crate::store) use crate::store::capture::tests as fixtures;
+use crate::store::{
+    BackupDigest,
+    capture::status::tests::{plan, status},
+};
 use ic_platform::ingress::Content as EnvelopeContent;
+
 pub(in crate::store) fn admission() -> StatusAdmissionRecord {
     StatusAdmissionRecord {
         provider: [1; 32],
@@ -16,9 +27,11 @@ pub(in crate::store) fn admission() -> StatusAdmissionRecord {
         result_bytes: 4096,
     }
 }
+
 pub(in crate::store) fn prepared() -> PreparedStatus {
     prepared_content(call_content())
 }
+
 pub(in crate::store) fn call_content() -> EnvelopeContent {
     let p = plan();
     let sender = p.request().sender;
@@ -32,6 +45,7 @@ pub(in crate::store) fn call_content() -> EnvelopeContent {
         sender_info: None,
     }
 }
+
 pub(in crate::store) fn prepared_content(content: EnvelopeContent) -> PreparedStatus {
     let request_id = content.request_id().unwrap();
     let expires_ns = match &content {
@@ -56,16 +70,11 @@ pub(in crate::store) fn prepared_content(content: EnvelopeContent) -> PreparedSt
         observation: b"original observation binding".to_vec(),
     }
 }
+
 pub(in crate::store) fn evidence() -> StatusEvidence {
     StatusEvidence {
         rejected: false,
-        response: crate::store::capture::test_fixtures::wire::encode(&status(&plan()), 4096),
+        response: crate::store::capture::tests::wire::encode(&status(&plan()), 4096),
         proof: b"native ordering fixture; not a certificate".to_vec(),
     }
 }
-pub(in crate::store) mod certificate_tests;
-mod http_lookup_tests;
-mod http_tests;
-mod lookup_tests;
-mod observation_tests;
-mod request_tests;

@@ -1,7 +1,6 @@
 //! Pure exact-length restore transfer schedule; no destination or dispatch authority.
 use super::CaptureSource;
-use crate::store::BackupDigest;
-use crate::store::{BackupSummary, BackupTarget};
+use crate::store::{BackupDigest, BackupSummary, BackupTarget};
 use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use thiserror::Error;
 
@@ -94,6 +93,7 @@ impl CaptureSource<'_, '_> {
         plan_payload(&self.payload, request)
     }
 }
+
 pub(in crate::store) fn plan_payload(
     payload: &crate::store::PayloadSource<'_>,
     request: &RestoreTransferRequest,
@@ -186,16 +186,19 @@ impl RestoreTransfer {
     pub fn source(&self) -> &BackupSummary {
         &self.source
     }
+
     /// Extent/chunk count for each upload or readback pass.
     #[must_use]
     pub fn data_calls(&self) -> u32 {
         self.data_calls
     }
+
     /// Base upload/readback and lifecycle count; no provider or observation overhead.
     #[must_use]
     pub fn minimum_management_calls(&self) -> u32 {
         self.management_calls
     }
+
     /// Generate original-source read DTOs lazily. These are not upload requests.
     pub fn source_requests(&self) -> impl ExactSizeIterator<Item = ReadDataArgs> + '_ {
         (0..self.data_calls).map(|n| ReadDataArgs {

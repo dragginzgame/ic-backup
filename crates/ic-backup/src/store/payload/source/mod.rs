@@ -2,8 +2,7 @@
 use super::{BackupStore, BackupSummary, PayloadDirectory, StoreError, unchanged_file};
 use crate::store::BackupDigest;
 use ic_host_artifacts::Length;
-use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
-use ic_platform_protocol::management_snapshots::{ReadDataArgs, ReadKind};
+use ic_platform_protocol::management_snapshots::{Extent, ReadDataArgs, ReadKind, SnapshotChunk};
 use std::{
     fmt,
     fs::{File, Metadata},

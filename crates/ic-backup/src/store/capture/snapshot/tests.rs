@@ -1,8 +1,6 @@
 //! Re-authored frozen-legacy wire cases; goldens retain original bytes and hashes.
-use super::super::status::tests::plan;
-use super::*;
-use crate::store::BackupDigest;
-use crate::store::capture::test_fixtures::wire::frozen;
+use super::{super::status::tests::plan, *};
+use crate::store::{BackupDigest, capture::tests::wire::frozen};
 use serde::Deserialize;
 
 fn snapshot(id: Vec<u8>) -> Snapshot {
@@ -12,9 +10,11 @@ fn snapshot(id: Vec<u8>) -> Snapshot {
         total_size: u64::MAX,
     }
 }
-fn encode(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
-    crate::store::capture::test_fixtures::wire::encode(value, MAX_REPLY_BYTES)
+
+fn encode(value: &impl crate::store::capture::tests::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::tests::wire::encode(value, MAX_REPLY_BYTES)
 }
+
 fn hex(value: &str) -> Vec<u8> {
     let (pairs, rest) = value.as_bytes().as_chunks::<2>();
     assert!(rest.is_empty());
@@ -31,6 +31,7 @@ struct Golden {
     reply_hex: String,
     snapshots: Vec<Snapshot>,
 }
+
 fn goldens() -> Vec<Golden> {
     serde_json::from_str(include_str!("golden.json")).unwrap()
 }

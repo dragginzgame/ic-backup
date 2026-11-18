@@ -30,6 +30,7 @@ impl RootCodec for RetainedCodec {
     fn protocol(&self) -> [u8; 32] {
         [84; 32]
     }
+
     fn prepare(&self, request: RootRequest<'_>, _: u32) -> Option<Box<dyn RootBinding>> {
         if request.id != [1; 16]
             || request.step != Step::TakeSnapshot
@@ -48,15 +49,18 @@ impl RootBinding for Bound {
     fn execute(&self) -> &[u8] {
         &self.0
     }
+
     fn lookup(&self) -> &[u8] {
         &self.1
     }
+
     fn decode(&self, exchange: RootExchange, payload: &[u8]) -> Option<RootOutcome> {
         (exchange == RootExchange::Lookup
             && payload == StatusEvidence::decode(RESULT).unwrap().response)
             .then(|| RootOutcome::Reply(INNER.to_vec()))
     }
 }
+
 #[test]
 fn cold_lookup_authenticates_both_real_ingresses_and_applies_only_the_original_inner_reply() {
     let mut intent = CapturePlan::decode(include_bytes!("fixtures/capture-intent.json")).unwrap();

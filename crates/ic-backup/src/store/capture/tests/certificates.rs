@@ -1,26 +1,28 @@
 //! Shared real BLS signatures over synthetic certificate trees; no IC effects.
 use crate::store::{PreparedStatus, StatusEvidence};
-use ic_platform::certificate::{TimePolicy, TimeWindow};
 use ic_platform::{
     certificate::{
-        PreparedRootKey,
+        PreparedRootKey, TimePolicy, TimeWindow,
         construction::{
             Certificate, Delegation, HashTree, encode_certificate, fork, labeled, leaf,
         },
     },
     fixture_signing::PrivateKey,
 };
+
 fn key(value: u8) -> PrivateKey {
     let mut bytes = [0; 32];
     bytes[31] = value;
     PrivateKey::deserialize(&bytes).unwrap()
 }
+
 pub(in crate::store) fn der(value: u8) -> Vec<u8> {
     PreparedRootKey::from_raw(&key(value).public_key().serialize())
         .unwrap()
         .as_der()
         .to_vec()
 }
+
 pub(in crate::store) fn times() -> TimePolicy {
     TimePolicy {
         certificate: TimeWindow {
@@ -35,6 +37,7 @@ pub(in crate::store) fn times() -> TimePolicy {
         },
     }
 }
+
 pub(in crate::store) fn signed(
     tree: HashTree,
     signer: u8,
@@ -51,6 +54,7 @@ pub(in crate::store) fn signed(
     )
     .unwrap()
 }
+
 pub(in crate::store) fn reply_tree(
     request: &[u8; 32],
     response: &[u8],
@@ -70,6 +74,7 @@ pub(in crate::store) fn reply_tree(
         labeled(b"time", leaf(vec![100])),
     )
 }
+
 pub(in crate::store) fn delegated(
     canister: &[u8],
     r: &PreparedStatus,

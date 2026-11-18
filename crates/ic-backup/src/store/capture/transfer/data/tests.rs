@@ -1,6 +1,8 @@
 //! Re-authored legacy data-admission cases against the extracted implementation.
-use super::super::tests::{chunk, metadata, plan};
-use super::*;
+use super::{
+    super::tests::{chunk, metadata, plan},
+    *,
+};
 use ic_platform_protocol::management_snapshots::{SnapshotData, fixtures};
 
 fn reply(bytes: &[u8]) -> Vec<u8> {
@@ -12,6 +14,7 @@ fn reply(bytes: &[u8]) -> Vec<u8> {
     )
     .unwrap()
 }
+
 fn hex(value: &str) -> Vec<u8> {
     value
         .as_bytes()

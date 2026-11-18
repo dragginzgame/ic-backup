@@ -1,5 +1,8 @@
 //! Pure uploaded-state comparison; no authentication, persistence or load authority.
 
+#[cfg(test)]
+mod tests;
+
 use super::{CaptureTransfer, TransferMetadataError, metadata};
 use ic_platform_protocol::management_snapshots::{
     Global, LowMemoryHook, SnapshotMetadata, SnapshotSource, Timer,
@@ -134,6 +137,3 @@ pub enum ReadbackMetadataError {
     #[error("readback chunk set differs from the source")]
     ChunkStore,
 }
-
-#[cfg(test)]
-mod tests;

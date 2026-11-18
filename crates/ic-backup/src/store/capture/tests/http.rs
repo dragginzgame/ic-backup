@@ -1,21 +1,22 @@
 use super::*;
-use crate::store::BackupDigest;
 use crate::store::{
+    BackupDigest,
     capture::{
         advance::tests::{
             admission,
             certificate_tests::fixture,
-            fixtures::certificates::{der, reply_tree, signed},
-            fixtures::signatures::{Scheme, change, fixture as request_fixture},
+            fixtures::{
+                certificates::{der, reply_tree, signed},
+                signatures::{Scheme, change, fixture as request_fixture},
+            },
         },
         status::tests::status,
     },
     tests::root,
 };
-use std::io::Write;
 use std::{
     fs,
-    io::Read,
+    io::{Read, Write},
     net::{TcpListener, TcpStream},
     path::PathBuf,
     sync::{
@@ -66,7 +67,7 @@ pub(in crate::store) fn input_for(
     let p = CapturePolicy::new(request).unwrap();
     set_expiry(&mut r, now() + 30_000_000_000, scheme);
     r.observation = old.observation;
-    let response = crate::store::capture::test_fixtures::wire::encode(&status(&p), 4096);
+    let response = crate::store::capture::tests::wire::encode(&status(&p), 4096);
     let mut a = admission();
     a.prepare_deadline_ns = now() + 10_000_000_000;
     a.submit_deadline_ns = a.prepare_deadline_ns + 10_000_000_000;
@@ -195,6 +196,7 @@ impl Server {
             thread: Some(thread),
         }
     }
+
     pub(in crate::store) fn client(
         &self,
         p: &CapturePolicy,
@@ -203,9 +205,11 @@ impl Server {
         BackupHttpTransport::new(&self.endpoint, p.request().target.network, der(1), timeout)
             .unwrap()
     }
+
     pub(in crate::store) fn count(&self) -> usize {
         self.requests.lock().unwrap().len()
     }
+
     pub(in crate::store) fn finish(mut self) -> Vec<Vec<u8>> {
         self.stop.store(true, Ordering::SeqCst);
         self.thread.take().unwrap().join().unwrap();

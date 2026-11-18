@@ -6,9 +6,11 @@ impl RootBinding for Binding {
     fn execute(&self) -> &[u8] {
         &[80]
     }
+
     fn lookup(&self) -> &[u8] {
         &[81]
     }
+
     fn decode(&self, exchange: RootExchange, bytes: &[u8]) -> Option<RootOutcome> {
         assert_eq!(exchange, RootExchange::Lookup);
         match bytes {

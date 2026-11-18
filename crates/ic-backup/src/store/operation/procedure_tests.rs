@@ -9,18 +9,17 @@ use crate::store::capture::{
     },
     procedure::{Error as ProcedureError, Next, Procedure},
     status::tests::status,
-    test_fixtures::signatures::{Scheme, fixture},
+    tests::signatures::{Scheme, fixture},
 };
-use ic_platform_protocol::management_snapshots::Extent;
-use ic_platform_protocol::management_snapshots::Reserved;
 use ic_platform_protocol::management_snapshots::{
-    CanisterArgs, LowMemoryHook, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs, SnapshotChunk,
-    SnapshotData, SnapshotMetadata, SnapshotSource, TakeSnapshotArgs, Timer,
+    CanisterArgs, Extent, LowMemoryHook, ReadDataArgs, ReadKind, Reserved, Snapshot, SnapshotArgs,
+    SnapshotChunk, SnapshotData, SnapshotMetadata, SnapshotSource, TakeSnapshotArgs, Timer,
 };
 
-fn encode(value: &impl crate::store::capture::test_fixtures::wire::EncodeFixture) -> Vec<u8> {
-    crate::store::capture::test_fixtures::wire::encode(value, 4096)
+fn encode(value: &impl crate::store::capture::tests::wire::EncodeFixture) -> Vec<u8> {
+    crate::store::capture::tests::wire::encode(value, 4096)
 }
+
 pub(in crate::store) fn selected() -> CapturePlan {
     let mut request = fixture(Scheme::Ed25519).0.request().clone();
     request.module_sha256 = BackupDigest::compute(b"abcdefghij");
@@ -33,6 +32,7 @@ pub(in crate::store) fn selected() -> CapturePlan {
     request.trust_root = BackupDigest::compute(&profile().root_der);
     CapturePlan::new(request, profile()).unwrap()
 }
+
 fn allowance() -> Allowance {
     Allowance {
         manager_reply_bytes: None,
@@ -45,6 +45,7 @@ fn allowance() -> Allowance {
         result_bytes: 4096,
     }
 }
+
 fn snapshot(id: u8) -> Snapshot {
     Snapshot {
         id: vec![id],
@@ -52,6 +53,7 @@ fn snapshot(id: u8) -> Snapshot {
         total_size: u64::MAX,
     }
 }
+
 fn metadata() -> SnapshotMetadata {
     SnapshotMetadata {
         source: Some(SnapshotSource::TakenFromCanister(Reserved)),
@@ -72,6 +74,7 @@ fn metadata() -> SnapshotMetadata {
         on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     }
 }
+
 fn data() -> Vec<(ReadKind, Vec<u8>)> {
     let mut result = Vec::new();
     for (region, bytes) in [b"abcdefghij".as_slice(), b"heap!", b"state"]
@@ -100,6 +103,7 @@ fn data() -> Vec<(ReadKind, Vec<u8>)> {
     }));
     result
 }
+
 pub(in crate::store) fn reply(plan: &CapturePlan, step: Step) -> Vec<u8> {
     match step {
         Step::InitialStatus | Step::FinalStatus => encode(&status(plan.plan())),
@@ -112,6 +116,7 @@ pub(in crate::store) fn reply(plan: &CapturePlan, step: Step) -> Vec<u8> {
         _ => panic!("capture fixture received restore step"),
     }
 }
+
 pub(in crate::store) fn expected_request(
     plan: &CapturePlan,
     step: Step,
@@ -152,17 +157,20 @@ pub(in crate::store) fn expected_request(
         _ => panic!("capture fixture received restore step"),
     }
 }
+
 fn reference(bytes: &[u8]) -> ReferenceRecord {
     ReferenceRecord {
         bytes: bytes.len().try_into().unwrap(),
         sha256: *BackupDigest::compute(bytes).as_bytes(),
     }
 }
+
 fn append(bytes: &mut Vec<u8>, plan: &CapturePlan, fact: FactRecord) -> Journal {
     let journal = Journal::open(bytes.as_slice(), plan).unwrap();
     bytes.extend(journal.candidate(fact).unwrap());
     Journal::open(bytes.as_slice(), plan).unwrap()
 }
+
 fn through<'a>(plan: &'a CapturePlan, stop: Step) -> Procedure<'a> {
     let mut flow = Procedure::new(plan).unwrap();
     loop {

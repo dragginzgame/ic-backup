@@ -1,11 +1,14 @@
 //! Fixed capture dispatcher over the shared one-shot recorder.
-use super::custody::CaptureOperation;
-use super::runtime::{Action, Connection, Error, Guard, Progress, Signer};
-use super::{FactRecord, Journal, Step};
+use super::{
+    FactRecord, Journal, Step,
+    custody::CaptureOperation,
+    runtime::{Action, Connection, Error, Guard, Progress, Signer},
+};
 use crate::store::{
     CapturePlan, OperationStoreError,
     capture::procedure::{Next, Procedure},
 };
+
 fn action(step: Step) -> Result<Action, OperationStoreError> {
     Ok(match step {
         Step::InitialStatus | Step::ListSnapshots | Step::FinalStatus => Action::Inspect,
@@ -26,6 +29,7 @@ impl CaptureOperation {
             |flow| self.materialize(journal, flow, false).map(|_| ()),
         )
     }
+
     /// Perform the next fixed capture action with at most one new management submission.
     /// # Errors
     /// Refuses changed custody, authority, finite allowance or original result policy.
@@ -87,6 +91,7 @@ impl CaptureOperation {
         flow.accept(result.rejected, step, result.request_id, &result.response)?;
         Ok(Progress::Advanced)
     }
+
     /// Observe the original pending capture request once, with separate finite allowance.
     /// # Errors
     /// Refuses resolved, changed or exhausted original authority and invalid evidence.

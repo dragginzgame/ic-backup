@@ -28,6 +28,9 @@
 //! # }
 //! ```
 
+#[cfg(test)]
+mod tests;
+
 mod digest;
 mod limits;
 pub use digest::{BackupDigest, DigestParseError};
@@ -38,13 +41,10 @@ mod operation;
 mod payload;
 mod restore;
 pub use operation::intent::Plan as OperationPlan;
-pub use restore::persistence::LoadedStopped;
 pub use restore::{
     RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError, RestorePolicyError,
-    RestoreRequest,
+    RestoreRequest, persistence::LoadedStopped,
 };
-#[cfg(test)]
-mod tests;
 
 #[cfg(test)]
 pub(in crate::store) use capture::CapturePolicy;
@@ -60,9 +60,11 @@ pub use capture::{
     StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
 };
 pub use manifest::ManifestError;
-pub use operation::effect::Effect as SnapshotEffect;
-pub use operation::intent::ManagerRecord as RootManager;
-pub use operation::manager::{RootBinding, RootCodec, RootExchange, RootOutcome, RootRequest};
+pub use operation::{
+    effect::Effect as SnapshotEffect,
+    intent::ManagerRecord as RootManager,
+    manager::{RootBinding, RootCodec, RootExchange, RootOutcome, RootRequest},
+};
 pub use payload::{PayloadReadError, PayloadSource};
 
 use ic_host_artifacts::{Error as ArtifactError, Length};
@@ -142,6 +144,7 @@ impl BackupStore {
         self.codec = Some(codec);
         self
     }
+
     /// Initialize an existing empty private directory, preserving partial work on failure.
     ///
     /// The caller creates the directory and excludes external writers. A retained

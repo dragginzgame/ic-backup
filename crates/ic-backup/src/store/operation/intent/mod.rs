@@ -1,9 +1,8 @@
 //! Original direct profile and borrowed approval shared by the two fixed procedures.
-use crate::store::BackupDigest;
 use crate::store::{
-    BackupTarget, CaptureLookupError, CaptureObservationError, CapturePlan, CaptureTiming,
-    OperationLimits, OperationStoreError, PreparedStatus, RestorePlan, StatusAdmissionRecord,
-    StatusCertificateError, StatusEvidence, StatusRequestError,
+    BackupDigest, BackupTarget, CaptureLookupError, CaptureObservationError, CapturePlan,
+    CaptureTiming, OperationLimits, OperationStoreError, PreparedStatus, RestorePlan,
+    StatusAdmissionRecord, StatusCertificateError, StatusEvidence, StatusRequestError,
     capture::{
         CertificateRequirements,
         advance::{
@@ -78,6 +77,7 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => &p.request().operation_id,
         }
     }
+
     /// Actual approved network and target.
     #[must_use]
     pub fn target(self) -> BackupTarget {
@@ -86,6 +86,7 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.request().target,
         }
     }
+
     /// Host signing identity from the original approval.
     #[must_use]
     pub fn sender(self) -> Principal {
@@ -94,17 +95,20 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.request().sender,
         }
     }
+
     /// Original Root policy for the application guard and sign-only adapter.
     #[must_use]
     pub fn root_manager(self) -> Option<&'a ManagerRecord> {
         self.profile().manager.as_ref()
     }
+
     /// Signed ingress recipient for updates under this approval.
     /// Signers use this identity separately from the child selected by `target`.
     #[must_use]
     pub fn ingress_recipient(self) -> Principal {
         self.requirements().recipient
     }
+
     /// Exact original approval commitment.
     #[must_use]
     pub fn digest(self) -> BackupDigest {
@@ -113,6 +117,7 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.digest(),
         }
     }
+
     /// Exact original encoded declaration.
     #[must_use]
     pub fn encoded(self) -> &'a [u8] {
@@ -121,24 +126,28 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.encoded(),
         }
     }
+
     pub(in crate::store) fn trust_root(self) -> BackupDigest {
         match self {
             Self::Capture(p) => p.request().trust_root,
             Self::Restore(p) => p.request().trust_root,
         }
     }
+
     pub(in crate::store) fn limits(self) -> OperationLimits {
         match self {
             Self::Capture(p) => p.request().limits,
             Self::Restore(p) => p.request().limits,
         }
     }
+
     pub(in crate::store) fn profile(self) -> &'a ProfileRecord {
         match self {
             Self::Capture(p) => p.profile(),
             Self::Restore(p) => p.profile(),
         }
     }
+
     pub(in crate::store) fn requirements(
         self,
     ) -> crate::store::capture::advance::IngressRequirements {
@@ -153,6 +162,7 @@ impl<'a> Plan<'a> {
             trust_root: self.trust_root(),
         }
     }
+
     pub(in crate::store) fn status_requirements(
         self,
     ) -> crate::store::capture::status::StatusRequirements {
@@ -166,12 +176,14 @@ impl<'a> Plan<'a> {
             sole_controller: manager.is_some(),
         }
     }
+
     pub(in crate::store) fn certificate(self) -> CertificateRequirements {
         CertificateRequirements {
             canister: self.requirements().effective_canister(),
             trust_root: self.trust_root(),
         }
     }
+
     pub(in crate::store) fn validate(self) -> Result<(), Error> {
         let p = self.profile();
         let limits = self.limits();
@@ -211,6 +223,7 @@ impl<'a> Plan<'a> {
         self.observation(reference)?;
         Ok(())
     }
+
     pub(in crate::store) fn admission(
         self,
         reference: u64,
@@ -237,6 +250,7 @@ impl<'a> Plan<'a> {
         a.validate_limits(limits.network_requests, limits.evidence_bytes, 0)?;
         Ok(a)
     }
+
     pub(in crate::store) fn observation(self, reference: u64) -> Result<Vec<u8>, Error> {
         let p = self.profile();
         let timing = CaptureTiming {
@@ -250,6 +264,7 @@ impl<'a> Plan<'a> {
                 .ok_or(Error::Timing)?,
         )?)
     }
+
     pub(in crate::store) fn decode_request(
         self,
         reference: u64,
@@ -273,6 +288,7 @@ impl<'a> Plan<'a> {
             observation: self.observation(reference)?,
         })
     }
+
     #[cfg(test)]
     pub(in crate::store) fn authenticate_request(
         self,
@@ -287,6 +303,7 @@ impl<'a> Plan<'a> {
         }
         self.authenticate_ingress(reference, prepared, method, arguments)
     }
+
     pub(in crate::store) fn authenticate_ingress(
         self,
         reference: u64,
@@ -325,6 +342,7 @@ impl<'a> Plan<'a> {
             .authenticate(&a, prepared, evidence, &self.profile().root_der)?;
         Ok(())
     }
+
     pub(in crate::store) fn authenticate_lookup(
         self,
         reference: u64,
@@ -342,6 +360,7 @@ impl<'a> Plan<'a> {
         )?;
         Ok(())
     }
+
     pub(in crate::store) fn observe(
         self,
         reference: u64,

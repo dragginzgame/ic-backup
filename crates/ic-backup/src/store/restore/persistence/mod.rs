@@ -1,18 +1,19 @@
 //! Original restore approval/source custody over the shared recorder.
 use super::{RestorePlan, RestorePlanError, procedure::Procedure};
-use crate::store::BackupDigest;
-use crate::store::operation::{
-    replay::{self, Error as ReplayError},
-    runtime::{Action, Connection, Error, Guard, Progress, Signer, now},
-};
 use crate::store::{
-    BackupStore, CaptureOperation, CapturePlan, CaptureSourceError, OperationReplayError,
-    OperationStoreError, PRIVATE, PayloadSource, RestoreTransfer,
+    BackupDigest, BackupStore, CaptureOperation, CapturePlan, CaptureSourceError,
+    OperationReplayError, OperationStoreError, PRIVATE, PayloadSource, RestoreTransfer,
     capture::{
         child, exact, lock_target, owner, owner_bytes, same_directory, same_identity, target_for,
     },
     open_optional,
-    operation::{FactRecord, Journal, custody::Recorder, intent::Intent},
+    operation::{
+        FactRecord, Journal,
+        custody::Recorder,
+        intent::Intent,
+        replay::{self, Error as ReplayError},
+        runtime::{Action, Connection, Error, Guard, Progress, Signer, now},
+    },
 };
 use ic_host_fs::Directory;
 use ic_platform_protocol::management_snapshots::SnapshotMetadata;
@@ -58,6 +59,7 @@ impl Source<'_> {
         self.payload.check_files()?;
         Ok(())
     }
+
     pub(in crate::store) fn transfer(
         &self,
         plan: &RestorePlan,
@@ -100,6 +102,7 @@ impl RestoreOperation<'_> {
     pub fn plan(&self) -> &RestorePlan {
         self.record.plan()
     }
+
     fn project<'a>(
         &mut self,
         journal: &Journal,
@@ -136,6 +139,7 @@ impl RestoreOperation<'_> {
         self.source.check()?;
         Ok(flow)
     }
+
     fn completion(
         &self,
         journal: &Journal,
@@ -159,6 +163,7 @@ impl RestoreOperation<'_> {
             journal_sha256: journal.head,
         }))
     }
+
     /// Authenticate original progress and source bytes with no effects, clock or writes.
     /// # Errors
     /// Refuses changed custody, invalid original evidence or failed restore policy.
@@ -169,6 +174,7 @@ impl RestoreOperation<'_> {
         self.record
             .view(&journal, flow.next()?, self.completion(&journal, &flow)?)
     }
+
     /// Advance the fixed restore with at most one original management submission.
     /// Completion verifies original evidence offline and leaves the application stopped.
     /// # Errors
@@ -233,6 +239,7 @@ impl RestoreOperation<'_> {
         )?;
         Ok(Progress::Advanced)
     }
+
     /// Settle the original pending call from surviving terminal certificate bytes.
     /// # Errors
     /// Refuses resolved or changed history; retained policy failures remain settled.
@@ -291,6 +298,7 @@ impl RestoreOperation<'_> {
         )?;
         Ok(())
     }
+
     /// Make the sole budgeted observation of the original pending request.
     /// # Errors
     /// Refuses renewed attempts, changed custody, invalid proof or unavailable live authority.
@@ -341,6 +349,7 @@ impl RestoreOperation<'_> {
         )?;
         Ok(Progress::Advanced)
     }
+
     pub(in crate::store) fn sync_completed(&mut self) -> Result<(), ReplayError> {
         if self.inspect()?.completed.is_none() {
             return Err(OperationStoreError::Incomplete.into());
@@ -352,6 +361,7 @@ impl RestoreOperation<'_> {
         Ok(())
     }
 }
+
 fn action(step: crate::store::OperationStep) -> Action {
     use crate::store::OperationStep::*;
     match step {
@@ -394,6 +404,7 @@ impl BackupStore {
             metadata,
         })
     }
+
     /// Persist the exact approved restore after a completed capture owner on the same target.
     /// # Errors
     /// Refuses occupied IDs, wrong approval/source/owner or uncertain local publication.
@@ -445,6 +456,7 @@ impl BackupStore {
         let record = Recorder::create_claimed(&self.root, plan.clone(), target_lock, &initial)?;
         Ok(RestoreOperation { record, source })
     }
+
     /// Reopen by original operation ID and approval without a connection or reconstructed plan.
     /// Selection reads bounded original intent; target/source/operation locks then
     /// admit those same exact bytes and all retained evidence without writes or repair.
@@ -479,6 +491,7 @@ impl BackupStore {
         )?;
         self.open_restore_locked(&plan, approval, &target, &target_lock)
     }
+
     pub(in crate::store) fn open_restore_locked(
         &self,
         plan: &RestorePlan,
@@ -509,12 +522,14 @@ impl BackupStore {
         Ok(operation)
     }
 }
+
 fn approve(plan: &RestorePlan, approval: BackupDigest) -> Result<(), OperationStoreError> {
     if plan.digest() != approval {
         return Err(OperationStoreError::ApprovalMismatch);
     }
     Ok(())
 }
+
 pub(in crate::store) fn replace_owner(
     store: &Directory,
     target: &Directory,

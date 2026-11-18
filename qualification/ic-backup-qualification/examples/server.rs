@@ -1,6 +1,7 @@
 //! Explicit preparation/admission of the locked Testkit server; never starts it.
 use ic_testkit::server::{PreparedServer, host_asset, prepare};
 use std::path::PathBuf;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     match args.as_slice() {

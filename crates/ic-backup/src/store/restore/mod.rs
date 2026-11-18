@@ -1,11 +1,13 @@
 //! Source-bound same-canister restore through the common direct recorder.
+#[cfg(test)]
+pub(in crate::store::restore) mod tests;
+
 use super::{
     BackupTarget, CaptureSource, OperationLimits, RestoreTransfer, RestoreTransferError,
     RestoreTransferRequest, manifest::lower_hex,
 };
-use crate::store::BackupDigest;
 use crate::store::{
-    OperationStoreError,
+    BackupDigest, OperationStoreError,
     operation::{
         Journal,
         custody::Recorder,
@@ -127,6 +129,7 @@ impl RestorePlan {
         plan.validate_source(source)?;
         Ok(plan)
     }
+
     fn from_parts(
         request: RestoreRequest,
         source: SourceRecord,
@@ -170,6 +173,7 @@ impl RestorePlan {
         plan.view().validate()?;
         Ok(plan)
     }
+
     pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, RestorePlanError> {
         if bytes.len() > PLAN_LIMIT {
             return Err(RestorePlanError::InvalidPlan);
@@ -204,6 +208,7 @@ impl RestorePlan {
         }
         Ok(plan)
     }
+
     pub(in crate::store) fn validate_source(
         &self,
         source: &CaptureSource<'_, '_>,
@@ -243,6 +248,7 @@ impl RestorePlan {
         }
         Ok(transfer)
     }
+
     pub(in crate::store) fn transfer_request(&self) -> RestoreTransferRequest {
         RestoreTransferRequest {
             target: self.request.target,
@@ -252,41 +258,49 @@ impl RestorePlan {
             maximum_management_calls: self.request.limits.network_requests,
         }
     }
+
     /// Exact original declaration; editing a clone grants no authority.
     #[must_use]
     pub fn request(&self) -> &RestoreRequest {
         &self.request
     }
+
     /// Original capture operation selected as source.
     #[must_use]
     pub fn source_operation_id(&self) -> &str {
         &self.source.operation_id
     }
+
     /// Exact original capture approval.
     #[must_use]
     pub fn source_plan_sha256(&self) -> BackupDigest {
         self.source.capture_plan
     }
+
     /// Exact trusted source manifest.
     #[must_use]
     pub fn source_manifest_sha256(&self) -> BackupDigest {
         self.source.manifest
     }
+
     /// Original source module, required before and after load.
     #[must_use]
     pub fn module_sha256(&self) -> BackupDigest {
         self.source.module
     }
+
     /// Exact canonical original approval bytes.
     #[must_use]
     pub fn encoded(&self) -> &[u8] {
         &self.bytes
     }
+
     /// Domain-separated original approval.
     #[must_use]
     pub fn digest(&self) -> BackupDigest {
         self.digest
     }
+
     pub(in crate::store) fn profile(&self) -> &ProfileRecord {
         &self.profile
     }
@@ -295,12 +309,15 @@ impl Intent for RestorePlan {
     fn attach_codec(&mut self, codec: Option<&'static dyn crate::store::RootCodec>) {
         self.profile.codec = codec;
     }
+
     fn view(&self) -> Plan<'_> {
         Plan::Restore(self)
     }
+
     fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
         Self::decode(bytes).map_err(|_| OperationStoreError::InvalidPlan)
     }
+
     fn check_layout(record: &Recorder<Self>, _: &Journal) -> Result<(), OperationStoreError> {
         let bundles = crate::store::capture::child(&record.store, "bundles", false)?;
         if bundles
@@ -314,6 +331,7 @@ impl Intent for RestorePlan {
         }
         Ok(())
     }
+
     fn published_binding(
         _: &Recorder<Self>,
         journal: &Journal,
@@ -321,12 +339,14 @@ impl Intent for RestorePlan {
         Ok(journal.completed_at_ns.is_some())
     }
 }
+
 fn hash(text: &str) -> Result<BackupDigest, RestorePlanError> {
     if !lower_hex(text, 64) {
         return Err(RestorePlanError::InvalidPlan);
     }
     text.parse().map_err(|_| RestorePlanError::InvalidPlan)
 }
+
 fn principal(text: &str) -> Result<Principal, RestorePlanError> {
     let p = Principal::from_text(text).map_err(|_| RestorePlanError::InvalidPlan)?;
     if p.to_text() != text {
@@ -334,5 +354,3 @@ fn principal(text: &str) -> Result<Principal, RestorePlanError> {
     }
     Ok(p)
 }
-#[cfg(test)]
-pub(in crate::store::restore) mod tests;

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.105.7] - 2026-11-18
+
+- Adopt Toko Tooling 0.45.8 in both workspaces. Publication timing records
+  the exact package and version selected for Cargo dispatch.
+- Group Rust imports and move test wiring and shared capture fixtures to their
+  owning test modules. The publication caller fixture supports unstaged renames.
+
 ## [0.105.6] - 2026-11-18
 
 - Adopt Toko Tooling 0.45.2 in both workspaces. The CI setup diagnostics now

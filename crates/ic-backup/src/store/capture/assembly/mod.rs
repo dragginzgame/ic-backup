@@ -1,10 +1,10 @@
 //! Closed payload-member hashing retained by completion.
 use super::{OperationStoreError, open_optional};
-use crate::store::BackupDigest;
-use crate::store::{StoreError, payload::unchanged_file};
+use crate::store::{BackupDigest, StoreError, payload::unchanged_file};
 use ic_host_artifacts::Length;
 use ic_host_fs::{Directory, Kind as EntryKind};
 use std::fs::File;
+
 fn names(directory: &Directory, limit: u64) -> Result<Vec<String>, OperationStoreError> {
     let mut names = Vec::new();
     let mut total = 0_u64;

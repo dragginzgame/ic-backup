@@ -1,4 +1,7 @@
 //! Bounded list/take replies and non-destructive capture arguments; no IC effects.
+#[cfg(test)]
+mod tests;
+
 use super::CapturePolicy;
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
@@ -150,6 +153,3 @@ pub enum SnapshotReplyError {
     #[error("returned snapshot already existed before capture")]
     AlreadyExisted,
 }
-
-#[cfg(test)]
-mod tests;

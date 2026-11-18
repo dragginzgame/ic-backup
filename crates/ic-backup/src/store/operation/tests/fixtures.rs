@@ -4,7 +4,7 @@ use crate::store::capture::{
     CaptureOperation, CapturePlan,
     intent::tests::signed_reply,
     procedure::{Next, Procedure},
-    test_fixtures::reply,
+    tests::reply,
 };
 
 pub(in crate::store) fn settle(operation: &mut CaptureOperation, mixed: bool) {

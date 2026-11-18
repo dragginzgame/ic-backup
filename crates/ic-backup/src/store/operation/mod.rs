@@ -1,6 +1,11 @@
 //! Common capture call/observation facts, not effect authority.
 //! The fixed procedure authenticates referenced evidence and applies policy before
 //! selecting another effect. An observation reference alone does not prove termination.
+#[cfg(test)]
+mod procedure_tests;
+#[cfg(test)]
+pub(in crate::store) mod tests;
+
 pub(in crate::store) mod framing;
 use framing::{Bounds, FRAME_BYTES, FRAMES, Frames, LEDGER_BYTES, LedgerError, encode_frame};
 pub(in crate::store) mod intent;
@@ -153,6 +158,7 @@ impl Invocation {
             result: None,
         })
     }
+
     fn prepare(&mut self, request: &ReferenceRecord, maximum: u32) -> Result<(), LedgerError> {
         if self.request.is_some() || self.submitted || request.bytes == 0 || request.bytes > maximum
         {
@@ -161,6 +167,7 @@ impl Invocation {
         self.request = Some(request.clone());
         Ok(())
     }
+
     fn submit(&mut self) -> Result<(), LedgerError> {
         if self.request.is_none() || self.submitted {
             return Err(LedgerError::Transition);
@@ -168,6 +175,7 @@ impl Invocation {
         self.submitted = true;
         Ok(())
     }
+
     fn settle(&mut self, result: &ReferenceRecord, maximum: u32) -> Result<(), LedgerError> {
         if !self.submitted || self.result.is_some() || result.bytes == 0 || result.bytes > maximum {
             return Err(LedgerError::Transition);
@@ -490,18 +498,21 @@ impl Journal {
         }
         Ok(())
     }
+
     fn call(&mut self, step: Step) -> Result<&mut Call, LedgerError> {
         self.calls
             .last_mut()
             .filter(|call| call.step == step)
             .ok_or(LedgerError::Transition)
     }
+
     fn manager_lookup(&mut self, step: Step) -> Result<&mut Invocation, LedgerError> {
         self.call(step)?
             .manager_lookup
             .as_mut()
             .ok_or(LedgerError::Transition)
     }
+
     fn observation(&mut self, step: Step) -> Result<&mut Invocation, LedgerError> {
         let call = self.call(step)?;
         if call.update.result.is_some() {
@@ -509,6 +520,7 @@ impl Journal {
         }
         call.observation.as_mut().ok_or(LedgerError::Transition)
     }
+
     fn reserve(&mut self, allowance: Allowance, observation: bool) -> Result<(), LedgerError> {
         self.signatures = self
             .signatures
@@ -537,6 +549,7 @@ impl Journal {
             .ok_or(LedgerError::ByteLimit)?;
         Ok(())
     }
+
     fn validate_allowance(a: Allowance) -> Result<(), LedgerError> {
         if !(1..=8192).contains(&a.signatures)
             || !(1..=8192).contains(&a.network)
@@ -550,9 +563,11 @@ impl Journal {
         }
         Ok(())
     }
+
     fn seed(intent: &[u8]) -> BackupDigest {
         BackupDigest::compute(&[DOMAIN, intent].concat())
     }
+
     fn payload(sequence: u32, fact: FactRecord) -> Result<Vec<u8>, LedgerError> {
         serde_json::to_vec(&FrameRecord { sequence, fact }).map_err(|_| LedgerError::Transition)
     }
@@ -566,15 +581,7 @@ pub(in crate::store) mod manager;
 pub(in crate::store) mod replay;
 pub(in crate::store) mod runtime;
 
-#[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-mod procedure_tests;
-
 mod facade;
-#[cfg(test)]
-pub(in crate::store) mod fixtures;
 pub use Step as OperationStep;
 pub use custody::CaptureOperation;
 pub use facade::{OperationOptions, OperationView};

@@ -48,7 +48,7 @@ make publish
 ```
 
 `publish-check` invokes Cargo's real `--dry-run`; `publish` can upload. Both use
-the installed Toko 0.45.2 publication adapter, the fixed `ic-backup` roster and
+the installed Toko 0.45.8 publication adapter, the fixed `ic-backup` roster and
 `crates-io` registry and exact versions from locked metadata. Unknown, duplicate,
 empty or private package selections refuse. Only a
 command-line `PACKAGE=ic-backup` may narrow the roster; qualification packages
@@ -80,7 +80,8 @@ interoperability and excludes Testkit/PocketIC. Cargo publication separately
 admits the final archive, clean source and registry destination. These guarantees
 remain separate; neither compilation substitutes for the other.
 
-The adapter records selection, source commit, exact arguments, dispatch intent,
+When release timing is enabled, the Cargo publication span records the exact
+selected package and version. The adapter records selection, source commit, exact arguments, dispatch intent,
 Cargo output and separate Cargo/logger statuses under `target/publication/`.
 Upload requires clean source; source identity and status are rechecked before
 dispatch. Caller credentials and registry configuration stay outside the repo.

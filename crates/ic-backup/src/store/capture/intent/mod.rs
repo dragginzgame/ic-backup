@@ -1,12 +1,14 @@
 //! Strict immutable capture intent; direct profile authentication has one shared owner.
+#[cfg(test)]
+pub(in crate::store) mod tests;
+
 use super::{
     CapturePolicy, CaptureRequest, OperationLimits, OperationStoreError,
     plan::{PLAN_LIMIT, hash, principal},
 };
-use crate::store::BackupDigest;
 pub(in crate::store) use crate::store::operation::intent::Error;
 use crate::store::{
-    BackupTarget,
+    BackupDigest, BackupTarget,
     operation::{
         Journal,
         custody::Recorder,
@@ -48,6 +50,7 @@ impl CapturePlan {
     pub fn request(&self) -> &CaptureRequest {
         self.plan.request()
     }
+
     pub(in crate::store) fn new(
         request: CaptureRequest,
         profile: ProfileRecord,
@@ -117,14 +120,17 @@ impl CapturePlan {
     pub(in crate::store) fn plan(&self) -> &CapturePolicy {
         &self.plan
     }
+
     pub(in crate::store) fn profile(&self) -> &ProfileRecord {
         &self.profile
     }
+
     /// Exact canonical approval bytes retained by operation creation.
     #[must_use]
     pub fn encoded(&self) -> &[u8] {
         &self.bytes
     }
+
     /// Domain-separated approval commitment to all original identities and limits.
     #[must_use]
     pub fn digest(&self) -> BackupDigest {
@@ -136,15 +142,19 @@ impl Intent for CapturePlan {
     fn attach_codec(&mut self, codec: Option<&'static dyn crate::store::RootCodec>) {
         self.profile.codec = codec;
     }
+
     fn view(&self) -> Plan<'_> {
         Plan::Capture(self)
     }
+
     fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
         Self::decode(bytes).map_err(|_| OperationStoreError::InvalidPlan)
     }
+
     fn check_layout(record: &Recorder<Self>, journal: &Journal) -> Result<(), OperationStoreError> {
         record.check_bundle_layout(journal)
     }
+
     fn published_binding(
         record: &Recorder<Self>,
         journal: &Journal,
@@ -152,5 +162,3 @@ impl Intent for CapturePlan {
         record.published_binding(journal)
     }
 }
-#[cfg(test)]
-pub(in crate::store) mod tests;

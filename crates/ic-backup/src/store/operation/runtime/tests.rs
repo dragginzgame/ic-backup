@@ -1,17 +1,19 @@
 //! The real shared HTTP path with fixture signing/certificates; no IC effects.
-use super::super::procedure_tests::{expected_request, reply, selected};
-use super::*;
-use crate::store::operation::intent::Intent;
-use crate::store::{
-    CaptureOperation, CapturePlan,
-    capture::procedure::{Next, Procedure},
+use super::{
+    super::procedure_tests::{expected_request, reply, selected},
+    *,
 };
 use crate::store::{
-    capture::test_fixtures::{
-        certificates::signed,
-        http::{Response, Server, http, runtime},
-        signatures::Scheme,
+    CaptureOperation, CapturePlan,
+    capture::{
+        procedure::{Next, Procedure},
+        tests::{
+            certificates::signed,
+            http::{Response, Server, http, runtime},
+            signatures::Scheme,
+        },
     },
+    operation::intent::Intent,
     tests::root,
 };
 use ic_host_fs::Directory;
@@ -41,6 +43,7 @@ impl Signer for ExternalSigner {
     fn protocol(&self) -> [u8; 32] {
         [2; 32]
     }
+
     async fn sign(&mut self, request: SigningRequest<'_>) -> Result<Vec<u8>, Self::Error> {
         self.calls += 1;
         if let Some(path) = &self.acknowledge {
@@ -103,6 +106,7 @@ impl Guard for Application {
     fn protocol(&self) -> [u8; 32] {
         [3; 32]
     }
+
     fn admit(
         &self,
         _: crate::store::OperationPlan<'_>,
@@ -118,6 +122,7 @@ impl Guard for Application {
         }
     }
 }
+
 fn fixture(
     response: Response,
 ) -> (
@@ -160,6 +165,7 @@ fn fixture(
     };
     (path, parent, recorder, connection, server)
 }
+
 fn leb(mut n: u64) -> Vec<u8> {
     let mut bytes = Vec::new();
     loop {
@@ -171,6 +177,7 @@ fn leb(mut n: u64) -> Vec<u8> {
         }
     }
 }
+
 fn terminal_certificate(request_id: &[u8; 32], response: Vec<u8>, status: &[u8]) -> Vec<u8> {
     signed(
         fork(
@@ -190,6 +197,7 @@ fn terminal_certificate(request_id: &[u8; 32], response: Vec<u8>, status: &[u8])
         None,
     )
 }
+
 fn certificate_body(certificate: &[u8], call: bool) -> Vec<u8> {
     let mut bytes = if call {
         b"\xa2\x66status\x67replied\x6bcertificate\x59".to_vec()
@@ -200,10 +208,12 @@ fn certificate_body(certificate: &[u8], call: bool) -> Vec<u8> {
     bytes.extend_from_slice(certificate);
     http(200, "", &bytes)
 }
+
 fn envelope(request: &[u8]) -> &[u8] {
     let end = request.windows(4).position(|b| b == b"\r\n\r\n").unwrap() + 4;
     &request[end..]
 }
+
 fn response(request: &[u8], n: usize) -> Vec<u8> {
     let intent = selected();
     let content = decode_envelope(envelope(request), 4096)
@@ -655,7 +665,7 @@ fn certified_policy_failure_is_retained_and_blocks_cold_continuation() {
                 .content;
             let mut running = crate::store::capture::status::tests::status(selected().plan());
             running.status = ic_platform_protocol::management_snapshots::Status::Running;
-            let response = crate::store::capture::test_fixtures::wire::encode(&running, 4096);
+            let response = crate::store::capture::tests::wire::encode(&running, 4096);
             Some(certificate_body(
                 &terminal_certificate(&content.request_id().unwrap(), response, b"replied"),
                 true,

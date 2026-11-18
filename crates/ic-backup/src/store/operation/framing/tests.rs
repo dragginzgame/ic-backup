@@ -1,6 +1,7 @@
 //! Shared bounded framing regressions retained from the original capture ledger.
 use super::*;
 use std::io::Cursor;
+
 fn bounds() -> Bounds {
     Bounds {
         frame_bytes: FRAME_BYTES,
@@ -8,6 +9,7 @@ fn bounds() -> Bounds {
         bytes: LEDGER_BYTES,
     }
 }
+
 fn frame(head: BackupDigest, payload: &[u8]) -> (Vec<u8>, BackupDigest) {
     let bytes = encode_frame(head, payload).unwrap();
     let digest = chain(head, &(payload.len() as u32).to_le_bytes(), payload);

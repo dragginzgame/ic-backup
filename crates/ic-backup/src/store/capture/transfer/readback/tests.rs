@@ -1,16 +1,18 @@
 //! Source/readback regressions derived from the frozen metadata/upload contracts.
 use super::*;
-use crate::store::capture::test_fixtures::wire::frozen;
-use crate::store::capture::transfer::tests::{chunk, metadata, plan};
-use ic_platform_protocol::management_snapshots::{Float32Bits, Float64Bits};
+use crate::store::capture::{
+    tests::wire::frozen,
+    transfer::tests::{chunk, metadata, plan},
+};
 use ic_platform_protocol::{
     candid::Error as DecodeError,
-    management_snapshots::{Reserved, SnapshotChunk, fixtures},
+    management_snapshots::{Float32Bits, Float64Bits, Reserved, SnapshotChunk, fixtures},
 };
 
 fn encode(value: &SnapshotMetadata) -> Vec<u8> {
     fixtures::snapshot_metadata(value, 1024 * 1024).unwrap()
 }
+
 fn uploaded(source: &SnapshotMetadata) -> SnapshotMetadata {
     let mut value = source.clone();
     value.source = Some(SnapshotSource::MetadataUpload(Reserved));
@@ -18,6 +20,7 @@ fn uploaded(source: &SnapshotMetadata) -> SnapshotMetadata {
     value.canister_version = u64::MAX;
     value
 }
+
 fn check(
     source: &SnapshotMetadata,
     destination: &SnapshotMetadata,

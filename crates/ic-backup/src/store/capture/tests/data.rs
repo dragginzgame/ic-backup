@@ -1,6 +1,8 @@
 //! A completed native retained-evidence capture; no simulated IC effects.
-use super::http::{Response, Server};
-use super::*;
+use super::{
+    http::{Response, Server},
+    *,
+};
 use crate::store::{BackupHttpTransport, BackupStore, tests::root};
 use std::{convert::Infallible, path::PathBuf, time::Duration};
 
@@ -10,6 +12,7 @@ impl BackupSigner for UnusedSigner {
     fn protocol(&self) -> [u8; 32] {
         [2; 32]
     }
+
     async fn sign(&mut self, _: OperationSigningRequest<'_>) -> Result<Vec<u8>, Infallible> {
         panic!("native retained source never signs")
     }
@@ -20,6 +23,7 @@ impl BackupApplicationGuard for UnusedGuard {
     fn protocol(&self) -> [u8; 32] {
         [3; 32]
     }
+
     fn admit(
         &self,
         _: crate::store::OperationPlan<'_>,
@@ -40,6 +44,7 @@ impl Fixture {
     pub fn replan(&self, request: CaptureRequest) -> CapturePlan {
         CapturePlan::new(request, self.p.profile().clone()).unwrap()
     }
+
     pub fn ledger(&self) -> PathBuf {
         self.root
             .join("operations")
@@ -47,6 +52,7 @@ impl Fixture {
             .join("journal.bin")
     }
 }
+
 pub(in crate::store) fn settled(mixed: bool) -> (Fixture, Server, FixtureConnection) {
     let root = root("capture-source");
     let store = BackupStore::initialize(&root).unwrap();
@@ -92,6 +98,6 @@ pub(in crate::store) fn settled(mixed: bool) -> (Fixture, Server, FixtureConnect
     let mut op = store
         .create_capture(CapturePlan::decode(p.encoded()).unwrap(), p.digest())
         .unwrap();
-    crate::store::operation::fixtures::settle(&mut op, mixed);
+    crate::store::operation::tests::fixtures::settle(&mut op, mixed);
     (Fixture { store, p, op, root }, server, connection)
 }

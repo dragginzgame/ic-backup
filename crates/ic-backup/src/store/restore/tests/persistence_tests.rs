@@ -2,11 +2,12 @@
 use super::*;
 use crate::store::capture::{
     intent::tests::profile,
-    test_fixtures::{
+    tests::{
         completion::{complete, settled},
         source::maximum,
     },
 };
+
 #[test]
 fn restore_custody_preserves_source_and_refuses_changed_intent_and_unknown_tail() {
     let (mut f, _, mut connection) = settled();

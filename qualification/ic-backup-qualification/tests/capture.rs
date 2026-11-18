@@ -1,8 +1,7 @@
 //! All keys, application permissions, fixture memory and proxying remain test-only.
 //! Actual-IC public-API tests, including a separately built normal-dependency consumer.
-use ic_backup::store::BackupDigest;
 use ic_backup::store::{
-    BackupConnection, BackupHttpTransport, BackupStore, BackupSummary, BackupTarget,
+    BackupConnection, BackupDigest, BackupHttpTransport, BackupStore, BackupSummary, BackupTarget,
     CaptureRequest, CaptureTiming, OperationLimits, OperationOptions, OperationPlan,
     OperationProgress, OperationStep, RestoreRequest, ScanLimits,
 };
@@ -44,30 +43,37 @@ enum Mode {
     RestoreUpload,
     RestoreLoad,
 }
+
 #[test]
 fn twenty_mib_capture_restore_interrupted_transfer_and_offline_replay() {
     run(Mode::Capacity);
 }
+
 #[test]
 fn isolated_normal_consumer_continues_capture_restore_and_replays_in_new_processes() {
     run(Mode::Isolated);
 }
+
 #[test]
 fn full_mib_chunk_captures_and_restores_through_complete_envelopes_and_proofs() {
     run(Mode::Boundary);
 }
+
 #[test]
 fn load_certificate_survives_local_write_failure_and_settles_offline() {
     run(Mode::WriteFailure);
 }
+
 #[test]
 fn complete_multi_extent_capture_restore_succession_and_offline_replay() {
     run(Mode::Complete);
 }
+
 #[test]
 fn interrupted_take_observes_once_then_replays_without_server_or_live_authority() {
     run(Mode::TakeObservation);
 }
+
 #[test]
 fn surviving_payload_certificate_settles_original_call_after_shutdown() {
     run(Mode::DataReply);
@@ -77,10 +83,12 @@ fn surviving_payload_certificate_settles_original_call_after_shutdown() {
 fn original_allocation_reply_settles_offline_without_reallocating() {
     run(Mode::RestoreAllocation);
 }
+
 #[test]
 fn original_mid_upload_reply_settles_offline_without_uploading_again() {
     run(Mode::RestoreUpload);
 }
+
 #[test]
 fn original_load_reply_settles_offline_without_rewinding_again() {
     run(Mode::RestoreLoad);
@@ -112,6 +120,7 @@ fn run(mode: Mode) {
         .unwrap()
         .block_on(exercise(&evidence, prepared, mode));
 }
+
 fn leb(mut value: u64) -> Vec<u8> {
     let mut out = Vec::new();
     loop {
@@ -123,6 +132,7 @@ fn leb(mut value: u64) -> Vec<u8> {
         }
     }
 }
+
 fn wasm(heap: &[u8]) -> Vec<u8> {
     let mut bytes = b"\0asm\x01\0\0\0".to_vec();
     bytes.extend_from_slice(&[5, 3, 1, 0, 1]); // one memory, one page
@@ -135,6 +145,7 @@ fn wasm(heap: &[u8]) -> Vec<u8> {
     bytes.extend_from_slice(&data);
     bytes
 }
+
 fn options() -> OperationOptions {
     OperationOptions {
         application: [3; 32],
@@ -151,6 +162,7 @@ fn options() -> OperationOptions {
         result_bytes: 2 * 1024 * 1024,
     }
 }
+
 fn scan() -> ScanLimits {
     ScanLimits {
         entries: 10.try_into().unwrap(),
@@ -158,6 +170,7 @@ fn scan() -> ScanLimits {
         results: 10.try_into().unwrap(),
     }
 }
+
 async fn complete(
     operation: &mut ic_backup::store::CaptureOperation,
     connection: &mut Connection,
@@ -171,6 +184,7 @@ async fn complete(
     }
     panic!("fixed capture did not complete within original call allowance")
 }
+
 async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
     let capacity = matches!(mode, Mode::Capacity);
     let mut server = server::RetainedServer::start(

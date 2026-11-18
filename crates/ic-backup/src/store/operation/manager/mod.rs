@@ -1,5 +1,8 @@
 //! Pure host boundary to the integration-owned Root protocol. No adapter method
 //! may sign, dispatch, observe a clock or access external state.
+#[cfg(test)]
+mod tests;
+
 use super::{
     Step,
     effect::Effect,
@@ -134,12 +137,14 @@ impl Call {
             reply_bytes: manager.reply_bytes,
         })
     }
+
     pub(in crate::store) fn execute(&self) -> (&'static str, &[u8]) {
         match self {
             Self::Direct(method, arguments) => (method, arguments),
             Self::Root { binding, .. } => ("snapshot_execute", binding.execute()),
         }
     }
+
     pub(in crate::store) fn result(
         &self,
         exchange: RootExchange,
@@ -169,6 +174,3 @@ impl Call {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

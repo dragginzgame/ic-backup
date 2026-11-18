@@ -5,7 +5,7 @@
 use super::*;
 use crate::store::{
     CaptureSourceError, CaptureSuccessionError, OperationReplayError, StoreError,
-    capture::test_fixtures::{
+    capture::tests::{
         completion::{complete, limits, manifest, replace_owner, settled},
         source::{extent, maximum},
     },
@@ -153,7 +153,7 @@ fn staged_or_missing_receipts_cannot_outlive_original_target_ownership() {
         let original = fs::read(f.ledger()).unwrap();
         assert!(f.op.inspect().is_err());
         assert!(
-            crate::store::capture::test_fixtures::http::runtime()
+            crate::store::capture::tests::http::runtime()
                 .block_on(f.op.advance(&mut connection))
                 .is_err()
         );

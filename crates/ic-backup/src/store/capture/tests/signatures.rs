@@ -36,6 +36,7 @@ impl Scheme {
             .concat(),
         }
     }
+
     pub(in crate::store) fn sign(self, message: &[u8]) -> Vec<u8> {
         match self {
             Self::Ed25519 => {
@@ -56,6 +57,7 @@ impl Scheme {
         }
     }
 }
+
 pub(in crate::store) fn fixture(scheme: Scheme) -> (CapturePolicy, PreparedStatus) {
     let der = scheme.key();
     let sender = Principal::self_authenticating(&der);
@@ -85,6 +87,7 @@ pub(in crate::store) fn fixture(scheme: Scheme) -> (CapturePolicy, PreparedStatu
         },
     )
 }
+
 pub(in crate::store) fn change(prepared: &mut PreparedStatus, action: impl FnOnce(&mut Envelope)) {
     let mut envelope = decode_envelope(&prepared.envelope, 4096).unwrap().value;
     action(&mut envelope);

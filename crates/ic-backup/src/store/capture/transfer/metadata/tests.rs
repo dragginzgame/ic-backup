@@ -1,18 +1,22 @@
 //! Re-authored cases from the frozen legacy metadata tests; fixture provenance
 //! is recorded in docs/architecture/capture-transfer.md.
-use super::super::MAX_GLOBALS;
-use super::super::tests::{chunk, metadata, plan};
-use super::*;
-use crate::store::BackupDigest;
-use crate::store::capture::test_fixtures::wire::frozen;
-use ic_platform_protocol::management_snapshots::{Float32Bits, Float64Bits};
-use ic_platform_protocol::management_snapshots::{Global, SnapshotSource, fixtures};
-use ic_platform_protocol::management_snapshots::{LowMemoryHook, Timer};
+use super::{
+    super::{
+        MAX_GLOBALS,
+        tests::{chunk, metadata, plan},
+    },
+    *,
+};
+use crate::store::{BackupDigest, capture::tests::wire::frozen};
+use ic_platform_protocol::management_snapshots::{
+    Float32Bits, Float64Bits, Global, LowMemoryHook, SnapshotSource, Timer, fixtures,
+};
 use serde::Deserialize;
 
 fn encode(value: &SnapshotMetadata) -> Vec<u8> {
     fixtures::snapshot_metadata(value, MAX_REPLY_BYTES).unwrap()
 }
+
 fn hex(value: &str) -> Vec<u8> {
     value
         .as_bytes()
@@ -22,6 +26,7 @@ fn hex(value: &str) -> Vec<u8> {
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect()
 }
+
 fn round_trip_metadata() -> SnapshotMetadata {
     let mut m = metadata(3, 5, 7);
     m.globals = vec![
@@ -112,7 +117,7 @@ fn public_decoder_preserves_bytes_and_flows_into_original_schedule() {
         transfer
             .decode_data(
                 0,
-                &crate::store::capture::test_fixtures::wire::encode(
+                &crate::store::capture::tests::wire::encode(
                     &ic_platform_protocol::management_snapshots::SnapshotData {
                         chunk: b"abc".to_vec()
                     },

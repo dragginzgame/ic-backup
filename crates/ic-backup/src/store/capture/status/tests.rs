@@ -6,9 +6,11 @@ use ic_platform_types::Principal;
 pub(in crate::store) fn plan() -> CapturePolicy {
     CapturePolicy::decode(include_bytes!("../../tests/fixtures/capture-plan.json")).unwrap()
 }
+
 fn sender(plan: &CapturePolicy) -> Principal {
     plan.request().sender
 }
+
 pub(in crate::store) fn status(plan: &CapturePolicy) -> CaptureStatus {
     CaptureStatus {
         status: Status::Stopped,

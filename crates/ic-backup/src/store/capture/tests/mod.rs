@@ -1,9 +1,8 @@
 //! Shared owned cryptographic/native file fixtures. No IC-effect qualification.
-use super::advance::*;
 use super::{
     BackupApplicationGuard, BackupConnection, BackupSigner, CaptureOperation, CapturePlan,
     CapturePolicy, CaptureRequest, CaptureTiming, OperationAction, OperationOptions,
-    OperationSigningRequest, PreparedStatus, StatusAdmissionRecord,
+    OperationSigningRequest, PreparedStatus, StatusAdmissionRecord, advance::*,
 };
 use crate::store::BackupDigest;
 use ic_platform::ingress::Content as EnvelopeContent;
@@ -19,6 +18,7 @@ pub(in crate::store) mod wire;
 fn plan() -> CapturePolicy {
     super::status::tests::plan()
 }
+
 fn call_content() -> EnvelopeContent {
     let p = plan();
     EnvelopeContent::Call {

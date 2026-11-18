@@ -168,6 +168,7 @@ fn members<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<MemberRecor
         fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.write_str("at most 1027 payload members")
         }
+
         fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
             let mut rows = Vec::new();
             while rows.len() < MAX_MEMBERS {

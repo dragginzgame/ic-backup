@@ -1,9 +1,8 @@
 //! Native held-source regressions; synthetic bytes do not qualify IC effects.
 use super::*;
-use ic_platform_protocol::management_snapshots::Extent;
-use ic_platform_protocol::management_snapshots::Reserved;
 use ic_platform_protocol::management_snapshots::{
-    LowMemoryHook, ReadDataArgs, ReadKind, SnapshotChunk, SnapshotMetadata, SnapshotSource, Timer,
+    Extent, LowMemoryHook, ReadDataArgs, ReadKind, Reserved, SnapshotChunk, SnapshotMetadata,
+    SnapshotSource, Timer,
 };
 
 impl Fixture {
@@ -16,6 +15,7 @@ impl Fixture {
             )
             .unwrap()
     }
+
     fn request(&self, kind: ReadKind) -> ReadDataArgs {
         ReadDataArgs {
             canister_id: ic_platform_types::Principal::from_text(&self.record.canister).unwrap(),

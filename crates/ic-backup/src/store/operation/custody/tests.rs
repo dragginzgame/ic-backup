@@ -1,25 +1,26 @@
 //! Re-authored from frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
 //! Native custody and recovery regressions, not physical-power-loss or IC qualification.
 //! ops/persistence/attempt_journal/tests and agent tests/http_boundary/recovery.
-use super::super::{
-    procedure_tests::{expected_request, reply, selected},
-    replay,
+use super::{
+    super::{
+        procedure_tests::{expected_request, reply, selected},
+        replay,
+    },
+    *,
 };
-use super::*;
 use crate::store::{
     capture::{
         advance::{PreparedStatus, StatusEvidence},
         intent::tests::signed_reply,
         procedure::Next,
-        test_fixtures::{certificates::signed, lookup::lookup, signatures::Scheme},
+        tests::{certificates::signed, lookup::lookup, signatures::Scheme},
     },
     tests::{root, write_file},
 };
-use std::path::Path;
 use std::{
     fs,
     os::unix::fs::{DirBuilderExt, symlink},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 pub(in crate::store::operation) fn store(path: &Path) -> Directory {
@@ -100,10 +101,12 @@ fn capture_creation_refuses_a_different_held_target_lock_without_cleanup() {
     );
     assert_eq!(fs::read(retained.join("journal.bin")).unwrap(), initial);
 }
+
 fn directory(path: &Path, recorder: &CaptureOperation) -> PathBuf {
     path.join("operations")
         .join(&recorder.intent.plan().request().operation_id)
 }
+
 fn append_call(recorder: &mut CaptureOperation, step: Step, settle: bool) -> PreparedStatus {
     let (method, args) = expected_request(&recorder.intent, step);
     let (request, evidence) = signed_reply(
@@ -139,6 +142,7 @@ fn append_call(recorder: &mut CaptureOperation, step: Step, settle: bool) -> Pre
     }
     request
 }
+
 fn step_number(step: Step) -> u8 {
     match step {
         Step::InitialStatus => 0,
@@ -150,6 +154,7 @@ fn step_number(step: Step) -> u8 {
         _ => panic!("capture fixture received restore step"),
     }
 }
+
 fn settle_call(recorder: &mut CaptureOperation, step: Step, evidence: &StatusEvidence) {
     let bytes = evidence
         .encode(recorder.intent.profile().result_bytes)
@@ -164,6 +169,7 @@ fn settle_call(recorder: &mut CaptureOperation, step: Step, evidence: &StatusEvi
         )
         .unwrap();
 }
+
 fn replay(recorder: &CaptureOperation, materialized: bool) -> Result<Next, replay::Error> {
     let journal = recorder.check()?;
     let flow = journal.replay(
@@ -179,12 +185,14 @@ fn replay(recorder: &CaptureOperation, materialized: bool) -> Result<Next, repla
     )?;
     Ok(flow.next()?)
 }
+
 fn with_observations() -> CapturePlan {
     let intent = selected();
     let mut request = intent.plan().request().clone();
     request.limits.observations = 1;
     CapturePlan::new(request, intent.profile().clone()).unwrap()
 }
+
 fn observe(recorder: &mut CaptureOperation, original: &PreparedStatus, outcome: &[u8]) {
     let step = Step::InitialStatus;
     // Lookup time differs from the original call. Its proof is too late for the
@@ -544,7 +552,7 @@ fn replay_requires_original_signature_for_pending_reply_and_observed_calls() {
         assert!(replay(&recorder, false).is_ok());
         // The content/request ID and valid result proof stay unchanged. A result
         // certificate alone cannot excuse an invalid original request signature.
-        crate::store::capture::test_fixtures::signatures::change(&mut original, |envelope| {
+        crate::store::capture::tests::signatures::change(&mut original, |envelope| {
             envelope.sender_sig.as_mut().unwrap()[0] ^= 1;
         });
         let result = journal.replay(

@@ -1,13 +1,20 @@
 //! Fixed capture/restore dispatch over the common recorder.
-use super::custody::{Recorder, Role};
-use super::manager::RootExchange;
-use super::{FRAME_RESERVATION, FRAMES, FactRecord, Journal, ReferenceRecord, Step};
-use crate::store::capture::{
-    OperationStoreError,
-    advance::{BackupHttpError, BackupHttpTransport, StatusEvidence},
-    intent::{self},
+#[cfg(test)]
+mod tests;
+
+use super::{
+    FRAME_RESERVATION, FRAMES, FactRecord, Journal, ReferenceRecord, Step,
+    custody::{Recorder, Role},
+    manager::RootExchange,
 };
-use crate::store::operation::intent::{Intent, Plan};
+use crate::store::{
+    capture::{
+        OperationStoreError,
+        advance::{BackupHttpError, BackupHttpTransport, StatusEvidence},
+        intent::{self},
+    },
+    operation::intent::{Intent, Plan},
+};
 use std::{
     future::Future,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -154,6 +161,7 @@ impl<S, G> Error<S, G> {
             _ => None,
         }
     }
+
     fn after_response(self, request_id: [u8; 32], certificate: Vec<u8>) -> Self {
         Self::AfterResponse {
             source: Box::new(self),
@@ -500,6 +508,7 @@ impl<P: Intent> Recorder<P> {
                 response,
             }))
     }
+
     pub(in crate::store) async fn observe<S: Signer, G: Guard>(
         &mut self,
         mut journal: Journal,
@@ -634,6 +643,7 @@ impl<P: Intent> Recorder<P> {
             _ => None,
         })
     }
+
     pub(in crate::store) fn import_reply(
         &mut self,
         journal: &Journal,
@@ -718,6 +728,7 @@ impl<P: Intent> Recorder<P> {
                 response,
             }))
     }
+
     pub(in crate::store) fn import_observation(
         &mut self,
         journal: &Journal,
@@ -778,6 +789,3 @@ impl<S, G> From<crate::store::restore::procedure::Error> for Error<S, G> {
         Self::Replay(error.into())
     }
 }
-
-#[cfg(test)]
-mod tests;

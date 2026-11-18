@@ -1,8 +1,7 @@
 //! Fixture-only direct authority shared by the IC harness and isolated consumer.
-use ic_backup::store::BackupDigest;
 use ic_backup::store::{
-    BackupApplicationGuard, BackupSigner, OperationAction, OperationPlan, OperationSigningContent,
-    OperationSigningRequest,
+    BackupApplicationGuard, BackupDigest, BackupSigner, OperationAction, OperationPlan,
+    OperationSigningContent, OperationSigningRequest,
 };
 use ic_platform::{
     ed25519::{Signer as _, SigningKey},
@@ -15,6 +14,7 @@ use std::{
     },
     time::{SystemTime, UNIX_EPOCH},
 };
+
 /// Current fixture wall-clock time in Unix nanoseconds.
 /// # Panics
 /// Panics if the fixture clock precedes Unix time or exceeds the u64 range.
@@ -27,6 +27,7 @@ pub fn now() -> u64 {
         .try_into()
         .unwrap()
 }
+
 /// Public DER for the fixed test-only signing key.
 #[must_use]
 pub fn der() -> Vec<u8> {
@@ -43,6 +44,7 @@ impl BackupSigner for FixtureSigner {
     fn protocol(&self) -> [u8; 32] {
         [1; 32]
     }
+
     async fn sign(&mut self, request: OperationSigningRequest<'_>) -> Result<Vec<u8>, ()> {
         let ordinal = self.0.fetch_add(1, Ordering::SeqCst);
         assert!(now() < request.deadline_ns);
@@ -100,6 +102,7 @@ impl BackupApplicationGuard for FixtureGuard {
     fn protocol(&self) -> [u8; 32] {
         [2; 32]
     }
+
     fn admit(
         &self,
         _: OperationPlan<'_>,
