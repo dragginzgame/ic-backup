@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.105.6] - 2026-11-18
+
+- Adopt Toko Tooling 0.45.2 in both workspaces. The CI setup diagnostics now
+  redact environment assignments, URL fragments and access-key fields.
+
 ## [0.105.5] - 2026-11-18
 
 ### Added

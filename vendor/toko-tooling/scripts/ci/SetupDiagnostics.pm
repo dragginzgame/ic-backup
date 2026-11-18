@@ -16,10 +16,12 @@ sub excerpt {
     my $retain = sub {
         my ($text) = @_;
         $text =~ s/\e\[[0-?]*[ -\/]*[\@-~]//g;
+        $text =~ tr/\t/ /;
         $text =~ s/[^\x20-\x7e]/?/g;
         $pem = 1 if $text =~ /-----BEGIN /;
-        my $sensitive = $pem || $text =~ /authorization|cookie|passwd|password|secret|token|credential|private[ _-]?key|api[ _-]?key/i
-            || $text =~ m{https?://[^\s/]+\@|https?://\S*\?}i
+        my $sensitive = $pem || $text =~ /authorization|cookie|passwd|password|secret|token|credential|private[ _-]?key|(?:api|access)[ _-]?key/i
+            || $text =~ /^\s*[A-Za-z_][A-Za-z0-9_]*=/
+            || $text =~ m{https?://[^\s/]+\@|https?://\S*[?#]}i
             || $text =~ /(?:gh[pousr]_|github_pat_|AKIA|ASIA)[A-Za-z0-9_]+|eyJ[A-Za-z0-9_-]+\.|[A-Za-z0-9+\/=]{80,}/
             || grep { index($text, $_) >= 0 } @secrets;
         $pem = 0 if $text =~ /-----END /;

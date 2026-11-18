@@ -1,9 +1,9 @@
 # Toko Tooling snapshot v1
-# version	0.45.1
+# version	0.45.2
 # layout	vendor
 format	1
 source	https://crates.io/crates/toko-tooling
-revision	dc38b1d6932310739c21ab8a821c811d4bf43e306f89751faea38638c8bc1373
+revision	249d4512d126a08fe16fc6d06255c712ff5ca2b720e49518167f08dda18de289
 # entrypoint	TOKO-TOOLING.md
 # entrypoint	LICENSE.md
 # entrypoint	CONTRIBUTING.md
@@ -27,7 +27,7 @@ file	07b59f8cc784c79c648d379561f2493e40bac5b7c2809e8eda960cba661fae7d	-	vendor/t
 file	1085e5521dfacb38aed065b70f905aab666ab73ef49dd5a25270c2ec2cf63710	x	vendor/toko-tooling/.githooks/pre-commit
 file	f83e4bd3143a04e954f77eb23d38b1924658aa298b0c1d3486748197861d696d	-	vendor/toko-tooling/make/cargo-publication.mk
 file	31c47b675fba90850681c6fac0d685def34b08a68e7e05bc55ae0403419fdf82	x	vendor/toko-tooling/scripts/dev/prepare-rust-toolchain.sh
-file	6669586f99f4395332b1204c284648a5bf49ce2d029883e3bf5f525e2dcb5be4	-	vendor/toko-tooling/scripts/ci/SetupDiagnostics.pm
+file	f859d7851232f63849caeb198c4e536759df3f39741db90cfc8cef7fe065c53f	-	vendor/toko-tooling/scripts/ci/SetupDiagnostics.pm
 file	578a5f7217e378280fe378328d39e4b7dcea653bd868159b57362461bd4e8555	x	vendor/toko-tooling/scripts/ci/verify-file-checksum.sh
 file	aec8dfcff940adbf7ca69d0e9edb4cd31b65648e1deef299ffb194e94e64c536	x	vendor/toko-tooling/scripts/ci/verify-toko-tooling-snapshot.sh
 file	33060e8f4a77791ef3c97caca8a983db98a8205f933d17bb08b632ee2e1d9f30	x	vendor/toko-tooling/scripts/ci/tool-catalog-records.pl
