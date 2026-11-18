@@ -9,7 +9,7 @@ license-file = "../LICENSE.md"
 publish = false
 
 [workspace.dependencies]
-ic-backup = { path = "../crates/ic-backup", version = "0.105.7" }
+ic-backup = { path = "../crates/ic-backup", version = "0.105.8" }
 ic-backup-consumer = { path = "ic-backup-consumer" }
 ic-host-process = "0.81.0"
 ic-platform = { version = "0.34.11", default-features = false, features = ["ed25519", "ingress-packets"] }
@@ -18,7 +18,7 @@ ic-platform-types = { version = "0.21.2", default-features = false, features = [
 ic-testkit = { version = "0.110.0", default-features = false, features = ["managed-server"] }
 tokio = { version = "1.53.3", default-features = false, features = ["rt", "net", "time"] }
 
-toko-tooling = "=0.45.8"
+toko-tooling = "=0.45.10"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

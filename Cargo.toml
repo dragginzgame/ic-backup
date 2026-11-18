@@ -30,7 +30,7 @@ ic-platform-protocol = { version = "0.3.3", default-features = false, features =
 tokio = { version = "1.53.3", default-features = false, features = ["time"] }
 
 # Tests and tooling
-toko-tooling = "=0.45.8"
+toko-tooling = "=0.45.10"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

@@ -14,16 +14,17 @@ sub run {
     ($? >> 8) == $expected or die "wrong status for $phase: $?\n";
 }
 $ENV{SETUP_TEST_TOKEN} = 'fixture-secret-987654';
+$ENV{SETUP_TEST_ACCESS_KEY} = 'opaque-fixture-3519';
 run('success', 'print "progress-sentinel\n"', 0);
 open my $success, '<', 'target/ci-setup/.attempt-success/diagnostic.txt' or die $!;
 my $receipt = do { local $/; <$success> };
 $receipt =~ /status=0/ && $receipt !~ /progress-sentinel/
     or die "success must retain status without raw command output\n";
-run('early', 'print STDERR "download failed: checksum mismatch\nAuthorization: Bearer fixture-secret-987654\nhttps://user:password\@host/path?token=abc\nBUILD_HINT=assigned-marker\nhttps://example.invalid/#fragment-marker\naccess\tkey: field-marker\n"; exit 23', 23);
+run('early', 'print STDERR "download failed: checksum mismatch\n$ENV{SETUP_TEST_ACCESS_KEY}\ncontext/$ENV{SETUP_TEST_ACCESS_KEY}/suffix\nAuthorization: Bearer fixture-secret-987654\nhttps://user:password\@host/path?token=abc\nBUILD_HINT=assigned-marker\nhttps://example.invalid/#fragment-marker\naccess\tkey: field-marker\n"; exit 23', 23);
 open my $log, '<', 'target/ci-setup/.attempt-early/diagnostic.txt' or die $!;
 my $text = do { local $/; <$log> };
 $text =~ /checksum mismatch/ && $text =~ /status=23/
-    && $text !~ /fixture-secret|user:password|token=abc|assigned-marker|fragment-marker|field-marker/ or die "unsafe/missing diagnostic\n";
+    && $text !~ /opaque-fixture-3519|fixture-secret|user:password|token=abc|assigned-marker|fragment-marker|field-marker/ or die "unsafe/missing diagnostic\n";
 run('empty', 'exit 19', 19);
 run('collector', 'mkdir "target/ci-setup/.attempt-collector/diagnostic.txt"; exit 17', 17);
 run('collector-success', 'mkdir "target/ci-setup/.attempt-collector-success/diagnostic.txt"', 1);

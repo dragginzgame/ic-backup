@@ -4,12 +4,14 @@ use warnings;
 use Exporter 'import';
 our @EXPORT_OK = qw(run_setup excerpt);
 
-# Consume a complete stream so a retained tail cannot begin inside a PEM block.
-# Keep a bounded line and tail in memory, omitting oversized lines.
+# Scan from the beginning for PEM context and retain a bounded tail.
+# Command pipes drain to EOF. Callers can cap reads on an admitted file.
 sub excerpt {
-    my ($input) = @_;
+    my ($input, $remaining) = @_;
+    @_ == 1 || (@_ == 2 && defined($remaining) && $remaining =~ /\A[0-9]+\z/)
+        or die "expected a handle and optional nonnegative byte limit\n";
     my @secrets = grep { length($_) >= 4 } map { $ENV{$_} }
-        grep { /TOKEN|SECRET|PASSWORD|CREDENTIAL|PRIVATE_KEY|API_KEY/i } keys %ENV;
+        grep { /TOKEN|SECRET|PASSWORD|CREDENTIAL|PRIVATE_KEY|API_KEY|ACCESS_KEY/i } keys %ENV;
     my (@tail, $line);
     my ($pem, $suppress, $omitted, $bytes) = (0, 0, 0, 0);
     $line = '';
@@ -34,10 +36,12 @@ sub excerpt {
             $omitted = 1;
         }
     };
-    while (1) {
-        my $count = sysread($input, my $chunk, 4096);
+    while (!defined($remaining) || $remaining > 0) {
+        my $size = defined($remaining) && $remaining < 4096 ? $remaining : 4096;
+        my $count = sysread($input, my $chunk, $size);
         defined $count or die "cannot read setup diagnostics\n";
         last unless $count;
+        $remaining -= $count if defined $remaining;
         for my $part (split /(?<=\n)/, $chunk) {
             # Track PEM markers across chunks even when dropping an oversized
             # line. Resume on the next line unless a PEM block remains open.
@@ -55,8 +59,13 @@ sub excerpt {
             }
         }
     }
-    $retain->($line) if length($line) && !$suppress;
-    return ($omitted ? "[earlier output or oversized lines omitted]\n" : '')
+    my $at_limit = defined($remaining) && $remaining == 0;
+    # At the ceiling an unfinished line can contain only the prefix of a secret.
+    $retain->($line) if !$at_limit && length($line) && !$suppress;
+    my @notices;
+    push @notices, 'earlier output or oversized lines omitted' if $omitted;
+    push @notices, 'input truncated at byte limit' if $at_limit;
+    return (@notices ? '[' . join('; ', @notices) . "]\n" : '')
         . (@tail ? join('', @tail) : "[no usable diagnostic output]\n");
 }
 

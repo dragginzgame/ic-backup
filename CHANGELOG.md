@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.105.8] - 2026-11-19
+
+- Adopt Toko Tooling 0.45.10. Testkit download failures now print a redacted excerpt from at most 8 KiB of installer output and preserve the original curl status.
+
 ## [0.105.7] - 2026-11-18
 
 - Adopt Toko Tooling 0.45.8 in both workspaces. Publication timing records

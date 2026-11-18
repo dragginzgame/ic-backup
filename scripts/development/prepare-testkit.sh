@@ -16,7 +16,8 @@ curl --fail --show-error --location --proto '=https' --proto-redir '=https' \
     --max-time 120 --max-filesize 67108864 --output "$attempt/archive.gz" \
     "$url" 2> "$attempt/download.stderr" || {
     status=$?
-    tail -c 8192 "$attempt/download.stderr" >&2
+    perl -Ivendor/toko-tooling/scripts/ci -MSetupDiagnostics=excerpt \
+        -e 'print STDERR excerpt(\*STDIN, 8192)' < "$attempt/download.stderr" || true
     exit "$status"
 }
 mkdir -p "$directory"
