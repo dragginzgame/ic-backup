@@ -133,6 +133,9 @@ impl CapturePlan {
 }
 
 impl Intent for CapturePlan {
+    fn attach_codec(&mut self, codec: Option<&'static dyn crate::store::RootCodec>) {
+        self.profile.codec = codec;
+    }
     fn view(&self) -> Plan<'_> {
         Plan::Capture(self)
     }

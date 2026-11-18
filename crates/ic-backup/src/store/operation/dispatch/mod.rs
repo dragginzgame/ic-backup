@@ -66,15 +66,15 @@ impl CaptureOperation {
                 _ => (),
             }
         }
-        let (method, arguments) = flow.request()?;
+        let effect = flow.effect()?;
         let Some(result) = self
             .run(
                 journal,
                 connection,
                 step,
                 action(step)?,
-                method,
-                &arguments,
+                crate::store::RootExchange::Execute,
+                &effect,
                 || Ok(()),
             )
             .await?
@@ -105,7 +105,21 @@ impl CaptureOperation {
         if flow.next()? != Next::Call(step) {
             return Err(Error::Resolved);
         }
-        let Some(result) = self.observe(journal, connection, || Ok(())).await? else {
+        let result = if intent.profile().manager.is_some() {
+            self.run(
+                journal,
+                connection,
+                step,
+                Action::Inspect,
+                crate::store::RootExchange::Lookup,
+                &flow.effect()?,
+                || Ok(()),
+            )
+            .await?
+        } else {
+            self.observe(journal, connection, || Ok(())).await?
+        };
+        let Some(result) = result else {
             return Ok(Progress::NeedsAttention(step));
         };
         if step == Step::FinalStatus {

@@ -63,7 +63,12 @@ impl BackupSigner for FixtureSigner {
                 ),
                 ingress_expiry: request.expires_ns,
                 sender,
-                canister_id: [].as_slice().try_into().unwrap(),
+                canister_id: request
+                    .plan
+                    .ingress_recipient()
+                    .as_slice()
+                    .try_into()
+                    .unwrap(),
                 method_name: method.into(),
                 arg: arguments.to_vec(),
                 sender_info: None,

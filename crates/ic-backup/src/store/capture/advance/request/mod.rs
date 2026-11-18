@@ -101,11 +101,19 @@ pub(in crate::store) fn authenticate_expected_request(
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
     let sender = plan.request().sender;
-    authenticate_direct_request(sender, admission.request_bytes, prepared, method, arguments)
+    authenticate_direct_request(
+        sender,
+        Principal::management_canister(),
+        admission.request_bytes,
+        prepared,
+        method,
+        arguments,
+    )
 }
 
 pub(in crate::store) fn authenticate_direct_request(
     sender: Principal,
+    recipient: Principal,
     request_bytes: u32,
     prepared: &PreparedStatus,
     method: &str,
@@ -116,7 +124,7 @@ pub(in crate::store) fn authenticate_direct_request(
         .encode(request_bytes)
         .map_err(StatusRequestError::Admission)?;
     prepared
-        .validate_direct_call(sender, method, arguments)
+        .validate_direct_call(sender, recipient, method, arguments)
         .map_err(StatusRequestError::Admission)?;
     let envelope = decode_envelope(&prepared.envelope, request_bytes as usize)
         .map_err(|_| StatusRequestError::Envelope)?
@@ -195,8 +203,21 @@ pub use lookup::authenticate_capture_lookup;
 pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
 
 /// Exact direct management identity selected by an original intent or native protocol fixture.
-pub(in crate::store) struct DirectRequirements {
+pub(in crate::store) struct IngressRequirements {
     pub target: crate::store::BackupTarget,
     pub sender: Principal,
+    pub recipient: Principal,
     pub trust_root: crate::store::BackupDigest,
+}
+
+impl IngressRequirements {
+    // Management ingress is routed by its child argument. An update to Root
+    // is routed and certified by the signed recipient, independently of the child.
+    pub(in crate::store) fn effective_canister(&self) -> Principal {
+        if self.recipient == Principal::management_canister() {
+            self.target.canister
+        } else {
+            self.recipient
+        }
+    }
 }

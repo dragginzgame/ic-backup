@@ -111,11 +111,10 @@ impl RestoreOperation<'_> {
             if flow.next()? != Some(call.step) {
                 return Err(ReplayError::History);
             }
-            let (method, arguments) = flow.request(&mut self.source)?;
-            let result =
-                replay::resolve_call(plan.view(), call, method, &arguments, &mut |call, role| {
-                    self.record.read_role(call, role)
-                })?;
+            let effect = flow.effect(&mut self.source)?;
+            let result = replay::resolve_call(plan.view(), call, &effect, &mut |call, role| {
+                self.record.read_role(call, role)
+            })?;
             if let Some(result) = result {
                 flow.accept(
                     call.step,
@@ -208,7 +207,7 @@ impl RestoreOperation<'_> {
                     .ok_or(OperationStoreError::StatusAdmission)?,
             )?;
         }
-        let (method, arguments) = flow.request(&mut self.source)?;
+        let effect = flow.effect(&mut self.source)?;
         let source = &self.source;
         let result = self
             .record
@@ -217,8 +216,8 @@ impl RestoreOperation<'_> {
                 connection,
                 step,
                 action(step),
-                method,
-                &arguments,
+                crate::store::RootExchange::Execute,
+                &effect,
                 || source.check(),
             )
             .await?;
@@ -241,7 +240,7 @@ impl RestoreOperation<'_> {
         self.reconcile_certificate(certificate, false)
     }
 
-    /// Import the surviving certificate from the original submitted read-state lookup.
+    /// Import the surviving certificate for the original read-state or Root lookup.
     /// Uses its separate retained time policy without clock, signing or network work.
     /// # Errors
     /// Refuses missing/resolved lookup, changed source/custody or invalid evidence/policy.
@@ -265,14 +264,20 @@ impl RestoreOperation<'_> {
         if flow.next()? != Some(step) {
             return Err(ReplayError::History);
         }
-        let (method, arguments) = flow.request(&mut self.source)?;
-        let result = if observation {
+        let result = if observation && plan.profile().manager.is_none() {
             self.record.import_observation(&journal, certificate)?
         } else {
-            Some(
-                self.record
-                    .import_reply(&journal, method, &arguments, certificate)?,
-            )
+            let exchange = if observation {
+                crate::store::RootExchange::Lookup
+            } else {
+                crate::store::RootExchange::Execute
+            };
+            self.record.import_reply(
+                &journal,
+                &flow.effect(&mut self.source)?,
+                exchange,
+                certificate,
+            )?
         };
         let Some(result) = result else {
             return Ok(());
@@ -304,11 +309,26 @@ impl RestoreOperation<'_> {
         if flow.next()? != Some(step) {
             return Err(Error::Resolved);
         }
-        let source = &self.source;
-        let result = self
-            .record
-            .observe(journal, connection, || source.check())
-            .await?;
+        let result = if plan.profile().manager.is_some() {
+            let effect = flow.effect(&mut self.source)?;
+            let source = &self.source;
+            self.record
+                .run(
+                    journal,
+                    connection,
+                    step,
+                    Action::Inspect,
+                    crate::store::RootExchange::Lookup,
+                    &effect,
+                    || source.check(),
+                )
+                .await?
+        } else {
+            let source = &self.source;
+            self.record
+                .observe(journal, connection, || source.check())
+                .await?
+        };
         let Some(result) = result else {
             return Ok(Progress::NeedsAttention(step));
         };
@@ -471,7 +491,11 @@ impl BackupStore {
             plan,
             self.open_capture(plan.source_operation_id(), plan.source_plan_sha256())?,
         )?;
-        let record = Recorder::<RestorePlan>::open(&self.root, &plan.request().operation_id)?;
+        let record = Recorder::<RestorePlan>::open_with_codec(
+            &self.root,
+            &plan.request().operation_id,
+            self.codec,
+        )?;
         if record.plan().encoded() != plan.encoded() {
             return Err(OperationStoreError::ApprovalMismatch.into());
         }

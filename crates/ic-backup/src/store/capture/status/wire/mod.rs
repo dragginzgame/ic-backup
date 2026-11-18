@@ -1,5 +1,7 @@
 //! Bounded projection; Platform owns wire traversal and management field labels.
-use super::{CapturePolicy, CaptureStatusError, StatusRequirements};
+#[cfg(test)]
+use super::CapturePolicy;
+use super::{CaptureStatusError, StatusRequirements};
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
     management_snapshots::decode_capture_status,
@@ -9,6 +11,7 @@ use thiserror::Error;
 const MAX_REPLY_BYTES: usize = 1024 * 1024;
 const MAX_SKIPPED_WORK: usize = 64 * 1024;
 
+#[cfg(test)]
 impl CapturePolicy {
     /// Validate a raw status reply against the original capture preconditions.
     ///

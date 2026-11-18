@@ -18,9 +18,33 @@ use ic_platform::certificate::PreparedRootKey;
 use ic_platform_types::Principal;
 use serde::{Deserialize, Serialize};
 
+/// Immutable Root authority and per-slot limits from the original approval.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ManagerRecord {
+    /// Approved Root principal, distinct from the host signer and child.
+    pub root: Principal,
+    /// Approved manager authority generation.
+    pub generation: u64,
+    /// Commitment to the Root wire protocol and codec.
+    pub protocol: [u8; 32],
+    /// Commitment to the provisioned manager implementation and controller policy.
+    pub authority_policy: [u8; 32],
+    /// Cycles attached per original management call.
+    pub cycles: u64,
+    /// Maximum cost including attachment per inner call.
+    pub cycle_limit: u64,
+    /// Maximum retained inner reply or rejection per slot.
+    pub reply_bytes: u32,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::store) struct ProfileRecord {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub manager: Option<ManagerRecord>,
+    #[serde(skip)]
+    pub codec: Option<&'static dyn super::manager::RootCodec>,
     pub transport: [u8; 32],
     pub signer: [u8; 32],
     pub guard: [u8; 32],
@@ -62,13 +86,24 @@ impl<'a> Plan<'a> {
             Self::Restore(p) => p.request().target,
         }
     }
-    /// Actual direct management sender.
+    /// Host signing identity from the original approval.
     #[must_use]
     pub fn sender(self) -> Principal {
         match self {
             Self::Capture(p) => p.request().sender,
             Self::Restore(p) => p.request().sender,
         }
+    }
+    /// Original Root policy for the application guard and sign-only adapter.
+    #[must_use]
+    pub fn root_manager(self) -> Option<&'a ManagerRecord> {
+        self.profile().manager.as_ref()
+    }
+    /// Signed ingress recipient for updates under this approval.
+    /// Signers use this identity separately from the child selected by `target`.
+    #[must_use]
+    pub fn ingress_recipient(self) -> Principal {
+        self.requirements().recipient
     }
     /// Exact original approval commitment.
     #[must_use]
@@ -106,22 +141,59 @@ impl<'a> Plan<'a> {
     }
     pub(in crate::store) fn requirements(
         self,
-    ) -> crate::store::capture::advance::DirectRequirements {
-        crate::store::capture::advance::DirectRequirements {
+    ) -> crate::store::capture::advance::IngressRequirements {
+        crate::store::capture::advance::IngressRequirements {
             target: self.target(),
             sender: self.sender(),
+            recipient: self
+                .profile()
+                .manager
+                .as_ref()
+                .map_or_else(Principal::management_canister, |manager| manager.root),
             trust_root: self.trust_root(),
+        }
+    }
+    pub(in crate::store) fn status_requirements(
+        self,
+    ) -> crate::store::capture::status::StatusRequirements {
+        let manager = self.profile().manager.as_ref();
+        crate::store::capture::status::StatusRequirements {
+            module_sha256: match self {
+                Self::Capture(plan) => plan.request().module_sha256,
+                Self::Restore(plan) => plan.module_sha256(),
+            },
+            sender: manager.map_or_else(|| self.sender(), |binding| binding.root),
+            sole_controller: manager.is_some(),
         }
     }
     pub(in crate::store) fn certificate(self) -> CertificateRequirements {
         CertificateRequirements {
-            canister: self.target().canister,
+            canister: self.requirements().effective_canister(),
             trust_root: self.trust_root(),
         }
     }
     pub(in crate::store) fn validate(self) -> Result<(), Error> {
         let p = self.profile();
         let limits = self.limits();
+        if let Some(manager) = &p.manager
+            && (p
+                .codec
+                .is_some_and(|codec| codec.protocol() != manager.protocol)
+                || manager.generation != 1
+                || manager.root == Principal::management_canister()
+                || manager.root == Principal::anonymous()
+                || manager.root == self.target().canister
+                || manager.root == self.sender()
+                || manager.protocol == [0; 32]
+                || manager.authority_policy == [0; 32]
+                || manager.cycles > manager.cycle_limit
+                || manager.cycle_limit > 1_000_000_000_000
+                || !(1..=1_048_576 + 16_384).contains(&manager.reply_bytes)
+                || self.operation_id() == "00000000000000000000000000000000"
+                || self.target().network.as_bytes() == &[0; 32])
+        {
+            return Err(Error::Profile);
+        }
         if !limits.valid()
             || !(1..=1024).contains(&p.snapshot_capacity)
             || p.root_der.len() != 133
@@ -201,7 +273,21 @@ impl<'a> Plan<'a> {
             observation: self.observation(reference)?,
         })
     }
+    #[cfg(test)]
     pub(in crate::store) fn authenticate_request(
+        self,
+        reference: u64,
+        prepared: &PreparedStatus,
+        method: &str,
+        arguments: &[u8],
+    ) -> Result<(), Error> {
+        // Direct call evidence has no Root binding or inner outcome.
+        if self.profile().manager.is_some() {
+            return Err(Error::ManagerExchange);
+        }
+        self.authenticate_ingress(reference, prepared, method, arguments)
+    }
+    pub(in crate::store) fn authenticate_ingress(
         self,
         reference: u64,
         prepared: &PreparedStatus,
@@ -214,7 +300,15 @@ impl<'a> Plan<'a> {
         {
             return Err(Error::Timing);
         }
-        authenticate_direct_request(self.sender(), a.request_bytes, prepared, method, arguments)?;
+        let requirements = self.requirements();
+        authenticate_direct_request(
+            requirements.sender,
+            requirements.recipient,
+            a.request_bytes,
+            prepared,
+            method,
+            arguments,
+        )?;
         Ok(())
     }
     // The caller authenticates this owned request before resolving its result.
@@ -269,6 +363,7 @@ impl<'a> Plan<'a> {
 
 pub(in crate::store) trait Intent: Clone {
     fn view(&self) -> Plan<'_>;
+    fn attach_codec(&mut self, codec: Option<&'static dyn super::manager::RootCodec>);
     fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError>;
     fn check_layout(
         record: &super::custody::Recorder<Self>,
@@ -283,6 +378,12 @@ pub(in crate::store) trait Intent: Clone {
 /// Original declaration, immutable profile or historical evidence refused.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// The manager attested a definitive pre-dispatch refusal for the original slot.
+    #[error("Root refused the original operation before dispatch")]
+    RootRefused,
+    /// Manager evidence requires the original Root exchange codec.
+    #[error("original Root exchange codec required")]
+    ManagerExchange,
     /// Invalid original direct profile or finite declaration.
     #[error("original direct profile refused")]
     Profile,

@@ -22,8 +22,9 @@ management call. There are no public phase commands.
 
 Signing and network allowance stay spent after interruption. Pending work never
 resubmits automatically. Explicit `reconcile_reply` imports an original certified
-reply locally; `reconcile_observation` reserves one bounded original-request
-read-state lookup. After a received certificate cannot be recorded, typed errors
+reply locally. On direct operations `reconcile_observation` reserves a bounded
+read-state lookup. On Root operations it signs a separate `snapshot_lookup`
+update for the original execute binding. After a received certificate cannot be recorded, typed errors
 return its bounded bytes and original request ID. `reconcile_observation_reply`
 imports a surviving lookup proof under its original separate time policy.
 Cold terminal replay authenticates original evidence without
@@ -55,8 +56,9 @@ interrupted allocation/upload/load, interrupted take observation,
 original payload-reply settlement and offline replay with fixture signing and
 application authority. They additionally exercise full 1 MiB whole chunks,
 offline recovery from a failed load-result write, and a separately built normal
-consumer continuing capture/restore across processes. They do not qualify Canic
-or physical power loss.
+consumer continuing capture/restore across processes. A separate local Root/child
+witness recovered lost take and load results across host restarts through the
+Canic codec and replayed completion after PocketIC shutdown.
 The [20 MiB profile](docs/architecture/capture-transfer.md#20-mib-qualification--2026-11-16)
 also passes full capture/restore, interrupted-transfer recovery and offline replay
 on Linux, with explicit geometry and finite allowances.

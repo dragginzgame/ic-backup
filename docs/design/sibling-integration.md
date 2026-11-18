@@ -629,3 +629,23 @@ reopen and uncertain observation. Relevant submission history is
 assumption is a second effect owner whose inner outcome is not the outer ingress
 outcome. Legacy's direct transport cannot supply that missing proof. No code or
 legacy recovery artifacts were copied, and no new qualification is claimed here.
+
+### Accepted Root exchange and host admission
+
+The producer accepted the exchange on [Backup #1](https://github.com/dragginzgame/ic-backup/issues/1).
+Root mounts authenticated updates `snapshot_execute` (Wire 80) and
+`snapshot_lookup` (81) in its optional backup build. The signed envelope recipient
+for either call must equal the approved Root. Historical authentication compares
+that principal, the host signer, method, argument bytes, ingress expiry and original
+request ID. Direct management calls continue to require the management principal.
+This check authenticates the signed request only. Applying either Root response
+also requires its ingress certificate and the adapter's full original-binding check.
+
+The host now supplies `RootRequest` to the selected `RootCodec`. Its
+`RootBinding` holds the two exact request frames and decodes the corresponding
+successful outer payload against the full expected original binding. A codec is
+trusted, pure integration code. Its protocol commitment belongs in the original
+approval along with the provisioned authority policy. Root-signed statements
+do not establish the deployed Wasm identity by themselves. The signer uses
+`OperationPlan::ingress_recipient`; the guard can inspect `root_manager()`.
+The live witness and supplier hashes are recorded in the [handoff](../status/current.md).

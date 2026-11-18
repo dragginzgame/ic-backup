@@ -409,3 +409,11 @@ separate-process offline replay. The isolated archive consumer passes. Original
 fixtures and joined process reports remain under `qualification/target/fixtures/`;
 logs and verified archives are under `target/evidence/supplier-refresh/`. These
 Linux results do not qualify macOS or the blocked new Platform cohort.
+
+The private manager approval profile binds Root separately from the host signer.
+Capture and restore include the generation, protocol and authority-policy
+commitments, attached cycles, maximum cycle cost and retained reply allowance in
+their original approval digest. The manager status policy requires Root as the
+sole child controller. Direct profiles omit the manager field so retained direct
+approval bytes keep their existing meaning. The public planner selects the manager profile through `with_root_manager`.
+Recovery selects its original pure codec through `with_root_codec`.

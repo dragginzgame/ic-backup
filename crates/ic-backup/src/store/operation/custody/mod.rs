@@ -36,6 +36,8 @@ pub(in crate::store) enum Role {
     Result,
     ObservationRequest,
     ObservationResult,
+    ManagerLookupRequest,
+    ManagerLookupResult,
 }
 
 impl Step {
@@ -60,6 +62,8 @@ impl Step {
         let role = match role {
             Role::Request => "request",
             Role::Result => "result",
+            Role::ManagerLookupRequest => "manager-lookup-request",
+            Role::ManagerLookupResult => "manager-lookup-result",
             Role::ObservationRequest => "observation-request",
             Role::ObservationResult => "observation-certificate",
         };
@@ -84,6 +88,8 @@ impl Call {
         match role {
             Role::Request => self.update.request.as_ref(),
             Role::Result => self.update.result.as_ref(),
+            Role::ManagerLookupRequest => self.manager_lookup.as_ref()?.request.as_ref(),
+            Role::ManagerLookupResult => self.manager_lookup.as_ref()?.result.as_ref(),
             Role::ObservationRequest => self.observation.as_ref()?.request.as_ref(),
             Role::ObservationResult => self.observation.as_ref()?.result.as_ref(),
         }
@@ -98,6 +104,8 @@ impl Journal {
                 Role::Result,
                 Role::ObservationRequest,
                 Role::ObservationResult,
+                Role::ManagerLookupRequest,
+                Role::ManagerLookupResult,
             ]
             .into_iter()
             .filter_map(move |role| call.reference(role).map(|r| (call.step.name(role), r)))
@@ -208,7 +216,15 @@ impl<P: Intent> Recorder<P> {
         Self::read_intent(&child(&parent, id, false)?, id)
     }
 
+    #[cfg(test)]
     pub(in crate::store) fn open(store: &Directory, id: &str) -> Result<Self, OperationStoreError> {
+        Self::open_with_codec(store, id, None)
+    }
+    pub(in crate::store) fn open_with_codec(
+        store: &Directory,
+        id: &str,
+        codec: Option<&'static dyn crate::store::RootCodec>,
+    ) -> Result<Self, OperationStoreError> {
         if !crate::store::manifest::lower_hex(id, 32) {
             return Err(OperationStoreError::InvalidPlan);
         }
@@ -217,7 +233,8 @@ impl<P: Intent> Recorder<P> {
         let directory = child(&parent, id, false)?;
         let lock =
             acquire(open_optional(&directory, "lock")?.ok_or(OperationStoreError::Incomplete)?)?;
-        let intent = Self::read_intent(&directory, id)?;
+        let mut intent = Self::read_intent(&directory, id)?;
+        intent.attach_codec(codec);
         Self::held(store, directory, intent, lock)
     }
 
@@ -423,6 +440,12 @@ impl<P: Intent> Recorder<P> {
         let reference = match &fact {
             FactRecord::CallPrepared { step, request } => Some((step.name(Role::Request), request)),
             FactRecord::CallResult { step, result } => Some((step.name(Role::Result), result)),
+            FactRecord::ManagerLookupPrepared { step, request } => {
+                Some((step.name(Role::ManagerLookupRequest), request))
+            }
+            FactRecord::ManagerLookupResult { step, result } => {
+                Some((step.name(Role::ManagerLookupResult), result))
+            }
             FactRecord::ObservationPrepared { step, request } => {
                 Some((step.name(Role::ObservationRequest), request))
             }

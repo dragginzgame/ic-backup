@@ -1,7 +1,9 @@
 # Minimal Backup replacement design
 
 Status: capture and same-canister restore replacement implemented and qualified
-locally, 2026-11-16. Canic process/manager/fence integration remains unqualified.
+locally, 2026-11-16. The 2026-11-18 local Canic Root witness additionally qualifies
+original-result recovery across host restart. Production signing and application
+fencing remain separate integration work.
 The [handoff](../status/current.md) owns current evidence and next work.
 
 ## Cleanup before feature expansion

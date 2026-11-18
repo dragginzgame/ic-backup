@@ -7,6 +7,7 @@ use super::*;
 const INTENT: &[u8] = b"approved intent";
 fn allowance() -> Allowance {
     Allowance {
+        manager_reply_bytes: None,
         signatures: 30,
         network: 90,
         observations: 3,
@@ -449,5 +450,78 @@ fn hashed_unknown_duplicate_and_noncanonical_records_are_not_extensions() {
         let mut bytes = prefix.clone();
         bytes.extend(encode_frame(state.head, payload).unwrap());
         assert!(matches!(Journal::read(bytes.as_slice(), INTENT, a), Err(LedgerError::Transition)));
+    }
+}
+
+#[test]
+fn manager_lookup_reopens_once_under_the_original_step_and_spends_only_the_host_hop() {
+    let step = Step::InitialStatus;
+    let a = Allowance {
+        manager_reply_bytes: Some(16_384),
+        ..allowance()
+    };
+    let reserve = FactRecord::ManagerLookupReserved {
+        step,
+        reference_ns: 200,
+    };
+    for outer_result_retained in [false, true] {
+        let mut bytes = Journal::initial(INTENT, a).unwrap();
+        for fact in facts(step)
+            .into_iter()
+            .take(if outer_result_retained { 4 } else { 3 })
+        {
+            append(&mut bytes, a, fact);
+        }
+        assert!(
+            read(&bytes, allowance())
+                .candidate(reserve.clone())
+                .is_err()
+        );
+        let pending = append(&mut bytes, a, reserve.clone());
+        assert_eq!(
+            (pending.signatures, pending.network, pending.observations),
+            (2, 7, 1)
+        );
+        assert!(pending.candidate(reserve.clone()).is_err());
+        let prepared = FactRecord::ManagerLookupPrepared {
+            step,
+            request: reference(b"signed lookup"),
+        };
+        let submitted = FactRecord::ManagerLookupSubmitted { step };
+        let result = FactRecord::ManagerLookupResult {
+            step,
+            result: reference(b"certified lookup response"),
+        };
+        for fact in [prepared, submitted, result] {
+            let reopened = append(&mut bytes, a, fact.clone());
+            assert!(reopened.candidate(fact).is_err());
+            assert!(reopened.candidate(reserve.clone()).is_err());
+            assert!(
+                reopened
+                    .candidate(FactRecord::CallSubmitted { step })
+                    .is_err()
+            );
+            assert_eq!(reopened.calls[0].update.reference_ns, 100);
+        }
+        let reopened = read(&bytes, a);
+        let evidence: Vec<_> = reopened.evidence().map(|(name, _)| name).collect();
+        assert!(evidence.contains(&step.name(custody::Role::ManagerLookupRequest)));
+        assert!(evidence.contains(&step.name(custody::Role::ManagerLookupResult)));
+        assert!(Journal::read(bytes.as_slice(), INTENT, allowance()).is_err());
+    }
+}
+
+#[test]
+fn manager_preflight_counts_original_slots_and_reserved_reply_capacity() {
+    for (reply_bytes, maximum) in [(16_384, 64), (1_048_576, 16)] {
+        let a = Allowance {
+            manager_reply_bytes: Some(reply_bytes),
+            ..allowance()
+        };
+        let mut bytes = Journal::initial(INTENT, a).unwrap();
+        let original = append(&mut bytes, a, facts(Step::InitialStatus)[0].clone());
+        original.check_manager_slots(maximum - 1).unwrap();
+        assert!(original.check_manager_slots(maximum).is_err());
+        assert!(original.check_manager_slots(u32::MAX).is_err());
     }
 }

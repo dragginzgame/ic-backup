@@ -5,6 +5,7 @@ use super::{
     replay::Error,
 };
 use crate::store::BackupDigest;
+use crate::store::operation::effect::Effect;
 use crate::store::operation::intent::Intent;
 use crate::store::{
     BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError,
@@ -23,8 +24,8 @@ use crate::store::{
 };
 use ic_host_artifacts::Length;
 use ic_host_fs::Kind as EntryKind;
-use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
 use ic_platform_protocol::management_snapshots::ReadKind;
+use ic_platform_protocol::management_snapshots::SnapshotArgs;
 use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
 use std::{
     ffi::OsStr,
@@ -136,7 +137,8 @@ impl CaptureOperation {
 
     pub(in crate::store) fn sync_published(&mut self) -> Result<BackupSummary, Error> {
         let journal = self.check()?;
-        let intent = CapturePlan::decode(self.intent.encoded())?;
+        let mut intent = CapturePlan::decode(self.intent.encoded())?;
+        intent.attach_codec(self.intent.profile().codec);
         let flow = self.project(&journal, &intent)?;
         let summary = self
             .published(&journal, &flow)?
@@ -200,12 +202,29 @@ impl CaptureOperation {
         Ok(())
     }
 
-    fn response(&self, journal: &Journal, step: Step) -> Result<Vec<u8>, Error> {
+    fn response(
+        &self,
+        journal: &Journal,
+        step: Step,
+        effect: impl FnOnce() -> Result<(Effect, usize), Error>,
+    ) -> Result<Vec<u8>, Error> {
         let call = journal
             .calls
             .iter()
             .find(|c| c.step == step)
             .ok_or(OperationStoreError::Incomplete)?;
+        if self.intent.profile().manager.is_some() {
+            let result = super::replay::resolve_call(
+                self.intent.view(),
+                call,
+                &effect()?,
+                &mut |call, role| self.read_role(call, role),
+            )?;
+            return result
+                .filter(|r| !r.rejected)
+                .map(|r| r.response)
+                .ok_or(Error::History);
+        }
         if call.update.result.is_some() {
             return Ok(crate::store::capture::advance::StatusEvidence::decode(
                 &self.read_role(call, Role::Result)?,
@@ -237,7 +256,19 @@ impl CaptureOperation {
         n: u32,
     ) -> Result<Vec<u8>, Error> {
         transfer
-            .decode_data(n, &self.response(journal, Step::Data(n))?)
+            .decode_data(
+                n,
+                &self.response(journal, Step::Data(n), || {
+                    Ok((
+                        Effect::Read(
+                            transfer
+                                .data_arguments(n)
+                                .map_err(crate::store::capture::procedure::Error::from)?,
+                        ),
+                        1024,
+                    ))
+                })?,
+            )
             .map_err(|error| crate::store::capture::procedure::Error::Data(error).into())
     }
 
@@ -458,31 +489,13 @@ impl CaptureOperation {
         flow: &Procedure<'_>,
     ) -> Result<Vec<u8>, Error> {
         let members = self.materialize(journal, flow, false)?;
-        let call = journal
-            .calls
-            .iter()
-            .find(|c| c.step == Step::Metadata)
-            .ok_or(OperationStoreError::Incomplete)?;
-        let request = self.intent.view().decode_request(
-            call.update.reference_ns,
-            self.read_role(call, Role::Request)?,
-        )?;
-        let EnvelopeContent::Call { arg, .. } = decode_envelope(
-            &request.envelope,
-            self.intent.profile().request_bytes as usize,
-        )
-        .map_err(|_| OperationStoreError::Changed)?
-        .value
-        .content
-        else {
-            return Err(Error::History);
-        };
         let transfer = flow.transfer()?;
-        let snapshot_id = transfer
-            .requests()
-            .next()
-            .ok_or(OperationStoreError::Incomplete)?
-            .snapshot_id;
+        let snapshot_id = transfer.snapshot_id();
+        let metadata_effect = Effect::Metadata(SnapshotArgs {
+            canister_id: self.intent.request().target.canister,
+            snapshot_id: snapshot_id.to_vec(),
+        });
+        let (_, arg) = metadata_effect.encode(512).map_err(|_| Error::History)?;
         let file = open_optional(&self.directory, "journal.bin")
             .map_err(OperationStoreError::from)?
             .ok_or(OperationStoreError::Incomplete)?;
@@ -516,7 +529,9 @@ impl CaptureOperation {
                 sha256: BackupDigest::from_bytes(identity.sha256).to_string(),
             },
             metadata_arguments: commitment(&arg),
-            metadata_reply: commitment(&self.response(journal, Step::Metadata)?),
+            metadata_reply: commitment(
+                &self.response(journal, Step::Metadata, || Ok((metadata_effect, 512)))?,
+            ),
             members,
         };
         let bytes = serde_json::to_vec(&record).map_err(OperationStoreError::from)?;

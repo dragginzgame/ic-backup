@@ -92,6 +92,21 @@ pub(in crate::store) enum FactRecord {
         step: Step,
         certificate: ReferenceRecord,
     },
+    ManagerLookupReserved {
+        step: Step,
+        reference_ns: u64,
+    },
+    ManagerLookupPrepared {
+        step: Step,
+        request: ReferenceRecord,
+    },
+    ManagerLookupSubmitted {
+        step: Step,
+    },
+    ManagerLookupResult {
+        step: Step,
+        result: ReferenceRecord,
+    },
     MaterializationStarted,
     PublishReady {
         completed_at_ns: u64,
@@ -109,6 +124,7 @@ struct FrameRecord {
 // a persisted mutable allowance. The immutable intent decoder owns their bounds.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::store) struct Allowance {
+    pub(in crate::store) manager_reply_bytes: Option<u32>,
     pub(in crate::store) signatures: u32,
     pub(in crate::store) network: u32,
     pub(in crate::store) observations: u32,
@@ -166,12 +182,16 @@ pub(in crate::store) struct Call {
     pub(in crate::store) step: Step,
     pub(in crate::store) update: Invocation,
     pub(in crate::store) observation: Option<Invocation>,
+    pub(in crate::store) manager_lookup: Option<Invocation>,
 }
 impl Call {
     // This only establishes that evidence exists for semantic replay. It does not
     // infer a terminal outcome, or policy success, from an observation certificate.
     fn has_outcome_evidence(&self) -> bool {
-        self.update.result.is_some()
+        self.manager_lookup
+            .as_ref()
+            .is_some_and(|lookup| lookup.result.is_some())
+            || self.update.result.is_some()
             || self
                 .observation
                 .as_ref()
@@ -199,6 +219,7 @@ impl Journal {
         let limits = intent.view().limits();
         let profile = intent.view().profile();
         Allowance {
+            manager_reply_bytes: profile.manager.as_ref().map(|manager| manager.reply_bytes),
             signatures: limits.signing_requests,
             network: limits.network_requests,
             observations: limits.observations,
@@ -304,6 +325,7 @@ impl Journal {
         }
         match fact {
             FactRecord::CallReserved { step, reference_ns } => {
+                self.check_manager_slots(1)?;
                 let previous = self.calls.last();
                 let ordered = match (previous.map(|call| call.step), step) {
                     (None, Step::RestoreInitialStatus)
@@ -346,6 +368,7 @@ impl Journal {
                     step: *step,
                     update,
                     observation: None,
+                    manager_lookup: None,
                 });
             }
             FactRecord::CallPrepared { step, request } => self
@@ -376,6 +399,26 @@ impl Journal {
             FactRecord::ObservationResult { step, certificate } => self
                 .observation(*step)?
                 .settle(certificate, allowance.result_bytes)?,
+            FactRecord::ManagerLookupReserved { step, reference_ns } => {
+                let call = self.call(*step)?;
+                if allowance.manager_reply_bytes.is_none()
+                    || !call.update.submitted
+                    || call.manager_lookup.is_some()
+                    || *reference_ns < call.update.reference_ns
+                {
+                    return Err(LedgerError::Transition);
+                }
+                let lookup = Invocation::reserved(*reference_ns)?;
+                self.reserve(allowance, true)?;
+                self.call(*step)?.manager_lookup = Some(lookup);
+            }
+            FactRecord::ManagerLookupPrepared { step, request } => self
+                .manager_lookup(*step)?
+                .prepare(request, allowance.request_bytes)?,
+            FactRecord::ManagerLookupSubmitted { step } => self.manager_lookup(*step)?.submit()?,
+            FactRecord::ManagerLookupResult { step, result } => self
+                .manager_lookup(*step)?
+                .settle(result, allowance.result_bytes)?,
             FactRecord::MaterializationStarted => {
                 if self.materialization
                     || !self.calls.last().is_some_and(|call| {
@@ -433,10 +476,30 @@ impl Journal {
         Ok(())
     }
 
+    // Root enforces these limits across its lifetime. The host can refuse an
+    // impossible local remainder before spending without assuming capacity on Root.
+    pub(in crate::store) fn check_manager_slots(&self, additional: u32) -> Result<(), LedgerError> {
+        if let Some(reply_bytes) = self.allowance.manager_reply_bytes {
+            let used = u32::try_from(self.calls.len()).map_err(|_| LedgerError::Transition)?;
+            let slots = used
+                .checked_add(additional)
+                .ok_or(LedgerError::Transition)?;
+            if slots > 64 || u64::from(slots) * u64::from(reply_bytes) > 16 * 1024 * 1024 {
+                return Err(LedgerError::Transition);
+            }
+        }
+        Ok(())
+    }
     fn call(&mut self, step: Step) -> Result<&mut Call, LedgerError> {
         self.calls
             .last_mut()
             .filter(|call| call.step == step)
+            .ok_or(LedgerError::Transition)
+    }
+    fn manager_lookup(&mut self, step: Step) -> Result<&mut Invocation, LedgerError> {
+        self.call(step)?
+            .manager_lookup
+            .as_mut()
             .ok_or(LedgerError::Transition)
     }
     fn observation(&mut self, step: Step) -> Result<&mut Invocation, LedgerError> {
@@ -454,7 +517,11 @@ impl Journal {
         self.network = self
             .network
             .checked_add(allowance.signer_network)
-            .and_then(|n| n.checked_add(1))
+            .and_then(|n| {
+                n.checked_add(
+                    1 + u32::from(allowance.manager_reply_bytes.is_some() && !observation),
+                )
+            })
             .ok_or(LedgerError::Transition)?;
         self.observations += u32::from(observation);
         self.frames_reserved = self
@@ -494,6 +561,8 @@ impl Journal {
 mod completion;
 pub(in crate::store) mod custody;
 mod dispatch;
+pub(in crate::store) mod effect;
+pub(in crate::store) mod manager;
 pub(in crate::store) mod replay;
 pub(in crate::store) mod runtime;
 

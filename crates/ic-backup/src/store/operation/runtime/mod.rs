@@ -1,5 +1,6 @@
 //! Fixed capture/restore dispatch over the common recorder.
 use super::custody::{Recorder, Role};
+use super::manager::RootExchange;
 use super::{FRAME_RESERVATION, FRAMES, FactRecord, Journal, ReferenceRecord, Step};
 use crate::store::capture::{
     OperationStoreError,
@@ -94,6 +95,10 @@ pub trait Guard {
 
 /// One direct transport, external signer and action-aware application guard.
 pub struct Connection<S, G> {
+    pub(in crate::store) manager: Option<(
+        crate::store::RootManager,
+        &'static dyn crate::store::RootCodec,
+    )>,
     pub(in crate::store) transport: BackupHttpTransport,
     pub(in crate::store) signer: S,
     pub(in crate::store) guard: G,
@@ -194,6 +199,18 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         signing: bool,
     ) -> Result<(), Error<S::Error, G::Error>> {
         let profile = intent.profile();
+        if let Some(manager) = &profile.manager {
+            if self.manager.as_ref().is_none_or(|(authority, codec)| {
+                authority != manager || codec.protocol() != manager.protocol
+            }) || profile
+                .codec
+                .is_none_or(|codec| codec.protocol() != manager.protocol)
+            {
+                return Err(intent::Error::ManagerExchange.into());
+            }
+        } else if self.manager.is_some() {
+            return Err(Error::Binding);
+        }
         self.transport
             .admit_binding(intent.target().network, intent.trust_root())?;
         if profile.transport != self.transport.commitment()
@@ -259,6 +276,7 @@ impl Journal {
     // Admit the whole known remainder before take or the first payload request.
     // This is a pure ceiling check, not another persisted reservation or schedule.
     pub(in crate::store) fn remaining(&self, calls: u32) -> Result<(), OperationStoreError> {
+        self.check_manager_slots(calls)?;
         let a = self.allowance;
         let (local_frames, local_bytes) = if self
             .calls
@@ -273,7 +291,10 @@ impl Journal {
             )
         };
         let fits = (|| {
-            let network = calls.checked_mul(a.signer_network.checked_add(1)?)?;
+            let network = calls.checked_mul(
+                a.signer_network
+                    .checked_add(1 + u32::from(a.manager_reply_bytes.is_some()))?,
+            )?;
             let frames = calls.checked_mul(4)?.checked_add(local_frames)?;
             let evidence = u64::from(calls)
                 .checked_mul(
@@ -326,25 +347,66 @@ impl<P: Intent> Recorder<P> {
         connection: &mut Connection<S, G>,
         step: Step,
         action: Action,
-        method: &'static str,
-        arguments: &[u8],
+        exchange: RootExchange,
+        effect: &(super::effect::Effect, usize),
         mut source: impl FnMut() -> Result<(), OperationStoreError>,
     ) -> Result<Option<Applied>, Error<S::Error, G::Error>> {
         let original = self.intent.clone();
         let intent = original.view();
-        let pending = journal.calls.last().filter(|c| c.step == step);
-        if pending.is_some_and(|c| c.update.submitted || c.update.request.is_none()) {
+        let call = journal.calls.last().filter(|c| c.step == step);
+        let pending = match exchange {
+            RootExchange::Execute => call.map(|call| &call.update),
+            RootExchange::Lookup => {
+                let call = call
+                    .filter(|call| call.update.submitted)
+                    .ok_or(Error::Resolved)?;
+                call.manager_lookup.as_ref()
+            }
+        };
+        if pending.is_some_and(|invocation| invocation.submitted || invocation.request.is_none()) {
             return Ok(None);
         }
+        let reference = match pending {
+            Some(invocation) => invocation.reference_ns,
+            None => now().ok_or(Error::Deadline)?,
+        };
+        let execute_reference = call.map_or(reference, |call| call.update.reference_ns);
+        let original_call =
+            super::manager::Call::prepare(intent, step, execute_reference, &effect.0, effect.1)?;
+        let (method, arguments, role, original_id) = match exchange {
+            RootExchange::Execute => {
+                let (method, args) = original_call.execute();
+                (method, args, Role::Request, None)
+            }
+            RootExchange::Lookup => {
+                let super::manager::Call::Root { binding, .. } = &original_call else {
+                    return Err(Error::Binding);
+                };
+                let call = call.ok_or(Error::Resolved)?;
+                let original = intent
+                    .decode_request(execute_reference, self.read_role(call, Role::Request)?)?;
+                (
+                    "snapshot_lookup",
+                    binding.lookup(),
+                    Role::ManagerLookupRequest,
+                    Some(original.request_id),
+                )
+            }
+        };
         if pending.is_none() {
             source()?;
-            let reference = now().ok_or(Error::Deadline)?;
             connection.admit(intent, action, reference, true)?;
             let reserved = self.append(
                 &journal,
-                FactRecord::CallReserved {
-                    step,
-                    reference_ns: reference,
+                match exchange {
+                    RootExchange::Execute => FactRecord::CallReserved {
+                        step,
+                        reference_ns: reference,
+                    },
+                    RootExchange::Lookup => FactRecord::ManagerLookupReserved {
+                        step,
+                        reference_ns: reference,
+                    },
                 },
                 None,
             )?;
@@ -361,12 +423,13 @@ impl<P: Intent> Recorder<P> {
                 return Err(OperationStoreError::Changed.into());
             }
             let prepared = intent.decode_request(reference, envelope)?;
-            intent.authenticate_request(reference, &prepared, method, arguments)?;
+            intent.authenticate_ingress(reference, &prepared, method, arguments)?;
+            let request = ReferenceRecord::new(&prepared.envelope)?;
             journal = self.append(
                 &reserved,
-                FactRecord::CallPrepared {
-                    step,
-                    request: ReferenceRecord::new(&prepared.envelope)?,
+                match exchange {
+                    RootExchange::Execute => FactRecord::CallPrepared { step, request },
+                    RootExchange::Lookup => FactRecord::ManagerLookupPrepared { step, request },
                 },
                 Some(&prepared.envelope),
             )?;
@@ -375,12 +438,21 @@ impl<P: Intent> Recorder<P> {
             .calls
             .last()
             .ok_or(OperationStoreError::Incomplete)?;
-        let reference = call.update.reference_ns;
-        let prepared = intent.decode_request(reference, self.read_role(call, Role::Request)?)?;
-        intent.authenticate_request(reference, &prepared, method, arguments)?;
+        let prepared = intent.decode_request(reference, self.read_role(call, role)?)?;
+        if original_id == Some(prepared.request_id) {
+            return Err(Error::Binding);
+        }
+        intent.authenticate_ingress(reference, &prepared, method, arguments)?;
         source()?;
         connection.admit(intent, action, reference, false)?;
-        let submitted = self.append(&journal, FactRecord::CallSubmitted { step }, None)?;
+        let submitted = self.append(
+            &journal,
+            match exchange {
+                RootExchange::Execute => FactRecord::CallSubmitted { step },
+                RootExchange::Lookup => FactRecord::ManagerLookupSubmitted { step },
+            },
+            None,
+        )?;
         source()?;
         connection.admit(intent, action, reference, false)?;
         source()?;
@@ -405,26 +477,28 @@ impl<P: Intent> Recorder<P> {
             // submit_expected authenticated these owned bytes against this exact
             // request/root/window. Retain them before applying procedure policy.
             let bytes = evidence.encode(intent.profile().result_bytes)?;
-            let settled = self.append(
+            let result = ReferenceRecord::new(&bytes)?;
+            self.append(
                 &submitted,
-                FactRecord::CallResult {
-                    step,
-                    result: ReferenceRecord::new(&bytes)?,
+                match exchange {
+                    RootExchange::Execute => FactRecord::CallResult { step, result },
+                    RootExchange::Lookup => FactRecord::ManagerLookupResult { step, result },
                 },
                 Some(&bytes),
             )?;
 
-            let _ = settled;
             Ok(())
         })();
         if let Err(error) = retained {
             return Err(error.after_response(prepared.request_id, evidence.proof));
         }
-        Ok(Some(Applied {
-            request_id: prepared.request_id,
-            rejected: evidence.rejected,
-            response: evidence.response,
-        }))
+        Ok(original_call
+            .result(exchange, evidence.rejected, evidence.response)?
+            .map(|(rejected, response)| Applied {
+                request_id: original_id.unwrap_or(prepared.request_id),
+                rejected,
+                response,
+            }))
     }
     pub(in crate::store) async fn observe<S: Signer, G: Guard>(
         &mut self,
@@ -512,7 +586,7 @@ impl<P: Intent> Recorder<P> {
         let certificate = connection
             .transport
             .read_state_certificate(
-                intent.target().canister,
+                intent.requirements().effective_canister(),
                 &lookup,
                 original.request_id,
                 intent.admission(reference)?.submit_deadline_ns,
@@ -563,27 +637,61 @@ impl<P: Intent> Recorder<P> {
     pub(in crate::store) fn import_reply(
         &mut self,
         journal: &Journal,
-        method: &str,
-        arguments: &[u8],
+        effect: &(super::effect::Effect, usize),
+        exchange: RootExchange,
         certificate: &[u8],
-    ) -> Result<Applied, super::replay::Error> {
+    ) -> Result<Option<Applied>, super::replay::Error> {
         let intent = self.intent.view();
         let call = journal
             .calls
             .last()
             .ok_or(OperationStoreError::Incomplete)?;
-        if !call.update.submitted || call.update.result.is_some() {
+        let execute_reference = call.update.reference_ns;
+        let original_call = super::manager::Call::prepare(
+            intent,
+            call.step,
+            execute_reference,
+            &effect.0,
+            effect.1,
+        )?;
+        let original =
+            intent.decode_request(execute_reference, self.read_role(call, Role::Request)?)?;
+        let (method, arguments) = original_call.execute();
+        intent.authenticate_ingress(execute_reference, &original, method, arguments)?;
+        let original_id = original.request_id;
+        let (request, invocation) = match exchange {
+            RootExchange::Execute => (original, &call.update),
+            RootExchange::Lookup => {
+                let super::manager::Call::Root { binding, .. } = &original_call else {
+                    return Err(super::replay::Error::History);
+                };
+                let lookup = call
+                    .manager_lookup
+                    .as_ref()
+                    .ok_or(OperationStoreError::Incomplete)?;
+                let request = intent.decode_request(
+                    lookup.reference_ns,
+                    self.read_role(call, Role::ManagerLookupRequest)?,
+                )?;
+                intent.authenticate_ingress(
+                    lookup.reference_ns,
+                    &request,
+                    "snapshot_lookup",
+                    binding.lookup(),
+                )?;
+                if request.request_id == original_id {
+                    return Err(super::replay::Error::History);
+                }
+                (request, lookup)
+            }
+        };
+        if !invocation.submitted || invocation.result.is_some() {
             return Err(super::replay::Error::History);
         }
-        let request = intent.decode_request(
-            call.update.reference_ns,
-            self.read_role(call, Role::Request)?,
-        )?;
-        intent.authenticate_request(call.update.reference_ns, &request, method, arguments)?;
         let (rejected, response) = intent
             .certificate()
             .response(
-                &intent.admission(call.update.reference_ns)?,
+                &intent.admission(invocation.reference_ns)?,
                 &request,
                 certificate,
                 &intent.profile().root_der,
@@ -595,21 +703,21 @@ impl<P: Intent> Recorder<P> {
             proof: certificate.to_vec(),
         };
         let bytes = evidence.encode(intent.profile().result_bytes)?;
-        self.append(
-            journal,
-            FactRecord::CallResult {
-                step: call.step,
-                result: ReferenceRecord::new(&bytes)?,
-            },
-            Some(&bytes),
-        )?;
-        Ok(Applied {
-            request_id: request.request_id,
-            rejected: evidence.rejected,
-            response: evidence.response,
-        })
+        let result = ReferenceRecord::new(&bytes)?;
+        let step = call.step;
+        let fact = match exchange {
+            RootExchange::Execute => FactRecord::CallResult { step, result },
+            RootExchange::Lookup => FactRecord::ManagerLookupResult { step, result },
+        };
+        self.append(journal, fact, Some(&bytes))?;
+        Ok(original_call
+            .result(exchange, rejected, evidence.response)?
+            .map(|(rejected, response)| Applied {
+                request_id: original_id,
+                rejected,
+                response,
+            }))
     }
-
     pub(in crate::store) fn import_observation(
         &mut self,
         journal: &Journal,

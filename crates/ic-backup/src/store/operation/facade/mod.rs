@@ -79,12 +79,24 @@ impl<S: Signer, G: Guard> Connection<S, G> {
     #[must_use]
     pub fn new(transport: crate::store::BackupHttpTransport, signer: S, guard: G) -> Self {
         Self {
+            manager: None,
             transport,
             signer,
             guard,
         }
     }
 
+    /// Select Root for new capture and restore approvals. The adapter performs pure
+    /// framing and retained-result decoding. Backup owns all signing and submission.
+    #[must_use]
+    pub fn with_root_manager(
+        mut self,
+        manager: crate::store::RootManager,
+        codec: &'static dyn crate::store::RootCodec,
+    ) -> Self {
+        self.manager = Some((manager, codec));
+        self
+    }
     /// Bind an immutable approval to this actual connection and its finite policy.
     ///
     /// No clock, signing, filesystem or network work occurs. A changed connection
@@ -103,6 +115,8 @@ impl<S: Signer, G: Guard> Connection<S, G> {
     }
     fn profile(&self, options: OperationOptions) -> ProfileRecord {
         ProfileRecord {
+            manager: self.manager.as_ref().map(|(manager, _)| manager.clone()),
+            codec: self.manager.as_ref().map(|(_, codec)| *codec),
             transport: self.transport.commitment(),
             signer: self.signer.protocol(),
             guard: self.guard.protocol(),
@@ -159,7 +173,7 @@ impl BackupStore {
         id: &str,
         approval: BackupDigest,
     ) -> Result<CaptureOperation, Error> {
-        let operation = CaptureOperation::open(&self.root, id)?;
+        let operation = CaptureOperation::open_with_codec(&self.root, id, self.codec)?;
         if operation.intent.digest() != approval {
             return Err(OperationStoreError::ApprovalMismatch.into());
         }
@@ -221,7 +235,7 @@ impl CaptureOperation {
         self.reconcile_certificate(certificate, false)
     }
 
-    /// Import the surviving reply to an already-submitted original read-state lookup.
+    /// Import the surviving certificate for the original read-state or Root lookup.
     /// Uses that lookup's retained time policy without new spending, clock or effects.
     /// # Errors
     /// Refuses missing/resolved lookup, changed custody, invalid proof or failed policy.
@@ -244,11 +258,15 @@ impl CaptureOperation {
         if flow.next()? != crate::store::capture::procedure::Next::Call(call.step) {
             return Err(Error::History);
         }
-        let (method, arguments) = flow.request()?;
-        let result = if observation {
+        let result = if observation && intent.profile().manager.is_none() {
             self.import_observation(&journal, certificate)?
         } else {
-            Some(self.import_reply(&journal, method, &arguments, certificate)?)
+            let exchange = if observation {
+                crate::store::RootExchange::Lookup
+            } else {
+                crate::store::RootExchange::Execute
+            };
+            self.import_reply(&journal, &flow.effect()?, exchange, certificate)?
         };
         let Some(result) = result else {
             return Ok(());

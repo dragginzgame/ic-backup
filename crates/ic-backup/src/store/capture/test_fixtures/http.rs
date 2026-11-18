@@ -71,11 +71,15 @@ pub(in crate::store) fn input_for(
     a.prepare_deadline_ns = now() + 10_000_000_000;
     a.submit_deadline_ns = a.prepare_deadline_ns + 10_000_000_000;
     let certificate = signed(reply_tree(&r.request_id, &response, b"replied"), 1, None);
+    (p, r, a, call_body(&certificate))
+}
+
+pub(in crate::store) fn call_body(certificate: &[u8]) -> Vec<u8> {
     // Fixed IC v3 CBOR map with one bounded certificate byte string; not a production encoder.
     let mut body = b"\xa2\x66status\x67replied\x6bcertificate\x59".to_vec();
     body.extend_from_slice(&u16::try_from(certificate.len()).unwrap().to_be_bytes());
-    body.extend_from_slice(&certificate);
-    (p, r, a, body)
+    body.extend_from_slice(certificate);
+    body
 }
 
 pub(in crate::store) fn set_expiry(request: &mut PreparedStatus, expiry: u64, scheme: Scheme) {

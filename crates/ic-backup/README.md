@@ -33,10 +33,12 @@ canister and restoring it to the same canister, network and release. Restore
 verifies metadata and every uploaded byte before loading, then returns
 `LoadedStopped`. Application acceptance and restarting remain caller-owned.
 
-The current implementation uses a host signer that is an actual controller of
-the target. Canic integration is required for the intended managed application
-product and is still unfinished. A host controlling a manager canister does not
-thereby control that manager's children. No manager route is implemented here.
+A direct capture uses a host signer that controls the child. For a Canic-managed
+child, use `connection.with_root_manager(manager, codec)` and
+`store.with_root_codec(codec)`. The host signer must control the configured Root,
+which must be the child's sole controller. Supply the codec matching the original
+approval whenever reopening the store. The optional Canic Root endpoints and
+checked decoder used for local qualification are still unpublished.
 
 This incompatible restart replaces legacy `ic-backup`/`ic-backup-agent` APIs.
 Version 0.105.0 remains an experimental restart release. Rust 1.100 or later is
@@ -62,7 +64,11 @@ Configure one `BackupConnection` from the transport, signer and guard. Plan and
 approve capture with `connection.plan`, then call `store.create_capture` once.
 Drive `operation.advance` until `Complete` or `NeedsAttention`. Each advance
 submits at most one management call; pending requests never retry automatically.
-The public API documentation contains compiled examples of the advance loop.
+For a submitted Root step with an uncertain result, reopen with the same
+approval and call `reconcile_observation` once. It spends one lookup reservation
+and authenticates Root's retained inner result. A missing record, pending result
+or outer rejection leaves the step unresolved. A surviving lookup certificate
+can be imported with `reconcile_observation_reply` without another submission.
 
 For restore, open and verify the original capture source, call
 `connection.plan_restore`, approve the digest and create the restore under its
@@ -72,7 +78,7 @@ parts of the procedure, not arbitrary caller-selected stages.
 
 ## Capacity profile
 
-The qualified first-release profile contains **20 MiB of combined module, heap,
+The qualified direct-controller profile contains **20 MiB of combined module, heap,
 stable memory and actual chunk bytes**. Linux PocketIC exercises capture, restore,
 interrupted-transfer recovery and offline replay at that size. Qualification is
 shape-bounded; arbitrary chunk counts have no blanket guarantee. See the maintained

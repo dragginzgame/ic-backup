@@ -132,6 +132,9 @@ impl CapturePolicy {
 }
 
 impl CaptureTransfer<'_> {
+    pub(in crate::store) fn snapshot_id(&self) -> &[u8] {
+        self.snapshot_id
+    }
     /// Number of data reads, including every named chunk regardless of its length.
     #[must_use]
     pub const fn data_calls(&self) -> u32 {

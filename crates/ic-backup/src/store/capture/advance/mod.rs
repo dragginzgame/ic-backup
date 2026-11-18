@@ -26,7 +26,7 @@ pub use direct::CaptureTiming;
 pub use http::{BackupHttpError, BackupHttpTransport, ReceivedCertificate};
 pub use request::CaptureLookupError;
 pub(in crate::store) use request::CaptureLookupPolicy;
-pub(in crate::store) use request::DirectRequirements;
+pub(in crate::store) use request::IngressRequirements;
 pub use request::StatusRequestError;
 pub(in crate::store) use request::authenticate_direct_request;
 pub(in crate::store) use request::authenticate_lookup_envelope;
@@ -155,12 +155,18 @@ impl PreparedStatus {
         arguments: &[u8],
     ) -> Result<(), OperationStoreError> {
         let expected = plan.request().sender;
-        self.validate_direct_call(expected, method, arguments)
+        self.validate_direct_call(
+            expected,
+            ic_platform_types::Principal::management_canister(),
+            method,
+            arguments,
+        )
     }
 
     fn validate_direct_call(
         &self,
         expected: ic_platform_types::Principal,
+        recipient: ic_platform_types::Principal,
         method: &str,
         arguments: &[u8],
     ) -> Result<(), OperationStoreError> {
@@ -180,7 +186,7 @@ impl PreparedStatus {
             return Err(OperationStoreError::StatusAdmission);
         };
         let matches_status = sender.as_slice() == expected.as_slice()
-            && canister_id.as_slice().is_empty()
+            && canister_id.as_slice() == recipient.as_slice()
             && method_name == method
             && arg.as_slice() == arguments;
         if !matches_status

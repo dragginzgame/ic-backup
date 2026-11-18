@@ -271,3 +271,44 @@ fn malformed_signature_scalars_and_public_points_refuse() {
         Err(StatusRequestError::Signature)
     ));
 }
+
+#[test]
+fn root_exchange_authenticates_recipient_method_and_original_ingress_id() {
+    let root = Principal::from_slice(&[8, 1]);
+    let mut ids = Vec::new();
+    for method in ["snapshot_execute", "snapshot_lookup"] {
+        let (plan, mut prepared) = fixture(Scheme::Ed25519);
+        let original_id = prepared.request_id;
+        change(&mut prepared, |envelope| {
+            if let EnvelopeContent::Call {
+                canister_id,
+                method_name,
+                arg,
+                ..
+            } = &mut envelope.content
+            {
+                *canister_id = root.as_slice().try_into().unwrap();
+                *method_name = method.into();
+                *arg = vec![42];
+            }
+            envelope.sender_sig = Some(Scheme::Ed25519.sign(&envelope.content.signable().unwrap()));
+        });
+        let check = |recipient, expected_method, record: &PreparedStatus| {
+            super::super::request::authenticate_direct_request(
+                plan.request().sender,
+                recipient,
+                4096,
+                record,
+                expected_method,
+                &[42],
+            )
+        };
+        check(root, method, &prepared).unwrap();
+        assert!(check(Principal::management_canister(), method, &prepared).is_err());
+        assert!(check(root, "canister_status", &prepared).is_err());
+        ids.push(prepared.request_id);
+        prepared.request_id = original_id;
+        assert!(check(root, method, &prepared).is_err());
+    }
+    assert_ne!(ids[0], ids[1]);
+}

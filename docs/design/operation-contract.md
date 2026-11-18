@@ -422,3 +422,14 @@ No transfer-binding, data-accepted or assembly-verified events remain.
 Final status is distinct; only exact published completion yields a receipt.
 The [capture contract](../architecture/capture-intent.md) owns pending recovery,
 observation, succession and older-source admission. The source-bound same-canister restore is implemented under the local-store contract.
+
+For the manager profile, the common journal reserves one inner management hop
+and one host update for an execute, plus the approved signing-service allowance.
+A Root lookup has its own reservation time, signed request, submission and
+certificate-backed result file under the original step. It consumes one
+observation, one signature and one host update plus signing-service allowance.
+Lookup remains available after a lost outer response or a retained outer
+response that leaves the inner outcome unresolved. Semantic replay must check
+that the inner outcome is unresolved before reserving lookup. No journal frame
+alone establishes that outcome. Reopening at any lookup stage preserves the
+original execute and all spent allowance.

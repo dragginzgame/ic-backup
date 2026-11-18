@@ -40,16 +40,24 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.45.0 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.45.1 is adopted from its registry
 archive with SHA-256
-`3789a925c1165317eff84cc80436195b66c0478b0c2b441bc2f1a755caf6a23a`,
-source `53c0eba3b1b207e0cd9e747eece438e21b693261`. Both workspaces declare
+`dc38b1d6932310739c21ab8a821c811d4bf43e306f89751faea38638c8bc1373`,
+source `9497997f8abdb72aea01b32da6d0a092c0ed6ed4`. Both workspaces declare
 its exact pin and each member inherits the disabled development marker.
-The canonical exporter installs ten selected entrypoints, including the shared
+The canonical exporter installs twelve selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
 The shared publication adapter is selected; no producer regression suites or
 automatic version/tag release runner are installed. See the
 [publication workflow](publication.md) for gates, eligibility and recovery.
+
+Both CI jobs prepare Rust through the selected
+`vendor/toko-tooling/scripts/dev/prepare-rust-toolchain.sh --toolchain-file rust-toolchain.toml`,
+invoked by `scripts/ci/setup.pl rust-toolchain`. Each step adds the previously
+prepared `.tools/host/bin` to PATH so the helper uses the installed `yq` and `jq`.
+The TOML file owns channel/profile/components/targets; CI repeats no selection.
+Canonical export retains this helper and its declared workspace-reader companion.
+Setup diagnostics additionally selects the shared module (62 managed files total).
 
 ## Commands
 
@@ -498,13 +506,16 @@ unchanged runtime journeys. No release/support matrix or legacy test rerun is cl
 
 ### CI setup diagnostics
 
-Toko 0.44.11's setup diagnostic policy is wired through `scripts/ci/setup.pl`
+Toko 0.45.1's `SetupDiagnostics.pm` owns command capture/status and redaction;
+`scripts/ci/setup.pl` owns the per-phase directory and exclusive artifact writer
 for host tools, Rust toolchain/tools, dependency fetches and the secret scanner.
-Only that selected command's bounded, sanitized output is retained; no cache,
+Only a failed command's bounded, sanitized excerpt is retained; successful phases
+retain a status-only receipt. No cache,
 home, environment dump or backup store is uploaded. Hidden attempt directories
-under `target/ci-setup/` hold at most 64 KiB of diagnostics plus a small status
-header per phase. URLs, known secret environment values, credential lines and
-private keys are omitted; oversized lines and truncation are explicit.
+under `target/ci-setup/` hold at most 100 lines / 32 KiB of diagnostics plus a small
+status header per phase. Sensitive URLs, known secret environment values,
+credential lines and private keys are omitted; oversized lines/truncation are
+explicit, and workflow commands are neutralized before printing or upload.
 Failures print an 8 KiB excerpt and retain their original exit status. Failed
 collection is reported separately and cannot turn a failed command green.
 CI uploads only these diagnostic files, including hidden directories, for seven

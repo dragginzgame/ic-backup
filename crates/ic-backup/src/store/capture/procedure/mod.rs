@@ -13,9 +13,8 @@ use super::{
 use crate::store::PreparedStatus;
 #[cfg(test)]
 use crate::store::StatusEvidence;
-use crate::store::operation::Step;
-#[cfg(test)]
 use crate::store::operation::intent::Intent;
+use crate::store::operation::{Step, effect::Effect};
 use ic_platform_protocol::management_snapshots::Extent;
 use ic_platform_protocol::management_snapshots::{
     CanisterArgs, ReadKind, Snapshot, SnapshotMetadata,
@@ -115,45 +114,40 @@ impl<'a> Procedure<'a> {
     }
 
     // The consumer cannot choose a phase, ordinal, target, method or arguments.
+    #[cfg(test)]
     pub(in crate::store) fn request(&self) -> Result<(&'static str, Vec<u8>), Error> {
+        let (effect, limit) = self.effect()?;
+        effect.encode(limit).map_err(|_| Error::Arguments)
+    }
+
+    pub(in crate::store) fn effect(&self) -> Result<(Effect, usize), Error> {
         let Next::Call(step) = self.next()? else {
             return Err(Error::Order);
         };
-        let (method, arguments) = match step {
-            Step::InitialStatus | Step::FinalStatus | Step::ListSnapshots => (
-                if step == Step::ListSnapshots {
-                    "list_canister_snapshots"
-                } else {
-                    "canister_status"
-                },
-                (CanisterArgs {
-                    canister_id: self.intent.plan().request().target.canister,
-                })
-                .encode(256)
-                .map_err(|_| Error::Arguments)?,
-            ),
+        let child = CanisterArgs {
+            canister_id: self.intent.request().target.canister,
+        };
+        Ok(match step {
+            Step::InitialStatus | Step::FinalStatus => (Effect::Status(child), 256),
+            Step::ListSnapshots => (Effect::List(child), 256),
             Step::TakeSnapshot => (
-                "take_canister_snapshot",
-                (self.intent.plan().take_snapshot_arguments(
+                Effect::Take(self.intent.plan().take_snapshot_arguments(
                     &self.inventory,
                     self.intent.profile().snapshot_capacity,
-                )?)
-                .encode(512)
-                .map_err(|_| Error::Arguments)?,
+                )?),
+                512,
             ),
             Step::Metadata => (
-                "read_canister_snapshot_metadata",
-                self.intent
-                    .plan()
-                    .metadata_read_arguments(self.snapshot.as_ref().ok_or(Error::Order)?)?,
+                Effect::Metadata(
+                    self.intent
+                        .plan()
+                        .metadata_read_arguments(self.snapshot.as_ref().ok_or(Error::Order)?)?,
+                ),
+                512,
             ),
-            Step::Data(n) => (
-                "read_canister_snapshot_data",
-                self.transfer()?.data_arguments(n)?,
-            ),
+            Step::Data(n) => (Effect::Read(self.transfer()?.data_arguments(n)?), 1024),
             _ => return Err(Error::Order),
-        };
-        Ok((method, arguments))
+        })
     }
 
     #[cfg(test)]
@@ -216,7 +210,10 @@ impl<'a> Procedure<'a> {
         }
         self.next = match step {
             Step::InitialStatus => {
-                self.intent.plan().validate_status_reply(reply)?;
+                self.intent
+                    .view()
+                    .status_requirements()
+                    .validate_status_reply(reply)?;
                 self.initial_request = Some(request_id);
                 Next::Call(Step::ListSnapshots)
             }
@@ -280,7 +277,10 @@ impl<'a> Procedure<'a> {
                 if self.initial_request == Some(request_id) {
                     return Err(Error::ReusedStatus);
                 }
-                self.intent.plan().validate_status_reply(reply)?;
+                self.intent
+                    .view()
+                    .status_requirements()
+                    .validate_status_reply(reply)?;
                 Next::Publish
             }
             _ => return Err(Error::Order),

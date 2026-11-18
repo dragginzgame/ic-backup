@@ -1,4 +1,98 @@
-# Current handoff — 2026-11-17
+# Current handoff — 2026-11-18
+
+## Root execute and original-result recovery — local qualification
+
+The public capture and restore loops now support an approved Canic Root through
+`BackupConnection::with_root_manager`. Backup derives the typed Platform effect,
+inner method, argument length/hash and absolute execute expiry. The Canic-owned
+codec prepares the execute and full-binding lookup frames. Backup signs, verifies
+and records each outer ingress separately. Reopening with
+`BackupStore::with_root_codec` selects the original protocol for offline replay.
+The child status checks require Root as sole controller. Direct approvals retain
+their existing bytes and direct recovery procedure.
+
+Linux PocketIC exercised the local unpushed Canic Root and child with a real
+host signer, Root as sole child controller and the Canic protocol's checked
+decoder. A loopback proxy retained then dropped the take and load responses.
+After each loss the host process exited. A fresh process reopened the approval,
+observed `NeedsAttention`, and recovered the original result with a separately
+signed lookup. Wire evidence records one take, one load and two lookups.
+Restore performed full readback and returned the stopped child to its original
+stable bytes after an independent fixture mutation. Another process verified
+completion after the server shut down. Captured payload was 1,690,546 bytes
+across seven 256 KiB-or-smaller reads. The 20 MiB profile is direct-only.
+
+The local harness, its dependency lock, HTTP evidence, original journals and
+certificates are under `target/evidence/root-host-consumer/`. The final run is
+`run-1794996922952207507`. The harness selected the unpublished Canic protocol
+read-only outside both tracked workspaces. The installed Root and child Wasm
+SHA-256 values are `d7302ff0f798570e0a8cf18192e2b6cd5d694b0a0e1a89e251b1fb773f7f4017`
+and `b062e14bc119ee14f194eac36b1819cc68e3d29574815676410075de2957a922`.
+The working protocol module SHA-256 was
+`7db42d24c980e1313c0f2e31754d98b2ac25ab3528be2f4af1cad5ec3b362d60`
+at Canic base `d652c55e4cc455a642f44645bf2e16a6d08baefc`. Qualification used
+fixture signing and application permission. The published supplier, production
+signer and application fencing are separate delivery work. This Root witness
+is local and outside hosted CI. Backup changes are uncommitted and unpublished.
+
+Five small test fixtures retain the approved intent, both signed Take/lookup
+envelopes, the lookup evidence and the independently decoded inner reply. The
+native replay regression authenticates the real certificates without an IC
+server and rejects corruption of each evidence input. Final checks passed:
+247 native tests, five doctests, 11 direct PocketIC journeys (104.60 s), both
+strict Clippy checks, Rustdoc, formatting, local links and diff checks.
+
+## Toko Tooling 0.45.1 adoption
+
+Both workspace pins and locks select Toko Tooling 0.45.1, source
+`9497997f8abdb72aea01b32da6d0a092c0ed6ed4`, registry archive SHA-256
+`dc38b1d6932310739c21ab8a821c811d4bf43e306f89751faea38638c8bc1373`.
+Canonical preview/update retained the pending CI toolchain helper and selected
+`SetupDiagnostics.pm`: twelve entrypoints / 62 admitted managed files. No managed
+file or receipt was edited by hand. Relative to saved starting locks, only the
+Tooling version/checksum changed in each workspace; existing supplier updates
+are preserved. Testkit/Process and product source are unchanged by this refresh.
+
+Backup's setup wrapper now delegates command execution, bounded stream capture
+and redaction to the shared module. Its own exclusive artifact writer retains
+phase/status evidence, the 8 KiB failure excerpt and original failure status;
+success stores a status-only receipt. CI artifact selection/retention stays with
+Backup. Consumer checks cover early failure, redaction/bounds, empty output,
+collector failure on success/failure, successful status-only retention and
+redirected evidence refusal. Both real workflow step bodies pass their eight
+toolchain-caller cases with rustup substituted, and publication-caller fixtures
+pass with registry effects substituted. No compiler installation or live upload
+was performed by those fixtures.
+
+Pending 0.105.5 includes this tooling refresh and the preceding CI helper change;
+package versions remain 0.105.4. Work is uncommitted/unpublished. Hosted CI was not
+awaited, and product/IC suites were not rerun for this setup-only change. Evidence:
+`target/evidence/tooling-refresh/`.
+Snapshot admission, Perl syntax, Actionlint, formatting, local links and diff
+checks pass; both workspace locked metadata checks also pass.
+
+## CI toolchain helper adoption
+
+Both Backup CI jobs now call the shared toolchain-file helper through the existing
+setup diagnostics wrapper. The invoking step exposes prepared host `yq` and `jq`
+via `.tools/host/bin`; channel/profile/components/targets have one owner in
+`rust-toolchain.toml`. Toko Tooling remains 0.45.0. Canonical preview/update retained
+the ten existing entrypoints and selected the helper with its declared companion:
+eleven entrypoints, 61 admitted managed files. No managed bytes were edited by hand.
+
+Actionlint and snapshot admission pass. Disposable checks execute both actual YAML
+step bodies with real helper/JSON/TOML tools and a stubbed rustup: current selection,
+changed profile/components/targets, original failure status/diagnostics and invalid
+policy refusal all pass (eight cases). No compiler was installed, no product/IC
+tests were rerun for CI-only wiring, and hosted CI was not awaited. Evidence is
+under `target/evidence/ci-toolchain-helper/`.
+
+Query was inspected read-only at base `51666c45c77e614972e951363d3f0b556999fbe3`
+with a dirty workflow: both corresponding steps already use this helper and PATH
+through Query's own diagnostics wrapper. No sibling edit or duplicate issue was
+needed, and its delivery/hosted status is not established by that inspection.
+Pending 0.105.5 records the compatible CI change; package versions remain 0.105.4.
+Work is uncommitted/unpublished.
 
 ## 0.105.4 published
 
@@ -447,8 +541,8 @@ blocker was found, and no sibling source was edited. The
 [transfer contract](../architecture/capture-transfer.md#full-platform-port--2026-11-17)
 records decoder and regression provenance.
 
-Toko Tooling 0.45.0 is installed through its canonical exporter in both workspaces.
-Its 59-file snapshot is admitted. CI setup retains bounded sanitized diagnostics
+Toko Tooling 0.45.1 is installed through its canonical exporter in both workspaces.
+Its 62-file snapshot is admitted. CI setup retains bounded sanitized diagnostics
 with original failure status and seven-day artifacts; local failure-path tests
 pass, while hosted artifact retrieval remains unobserved.
 Previous 0.103.0 publication evidence remains in `target/evidence/release-0.103.0/`

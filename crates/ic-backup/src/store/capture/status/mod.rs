@@ -1,4 +1,5 @@
 //! Pure status preconditions; observation authentication stays with the caller.
+#[cfg(test)]
 use super::CapturePolicy;
 use crate::store::BackupDigest;
 #[cfg(test)]
@@ -12,10 +13,12 @@ pub use wire::CaptureStatusReplyError;
 pub(in crate::store) struct StatusRequirements {
     pub module_sha256: BackupDigest,
     pub sender: Principal,
+    pub sole_controller: bool,
 }
 
 const MAX_CONTROLLERS: usize = 10;
 
+#[cfg(test)]
 impl CapturePolicy {
     /// Check decoded status against the original capture's module and management sender.
     ///
@@ -45,6 +48,7 @@ impl CapturePolicy {
         StatusRequirements {
             module_sha256: self.request().module_sha256,
             sender: self.request().sender,
+            sole_controller: false,
         }
     }
 }
@@ -82,6 +86,9 @@ impl StatusRequirements {
         if module_hash != Some(self.module_sha256.as_bytes().as_slice()) {
             return Err(CaptureStatusError::ModuleMismatch);
         }
+        if self.sole_controller && controllers != [self.sender] {
+            return Err(CaptureStatusError::ManagerAuthority);
+        }
         if !controllers.contains(&self.sender) {
             return Err(CaptureStatusError::NotController);
         }
@@ -92,6 +99,9 @@ impl StatusRequirements {
 /// A decoded status fails an original capture or restore precondition; no effect is authorized.
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum CaptureStatusError {
+    /// A manager-controlled child must have Root as its only controller.
+    #[error("child controller set differs from the approved Root")]
+    ManagerAuthority,
     /// The declared controller set exceeds the supported ten-controller boundary.
     #[error("capture status exceeds ten controllers")]
     ControllerLimit,

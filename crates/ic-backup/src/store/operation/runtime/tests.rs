@@ -143,6 +143,7 @@ fn fixture(
     let recorder =
         CaptureOperation::create(&parent, CapturePlan::new(request, profile).unwrap()).unwrap();
     let connection = Connection {
+        manager: None,
         transport,
         signer: ExternalSigner {
             calls: 0,

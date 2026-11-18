@@ -292,6 +292,9 @@ impl RestorePlan {
     }
 }
 impl Intent for RestorePlan {
+    fn attach_codec(&mut self, codec: Option<&'static dyn crate::store::RootCodec>) {
+        self.profile.codec = codec;
+    }
     fn view(&self) -> Plan<'_> {
         Plan::Restore(self)
     }

@@ -55,9 +55,8 @@ impl Journal {
             if flow.next()? != Next::Call(call.step) {
                 return Err(Error::History);
             }
-            let (method, arguments) = flow.request()?;
-            if let Some(result) = resolve_call(intent.view(), call, method, &arguments, &mut read)?
-            {
+            let effect = flow.effect()?;
+            if let Some(result) = resolve_call(intent.view(), call, &effect, &mut read)? {
                 flow.accept(
                     result.rejected,
                     call.step,
@@ -91,8 +90,7 @@ impl From<crate::store::restore::procedure::Error> for Error {
 pub(in crate::store) fn resolve_call(
     intent: Plan<'_>,
     call: &super::Call,
-    method: &str,
-    arguments: &[u8],
+    effect: &(super::effect::Effect, usize),
     read: &mut impl FnMut(&super::Call, super::custody::Role) -> Result<Vec<u8>, OperationStoreError>,
 ) -> Result<Option<Applied>, Error> {
     use super::custody::Role;
@@ -100,7 +98,16 @@ pub(in crate::store) fn resolve_call(
         return Ok(None);
     }
     let prepared = intent.decode_request(call.update.reference_ns, read(call, Role::Request)?)?;
-    intent.authenticate_request(call.update.reference_ns, &prepared, method, arguments)?;
+    use super::manager::{Call, RootExchange};
+    let original = Call::prepare(
+        intent,
+        call.step,
+        call.update.reference_ns,
+        &effect.0,
+        effect.1,
+    )?;
+    let (method, arguments) = original.execute();
+    intent.authenticate_ingress(call.update.reference_ns, &prepared, method, arguments)?;
     let mut terminal = None;
     if let Some(o) = &call.observation {
         if o.request.is_some() {
@@ -130,7 +137,42 @@ pub(in crate::store) fn resolve_call(
         intent.authenticate_result(call.update.reference_ns, &prepared, &evidence)?;
         terminal = Some((evidence.rejected, evidence.response));
     }
-    Ok(terminal.map(|(rejected, response)| Applied {
+    let mut inner = match terminal {
+        Some((rejected, bytes)) => original.result(RootExchange::Execute, rejected, bytes)?,
+        None => None,
+    };
+    if let Some(lookup) = &call.manager_lookup {
+        let Call::Root { binding, .. } = &original else {
+            return Err(Error::History);
+        };
+
+        if lookup.request.is_some() {
+            let signed = intent
+                .decode_request(lookup.reference_ns, read(call, Role::ManagerLookupRequest)?)?;
+            if signed.request_id == prepared.request_id {
+                return Err(Error::History);
+            }
+            intent.authenticate_ingress(
+                lookup.reference_ns,
+                &signed,
+                "snapshot_lookup",
+                binding.lookup(),
+            )?;
+            if lookup.result.is_some() {
+                let evidence = StatusEvidence::decode(&read(call, Role::ManagerLookupResult)?)?;
+                intent.authenticate_result(lookup.reference_ns, &signed, &evidence)?;
+                if let Some(result) =
+                    original.result(RootExchange::Lookup, evidence.rejected, evidence.response)?
+                {
+                    if inner.as_ref().is_some_and(|prior| prior != &result) {
+                        return Err(Error::History);
+                    }
+                    inner = Some(result);
+                }
+            }
+        }
+    }
+    Ok(inner.map(|(rejected, response)| Applied {
         request_id: prepared.request_id,
         rejected,
         response,

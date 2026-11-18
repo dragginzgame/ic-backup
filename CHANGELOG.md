@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.105.5] - 2026-11-18
+
+### Added
+
+- Capture and restore through a Canic Root with a caller-supplied, approval-bound
+  codec. Recover lost take and load results after host restart through the
+  original Root lookup. Offline replay validates both outer request identities.
+
+### 🔧 Changed
+
+- Adopt Toko Tooling 0.45.1 in both workspaces and reuse its bounded setup
+  diagnostics helper. Keep Backup's artifact custody and per-phase status records.
+
+- Prepare Rust in both CI jobs through the shared toolchain-file helper, so the
+  compiler profile, components and targets come from `rust-toolchain.toml`.
+  Preserve bounded setup diagnostics and use the prepared host JSON/TOML tools.
+
 ## [0.105.4] - 2026-11-17
 
 ### 🧪 Testing

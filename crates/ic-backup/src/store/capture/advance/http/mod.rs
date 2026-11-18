@@ -260,9 +260,10 @@ impl BackupHttpTransport {
     ) -> Result<StatusEvidence, BackupHttpError> {
         let arguments = call.arguments(plan).map_err(BackupHttpError::Admission)?;
         self.submit_expected(
-            super::request::DirectRequirements {
+            super::request::IngressRequirements {
                 target: plan.request().target,
                 sender: plan.request().sender,
+                recipient: ic_platform_types::Principal::management_canister(),
                 trust_root: plan.request().trust_root,
             },
             admission,
@@ -275,7 +276,7 @@ impl BackupHttpTransport {
 
     pub(in crate::store) async fn submit_expected(
         &self,
-        requirements: super::request::DirectRequirements,
+        requirements: super::request::IngressRequirements,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
         method: &str,
@@ -283,6 +284,7 @@ impl BackupHttpTransport {
     ) -> Result<StatusEvidence, BackupHttpError> {
         super::request::authenticate_direct_request(
             requirements.sender,
+            requirements.recipient,
             admission.request_bytes,
             prepared,
             method,
@@ -294,7 +296,7 @@ impl BackupHttpTransport {
         })?;
         self.admit_binding(requirements.target.network, requirements.trust_root)?;
         let certificate = self
-            .call_certificate(requirements.target.canister, admission, prepared)
+            .call_certificate(requirements.effective_canister(), admission, prepared)
             .await?;
         self.admit_received_certificate(&requirements, admission, prepared, certificate)
     }
@@ -303,14 +305,14 @@ impl BackupHttpTransport {
     // a deadline reached during authentication. This grants no new time window.
     pub(in crate::store) fn admit_received_certificate(
         &self,
-        requirements: &super::request::DirectRequirements,
+        requirements: &super::request::IngressRequirements,
         admission: &StatusAdmissionRecord,
         prepared: &PreparedStatus,
         certificate: Vec<u8>,
     ) -> Result<StatusEvidence, BackupHttpError> {
         let deadline = admission.submit_deadline_ns.min(prepared.expires_ns);
         let (rejected, response) = super::CertificateRequirements {
-            canister: requirements.target.canister,
+            canister: requirements.effective_canister(),
             trust_root: requirements.trust_root,
         }
         .response(admission, prepared, &certificate, &self.root_key_der)

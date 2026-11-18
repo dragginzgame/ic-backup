@@ -14,6 +14,11 @@ sub run {
     ($? >> 8) == $expected or die "wrong status for $phase: $?\n";
 }
 $ENV{SETUP_TEST_TOKEN} = 'fixture-secret-987654';
+run('success', 'print "progress-sentinel\n"', 0);
+open my $success, '<', 'target/ci-setup/.attempt-success/diagnostic.txt' or die $!;
+my $receipt = do { local $/; <$success> };
+$receipt =~ /status=0/ && $receipt !~ /progress-sentinel/
+    or die "success must retain status without raw command output\n";
 run('early', 'print STDERR "download failed: checksum mismatch\nAuthorization: Bearer fixture-secret-987654\nhttps://user:password\@host/path?token=abc\n"; exit 23', 23);
 open my $log, '<', 'target/ci-setup/.attempt-early/diagnostic.txt' or die $!;
 my $text = do { local $/; <$log> };

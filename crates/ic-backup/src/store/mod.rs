@@ -60,6 +60,9 @@ pub use capture::{
     StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
 };
 pub use manifest::ManifestError;
+pub use operation::effect::Effect as SnapshotEffect;
+pub use operation::intent::ManagerRecord as RootManager;
+pub use operation::manager::{RootBinding, RootCodec, RootExchange, RootOutcome, RootRequest};
 pub use payload::{PayloadReadError, PayloadSource};
 
 use ic_host_artifacts::{Error as ArtifactError, Length};
@@ -129,9 +132,16 @@ impl BackupSummary {
 #[derive(Debug)]
 pub struct BackupStore {
     root: Directory,
+    codec: Option<&'static dyn RootCodec>,
 }
 
 impl BackupStore {
+    /// Select the pure Root codec used when authenticating retained manager operations.
+    #[must_use]
+    pub fn with_root_codec(mut self, codec: &'static dyn RootCodec) -> Self {
+        self.codec = Some(codec);
+        self
+    }
     /// Initialize an existing empty private directory, preserving partial work on failure.
     ///
     /// The caller creates the directory and excludes external writers. A retained
@@ -164,7 +174,7 @@ impl BackupStore {
             root.create_directory(OsStr::new(name), 0o700, PRIVATE)?;
         }
         commit(stage)?;
-        Ok(Self { root })
+        Ok(Self { root, codec: None })
     }
 
     /// Open an initialized private store without creating or repairing anything.
@@ -202,7 +212,7 @@ impl BackupStore {
         if count != 4 {
             return Err(StoreError::IncompleteStore);
         }
-        Ok(Self { root })
+        Ok(Self { root, codec: None })
     }
 
     /// List matching completion declarations, newest capture first, without reading payloads.

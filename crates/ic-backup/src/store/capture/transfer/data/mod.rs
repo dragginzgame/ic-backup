@@ -12,26 +12,23 @@ pub enum DataReadError {
     Data(#[from] TransferDataError),
 }
 impl CaptureTransfer<'_> {
-    /// Encode one exact scheduled request without iterating preceding extents.
+    /// Build one exact scheduled request without iterating preceding extents.
     ///
     /// Uses the plan target, original snapshot ID and zero-based data ordinal.
     /// This pure helper grants no signing or dispatch authority.
     /// # Errors
-    /// Refuses an ordinal outside the schedule or arguments exceeding 1 KiB.
-    pub fn data_arguments(&self, ordinal: u32) -> Result<Vec<u8>, DataReadError> {
+    /// Refuses an ordinal outside the schedule.
+    pub fn data_arguments(&self, ordinal: u32) -> Result<ReadDataArgs, DataReadError> {
         if ordinal >= self.data_calls() {
             return Err(TransferDataError::Ordinal.into());
         }
-        (ReadDataArgs {
+        Ok(ReadDataArgs {
             canister_id: self.plan.request().target.canister,
             snapshot_id: self.snapshot_id.to_vec(),
             kind: self.kind(u64::from(ordinal)),
         })
-        .encode(1024)
-        .map_err(|_| OperationStoreError::StatusAdmission.into())
     }
 }
-use super::super::OperationStoreError;
 use crate::store::BackupDigest;
 use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use ic_platform_protocol::management_snapshots::ReadKind;

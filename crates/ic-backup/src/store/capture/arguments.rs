@@ -13,25 +13,23 @@ pub enum MetadataReadError {
     Admission(#[from] OperationStoreError),
 }
 impl CapturePolicy {
-    /// Encode the fixed metadata-read arguments for this target and exact snapshot ID.
+    /// Build the fixed metadata-read arguments for this target and exact snapshot ID.
     ///
     /// The integration must authenticate the original take result and preserve its
     /// custody. This pure helper neither proves that provenance nor reserves a call.
     /// Receiver is the management canister; effective routing is this plan's target.
     /// # Errors
-    /// Refuses empty/oversized snapshot IDs or arguments exceeding 512 bytes.
+    /// Refuses empty/oversized snapshot IDs.
     pub fn metadata_read_arguments(
         &self,
         snapshot: &Snapshot,
-    ) -> Result<Vec<u8>, MetadataReadError> {
+    ) -> Result<SnapshotArgs, MetadataReadError> {
         if !(1..=256).contains(&snapshot.id.len()) {
             return Err(MetadataReadError::SnapshotId);
         }
-        (SnapshotArgs {
+        Ok(SnapshotArgs {
             canister_id: self.request().target.canister,
             snapshot_id: snapshot.id.clone(),
         })
-        .encode(512)
-        .map_err(|_| MetadataReadError::Admission(OperationStoreError::StatusAdmission))
     }
 }

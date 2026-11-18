@@ -35,6 +35,7 @@ pub(in crate::store) fn selected() -> CapturePlan {
 }
 fn allowance() -> Allowance {
     Allowance {
+        manager_reply_bytes: None,
         signatures: 20,
         network: 20,
         observations: 0,

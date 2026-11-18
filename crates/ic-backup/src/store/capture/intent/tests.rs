@@ -15,6 +15,8 @@ use ic_platform::ingress::Content as EnvelopeContent;
 
 pub(in crate::store) fn profile() -> ProfileRecord {
     ProfileRecord {
+        manager: None,
+        codec: None,
         transport: [1; 32],
         signer: [2; 32],
         guard: [3; 32],
@@ -294,4 +296,70 @@ fn certified_rejection_is_terminal_evidence_and_never_unlocks_next_step() {
         ));
         assert!(matches!(procedure.next(), Err(ProcedureError::Order)));
     }
+}
+
+#[test]
+fn original_root_approval_survives_reopen_and_requires_sole_child_control() {
+    use crate::store::operation::intent::ManagerRecord;
+    use ic_platform_types::Principal;
+
+    let (direct, prepared, _) = input();
+    let request = direct.request().clone();
+    let root = Principal::from_slice(&[8, 1]);
+    let mut profile = direct.profile().clone();
+    profile.manager = Some(ManagerRecord {
+        root,
+        generation: 1,
+        protocol: [70; 32],
+        authority_policy: [71; 32],
+        cycles: 0,
+        cycle_limit: 1_000_000_000_000,
+        reply_bytes: 16_384,
+    });
+    let approved = CapturePlan::new(request.clone(), profile.clone()).unwrap();
+    let directory = crate::store::tests::root("manager-approved-capture");
+    let store = crate::store::BackupStore::initialize(&directory).unwrap();
+    drop(
+        store
+            .create_capture(approved.clone(), approved.digest())
+            .unwrap(),
+    );
+    drop(store);
+    let store = crate::store::BackupStore::open(&directory).unwrap();
+    assert!(
+        store
+            .open_capture(&request.operation_id, direct.digest())
+            .is_err()
+    );
+    let operation = store
+        .open_capture(&request.operation_id, approved.digest())
+        .unwrap();
+    assert_eq!(operation.inspect().unwrap().signing_requests_reserved, 0);
+    let reopened = &operation.intent;
+    assert_eq!(reopened.digest(), approved.digest());
+    assert_ne!(approved.digest(), direct.digest());
+    assert_eq!(reopened.view().ingress_recipient(), root);
+    assert_eq!(reopened.view().sender(), direct.view().sender());
+    let requirements = reopened.view().status_requirements();
+    let mut observed = status(direct.plan());
+    observed.settings.controllers = vec![root];
+    requirements.validate_status(&observed).unwrap();
+    observed.settings.controllers.push(request.sender);
+    assert!(requirements.validate_status(&observed).is_err());
+    assert!(matches!(
+        reopened
+            .view()
+            .authenticate_request(100, &prepared, "canister_status", &[]),
+        Err(Error::ManagerExchange)
+    ));
+    let manager = profile.manager.as_mut().unwrap();
+    manager.reply_bytes -= 1;
+    assert_ne!(
+        CapturePlan::new(request.clone(), profile.clone())
+            .unwrap()
+            .digest(),
+        approved.digest()
+    );
+    profile.manager.as_mut().unwrap().generation = 2;
+    assert!(CapturePlan::new(request, profile).is_err());
 }

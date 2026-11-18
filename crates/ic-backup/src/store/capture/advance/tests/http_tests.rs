@@ -36,9 +36,10 @@ fn certificate_survives_closing_deadline_without_relaxing_original_admission() {
     a.submit_deadline_ns = 1;
     let error = transport
         .admit_received_certificate(
-            &super::super::request::DirectRequirements {
+            &super::super::request::IngressRequirements {
                 target: p.request().target,
                 sender: p.request().sender,
+                recipient: ic_platform_types::Principal::management_canister(),
                 trust_root: p.request().trust_root,
             },
             &a,
@@ -539,4 +540,67 @@ fn https_sends_tls_and_refuses_a_plaintext_peer_without_http_fallback() {
         Err(BackupHttpError::Uncertain)
     ));
     peer.join().unwrap();
+}
+
+#[test]
+fn root_updates_route_and_verify_delegation_for_root() {
+    use super::super::IngressRequirements;
+    use crate::store::capture::test_fixtures::certificates::delegated;
+    use ic_platform_types::Principal;
+
+    let root = Principal::from_slice(&[8, 1]);
+    for method in ["snapshot_execute", "snapshot_lookup"] {
+        let (plan, mut prepared, admission, _) = input();
+        let child = plan.request().target.canister;
+        assert_ne!(root, child);
+        change(&mut prepared, |envelope| {
+            if let EnvelopeContent::Call {
+                canister_id,
+                method_name,
+                arg,
+                ..
+            } = &mut envelope.content
+            {
+                *canister_id = root.as_slice().try_into().unwrap();
+                *method_name = method.into();
+                *arg = vec![42];
+            }
+            envelope.sender_sig = Some(Scheme::Ed25519.sign(&envelope.content.signable().unwrap()));
+        });
+        for authority in [root, child] {
+            let mut evidence = StatusEvidence {
+                rejected: false,
+                response: vec![17],
+                proof: Vec::new(),
+            };
+            evidence.proof = delegated(authority.as_slice(), &prepared, &evidence);
+            let bytes = fixtures::http::call_body(&evidence.proof);
+            let server = Server::new(Response::Bytes(http(200, "", &bytes)));
+            let requirements = IngressRequirements {
+                target: plan.request().target,
+                sender: plan.request().sender,
+                recipient: root,
+                trust_root: plan.request().trust_root,
+            };
+            let result = runtime().block_on(
+                server
+                    .client(&plan, Duration::from_secs(2))
+                    .submit_expected(requirements, &admission, &prepared, method, &[42]),
+            );
+            if authority == root {
+                assert_eq!(result.unwrap().proof, evidence.proof);
+            } else {
+                let Err(error) = result else {
+                    panic!("accepted child-only certificate")
+                };
+                assert_eq!(
+                    error.received_certificate().unwrap().request_id(),
+                    prepared.request_id
+                );
+            }
+            let sent = server.finish();
+            assert_eq!(sent.len(), 1);
+            assert!(sent[0].starts_with(format!("POST /api/v3/canister/{root}/call ").as_bytes()));
+        }
+    }
 }
