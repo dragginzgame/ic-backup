@@ -1,5 +1,11 @@
 # Current handoff — 2026-11-18
 
+## 0.105.6 published with Toko Tooling 0.45.2
+
+[ic-backup 0.105.6](https://crates.io/crates/ic-backup/0.105.6) and tag `v0.105.6` select release commit `b1bda32b882f44146b03d6b222b1c86428db4d40`. Both workspaces pin Toko Tooling 0.45.2. The canonical exporter retained twelve entrypoints and 62 managed files. Post-push review confirmed that the only changed managed helper is `SetupDiagnostics.pm`. The Backup caller regression exercises assignment, URL fragment and access-key redaction while preserving the original failure status.
+
+All 247 native tests, five doctests, 11 direct PocketIC journeys (106.52 seconds), strict Clippy and archive checks passed. Independent readback matched the registry SHA-256 `fc99dc21176ef5640cda1201a6322148ec09f457667994299d9ce72ae44e62f9`, embedded commit, all 178 tracked package files and the license. A fresh registry-backed consumer built successfully. Evidence is under `target/evidence/release-0.105.6/` and `target/publication/publish.selection.hTeeOT`. Hosted CI runs asynchronously.
+
 ## 0.105.5 published
 
 [ic-backup 0.105.5](https://crates.io/crates/ic-backup/0.105.5) is published. The annotated tag `v0.105.5` points to release commit `f5052caf6ec7c073a120d60e3a6aa105ecb92bbc` on `origin/main`. The release gate passed 247 native tests, five doctests and all 11 direct-controller PocketIC journeys (104.14 seconds). The separate Root/child host-restart witness below used the local Canic supplier. Its production deployment remains with Canic.
