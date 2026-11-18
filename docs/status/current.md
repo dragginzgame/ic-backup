@@ -1,5 +1,11 @@
 # Current handoff — 2026-11-18
 
+## 0.105.5 published
+
+[ic-backup 0.105.5](https://crates.io/crates/ic-backup/0.105.5) is published. The annotated tag `v0.105.5` points to release commit `f5052caf6ec7c073a120d60e3a6aa105ecb92bbc` on `origin/main`. The release gate passed 247 native tests, five doctests and all 11 direct-controller PocketIC journeys (104.14 seconds). The separate Root/child host-restart witness below used the local Canic supplier. Its production deployment remains with Canic.
+
+Independent registry readback matched SHA-256 `4403bbeb216671e964aff1b853237bcdc8065dda4955411d260cc820046f2f3d`, the release commit, all 178 tracked package files and the license. A fresh registry-backed normal consumer built successfully. Post-push review confirmed that Root recovery uses the existing journal, a separately budgeted lookup, and the original execute binding. The normal dependency graph excludes Canic management, Testkit and PocketIC. Release evidence is under `target/evidence/release-0.105.5/`, with single upload attempt `target/publication/publish.selection.sShqZ1`. Hosted CI runs asynchronously.
+
 ## Root execute and original-result recovery — local qualification
 
 The public capture and restore loops now support an approved Canic Root through
@@ -33,7 +39,7 @@ The working protocol module SHA-256 was
 at Canic base `d652c55e4cc455a642f44645bf2e16a6d08baefc`. Qualification used
 fixture signing and application permission. The published supplier, production
 signer and application fencing are separate delivery work. This Root witness
-is local and outside hosted CI. Backup changes are uncommitted and unpublished.
+is local and outside hosted CI. Backup shipped the host boundary in 0.105.5.
 
 Five small test fixtures retain the approved intent, both signed Take/lookup
 envelopes, the lookup evidence and the independently decoded inner reply. The
