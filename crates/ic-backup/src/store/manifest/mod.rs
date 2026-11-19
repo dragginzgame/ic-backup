@@ -68,6 +68,7 @@ fn digest(value: &str) -> Result<BackupDigest, ManifestError> {
     if !lower_hex(value, 64) {
         return Err(ManifestError::Invalid("digest"));
     }
+
     value.parse().map_err(|_| ManifestError::Invalid("digest"))
 }
 
@@ -122,6 +123,7 @@ pub(super) fn decode(id: &str, bytes: &[u8]) -> Result<DecodedManifest, Manifest
                     .strip_prefix("chunk-")
                     .and_then(|s| s.strip_suffix(".bin"))
                     .ok_or(ManifestError::Invalid("member name"))?;
+
                 if digest(hash_name)? != hash || member.bytes > 1024 * 1024 {
                     return Err(ManifestError::Invalid("chunk binding"));
                 }
@@ -153,6 +155,7 @@ pub(super) fn decode(id: &str, bytes: &[u8]) -> Result<DecodedManifest, Manifest
         payload_bytes: total,
         manifest_sha256: BackupDigest::compute(bytes),
     };
+
     Ok(DecodedManifest {
         summary,
         members: record.members,
@@ -180,9 +183,11 @@ fn members<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<MemberRecor
             if seq.next_element::<de::IgnoredAny>()?.is_some() {
                 return Err(de::Error::custom("payload member limit exceeded"));
             }
+
             Ok(rows)
         }
     }
+
     deserializer.deserialize_seq(Members)
 }
 

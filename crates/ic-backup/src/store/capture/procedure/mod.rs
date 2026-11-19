@@ -90,6 +90,7 @@ impl<'a> Procedure<'a> {
         intent
             .plan()
             .take_snapshot_arguments(&[], intent.profile().snapshot_capacity)?;
+
         Ok(Self {
             intent,
             next: Next::Call(Step::InitialStatus),
@@ -106,6 +107,7 @@ impl<'a> Procedure<'a> {
         if self.failed {
             return Err(Error::Order);
         }
+
         Ok(self.next)
     }
 
@@ -113,6 +115,7 @@ impl<'a> Procedure<'a> {
     #[cfg(test)]
     pub(in crate::store) fn request(&self) -> Result<(&'static str, Vec<u8>), Error> {
         let (effect, limit) = self.effect()?;
+
         effect.encode(limit).map_err(|_| Error::Arguments)
     }
 
@@ -123,6 +126,7 @@ impl<'a> Procedure<'a> {
         let child = CanisterArgs {
             canister_id: self.intent.request().target.canister,
         };
+
         Ok(match step {
             Step::InitialStatus | Step::FinalStatus => (Effect::Status(child), 256),
             Step::ListSnapshots => (Effect::List(child), 256),
@@ -162,6 +166,7 @@ impl<'a> Procedure<'a> {
             self.intent
                 .view()
                 .authenticate_result(reference, prepared, evidence)?;
+
             self.accept(
                 evidence.rejected,
                 step,
@@ -172,6 +177,7 @@ impl<'a> Procedure<'a> {
         if result.is_err() {
             self.failed = true;
         }
+
         result
     }
 
@@ -192,6 +198,7 @@ impl<'a> Procedure<'a> {
         if result.is_err() {
             self.failed = true;
         }
+
         result
     }
 
@@ -211,6 +218,7 @@ impl<'a> Procedure<'a> {
                     .status_requirements()
                     .validate_status_reply(reply)?;
                 self.initial_request = Some(request_id);
+
                 Next::Call(Step::ListSnapshots)
             }
             Step::ListSnapshots => {
@@ -219,11 +227,13 @@ impl<'a> Procedure<'a> {
                     .plan()
                     .take_snapshot_arguments(&inventory, self.intent.profile().snapshot_capacity)?;
                 self.inventory = inventory;
+
                 Next::Call(Step::TakeSnapshot)
             }
             Step::TakeSnapshot => {
                 self.snapshot = Some(decode_taken_snapshot(reply, &self.inventory)?);
                 self.inventory.clear();
+
                 Next::Call(Step::Metadata)
             }
             Step::Metadata => {
@@ -234,6 +244,7 @@ impl<'a> Procedure<'a> {
                 }
                 self.module = Some((Sha256::new(), 0));
                 self.metadata = Some(metadata);
+
                 Next::Call(Step::Data(0))
             }
             Step::Data(n) => {
@@ -256,6 +267,7 @@ impl<'a> Procedure<'a> {
                         .ok_or(Error::ModuleHash)?;
                     hash.update(&data);
                 }
+
                 if last {
                     let (hash, bytes) = self.module.take().ok_or(Error::Order)?;
                     if bytes != self.metadata.as_ref().ok_or(Error::Order)?.wasm_module_size
@@ -264,6 +276,7 @@ impl<'a> Procedure<'a> {
                     {
                         return Err(Error::ModuleHash);
                     }
+
                     Next::Materialize
                 } else {
                     Next::Call(Step::Data(n + 1))
@@ -277,10 +290,12 @@ impl<'a> Procedure<'a> {
                     .view()
                     .status_requirements()
                     .validate_status_reply(reply)?;
+
                 Next::Publish
             }
             _ => return Err(Error::Order),
         };
+
         Ok(())
     }
 
@@ -292,6 +307,7 @@ impl<'a> Procedure<'a> {
             return Err(Error::Order);
         }
         self.next = Next::Call(Step::FinalStatus);
+
         Ok(())
     }
 

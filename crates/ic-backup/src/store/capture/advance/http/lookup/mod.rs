@@ -27,6 +27,7 @@ impl BackupHttpTransport {
             .certificate;
         remaining(deadline)
             .map_err(|error| error.after_response(request_id, certificate.clone()))?;
+
         Ok(certificate)
     }
 }

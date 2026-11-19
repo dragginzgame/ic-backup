@@ -31,6 +31,7 @@ pub(in crate::store) fn selected() -> CapturePlan {
     request.limits.network_requests = allowance().network;
     request.limits.observations = allowance().observations;
     request.trust_root = BackupDigest::compute(&profile().root_der);
+
     CapturePlan::new(request, profile()).unwrap()
 }
 
@@ -102,6 +103,7 @@ fn data() -> Vec<(ReadKind, Vec<u8>)> {
             bytes.to_vec(),
         )
     }));
+
     result
 }
 
@@ -123,6 +125,7 @@ pub(in crate::store) fn expected_request(
     step: Step,
 ) -> (&'static str, Vec<u8>) {
     let canister_id = plan.plan().request().target.canister;
+
     match step {
         Step::InitialStatus | Step::FinalStatus => {
             ("canister_status", encode(&CanisterArgs { canister_id }))
@@ -169,11 +172,13 @@ fn reference(bytes: &[u8]) -> ReferenceRecord {
 fn append(bytes: &mut Vec<u8>, plan: &CapturePlan, fact: FactRecord) -> Journal {
     let journal = Journal::open(bytes.as_slice(), plan).unwrap();
     bytes.extend(journal.candidate(fact).unwrap());
+
     Journal::open(bytes.as_slice(), plan).unwrap()
 }
 
 fn through<'a>(plan: &'a CapturePlan, stop: Step) -> Procedure<'a> {
     let mut flow = Procedure::new(plan).unwrap();
+
     loop {
         match flow.next().unwrap() {
             Next::Call(step) if step == stop => return flow,
@@ -424,6 +429,7 @@ fn snapshot_data_and_final_status_prerequisites_are_not_optional_phases() {
 fn whole_module_hash_is_required_after_all_valid_length_replies() {
     let plan = selected();
     let mut flow = through(&plan, Step::Data(0));
+
     loop {
         let Next::Call(Step::Data(n)) = flow.next().unwrap() else {
             panic!("must not materialize corrupted module")

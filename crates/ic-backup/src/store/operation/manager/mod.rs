@@ -133,6 +133,7 @@ impl Call {
                 return Err(Error::ManagerExchange);
             }
         }
+
         Ok(Self::Root {
             binding,
             reply_bytes: manager.reply_bytes,
@@ -162,6 +163,7 @@ impl Call {
         if rejected {
             return Ok(None);
         }
+
         match binding.decode(exchange, &bytes) {
             Some(RootOutcome::Reply(reply)) if reply.len() <= *reply_bytes as usize => {
                 Ok(Some((false, reply)))

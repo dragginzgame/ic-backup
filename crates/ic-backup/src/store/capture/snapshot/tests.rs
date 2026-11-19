@@ -19,6 +19,7 @@ fn encode(value: &impl crate::store::capture::tests::wire::EncodeFixture) -> Vec
 fn hex(value: &str) -> Vec<u8> {
     let (pairs, rest) = value.as_bytes().as_chunks::<2>();
     assert!(rest.is_empty());
+
     pairs
         .iter()
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
@@ -76,6 +77,7 @@ fn exact_inventory_and_identifier_caps_preserve_full_numeric_ranges() {
         .map(|index| {
             let mut id = vec![0; MAX_ID_BYTES];
             id[..8].copy_from_slice(&(index as u64).to_le_bytes());
+
             snapshot(id)
         })
         .collect();
@@ -135,8 +137,10 @@ fn refuses_partial_extra_wrong_shape_and_trailing_replies() {
         decode_snapshot_list(&raw),
         Err(SnapshotReplyError::Decode(_))
     ));
+
     for length in [MAX_REPLY_BYTES, MAX_REPLY_BYTES + 1] {
         let error = decode_snapshot_list(&vec![0; length]).unwrap_err();
+
         if length == MAX_REPLY_BYTES {
             assert!(matches!(error, SnapshotReplyError::Decode(_)));
         } else {
@@ -203,6 +207,7 @@ fn preflight_keeps_exact_target_code_and_prior_snapshots_without_effects() {
         p.take_snapshot_arguments(&inventory, 1).unwrap_err(),
         SnapshotReplyError::NoCapacity
     );
+
     for capacity in [0, MAX_SNAPSHOTS as u32 + 1, u32::MAX] {
         assert_eq!(
             p.take_snapshot_arguments(&[], capacity).unwrap_err(),

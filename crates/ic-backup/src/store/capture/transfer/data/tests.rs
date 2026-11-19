@@ -31,6 +31,7 @@ fn frozen_wire_vectors_accept_different_type_table_order() {
     let p = plan(3);
     let m = metadata(3, 0, 0);
     let transfer = p.plan_transfer(&[1], &m).unwrap();
+
     // Independent wire fixtures retained from the reviewed legacy regressions.
     for raw in [
         "4449444c026c01ed8c8bae04016d7b01000300ff11",
@@ -53,6 +54,7 @@ fn each_region_and_final_partial_extent_require_exact_length() {
                 .unwrap(),
             vec![42; expected]
         );
+
         for actual in [0, expected - 1, expected + 1] {
             assert_eq!(
                 transfer.decode_data(ordinal, &reply(&vec![42; actual])),
@@ -63,6 +65,7 @@ fn each_region_and_final_partial_extent_require_exact_length() {
             );
         }
     }
+
     // Invalid ordinals refuse before even parsing a reply.
     for ordinal in [6, u32::MAX] {
         assert_eq!(
@@ -75,6 +78,7 @@ fn each_region_and_final_partial_extent_require_exact_length() {
 #[test]
 fn whole_chunks_require_original_digest_including_empty_chunk() {
     let p = plan(4);
+
     for bytes in [b"".as_slice(), b"abcd"] {
         let mut m = metadata(1, 0, 0);
         m.wasm_chunk_store = vec![chunk(bytes)];
@@ -110,6 +114,7 @@ fn maximum_region_and_chunk_are_admitted() {
     m.wasm_chunk_store = vec![chunk(&bytes)];
     let transfer = p.plan_transfer(&[1], &m).unwrap();
     let raw = reply(&bytes);
+
     for ordinal in [0, 1] {
         assert_eq!(transfer.decode_data(ordinal, &raw).unwrap(), bytes);
     }
@@ -158,6 +163,7 @@ fn truncation_trailing_bytes_and_wrong_arity_refuse() {
         transfer.decode_data(0, &trailing),
         Err(TransferDataError::Decode(DecodeError::Trailing))
     );
+
     for wire in ["4449444c0000", "4449444c00027f7f"] {
         assert_eq!(
             transfer.decode_data(0, &hex(wire)),

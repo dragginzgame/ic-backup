@@ -19,7 +19,7 @@ export RUSTUP_AUTO_INSTALL := 0
 .PHONY: help check doc-links-check fetch-dependencies clippy rustdoc test
 help:
 	@printf '%s\n' \
-	  'check               Aggregate offline checks (all packages by default)' \
+	  'check               Aggregate locked checks (all packages by default)' \
 	  'check PACKAGE=name  Select one package for Rust checks' \
 	  'deps-list           List local workspace package versions' \
 	  'deps-update         Explicit Cargo dependency update (network)' \
@@ -27,7 +27,7 @@ help:
 	  'fetch-dependencies  Explicit locked Cargo cache preparation (network)' \
 	  'install-testkit-server  Prepare server assets through locked Testkit' \
 	  'install-tools       Prepare common tools, dependencies and Testkit' \
-	  'test-qualification  Offline actual-IC status, snapshot and replay qualification' \
+	  'test-qualification  Actual-IC status, snapshot and replay qualification' \
 	  'testkit-server-check  Admit the prepared server without downloads' \
 	  'package-check       Verify archive, packaged README and isolated consumer' \
 	  'publication-verify  Complete local publication gate, without upload' \
@@ -44,13 +44,13 @@ fetch-dependencies: | toko-execution-check
 	cargo fetch --manifest-path qualification/Cargo.toml --locked
 
 clippy: toko-tooling-check
-	cargo clippy $(CARGO_SELECTION) --all-targets --locked --offline -- -D warnings
+	cargo clippy $(CARGO_SELECTION) --all-targets --locked -- -D warnings
 
 rustdoc: toko-tooling-check
-	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_SELECTION) --no-deps --locked --offline
+	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_SELECTION) --no-deps --locked
 
 test: toko-tooling-check
-	RUSTFLAGS="-D warnings" cargo test $(CARGO_SELECTION) --locked --offline
+	RUSTFLAGS="-D warnings" cargo test $(CARGO_SELECTION) --locked
 
 doc-links-check: toko-tooling-check
 	@perl "$(TOKO_TOOLING_ROOT)/scripts/ci/check-documentation-links.pl" \
@@ -69,7 +69,7 @@ publication-preflight:
 publication-verify:
 	$(MAKE) tools-check
 	$(MAKE) clippy
-	cargo clippy --manifest-path qualification/Cargo.toml --locked --offline --all-targets -- -D warnings
+	cargo clippy --manifest-path qualification/Cargo.toml --locked --all-targets -- -D warnings
 	$(MAKE) doc-links-check fmt-check rustdoc
 	$(MAKE) test
 	$(MAKE) test-qualification
@@ -79,7 +79,7 @@ test-publication-adapter: toko-tooling-check
 	bash scripts/publication/test-adapter.sh
 
 TESTKIT_DIRECTORY := $(REPO_ROOT).tools/testkit-server
-TESTKIT_RUN = cargo run --manifest-path qualification/Cargo.toml -p ic-backup-qualification --example server --locked --offline --quiet --
+TESTKIT_RUN = cargo run --manifest-path qualification/Cargo.toml -p ic-backup-qualification --example server --locked --quiet --
 
 .PHONY: install-testkit-server testkit-server-check test-qualification
 install-testkit-server: | toko-execution-check
@@ -89,4 +89,4 @@ testkit-server-check: | toko-execution-check
 	$(TESTKIT_RUN) check "$(TESTKIT_DIRECTORY)"
 
 test-qualification: testkit-server-check
-	IC_BACKUP_TESTKIT_DIRECTORY="$(TESTKIT_DIRECTORY)" cargo test --release --manifest-path qualification/Cargo.toml --locked --offline
+	IC_BACKUP_TESTKIT_DIRECTORY="$(TESTKIT_DIRECTORY)" cargo test --release --manifest-path qualification/Cargo.toml --locked

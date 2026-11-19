@@ -36,6 +36,7 @@ fn read(bytes: &[u8], a: Allowance) -> Journal {
 fn append(bytes: &mut Vec<u8>, a: Allowance, fact: FactRecord) -> Journal {
     let frame = read(bytes, a).candidate(fact).unwrap();
     bytes.extend(frame);
+
     read(bytes, a)
 }
 
@@ -81,6 +82,7 @@ fn complete_history(a: Allowance) -> Vec<u8> {
             completed_at_ns: 200,
         },
     );
+
     bytes
 }
 
@@ -114,6 +116,7 @@ fn signing_and_submission_reservations_cannot_be_repeated_or_refunded() {
     let a = allowance();
     let step = Step::InitialStatus;
     let mut bytes = Journal::initial(INTENT, a).unwrap();
+
     for fact in facts(step) {
         let state = append(&mut bytes, a, fact.clone());
         assert_eq!((state.signatures, state.network), (1, 3));
@@ -403,6 +406,7 @@ fn fixed_order_materialization_and_closed_completion_refuse_extra_work() {
         ),
         (6, 18, 27, 27)
     );
+
     for fact in [
         FactRecord::Created,
         FactRecord::MaterializationStarted,
@@ -432,6 +436,7 @@ fn partial_tails_and_changed_frames_never_project_unused_authority() {
         boundary += size;
         read(&bytes[..boundary], a);
     }
+
     for at in [4, 15, 55, bytes.len() - 1] {
         let mut changed = bytes.clone();
         changed[at] ^= 1;
@@ -447,6 +452,7 @@ fn hashed_unknown_duplicate_and_noncanonical_records_are_not_extensions() {
     let a = allowance();
     let prefix = Journal::initial(INTENT, a).unwrap();
     let state = read(&prefix, a);
+
     for payload in [
         br#"{"sequence":1,"fact":{"kind":"created"}}"#.as_slice(),
         br#"{"sequence":2,"fact":{"kind":"call_reserved","step":"initial_status","reference_ns":100}}"#,
@@ -472,6 +478,7 @@ fn manager_lookup_reopens_once_under_the_original_step_and_spends_only_the_host_
         step,
         reference_ns: 200,
     };
+
     for outer_result_retained in [false, true] {
         let mut bytes = Journal::initial(INTENT, a).unwrap();
         for fact in facts(step)
@@ -529,6 +536,7 @@ fn manager_preflight_counts_original_slots_and_reserved_reply_capacity() {
         let mut bytes = Journal::initial(INTENT, a).unwrap();
         let original = append(&mut bytes, a, facts(Step::InitialStatus)[0].clone());
         original.check_manager_slots(maximum - 1).unwrap();
+
         for excess in [maximum, u32::MAX] {
             assert!(matches!(
                 original.check_manager_slots(excess),

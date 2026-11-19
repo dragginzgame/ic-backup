@@ -7,6 +7,7 @@ fn commitments_preserve_sha256_and_canonical_text() {
     assert_eq!(digest.to_string(), text);
     assert_eq!(text.parse::<BackupDigest>().unwrap(), digest);
     assert_eq!(BackupDigest::from_bytes(*digest.as_bytes()), digest);
+
     for invalid in [
         text.to_uppercase(),
         text[..62].into(),

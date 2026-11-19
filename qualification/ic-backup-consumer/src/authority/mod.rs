@@ -38,8 +38,14 @@ pub fn der() -> Vec<u8> {
     ]
     .concat()
 }
+
+///
+/// FixtureSigner
 /// Offline test signer whose counter records every signing invocation.
+///
+
 pub struct FixtureSigner(pub Arc<AtomicUsize>);
+
 impl BackupSigner for FixtureSigner {
     type Error = ();
     fn protocol(&self) -> [u8; 32] {
@@ -84,6 +90,7 @@ impl BackupSigner for FixtureSigner {
         };
         let signature =
             SigningKey::from_bytes(&[17; 32]).sign(&content.signable().map_err(|_| ())?);
+
         encode_envelope(
             &Envelope {
                 content,
@@ -96,8 +103,14 @@ impl BackupSigner for FixtureSigner {
         .map_err(|_| ())
     }
 }
+
+///
+/// FixtureGuard
 /// Revocable test application authority shared with the harness.
+///
+
 pub struct FixtureGuard(pub Arc<AtomicBool>);
+
 impl BackupApplicationGuard for FixtureGuard {
     type Error = ();
     fn protocol(&self) -> [u8; 32] {
@@ -107,10 +120,9 @@ impl BackupApplicationGuard for FixtureGuard {
     fn admit(
         &self,
         _: OperationPlan<'_>,
-        action: OperationAction,
+        _: OperationAction,
         witness: &[u8; 32],
     ) -> Result<(), ()> {
-        let _ = action;
         if witness == &[3; 32] && self.0.load(Ordering::SeqCst) {
             Ok(())
         } else {

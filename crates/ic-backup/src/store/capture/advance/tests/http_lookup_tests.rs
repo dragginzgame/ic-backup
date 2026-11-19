@@ -121,6 +121,7 @@ fn read_state_refuses_policy_signature_binding_and_expiry_before_connection() {
 #[test]
 fn read_state_transport_failures_are_single_attempt_and_bounded() {
     let (p, r, a, _) = input();
+
     for case in 0..7 {
         let response = match case {
             0 => Response::Disconnect,
@@ -212,10 +213,12 @@ fn cancelled_read_state_closes_the_connection_without_detached_retries() {
             Duration::from_secs(3),
             std::future::poll_fn(|cx| {
                 assert!(future.as_mut().poll(cx).is_pending());
+
                 if s.count() == 1 {
                     Poll::Ready(())
                 } else {
                     cx.waker().wake_by_ref();
+
                     Poll::Pending
                 }
             }),
@@ -242,6 +245,7 @@ fn cancelled_read_state_closes_the_connection_without_detached_retries() {
 fn lookup_deadline_and_lookup_expiry_each_bound_body_waiting() {
     let (p, r, a, _) = input();
     let rt = runtime();
+
     for expiry in [false, true] {
         let s = Server::new(Response::HoldBody);
         let transport = s.client(&p, Duration::from_secs(30));

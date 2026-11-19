@@ -100,5 +100,6 @@ pub(in crate::store) fn settled(mixed: bool) -> (Fixture, Server, FixtureConnect
         .create_capture(CapturePlan::decode(p.encoded()).unwrap(), p.digest())
         .unwrap();
     crate::store::operation::tests::fixtures::settle(&mut op, mixed);
+
     (Fixture { store, p, op, root }, server, connection)
 }

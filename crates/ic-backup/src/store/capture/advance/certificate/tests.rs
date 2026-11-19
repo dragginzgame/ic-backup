@@ -61,6 +61,7 @@ pub(in crate::store::capture::advance) fn call_certificate_evidence(
     evidence
         .encode(admission.result_bytes)
         .map_err(StatusCertificateError::Admission)?;
+
     Ok(evidence)
 }
 
@@ -142,6 +143,7 @@ fn authenticate_expected_evidence(
         .encode(admission.result_bytes)
         .map_err(StatusCertificateError::Admission)?;
     validate_certificate_request(plan, admission, prepared, method, arguments)?;
+
     CertificateRequirements {
         canister: plan.request().target.canister,
         trust_root: plan.request().trust_root,
@@ -180,6 +182,7 @@ fn authenticated_expected_response(
     arguments: &[u8],
 ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
     validate_certificate_request(plan, admission, prepared, method, arguments)?;
+
     CertificateRequirements {
         canister: plan.request().target.canister,
         trust_root: plan.request().trust_root,
@@ -204,6 +207,7 @@ fn validate_certificate_request(
     prepared
         .validate_expected_call(plan, method, arguments)
         .map_err(StatusCertificateError::Admission)?;
+
     Ok(())
 }
 
@@ -250,6 +254,7 @@ pub fn observe_capture_certificate(
     authenticate_call_request(plan, admission, prepared, call)?;
     // Retain original policy validity, but never replace it with observation time.
     super::observation(&prepared.observation)?;
+
     observe_authenticated_request(
         &super::CertificateRequirements {
             canister: plan.request().target.canister,

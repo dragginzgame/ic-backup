@@ -71,6 +71,7 @@ impl Step {
             Role::ObservationRequest => "observation-request",
             Role::ObservationResult => "observation-certificate",
         };
+
         format!("{step}-{role}.bin")
     }
 }
@@ -145,6 +146,7 @@ impl<P: Intent> Recorder<P> {
             file.sync_all()?;
         }
         self.directory.sync()?;
+
         Ok(())
     }
 
@@ -170,6 +172,7 @@ impl<P: Intent> Recorder<P> {
             &owner_bytes(id, intent.view().digest())?,
         )?;
         target.sync()?;
+
         Self::create_claimed(store, intent, target_lock, &initial)
     }
 
@@ -192,6 +195,7 @@ impl<P: Intent> Recorder<P> {
         let recorder = Self::held(store, directory, intent, lock)?;
         recorder.check_target_lock(&target_lock)?;
         drop(target_lock);
+
         Ok(recorder)
     }
 
@@ -204,6 +208,7 @@ impl<P: Intent> Recorder<P> {
         {
             return Err(OperationStoreError::Changed);
         }
+
         Ok(())
     }
 
@@ -218,6 +223,7 @@ impl<P: Intent> Recorder<P> {
         }
         exact(store, "format", b"ic-backup/host-store/1\n", 128)?;
         let parent = child(store, "operations", false)?;
+
         Self::read_intent(&child(&parent, id, false)?, id)
     }
 
@@ -236,6 +242,7 @@ impl<P: Intent> Recorder<P> {
             acquire(open_optional(&directory, "lock")?.ok_or(OperationStoreError::Incomplete)?)?;
         let mut intent = Self::read_intent(&directory, id)?;
         intent.attach_codec(codec);
+
         Self::held(store, directory, intent, lock)
     }
 
@@ -250,6 +257,7 @@ impl<P: Intent> Recorder<P> {
         if intent.view().operation_id() != id {
             return Err(OperationStoreError::Changed);
         }
+
         Ok(intent)
     }
 
@@ -273,6 +281,7 @@ impl<P: Intent> Recorder<P> {
             .map(|(name, _)| {
                 let file =
                     open_optional(&directory, &name)?.ok_or(OperationStoreError::Incomplete)?;
+
                 Ok((name, file))
             })
             .collect::<Result<_, OperationStoreError>>()?;
@@ -290,6 +299,7 @@ impl<P: Intent> Recorder<P> {
             usable: true,
         };
         recorder.check()?;
+
         Ok(recorder)
     }
 
@@ -377,6 +387,7 @@ impl<P: Intent> Recorder<P> {
         {
             return Err(OperationStoreError::Changed);
         }
+
         Ok(journal)
     }
 
@@ -400,6 +411,7 @@ impl<P: Intent> Recorder<P> {
             return Err(OperationStoreError::Changed);
         }
         unchanged_file(&self.directory, name, held, &before)?;
+
         Ok(bytes)
     }
 
@@ -411,6 +423,7 @@ impl<P: Intent> Recorder<P> {
     ) -> Result<Journal, OperationStoreError> {
         self.append_with(original, fact, evidence, |file, frame| {
             file.write_all(frame)?;
+
             file.sync_all()
         })
     }
@@ -428,6 +441,7 @@ impl<P: Intent> Recorder<P> {
             }
         });
         self.usable = result.is_ok();
+
         result
     }
 
@@ -507,6 +521,7 @@ impl<P: Intent> Recorder<P> {
             }
         });
         self.usable = checked.is_ok();
+
         checked
     }
 }

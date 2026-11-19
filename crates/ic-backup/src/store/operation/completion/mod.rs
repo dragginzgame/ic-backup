@@ -88,6 +88,7 @@ impl CaptureOperation {
         same_directory(&bundle, "payload", &payload)?;
         same_directory(&bundles, &p.operation_id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
+
         Ok(true)
     }
 
@@ -130,6 +131,7 @@ impl CaptureOperation {
             .summary;
         same_directory(&bundles, &summary.bundle_id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
+
         Ok(Some(summary))
     }
 
@@ -166,6 +168,7 @@ impl CaptureOperation {
         if self.verify_completion(summary.manifest_sha256)? != summary {
             return Err(OperationStoreError::Changed.into());
         }
+
         Ok(summary)
     }
 
@@ -198,6 +201,7 @@ impl CaptureOperation {
             }
         }
         same_directory(&self.store, "bundles", &bundles)?;
+
         Ok(())
     }
 
@@ -219,6 +223,7 @@ impl CaptureOperation {
                 &effect()?,
                 &mut |call, role| self.read_role(call, role),
             )?;
+
             return result
                 .filter(|r| !r.rejected)
                 .map(|r| r.response)
@@ -238,6 +243,7 @@ impl CaptureOperation {
             call.update.reference_ns,
             self.read_role(call, Role::Request)?,
         )?;
+
         match self.intent.view().observe(
             observation.reference_ns,
             &prepared,
@@ -303,6 +309,7 @@ impl CaptureOperation {
                         name: format!("chunk-{hash}.bin"),
                         ordinals: Vec::new(),
                     });
+
                     members.len() - 1
                 }
             };
@@ -343,17 +350,20 @@ impl CaptureOperation {
                     for &n in &member.ordinals {
                         let bytes = self.payload(journal, &transfer, n)?;
                         hash.write_all(&bytes).map_err(OperationStoreError::from)?;
+
                         // Before creating anything, admit every existing member.
                         // Read-only verification uses the complete closing tree hash below.
                         if create && let Some(file) = &mut file {
                             let mut actual = vec![0; bytes.len()];
                             file.read_exact(&mut actual)
                                 .map_err(OperationStoreError::from)?;
+
                             if actual != bytes {
                                 return Err(OperationStoreError::Changed.into());
                             }
                         }
                     }
+
                     Ok(())
                 },
             )
@@ -422,6 +432,7 @@ impl CaptureOperation {
         same_directory(&bundle, "payload", &payload)?;
         same_directory(&bundles, id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
+
         Ok(actual)
     }
 
@@ -479,6 +490,7 @@ impl CaptureOperation {
         same_directory(&bundles, &summary.bundle_id, &bundle)?;
         same_directory(&self.store, "bundles", &bundles)?;
         self.finish_write(&journal)?;
+
         Ok(summary)
     }
 
@@ -537,6 +549,7 @@ impl CaptureOperation {
         if bytes.len() > MANIFEST_LIMIT {
             return Err(OperationStoreError::Changed.into());
         }
+
         Ok(bytes)
     }
 }

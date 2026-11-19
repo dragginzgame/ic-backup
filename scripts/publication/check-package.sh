@@ -6,12 +6,12 @@ export PATH="$root/.tools/host/bin:$PATH"
 mkdir -p target/package-consumer
 evidence="$(mktemp -d "$root/target/package-consumer/check.XXXXXX")"
 printf 'Package consumer evidence: %s\n' "$evidence"
-cargo metadata --locked --offline --no-deps --format-version 1 > "$evidence/metadata.json"
+cargo metadata --locked --no-deps --format-version 1 > "$evidence/metadata.json"
 version="$(jq -er '.packages[] | select(.name == "ic-backup") | .version' "$evidence/metadata.json")"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 # Working-source qualification is useful before a release commit. Upload's
 # independent clean-source check is never relaxed by this package command.
-cargo package --locked --offline --allow-dirty -p ic-backup --target-dir "$evidence/archive" > "$evidence/package.log" 2>&1
+cargo package --locked --allow-dirty -p ic-backup --target-dir "$evidence/archive" > "$evidence/package.log" 2>&1
 package="$evidence/archive/package/ic-backup-$version"
 cmp crates/ic-backup/README.md "$package/README.md"
 test -s "$package/LICENSE.md"
@@ -45,12 +45,12 @@ for my $name (sort keys %$dependencies) {
 PERL
 cp qualification/Cargo.lock "$evidence/Cargo.lock"
 # Only the disposable consumer lock is projected; both maintained locks stay intact.
-cargo metadata --offline --manifest-path "$evidence/Cargo.toml" --format-version 1 > "$evidence/resolved.json"
-cargo tree --locked --offline --manifest-path "$evidence/Cargo.toml" --edges normal > "$evidence/graph.txt"
+cargo metadata --manifest-path "$evidence/Cargo.toml" --format-version 1 > "$evidence/resolved.json"
+cargo tree --locked --manifest-path "$evidence/Cargo.toml" --edges normal > "$evidence/graph.txt"
 if grep -E 'ic-testkit|pocket-ic|ic-backup-qualification' "$evidence/graph.txt"; then
     echo 'qualification dependency leaked into archive consumer' >&2
     exit 1
 fi
-cargo build --locked --offline --manifest-path "$evidence/Cargo.toml" \
+cargo build --locked --manifest-path "$evidence/Cargo.toml" \
     --target-dir "$root/target/package-consumer/build" > "$evidence/build.log" 2>&1
 printf 'Archive and normal-dependency consumer verified: ic-backup %s\n' "$version"

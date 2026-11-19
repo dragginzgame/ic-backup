@@ -47,6 +47,7 @@ fn round_trip_metadata() -> SnapshotMetadata {
     m.certified_data = vec![17; 32];
     m.global_timer = Some(Timer::Active(19));
     m.on_low_wasm_memory_hook_status = Some(LowMemoryHook::Executed);
+
     m
 }
 
@@ -60,6 +61,7 @@ fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
     }
     let cases: Vec<Case> = serde_json::from_str(include_str!("golden.json")).unwrap();
     let maximum = u128::MAX;
+
     for case in cases {
         let raw = hex(&case.reply_hex);
         assert_eq!(
@@ -95,6 +97,7 @@ fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
             value.globals.len(),
             if case.name == "sdk-optional" { 6 } else { 5 }
         );
+
         if value.globals.len() == 6 {
             assert!(value.globals[5].is_none());
         }
@@ -133,6 +136,7 @@ fn public_decoder_preserves_bytes_and_flows_into_original_schedule() {
 #[test]
 fn valid_absence_is_unsupported_capture_instead_of_fabricated_state() {
     let p = plan(8);
+
     for alter in [
         |m: &mut SnapshotMetadata| m.source = None,
         |m: &mut SnapshotMetadata| {
@@ -240,6 +244,7 @@ fn malformed_truncated_trailing_arity_and_header_limits_refuse() {
         decode(&vec![0; MAX_REPLY_BYTES + 1]),
         Err(TransferMetadataError::ReplyTooLarge)
     ));
+
     for raw in [b"DIDL\x41".as_slice(), b"DIDL\x01\x6c\xff\xff\xff\xff\x0f"] {
         assert!(matches!(
             decode(raw),

@@ -85,7 +85,7 @@ test ! -s target/effects
 perl -0pi -e 's/publish = false/publish = ["crates-io"]/ or die "missing private default"' Cargo.toml
 git add -- Cargo.toml
 git commit --quiet -m 'Fixture eligibility only'
-PUBLICATION_VERSION="$("$real_cargo" metadata --locked --offline --no-deps --format-version 1 | jq -er '.packages[] | select(.name == "ic-backup") | .version')"
+PUBLICATION_VERSION="$("$real_cargo" metadata --locked --no-deps --format-version 1 | jq -er '.packages[] | select(.name == "ic-backup") | .version')"
 export PUBLICATION_VERSION
 for selection in '' 'ic-backup ic-backup' 'ic-backup-consumer'; do
     expect_failure publication_check "PACKAGE=$selection"

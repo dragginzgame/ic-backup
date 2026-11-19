@@ -75,6 +75,7 @@ impl BackupStore {
                 plan.view(),
             )
             .map_err(|e| CaptureSuccessionError::Restore(Box::new(e)))?;
+
             Ok(CaptureOperation::create_claimed(
                 &self.root,
                 plan,
@@ -82,12 +83,14 @@ impl BackupStore {
                 &initial,
             )?)
         };
+
         match predecessor {
             Plan::Capture(p) => {
                 let mut previous = self.open_capture(&p.request().operation_id, p.digest())?;
                 previous.sync_published()?;
                 let result = finish(target_lock);
                 drop(previous);
+
                 result
             }
             Plan::Restore(p) => {
@@ -97,6 +100,7 @@ impl BackupStore {
                 previous.sync_completed()?;
                 let result = finish(target_lock);
                 drop(previous);
+
                 result
             }
         }

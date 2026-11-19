@@ -70,6 +70,7 @@ impl BackupStore {
         }
         payload.check_files()?;
         same_identity(&self.root, &operation.store)?;
+
         Ok(CaptureSource {
             _capture: operation,
             payload,

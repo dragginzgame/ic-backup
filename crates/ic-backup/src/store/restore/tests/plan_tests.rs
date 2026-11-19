@@ -75,14 +75,17 @@ fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
         let bytes = match fault {
             "unknown" => {
                 changed["data_calls"] = 4.into();
+
                 serde_json::to_vec(&changed).unwrap()
             }
             "nested" => {
                 changed["limits"]["new"] = true.into();
+
                 serde_json::to_vec(&changed).unwrap()
             }
             "missing" => {
                 changed.as_object_mut().unwrap().remove("sender");
+
                 serde_json::to_vec(&changed).unwrap()
             }
             "duplicate" => [
@@ -93,6 +96,7 @@ fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
             "truncated" => plan.encoded()[..plan.encoded().len() - 1].to_vec(),
             _ => {
                 changed["format"] = "ic-backup/local-restore-plan/1".into();
+
                 serde_json::to_vec(&changed).unwrap()
             }
         };
@@ -168,5 +172,6 @@ fn restore_intent_is_canonical_source_bound_and_keeps_capture_spending() {
 
 fn canonical(bytes: &[u8]) -> Vec<u8> {
     let record: super::super::PlanRecord = serde_json::from_slice(bytes).unwrap();
+
     serde_json::to_vec(&record).unwrap()
 }

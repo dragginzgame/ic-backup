@@ -72,6 +72,7 @@ pub(in crate::store) fn authenticate_direct_request(
     if sender_info.is_some() {
         return Err(StatusRequestError::Identity);
     }
+
     authenticate_direct_envelope(&envelope, sender.as_slice())
 }
 
@@ -95,11 +96,13 @@ fn authenticate_direct_envelope(
         .content
         .signable()
         .map_err(|_| StatusRequestError::Envelope)?;
+
     if let Some(raw) = der.strip_prefix(ED25519_DER).filter(|raw| raw.len() == 32) {
         verify_sender(der, sender)?;
         let raw = raw.try_into().map_err(|_| StatusRequestError::Identity)?;
         let key =
             ed25519::VerifyingKey::from_bytes(raw).map_err(|_| StatusRequestError::Signature)?;
+
         key.verify_strict(&message, &ed25519::Signature::from_bytes(signature))
             .map_err(|_| StatusRequestError::Signature)
     } else if let Some(raw) = der
@@ -114,6 +117,7 @@ fn authenticate_direct_envelope(
         if signature.normalize_s() != signature {
             return Err(StatusRequestError::Signature);
         }
+
         key.verify_prehash(BackupDigest::compute(&message).as_bytes(), &signature)
             .map_err(|_| StatusRequestError::Signature)
     } else {

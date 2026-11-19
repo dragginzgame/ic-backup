@@ -129,6 +129,7 @@ impl RestorePlan {
             profile,
         )?;
         plan.validate_source(source)?;
+
         Ok(plan)
     }
 
@@ -173,6 +174,7 @@ impl RestorePlan {
             digest,
         };
         plan.view().validate()?;
+
         Ok(plan)
     }
 
@@ -208,6 +210,7 @@ impl RestorePlan {
         if plan.bytes != bytes {
             return Err(RestorePlanError::InvalidPlan);
         }
+
         Ok(plan)
     }
 
@@ -248,6 +251,7 @@ impl RestorePlan {
         {
             return Err(RestorePlanError::RequestCapacity);
         }
+
         Ok(transfer)
     }
 
@@ -331,6 +335,7 @@ impl Intent for RestorePlan {
         {
             return Err(OperationStoreError::Changed);
         }
+
         Ok(())
     }
 
@@ -346,6 +351,7 @@ fn hash(text: &str) -> Result<BackupDigest, RestorePlanError> {
     if !lower_hex(text, 64) {
         return Err(RestorePlanError::InvalidPlan);
     }
+
     text.parse().map_err(|_| RestorePlanError::InvalidPlan)
 }
 
@@ -354,5 +360,6 @@ fn principal(text: &str) -> Result<Principal, RestorePlanError> {
     if p.to_text() != text {
         return Err(RestorePlanError::InvalidPlan);
     }
+
     Ok(p)
 }

@@ -46,6 +46,7 @@ impl PreparedStatus {
         arguments: &[u8],
     ) -> Result<(), OperationStoreError> {
         let expected = plan.request().sender;
+
         self.validate_direct_call(
             expected,
             ic_platform_types::Principal::management_canister(),
@@ -67,6 +68,7 @@ impl PreparedStatus {
         if expires_ns == 0 {
             return Err(OperationStoreError::Changed);
         }
+
         Ok(Self {
             request_id: bytes[..32]
                 .try_into()
@@ -92,6 +94,7 @@ impl StatusAdmissionRecord {
         plan: &CapturePolicy,
     ) -> Result<(), OperationStoreError> {
         let initial_bytes = 0;
+
         self.validate_limits(
             plan.request().limits.network_requests,
             plan.request().limits.evidence_bytes,
@@ -120,6 +123,7 @@ pub(in crate::store) fn prepared() -> PreparedStatus {
 pub(in crate::store) fn call_content() -> EnvelopeContent {
     let p = plan();
     let sender = p.request().sender;
+
     EnvelopeContent::Call {
         nonce: Some(vec![0, 255, 7]),
         ingress_expiry: 21,
@@ -148,6 +152,7 @@ pub(in crate::store) fn prepared_content(content: EnvelopeContent) -> PreparedSt
         4096,
     )
     .unwrap();
+
     PreparedStatus {
         request_id,
         expires_ns,

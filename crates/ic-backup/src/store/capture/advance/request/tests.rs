@@ -59,6 +59,7 @@ fn authenticate_expected_request(
         .validate(plan)
         .map_err(StatusRequestError::Admission)?;
     let sender = plan.request().sender;
+
     authenticate_direct_request(
         sender,
         Principal::management_canister(),
@@ -108,5 +109,6 @@ pub fn authenticate_capture_lookup(
     authenticate_call_request(plan, admission, original, call)
         .map_err(CaptureLookupError::Original)?;
     let sender = plan.request().sender;
+
     authenticate_lookup_envelope(sender, original.request_id, bytes, policy)
 }

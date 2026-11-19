@@ -74,6 +74,7 @@ pub(in crate::store) fn target_for(
 ) -> Result<Directory, OperationStoreError> {
     let targets = child(root, "targets", false)?;
     let network = child(&targets, &target.network.to_string(), create)?;
+
     child(&network, &target.canister.to_text(), create)
 }
 
@@ -99,6 +100,7 @@ pub(in crate::store) fn lock_target(
     }
     let file = target.create_file(OsStr::new("lock"), 0o600)?;
     file.sync_all()?;
+
     Ok((acquire(file)?, true))
 }
 
@@ -110,6 +112,7 @@ pub(in crate::store) fn retain(
     let mut file = directory.create_file(OsStr::new(name), 0o600)?;
     file.write_all(bytes)?;
     file.sync_all()?;
+
     Ok(())
 }
 
@@ -123,6 +126,7 @@ pub(in crate::store) fn exact(
     if bytes != expected {
         return Err(OperationStoreError::Changed);
     }
+
     Ok(())
 }
 
@@ -133,6 +137,7 @@ pub(in crate::store) fn same_identity(
     if first.identity()? != second.identity()? {
         return Err(OperationStoreError::Changed);
     }
+
     Ok(())
 }
 

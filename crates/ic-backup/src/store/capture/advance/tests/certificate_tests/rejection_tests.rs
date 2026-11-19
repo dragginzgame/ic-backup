@@ -20,6 +20,7 @@ fn rejected_tree(
         fields.push(labeled(b"reject_message", leaf(message.to_vec())));
     }
     fields.push(labeled(b"status", leaf(b"rejected".to_vec())));
+
     fork(
         labeled(
             b"request_status",
@@ -63,6 +64,7 @@ fn builder_preserves_original_successful_reply_and_certificate() {
 #[test]
 fn certified_rejection_uses_frozen_diagnostic_frame_and_all_direct_ingress_codes() {
     let (p, r, _) = fixture();
+
     for code in 1..=5 {
         let proof = rejection_proof(&r.request_id, &[code], b"bad", Some(b"IC0503"));
         let evidence = build(&p, &r, &proof).unwrap();
@@ -95,6 +97,7 @@ fn absent_and_present_empty_optional_error_are_distinct_and_unicode_is_exact() {
         present.response,
         b"ic-backup/status-rejection/1\n\x04\0\0\0\0\x01\0\0\0\0"
     );
+
     for message in ["é\0\n", "e\u{301}\0\n"] {
         let proof = rejection_proof(
             &r.request_id,
@@ -116,6 +119,7 @@ fn absent_and_present_empty_optional_error_are_distinct_and_unicode_is_exact() {
 #[test]
 fn missing_or_pruned_diagnostics_refuse_instead_of_becoming_absent() {
     let (p, r, _) = fixture();
+
     for tree in [
         rejected_tree(&r.request_id, None, Some(b"message"), None),
         rejected_tree(&r.request_id, Some(&[5]), None, None),
@@ -160,6 +164,7 @@ fn unsupported_codes_and_invalid_text_refuse_without_lossy_conversion() {
             Err(StatusCertificateError::Rejection)
         ));
     }
+
     for (message, error) in [
         ([0xff].as_slice(), None),
         (b"message".as_slice(), Some([0xff].as_slice())),

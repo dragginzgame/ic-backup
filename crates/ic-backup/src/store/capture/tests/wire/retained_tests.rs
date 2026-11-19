@@ -177,6 +177,7 @@ fn retained_wire_vectors_match_original_lengths_and_commitments() {
     }
     let cases: Vec<Case> =
         serde_json::from_str(include_str!("tests/fixtures/manifest.json")).unwrap();
+
     for case in cases {
         let bytes = frozen(&case.name);
         assert_eq!(bytes.len(), case.bytes, "{}", case.name);

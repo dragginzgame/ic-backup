@@ -24,6 +24,7 @@ fn bounds() -> Bounds {
 fn frame(head: BackupDigest, payload: &[u8]) -> (Vec<u8>, BackupDigest) {
     let bytes = encode_frame(head, payload).unwrap();
     let digest = chain(head, &(payload.len() as u32).to_le_bytes(), payload);
+
     (bytes, digest)
 }
 struct HeaderOnly {
@@ -35,6 +36,7 @@ impl Read for HeaderOnly {
             self.bytes.position() < 4,
             "attempted body read before admission"
         );
+
         self.bytes.read(into)
     }
 }
@@ -122,6 +124,7 @@ impl Read for ShortReads {
             return Err(io::ErrorKind::Interrupted.into());
         }
         let len = into.len().min(2);
+
         self.reader.read(&mut into[..len])
     }
 }

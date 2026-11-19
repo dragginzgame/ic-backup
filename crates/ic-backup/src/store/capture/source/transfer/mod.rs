@@ -168,6 +168,7 @@ pub(in crate::store) fn plan_payload(
             .map_err(|_| RestoreTransferError::Source)
         })
         .collect::<Result<_, _>>()?;
+
     Ok(RestoreTransfer {
         source: source.clone(),
         snapshot_id,

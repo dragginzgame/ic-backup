@@ -29,6 +29,7 @@ pub(in crate::store) fn encode_frame(
         return Err(LedgerError::FrameSize);
     }
     let length = (payload.len() as u32).to_le_bytes();
+
     Ok([
         length.as_slice(),
         payload,
@@ -96,6 +97,7 @@ impl<R: Read> Frames<R> {
         self.head = expected;
         self.count += 1;
         self.bytes = next_bytes;
+
         Ok(Some(payload))
     }
 }

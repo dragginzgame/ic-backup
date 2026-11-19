@@ -29,6 +29,7 @@ impl CapturePolicy {
         if !(1..=256).contains(&snapshot.id.len()) {
             return Err(MetadataReadError::SnapshotId);
         }
+
         Ok(SnapshotArgs {
             canister_id: self.request().target.canister,
             snapshot_id: snapshot.id.clone(),

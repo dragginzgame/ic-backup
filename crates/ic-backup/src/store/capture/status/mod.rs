@@ -45,6 +45,7 @@ impl StatusRequirements {
         if !controllers.contains(&self.sender) {
             return Err(CaptureStatusError::NotController);
         }
+
         Ok(())
     }
 }

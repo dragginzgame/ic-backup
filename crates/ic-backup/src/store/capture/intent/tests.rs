@@ -45,6 +45,7 @@ fn input() -> (CapturePlan, PreparedStatus, StatusEvidence) {
     let (method, args) = Procedure::new(&intent).unwrap().request().unwrap();
     let response = crate::store::capture::tests::wire::encode(&status(intent.plan()), 4096);
     let (prepared, evidence) = signed_reply(&intent, 0, method, args, response);
+
     (intent, prepared, evidence)
 }
 
@@ -84,6 +85,7 @@ pub(in crate::store) fn signed_reply(
         1,
         None,
     );
+
     (
         prepared,
         StatusEvidence {
@@ -107,6 +109,7 @@ fn replacement_approval_binds_profile_and_refuses_old_or_changed_encodings() {
     let mut record: serde_json::Value = serde_json::from_slice(intent.encoded()).unwrap();
     record["extra"] = true.into();
     assert!(CapturePlan::decode(&serde_json::to_vec(&record).unwrap()).is_err());
+
     for field in [
         "transport",
         "signer",
@@ -201,6 +204,7 @@ fn original_profile_rejects_unrepresentable_windows_costs_and_roots() {
 fn authenticated_procedure_replays_original_evidence_without_live_dependencies() {
     let (intent, prepared, evidence) = input();
     let reopened = CapturePlan::decode(intent.encoded()).unwrap();
+
     for approval in [&intent, &reopened] {
         let mut procedure = Procedure::new(approval).unwrap();
         procedure
@@ -291,6 +295,7 @@ fn certified_rejection_is_terminal_evidence_and_never_unlocks_next_step() {
     )
     .unwrap();
     assert!(evidence.rejected);
+
     for approval in [&intent, &CapturePlan::decode(intent.encoded()).unwrap()] {
         let mut procedure = Procedure::new(approval).unwrap();
         assert!(matches!(

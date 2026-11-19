@@ -65,6 +65,7 @@ pub fn status_certificate_observation(time: TimePolicy) -> Result<Vec<u8>, Statu
     let mut bytes = OBSERVATION.to_vec();
     for window in [time.certificate, time.delegation] {
         validate_window(window)?;
+
         for value in [
             window.reference_ns,
             window.max_age_ns,
@@ -73,6 +74,7 @@ pub fn status_certificate_observation(time: TimePolicy) -> Result<Vec<u8>, Statu
             bytes.extend_from_slice(&value.to_le_bytes());
         }
     }
+
     Ok(bytes)
 }
 
@@ -97,6 +99,7 @@ impl CertificateRequirements {
         if response != evidence.response {
             return Err(StatusCertificateError::Response);
         }
+
         Ok(())
     }
 
@@ -122,6 +125,7 @@ impl CertificateRequirements {
             self.canister,
             observation(&prepared.observation)?,
         )?;
+
         terminal_response(authenticated.tree(), &prepared.request_id, maximum)
     }
 }
@@ -140,6 +144,7 @@ fn authenticate<'a>(
         },
     )
     .map_err(StatusCertificateError::Decode)?;
+
     certificate::authenticate_certificate(decoded, &root, canister, time, LIMITS)
         .map_err(StatusCertificateError::Certificate)
 }
@@ -150,6 +155,7 @@ fn terminal_response(
     maximum: usize,
 ) -> Result<(bool, Vec<u8>), StatusCertificateError> {
     let path = [b"request_status".as_slice(), request_id, b"status"];
+
     match tree.lookup_path(path) {
         LookupResult::Found(b"replied") => {
             let reply = required_leaf(tree, request_id, b"reply")
@@ -159,6 +165,7 @@ fn terminal_response(
                     OperationStoreError::StatusAdmission,
                 ));
             }
+
             Ok((false, reply.to_vec()))
         }
         LookupResult::Found(b"rejected") => {
@@ -219,6 +226,7 @@ fn rejection(
         bytes.extend_from_slice(&(error.len() as u32).to_le_bytes());
         bytes.extend_from_slice(error);
     }
+
     Ok(bytes)
 }
 
@@ -243,6 +251,7 @@ pub(in crate::store) fn observation(bytes: &[u8]) -> Result<TimePolicy, StatusCe
     };
     validate_window(certificate)?;
     validate_window(delegation)?;
+
     Ok(TimePolicy {
         certificate,
         delegation,
@@ -258,5 +267,6 @@ fn validate_window(window: TimeWindow) -> Result<(), StatusCertificateError> {
     {
         return Err(StatusCertificateError::Observation);
     }
+
     Ok(())
 }

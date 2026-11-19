@@ -16,6 +16,7 @@ impl RootBinding for Binding {
 
     fn decode(&self, exchange: RootExchange, bytes: &[u8]) -> Option<RootOutcome> {
         assert_eq!(exchange, RootExchange::Lookup);
+
         match bytes {
             [0] => Some(RootOutcome::Pending),
             [1] => Some(RootOutcome::Reply(vec![3, 4])),

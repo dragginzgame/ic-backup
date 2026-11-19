@@ -25,6 +25,7 @@ fn frozen_legacy_vectors_keep_exact_bytes_and_do_not_gain_missing_module_authori
         payload_checksum: String,
     }
     let cases: Vec<Case> = serde_json::from_str(include_str!("golden.json")).unwrap();
+
     for case in cases {
         let raw: Vec<u8> = case
             .reply_hex
@@ -116,6 +117,7 @@ fn controllers_are_bounded_before_elements_and_hash_length_before_bytes() {
             "{name}"
         );
     }
+
     for name in ["status-empty-hash", "status-31-byte-hash"] {
         assert_eq!(
             p.validate_status_reply(&frozen(name)),
@@ -131,6 +133,7 @@ fn controllers_are_bounded_before_elements_and_hash_length_before_bytes() {
 fn hash_option_promotion_and_absence_never_invent_the_approved_hash() {
     let p = plan();
     assert_eq!(p.validate_status_reply(&frozen("status-bare-hash")), Ok(()));
+
     for name in [
         "status-null-hash",
         "status-reserved-hash",
@@ -173,6 +176,7 @@ fn skipped_work_is_cumulative_across_outer_and_nested_fields() {
             "{name}"
         );
     }
+
     for name in ["status-combined-padding", "status-excess-padding"] {
         assert_eq!(
             plan().validate_status_reply(&frozen(name)),
@@ -206,6 +210,7 @@ fn malformed_prefixes_extra_arguments_trailing_and_raw_header_limits_refuse() {
         p.validate_status_reply(&vec![0; MAX_REPLY_BYTES + 1]),
         Err(CaptureStatusReplyError::ReplyTooLarge)
     );
+
     for raw in [b"DIDL\x41".as_slice(), b"DIDL\x01\x6c\xff\xff\xff\xff\x0f"] {
         assert_eq!(
             p.validate_status_reply(raw),

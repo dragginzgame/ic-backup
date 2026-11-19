@@ -103,6 +103,7 @@ fn retained_restore() -> (crate::store::BackupStore, RestorePlan, std::path::Pat
             .create_restore(&plan, plan.digest(), &predecessor)
             .unwrap(),
     );
+
     (f.store, plan, f.root)
 }
 

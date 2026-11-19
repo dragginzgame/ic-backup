@@ -80,6 +80,7 @@ impl StatusAdmissionRecord {
         {
             return Err(OperationStoreError::StatusAdmission);
         }
+
         Ok(())
     }
 }
@@ -145,6 +146,7 @@ impl PreparedStatus {
         {
             return Err(OperationStoreError::StatusAdmission);
         }
+
         Ok(())
     }
 
@@ -153,6 +155,7 @@ impl PreparedStatus {
             return Err(OperationStoreError::StatusAdmission);
         }
         let tail = pair(&self.envelope, &self.observation, limit.saturating_sub(40))?;
+
         Ok([
             self.request_id.as_slice(),
             &self.expires_ns.to_le_bytes(),
@@ -164,6 +167,7 @@ impl PreparedStatus {
 impl StatusEvidence {
     pub(in crate::store) fn encode(&self, limit: u32) -> Result<Vec<u8>, OperationStoreError> {
         let tail = pair(&self.response, &self.proof, limit.saturating_sub(1))?;
+
         Ok([&[u8::from(self.rejected)], tail.as_slice()].concat())
     }
 
@@ -175,6 +179,7 @@ impl StatusEvidence {
             return Err(OperationStoreError::Changed);
         }
         let (response, proof) = split(tail)?;
+
         Ok(Self {
             rejected: kind == 1,
             response,
@@ -194,6 +199,7 @@ fn pair(first: &[u8], second: &[u8], limit: u32) -> Result<Vec<u8>, OperationSto
     {
         return Err(OperationStoreError::StatusAdmission);
     }
+
     Ok([&(first.len() as u32).to_le_bytes(), first, second].concat())
 }
 
@@ -207,5 +213,6 @@ fn split(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), OperationStoreError> {
     if length == 0 || length >= bytes.len().saturating_sub(4) {
         return Err(OperationStoreError::Changed);
     }
+
     Ok((bytes[4..4 + length].to_vec(), bytes[4 + length..].to_vec()))
 }

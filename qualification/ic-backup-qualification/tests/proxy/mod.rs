@@ -46,9 +46,11 @@ impl Proxy {
             let calls = Arc::clone(&calls);
             let stop = Arc::clone(&stop);
             let lost = Arc::clone(&lost);
+
             thread::spawn(move || {
                 let mut discarded = false;
                 let mut matched = 0;
+
                 while !stop.load(Ordering::SeqCst) {
                     let mut client = match listener.accept() {
                         Ok((socket, _)) => socket,
@@ -112,6 +114,7 @@ impl Proxy {
                         if method.as_deref() == Some(selected) {
                             let discard = matched == ordinal;
                             matched += 1;
+
                             discard
                         } else {
                             false
@@ -119,6 +122,7 @@ impl Proxy {
                     } else {
                         false
                     };
+
                     if !discarded && discard {
                         let body = body(&response);
                         let CallResponse::Replied { certificate } =
@@ -141,6 +145,7 @@ impl Proxy {
                 }
             })
         };
+
         Self {
             endpoint,
             calls,
@@ -158,6 +163,7 @@ impl Proxy {
 impl Drop for Proxy {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
+
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();
         }
@@ -167,11 +173,13 @@ impl Drop for Proxy {
 fn read_request(stream: &mut TcpStream) -> Vec<u8> {
     let mut bytes = Vec::new();
     let mut scratch = [0; 4096];
+
     loop {
         let n = stream.read(&mut scratch).unwrap();
         assert_ne!(n, 0);
         bytes.extend_from_slice(&scratch[..n]);
         assert!(bytes.len() <= 2 * 1024 * 1024 + 16384);
+
         if let Some(split) = bytes.windows(4).position(|b| b == b"\r\n\r\n") {
             let length: usize = std::str::from_utf8(&bytes[..split])
                 .unwrap()
@@ -182,6 +190,7 @@ fn read_request(stream: &mut TcpStream) -> Vec<u8> {
                         .map(|(_, value)| value.trim().parse().unwrap())
                 })
                 .unwrap();
+
             if bytes.len() == split + 4 + length {
                 return bytes;
             }
@@ -202,6 +211,7 @@ fn body(response: &[u8]) -> Vec<u8> {
     }
     let mut remaining = bytes;
     let mut out = Vec::new();
+
     loop {
         let split = remaining.windows(2).position(|b| b == b"\r\n").unwrap();
         let size = usize::from_str_radix(

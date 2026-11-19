@@ -86,6 +86,7 @@ impl Signer for ExternalSigner {
             },
         };
         let signature = Scheme::Ed25519.sign(&content.signable().unwrap());
+
         Ok(encode_envelope(
             &Envelope {
                 content,
@@ -116,6 +117,7 @@ impl Guard for Application {
     ) -> Result<(), Self::Error> {
         assert_eq!(witness, &[4; 32]);
         self.actions.lock().unwrap().push(action);
+
         if self.allowed.load(Ordering::SeqCst) {
             Ok(())
         } else {
@@ -164,15 +166,18 @@ fn fixture(
             actions: Mutex::new(Vec::new()),
         },
     };
+
     (path, parent, recorder, connection, server)
 }
 
 fn leb(mut n: u64) -> Vec<u8> {
     let mut bytes = Vec::new();
+
     loop {
         let next = (n & 127) as u8;
         n >>= 7;
         bytes.push(next | if n > 0 { 128 } else { 0 });
+
         if n == 0 {
             return bytes;
         }
@@ -207,11 +212,13 @@ fn certificate_body(certificate: &[u8], call: bool) -> Vec<u8> {
     };
     bytes.extend_from_slice(&u16::try_from(certificate.len()).unwrap().to_be_bytes());
     bytes.extend_from_slice(certificate);
+
     http(200, "", &bytes)
 }
 
 fn envelope(request: &[u8]) -> &[u8] {
     let end = request.windows(4).position(|b| b == b"\r\n\r\n").unwrap() + 4;
+
     &request[end..]
 }
 
@@ -254,6 +261,7 @@ fn response(request: &[u8], n: usize) -> Vec<u8> {
             .as_bytes()
         )
     );
+
     certificate_body(
         &terminal_certificate(
             &content.request_id().unwrap(),
@@ -361,6 +369,7 @@ fn invocation_projection_never_outlives_changed_evidence_or_payload_across_http(
                     *bytes.last_mut().unwrap() ^= 1;
                     fs::write(file, bytes).unwrap();
                 }
+
                 Some(response(request, n))
             })));
         let directory = path
@@ -419,6 +428,7 @@ fn mutation_and_revoked_guard_after_signing_cannot_dispatch() {
         );
         assert_eq!(connection.signer.calls, 1);
         assert_eq!(server.count(), 0);
+
         if !orphan {
             let journal = recorder.check().unwrap();
             assert_eq!(journal.signatures, 1);
@@ -483,6 +493,7 @@ fn original_reply_import_is_local_after_shutdown_and_revoked_authority() {
                 response,
                 proof,
             });
+
             None
         })));
     let rt = runtime();
@@ -516,6 +527,7 @@ fn one_observation_resolves_pending_update_and_preserves_original_submission_cou
                 && let content @ EnvelopeContent::Call { .. } = parsed.value.content
             {
                 *captured.lock().unwrap() = Some(content.request_id().unwrap());
+
                 None
             } else {
                 let content = decode_envelope(envelope(request), 4096)
@@ -527,6 +539,7 @@ fn one_observation_resolves_pending_update_and_preserves_original_submission_cou
                 };
                 let id = captured.lock().unwrap().unwrap();
                 assert_eq!(paths[0][1].as_slice(), id);
+
                 Some(certificate_body(
                     &terminal_certificate(&id, reply(&selected(), Step::InitialStatus), b"replied"),
                     false,
@@ -631,6 +644,7 @@ fn remainder_admission_includes_signing_network_evidence_and_local_completion() 
     let journal = Journal::open(bytes.as_slice(), &intent).unwrap();
     journal.remaining(14).unwrap();
     assert!(journal.remaining(21).is_err());
+
     for resource in 0..3 {
         let mut journal = journal.clone();
         match resource {
@@ -667,6 +681,7 @@ fn certified_policy_failure_is_retained_and_blocks_cold_continuation() {
             let mut running = crate::store::capture::status::tests::status(selected().plan());
             running.status = ic_platform_protocol::management_snapshots::Status::Running;
             let response = crate::store::capture::tests::wire::encode(&running, 4096);
+
             Some(certificate_body(
                 &terminal_certificate(&content.request_id().unwrap(), response, b"replied"),
                 true,
@@ -738,6 +753,7 @@ fn certified_rejection_remains_settled_without_replacement_or_live_replay() {
                 1,
                 None,
             );
+
             Some(certificate_body(&certificate, true))
         })));
     assert!(matches!(
@@ -859,6 +875,7 @@ fn orphan_appearing_during_http_refuses_result_retention_without_repeating() {
                 captured.lock().unwrap().as_ref().unwrap(),
                 b"original orphan",
             );
+
             Some(response(bytes, n))
         })));
     let id = recorder.intent.plan().request().operation_id.clone();
@@ -885,6 +902,7 @@ fn orphan_appearing_during_http_refuses_result_retention_without_repeating() {
 #[test]
 fn failed_result_write_returns_original_evidence_for_offline_import_without_new_allowance() {
     use std::os::unix::fs::PermissionsExt;
+
     for observation in [false, true] {
         let location = Arc::new(Mutex::new(None::<PathBuf>));
         let fault = Arc::clone(&location);
@@ -896,6 +914,7 @@ fn failed_result_write_returns_original_evidence_for_offline_import_without_new_
                     && let content @ EnvelopeContent::Call { .. } = parsed.value.content
                 {
                     *wire_id.lock().unwrap() = Some(content.request_id().unwrap());
+
                     if observation {
                         return None;
                     }
@@ -905,6 +924,7 @@ fn failed_result_write_returns_original_evidence_for_offline_import_without_new_
                     fs::Permissions::from_mode(0o500),
                 )
                 .unwrap();
+
                 Some(certificate_body(
                     &terminal_certificate(
                         &wire_id.lock().unwrap().unwrap(),
@@ -990,9 +1010,11 @@ fn nonterminal_lookup_is_spent_and_surviving_original_reply_can_still_resolve() 
                         proof,
                     },
                 ));
+
                 None
             } else {
                 let id = captured.lock().unwrap().as_ref().unwrap().0;
+
                 Some(certificate_body(
                     &terminal_certificate(&id, vec![], b"processing"),
                     false,
@@ -1240,6 +1262,7 @@ fn partial_manifest_and_changed_completed_payload_refuse_without_repair() {
                 )
                 .unwrap();
             crate::store::tests::write_file(&bundle.join("manifest.pending"), b"partial");
+
             bundle.join("manifest.pending")
         } else {
             assert!(matches!(
@@ -1247,6 +1270,7 @@ fn partial_manifest_and_changed_completed_payload_refuse_without_repair() {
                 Progress::Complete(_)
             ));
             fs::write(bundle.join("payload/module.wasm"), b"abcdefghik").unwrap();
+
             bundle.join("payload/module.wasm")
         };
         let original = fs::read(&damaged).unwrap();

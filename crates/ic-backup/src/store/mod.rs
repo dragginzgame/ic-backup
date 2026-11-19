@@ -142,6 +142,7 @@ impl BackupStore {
     #[must_use]
     pub fn with_root_codec(mut self, codec: &'static dyn RootCodec) -> Self {
         self.codec = Some(codec);
+
         self
     }
 
@@ -177,6 +178,7 @@ impl BackupStore {
             root.create_directory(OsStr::new(name), 0o700, PRIVATE)?;
         }
         commit(stage)?;
+
         Ok(Self { root, codec: None })
     }
 
@@ -215,6 +217,7 @@ impl BackupStore {
         if count != 4 {
             return Err(StoreError::IncompleteStore);
         }
+
         Ok(Self { root, codec: None })
     }
 
@@ -237,9 +240,11 @@ impl BackupStore {
                 return Err(StoreError::ResultLimit);
             }
             rows.push(row);
+
             Ok(())
         })?;
         rows.sort_by(|a, b| b.recency().cmp(&a.recency()));
+
         Ok(rows)
     }
 
@@ -265,8 +270,10 @@ impl BackupStore {
             {
                 latest = Some(row);
             }
+
             Ok(())
         })?;
+
         Ok(latest)
     }
 
@@ -305,10 +312,12 @@ impl BackupStore {
                     source,
                 })?
                 .summary;
+
             if target.is_none_or(|target| *target == row.target) {
                 accept(row)?;
             }
         }
+
         Ok(())
     }
 }

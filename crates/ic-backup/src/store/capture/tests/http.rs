@@ -72,6 +72,7 @@ pub(in crate::store) fn input_for(
     a.prepare_deadline_ns = now() + 10_000_000_000;
     a.submit_deadline_ns = a.prepare_deadline_ns + 10_000_000_000;
     let certificate = signed(reply_tree(&r.request_id, &response, b"replied"), 1, None);
+
     (p, r, a, call_body(&certificate))
 }
 
@@ -80,6 +81,7 @@ pub(in crate::store) fn call_body(certificate: &[u8]) -> Vec<u8> {
     let mut body = b"\xa2\x66status\x67replied\x6bcertificate\x59".to_vec();
     body.extend_from_slice(&u16::try_from(certificate.len()).unwrap().to_be_bytes());
     body.extend_from_slice(certificate);
+
     body
 }
 
@@ -126,6 +128,7 @@ impl Server {
             let stop = Arc::clone(&stop);
             let requests = Arc::clone(&requests);
             let root = root.clone();
+
             thread::spawn(move || {
                 while !stop.load(Ordering::SeqCst) {
                     let mut stream = match listener.accept() {
@@ -153,10 +156,12 @@ impl Server {
                     .unwrap();
                     captured.push(request);
                     drop(captured);
+
                     match &response {
                         Response::Computed(make) => {
                             let captured = requests.lock().unwrap();
                             let n = captured.len() - 1;
+
                             if let Some(bytes) = make(&captured[n], n) {
                                 let _ = stream.write_all(&bytes);
                             }
@@ -180,6 +185,7 @@ impl Server {
                         }
                         Response::HoldBody => {
                             stream.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nContent-Length: 10\r\n\r\n").unwrap();
+
                             while !stop.load(Ordering::SeqCst) {
                                 thread::sleep(Duration::from_millis(2));
                             }
@@ -188,6 +194,7 @@ impl Server {
                 }
             })
         };
+
         Self {
             endpoint,
             root,
@@ -215,6 +222,7 @@ impl Server {
         self.thread.take().unwrap().join().unwrap();
         let requests = self.requests.lock().unwrap().clone();
         assert!(self.root.is_dir());
+
         requests
     }
 }
@@ -222,6 +230,7 @@ impl Server {
 impl Drop for Server {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
+
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
@@ -231,11 +240,13 @@ impl Drop for Server {
 pub(in crate::store) fn read_request(stream: &mut TcpStream) -> Vec<u8> {
     let mut bytes = Vec::new();
     let mut buffer = [0; 4096];
+
     loop {
         let n = stream.read(&mut buffer).unwrap();
         assert_ne!(n, 0, "incomplete fixture request");
         bytes.extend_from_slice(&buffer[..n]);
         assert!(bytes.len() <= 1024 * 1024 + 16384);
+
         if let Some(offset) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
             let headers = std::str::from_utf8(&bytes[..offset]).unwrap();
             let length: usize = headers
@@ -246,8 +257,10 @@ pub(in crate::store) fn read_request(stream: &mut TcpStream) -> Vec<u8> {
                         .map(|(_, value)| value.trim().parse().unwrap())
                 })
                 .unwrap();
+
             if bytes.len() >= offset + 4 + length {
                 assert_eq!(bytes.len(), offset + 4 + length);
+
                 return bytes;
             }
         }

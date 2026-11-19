@@ -48,6 +48,7 @@ impl fmt::Display for BackupDigest {
         for byte in self.0 {
             write!(f, "{byte:02x}")?;
         }
+
         Ok(())
     }
 }
@@ -69,6 +70,7 @@ impl FromStr for BackupDigest {
             let digit = |b: u8| if b <= b'9' { b - b'0' } else { b - b'a' + 10 };
             *byte = digit(pair[0]) * 16 + digit(pair[1]);
         }
+
         Ok(Self(bytes))
     }
 }

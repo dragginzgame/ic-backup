@@ -61,6 +61,7 @@ fn original(
     let mut a = admission();
     a.prepare_deadline_ns = 110;
     a.submit_deadline_ns = 150;
+
     (p, a, r)
 }
 
@@ -152,6 +153,7 @@ fn pending_done_absent_and_pruned_are_distinct_and_never_terminal_receipts() {
         observe(&p, &a, &r, &replied(&other, b"other"), policy()).unwrap(),
         CaptureObservation::Absent
     ));
+
     for branch in [
         labeled(b"status", leaf(b"unknown".to_vec())),
         labeled(b"status", labeled(b"unexpected", leaf(vec![1]))),
@@ -321,6 +323,7 @@ fn rejected(id: &[u8; 32], code: &[u8], message: &[u8], error: Option<HashTree>)
             labeled(b"status", leaf(b"rejected".to_vec())),
         ),
     );
+
     certificate(
         id,
         error.map_or_else(
@@ -353,6 +356,7 @@ fn certified_rejections_reuse_exact_diagnostics_and_refuse_unknown_optional_fiel
         }
         assert_eq!(bytes, expected);
     }
+
     for proof in [
         rejected(&r.request_id, &[6], b"refused", None),
         rejected(&r.request_id, &[0x85, 0], b"refused", None),

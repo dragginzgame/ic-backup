@@ -50,6 +50,7 @@ impl CaptureOperation {
                 self.materialize(&journal, &flow, true)?;
                 self.finish_write(&journal)?;
                 flow.after_materialization()?;
+
                 Step::FinalStatus
             }
             Next::Publish => {
@@ -90,6 +91,7 @@ impl CaptureOperation {
             self.materialize(&self.check()?, &flow, false)?;
         }
         flow.accept(result.rejected, step, result.request_id, &result.response)?;
+
         Ok(Progress::Advanced)
     }
 
@@ -132,6 +134,7 @@ impl CaptureOperation {
             self.materialize(&self.check()?, &flow, false)?;
         }
         flow.accept(result.rejected, step, result.request_id, &result.response)?;
+
         Ok(Progress::Advanced)
     }
 }

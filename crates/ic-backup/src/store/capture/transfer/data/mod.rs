@@ -33,6 +33,7 @@ impl CaptureTransfer<'_> {
         if ordinal >= self.data_calls() {
             return Err(TransferDataError::Ordinal.into());
         }
+
         Ok(ReadDataArgs {
             canister_id: self.plan.request().target.canister,
             snapshot_id: self.snapshot_id.to_vec(),
@@ -66,6 +67,7 @@ impl CaptureTransfer<'_> {
         }
         let chunk = decode_reply(reply)?;
         self.validate_data_bytes(ordinal, &chunk)?;
+
         Ok(chunk)
     }
 
@@ -98,11 +100,13 @@ impl CaptureTransfer<'_> {
                         actual: bytes.len(),
                     });
                 }
+
                 if BackupDigest::compute(bytes).as_bytes().as_slice() != hash {
                     return Err(TransferDataError::ChunkHash);
                 }
             }
         }
+
         Ok(())
     }
 }
@@ -124,6 +128,7 @@ pub(in crate::store) fn decode_reply(reply: &[u8]) -> Result<Vec<u8>, TransferDa
         },
     )
     .map_err(TransferDataError::Decode)?;
+
     Ok(result.chunk)
 }
 

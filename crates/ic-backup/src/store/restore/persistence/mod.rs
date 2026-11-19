@@ -58,6 +58,7 @@ impl Source<'_> {
     pub(in crate::store) fn check(&self) -> Result<(), OperationStoreError> {
         self.capture.check_custody()?;
         self.payload.check_files()?;
+
         Ok(())
     }
 
@@ -119,6 +120,7 @@ impl RestoreOperation<'_> {
             let result = replay::resolve_call(plan.view(), call, &effect, &mut |call, role| {
                 self.record.read_role(call, role)
             })?;
+
             if let Some(result) = result {
                 flow.accept(
                     call.step,
@@ -131,6 +133,7 @@ impl RestoreOperation<'_> {
                 if index + 1 != journal.calls.len() || journal.completed_at_ns.is_some() {
                     return Err(ReplayError::History);
                 }
+
                 return Ok(flow);
             }
         }
@@ -138,6 +141,7 @@ impl RestoreOperation<'_> {
             return Err(ReplayError::History);
         }
         self.source.check()?;
+
         Ok(flow)
     }
 
@@ -153,6 +157,7 @@ impl RestoreOperation<'_> {
             return Err(ReplayError::History);
         }
         let plan = self.plan();
+
         Ok(Some(LoadedStopped {
             operation_id: plan.request().operation_id.clone(),
             target: plan.request().target,
@@ -172,6 +177,7 @@ impl RestoreOperation<'_> {
         let journal = self.record.check()?;
         let plan = self.plan().clone();
         let flow = self.project(&journal, &plan)?;
+
         self.record
             .view(&journal, flow.next()?, self.completion(&journal, &flow)?)
     }
@@ -198,6 +204,7 @@ impl RestoreOperation<'_> {
                 FactRecord::LoadedStopped { completed_at_ns },
                 None,
             )?;
+
             return Ok(Progress::Complete(Box::new(
                 self.completion(&closed, &flow)?
                     .ok_or(OperationStoreError::Incomplete)?,
@@ -238,6 +245,7 @@ impl RestoreOperation<'_> {
             &result.response,
             &mut self.source,
         )?;
+
         Ok(Progress::Advanced)
     }
 
@@ -280,6 +288,7 @@ impl RestoreOperation<'_> {
             } else {
                 crate::store::RootExchange::Execute
             };
+
             self.record.import_reply(
                 &journal,
                 &flow.effect(&mut self.source)?,
@@ -297,6 +306,7 @@ impl RestoreOperation<'_> {
             &result.response,
             &mut self.source,
         )?;
+
         Ok(())
     }
 
@@ -321,6 +331,7 @@ impl RestoreOperation<'_> {
         let result = if plan.profile().manager.is_some() {
             let effect = flow.effect(&mut self.source)?;
             let source = &self.source;
+
             self.record
                 .run(
                     journal,
@@ -334,6 +345,7 @@ impl RestoreOperation<'_> {
                 .await?
         } else {
             let source = &self.source;
+
             self.record
                 .observe(journal, connection, || source.check())
                 .await?
@@ -348,6 +360,7 @@ impl RestoreOperation<'_> {
             &result.response,
             &mut self.source,
         )?;
+
         Ok(Progress::Advanced)
     }
 
@@ -359,12 +372,14 @@ impl RestoreOperation<'_> {
         self.source.capture.sync_published()?;
         self.source.check()?;
         self.inspect()?;
+
         Ok(())
     }
 }
 
 fn action(step: crate::store::OperationStep) -> Action {
     use crate::store::OperationStep::*;
+
     match step {
         AllocateSnapshot => Action::AllocateSnapshot,
         Upload(_) => Action::UploadSnapshot,
@@ -399,6 +414,7 @@ impl BackupStore {
             .map_err(|e| RestorePersistenceError::Source(Box::new(e)))?;
         plan.validate_source(&admitted)?;
         let (payload, metadata) = admitted.into_parts();
+
         Ok(Source {
             capture,
             payload,
@@ -455,6 +471,7 @@ impl BackupStore {
             plan.view(),
         )?;
         let record = Recorder::create_claimed(&self.root, plan.clone(), target_lock, &initial)?;
+
         Ok(RestoreOperation { record, source })
     }
 
@@ -490,6 +507,7 @@ impl BackupStore {
                 .map_err(OperationStoreError::from)?
                 .ok_or(OperationStoreError::Incomplete)?,
         )?;
+
         self.open_restore_locked(&plan, approval, &target, &target_lock)
     }
 
@@ -520,6 +538,7 @@ impl BackupStore {
         record.check_target_lock(target_lock)?;
         let mut operation = RestoreOperation { record, source };
         operation.inspect()?;
+
         Ok(operation)
     }
 }
@@ -528,6 +547,7 @@ fn approve(plan: &RestorePlan, approval: BackupDigest) -> Result<(), OperationSt
     if plan.digest() != approval {
         return Err(OperationStoreError::ApprovalMismatch);
     }
+
     Ok(())
 }
 
@@ -556,6 +576,7 @@ pub(in crate::store) fn replace_owner(
                 ic_host_artifacts::Length::Exactly(bytes.len() as u64),
             )?
             .seal()?;
+
         // All original custody checks below run before granting replacement visibility.
         Ok(stage)
     };
@@ -563,6 +584,7 @@ pub(in crate::store) fn replace_owner(
     let admission = || {
         exact(target, "owner.json", &before, 1024)?;
         same_directory(store, "operations", operations)?;
+
         same_identity(&target_for(store, previous.target(), false)?, target)
     };
     if let Err(source) = admission() {
@@ -598,5 +620,6 @@ pub(in crate::store) fn replace_owner(
         }
     }
     exact(target, "owner.json", &bytes, 1024)?;
+
     Ok(())
 }

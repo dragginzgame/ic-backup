@@ -128,6 +128,7 @@ impl<'a> Procedure<'a> {
         source: &mut Source<'_>,
     ) -> Result<(&'static str, Vec<u8>), Error> {
         let (effect, limit) = self.effect(source)?;
+
         effect.encode(limit).map_err(|_| Error::Encoding)
     }
 
@@ -165,6 +166,7 @@ impl<'a> Procedure<'a> {
                     }
                     ReadKind::WasmChunk(SnapshotChunk { .. }) => WriteKind::WasmChunk,
                 };
+
                 Effect::Upload(UploadDataArgs {
                     canister_id: target,
                     snapshot_id: self.destination()?.to_vec(),
@@ -179,6 +181,7 @@ impl<'a> Procedure<'a> {
             Step::Readback(n) => {
                 let mut request = self.source_request(n)?;
                 request.snapshot_id = self.destination()?.to_vec();
+
                 Effect::Read(request)
             }
             Step::LoadSnapshot => Effect::Load(LoadSnapshotArgs {
@@ -188,6 +191,7 @@ impl<'a> Procedure<'a> {
             }),
             _ => return Err(Error::Order),
         };
+
         Ok((effect, crate::store::limits::REQUEST_BYTES as usize))
     }
 
@@ -203,6 +207,7 @@ impl<'a> Procedure<'a> {
         if result.is_err() {
             self.failed = true;
         }
+
         result
     }
 
@@ -229,6 +234,7 @@ impl<'a> Procedure<'a> {
                     .status_requirements()
                     .validate_status_reply(reply)?;
                 self.status_requests.push(request_id);
+
                 match step {
                     Step::RestoreInitialStatus => Some(Step::RestoreListSnapshots),
                     Step::BeforeLoadStatus => Some(Step::LoadSnapshot),
@@ -240,6 +246,7 @@ impl<'a> Procedure<'a> {
                 if self.inventory.len() >= self.plan.profile().snapshot_capacity as usize {
                     return Err(SnapshotReplyError::NoCapacity.into());
                 }
+
                 Some(Step::AllocateSnapshot)
             }
             Step::AllocateSnapshot => {
@@ -255,10 +262,12 @@ impl<'a> Procedure<'a> {
                     return Err(Error::Allocation);
                 }
                 self.destination = Some(value.snapshot_id);
+
                 Some(Step::Upload(0))
             }
             Step::Upload(n) => {
                 unit(reply)?;
+
                 Some(if n + 1 == self.transfer.data_calls() {
                     Step::ReadbackMetadata
                 } else {
@@ -278,6 +287,7 @@ impl<'a> Procedure<'a> {
                     .plan_transfer(&source_id, &self.metadata)
                     .map_err(|_| Error::MetadataProfile)?;
                 transfer.decode_uploaded_metadata(reply)?;
+
                 Some(Step::Readback(0))
             }
             Step::Readback(n) => {
@@ -286,6 +296,7 @@ impl<'a> Procedure<'a> {
                 if bytes != original {
                     return Err(Error::Readback);
                 }
+
                 Some(if n + 1 == self.transfer.data_calls() {
                     Step::BeforeLoadStatus
                 } else {
@@ -294,10 +305,12 @@ impl<'a> Procedure<'a> {
             }
             Step::LoadSnapshot => {
                 unit(reply)?;
+
                 Some(Step::AfterLoadStatus)
             }
             _ => return Err(Error::Order),
         };
+
         Ok(())
     }
 }
@@ -322,6 +335,7 @@ fn upload_metadata(
         .cloned()
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::MetadataProfile)?;
+
     Ok(UploadMetadataArgs {
         canister_id,
         replace_snapshot: None,

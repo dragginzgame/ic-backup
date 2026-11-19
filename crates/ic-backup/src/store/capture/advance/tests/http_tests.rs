@@ -162,6 +162,7 @@ fn exact_retained_envelope_and_effective_target_produce_authenticated_evidence()
 #[test]
 fn redirects_throttling_acceptance_and_server_failures_never_retry() {
     let rt = runtime();
+
     for status in [202, 301, 302, 307, 308, 400, 429, 500, 503] {
         let (p, r, a, _) = input();
         let server = Server::new(Response::Bytes(http(
@@ -231,6 +232,7 @@ fn malformed_unproven_and_compressed_responses_remain_uncertain() {
 #[test]
 fn declared_and_streamed_body_limits_refuse_before_decoding() {
     let rt = runtime();
+
     for chunked in [false, true] {
         let (p, r, a, _) = input();
         let body = vec![0; a.result_bytes as usize + 1];
@@ -330,6 +332,7 @@ fn disconnect_body_timeout_and_cancellation_never_retry() {
 #[test]
 fn original_submit_deadline_and_ingress_expiry_bound_body_waits() {
     let rt = runtime();
+
     for expiry in [false, true] {
         let (p, mut r, mut a, _) = input();
         let server = Server::new(Response::HoldBody);
@@ -436,6 +439,7 @@ fn http_success_with_certified_rejection_is_a_rejected_result() {
 #[test]
 fn signature_authentication_precedes_http_for_both_direct_key_profiles() {
     let rt = runtime();
+
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         let (p, r, a, body) = input_for(scheme);
         let server = Server::new(Response::Bytes(http(200, "", &body)));
@@ -472,6 +476,7 @@ fn signature_authentication_precedes_http_for_both_direct_key_profiles() {
 #[test]
 fn shared_reader_preserves_exact_body_limit_and_empty_body_refusals() {
     let rt = runtime();
+
     for size in [0, 4096, 4097] {
         let (p, r, a, _) = input();
         assert_eq!(a.result_bytes, 4096);
@@ -552,6 +557,7 @@ fn root_updates_route_and_verify_delegation_for_root() {
     use ic_platform_types::Principal;
 
     let root = Principal::from_slice(&[8, 1]);
+
     for method in ["snapshot_execute", "snapshot_lookup"] {
         let (plan, mut prepared, admission, _) = input();
         let child = plan.request().target.canister;
@@ -570,6 +576,7 @@ fn root_updates_route_and_verify_delegation_for_root() {
             }
             envelope.sender_sig = Some(Scheme::Ed25519.sign(&envelope.content.signable().unwrap()));
         });
+
         for authority in [root, child] {
             let mut evidence = StatusEvidence {
                 rejected: false,

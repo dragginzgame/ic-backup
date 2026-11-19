@@ -124,10 +124,12 @@ fn run(mode: Mode) {
 
 fn leb(mut value: u64) -> Vec<u8> {
     let mut out = Vec::new();
+
     loop {
         let byte = (value & 127) as u8;
         value >>= 7;
         out.push(byte | if value == 0 { 0 } else { 128 });
+
         if value == 0 {
             return out;
         }
@@ -144,6 +146,7 @@ fn wasm(heap: &[u8]) -> Vec<u8> {
     bytes.push(11);
     bytes.extend_from_slice(&leb(data.len() as u64));
     bytes.extend_from_slice(&data);
+
     bytes
 }
 
@@ -183,6 +186,7 @@ async fn complete(
             OperationProgress::NeedsAttention(step) => panic!("unexpected pending {step:?}"),
         }
     }
+
     panic!("fixed capture did not complete within original call allowance")
 }
 
@@ -468,6 +472,7 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         assert_eq!(calls.load(Ordering::SeqCst), signatures);
         assert_eq!(replay.network_requests_reserved as usize, requests);
         fs::write(evidence.join("qualified.txt"),b"actual original management ingress; explicit authenticated recovery; cold replay without server or live authority; no resubmission\n").unwrap();
+
         return;
     }
     let receipt = complete(&mut operation, &mut connection).await;
@@ -529,6 +534,7 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
             .unwrap();
         let second = complete(&mut successor, &mut connection).await;
         drop(successor);
+
         (next, second)
     } else {
         (plan.clone(), receipt.clone())
@@ -711,6 +717,7 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
                     .exists()
             );
             fs::write(evidence.join("returned-load-certificate.bin"), &proof).unwrap();
+
             proof
         } else {
             proxy.lost.lock().unwrap().clone().unwrap()
@@ -751,6 +758,7 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         assert_eq!(calls.load(Ordering::SeqCst), signatures);
         assert_eq!(observed_requests.load(Ordering::SeqCst), requests);
         fs::write(evidence.join("qualified.txt"),b"actual original allocation/mid-upload/load effect; exact original terminal certificate settled after shutdown; no renewed signing/submission after cold reopen or revoked authority\n").unwrap();
+
         return;
     }
     let loaded = loop {

@@ -1,6 +1,6 @@
 [package]
 name = "ic-backup"
-version = "0.105.11"
+version = "0.105.12"
 description = "Host-side capture, restore and local backup inventory for Internet Computer canisters"
 readme = "README.md"
 edition.workspace = true

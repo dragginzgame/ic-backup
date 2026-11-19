@@ -119,6 +119,7 @@ impl CapturePolicy {
         if chunks.windows(2).any(|pair| pair[0] == pair[1]) {
             return Err(TransferError::ChunkHash);
         }
+
         Ok(CaptureTransfer {
             plan: self,
             metadata,
@@ -188,6 +189,7 @@ pub(in crate::store::capture) fn data_kind(
         if ordinal < count {
             let offset = ordinal * extent;
             let size = extent.min(sizes[region] - offset);
+
             return match region {
                 0 => ReadKind::WasmModule(Extent { offset, size }),
                 1 => ReadKind::WasmMemory(Extent { offset, size }),
@@ -196,6 +198,7 @@ pub(in crate::store::capture) fn data_kind(
         }
         ordinal -= count;
     }
+
     ReadKind::WasmChunk(SnapshotChunk {
         hash: chunks[ordinal as usize].to_vec(),
     })
@@ -216,6 +219,7 @@ fn admit_metadata(metadata: &SnapshotMetadata) -> Result<(), TransferError> {
     {
         return Err(TransferError::UnsupportedProfile);
     }
+
     Ok(())
 }
 

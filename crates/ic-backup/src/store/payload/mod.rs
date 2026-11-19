@@ -91,6 +91,7 @@ impl BackupStore {
         let original =
             PayloadDirectory::open(self, bundle_id, expected_manifest, maximum_payload_bytes)?;
         original.verify_with(|file, length| read(file, length).map(|identity| (identity, ())))?;
+
         Ok(original.decoded.summary)
     }
 }
@@ -146,6 +147,7 @@ impl<'store> PayloadDirectory<'store> {
             .open_directory(OsStr::new("payload"), PRIVATE)?
             .ok_or(StoreError::InvalidLayout)?;
         check_members(&payload, &decoded.members)?;
+
         Ok(Self {
             store,
             bundles,
@@ -187,6 +189,7 @@ impl<'store> PayloadDirectory<'store> {
             retained.push(value);
         }
         self.check()?;
+
         Ok(retained)
     }
 
@@ -207,6 +210,7 @@ impl<'store> PayloadDirectory<'store> {
         unchanged_directory(&self.bundle, "payload", &self.payload)?;
         unchanged_directory(&self.bundles, &self.decoded.summary.bundle_id, &self.bundle)?;
         unchanged_directory(&self.store.root, "bundles", &self.bundles)?;
+
         Ok(())
     }
 }
@@ -226,6 +230,7 @@ fn check_members(
     if !names.is_empty() {
         return Err(StoreError::InvalidLayout);
     }
+
     Ok(())
 }
 
@@ -245,6 +250,7 @@ pub(super) fn unchanged_file(
     {
         return Err(StoreError::CustodyChanged);
     }
+
     Ok(current)
 }
 
@@ -255,5 +261,6 @@ fn unchanged_directory(parent: &Directory, name: &str, held: &Directory) -> Resu
     if held.identity()? != current.identity()? {
         return Err(StoreError::CustodyChanged);
     }
+
     Ok(())
 }

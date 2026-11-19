@@ -85,6 +85,7 @@ impl CapturePlan {
             digest,
         };
         intent.view().validate()?;
+
         Ok(intent)
     }
 
@@ -116,6 +117,7 @@ impl CapturePlan {
         if intent.bytes != bytes {
             return Err(Error::Profile);
         }
+
         Ok(intent)
     }
 

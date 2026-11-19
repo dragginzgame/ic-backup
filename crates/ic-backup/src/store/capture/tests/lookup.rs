@@ -43,6 +43,7 @@ pub(in crate::store) fn lookup(
         paths: vec![vec![b"request_status".to_vec(), r.request_id.to_vec()]],
     };
     let signature = scheme.sign(&content.signable().unwrap());
+
     encode_envelope(
         &Envelope {
             content,
@@ -59,5 +60,6 @@ pub(in crate::store) fn body(cert: &[u8]) -> Vec<u8> {
     let mut bytes = b"\xa1\x6bcertificate\x59".to_vec();
     bytes.extend_from_slice(&u16::try_from(cert.len()).unwrap().to_be_bytes());
     bytes.extend_from_slice(cert);
+
     bytes
 }

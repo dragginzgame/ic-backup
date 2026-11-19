@@ -14,6 +14,7 @@ pub(super) fn plan(extent: u32) -> CapturePolicy {
     request.limits.payload_bytes = 1 << 30;
     request.limits.network_requests = 8192;
     request.limits.signing_requests = 8192;
+
     CapturePolicy::new(request).unwrap()
 }
 
@@ -74,6 +75,7 @@ fn exact_region_order_extents_and_original_request_identity() {
         assert_eq!(request.canister_id, p.request().target.canister);
         assert_eq!(request.snapshot_id, id);
     }
+
     for (module, heap, stable, extent) in [(1, 1, 1, 4), (8, 4, 4, 4), (17, 9, 3, 8)] {
         let p = plan(extent);
         let m = metadata(module, heap, stable);
@@ -228,6 +230,7 @@ fn malformed_duplicate_and_excessive_chunks_refuse() {
 #[test]
 fn missing_round_trip_fields_are_unsupported_and_never_defaulted() {
     let p = plan(4);
+
     for change in [
         |m: &mut SnapshotMetadata| m.source = None,
         |m: &mut SnapshotMetadata| m.source = Some(SnapshotSource::MetadataUpload(Reserved)),

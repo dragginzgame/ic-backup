@@ -168,6 +168,7 @@ impl<'a> Plan<'a> {
         self,
     ) -> crate::store::capture::status::StatusRequirements {
         let manager = self.profile().manager.as_ref();
+
         crate::store::capture::status::StatusRequirements {
             module_sha256: match self {
                 Self::Capture(plan) => plan.request().module_sha256,
@@ -222,6 +223,7 @@ impl<'a> Plan<'a> {
         let reference = p.certificate_max_age_ns.max(p.delegation_max_age_ns).max(1);
         self.admission(reference)?;
         self.observation(reference)?;
+
         Ok(())
     }
 
@@ -249,6 +251,7 @@ impl<'a> Plan<'a> {
             result_bytes: p.result_bytes,
         };
         a.validate_limits(limits.network_requests, limits.evidence_bytes, 0)?;
+
         Ok(a)
     }
 
@@ -259,6 +262,7 @@ impl<'a> Plan<'a> {
             delegation_max_age_ns: p.delegation_max_age_ns,
             max_clock_skew_ns: p.clock_skew_ns,
         };
+
         Ok(status_certificate_observation(
             timing
                 .policy(&self.admission(reference)?, reference)
@@ -282,6 +286,7 @@ impl<'a> Plan<'a> {
         let EnvelopeContent::Call { ingress_expiry, .. } = &content else {
             return Err(Error::Profile);
         };
+
         Ok(PreparedStatus {
             request_id: content.request_id().map_err(|_| Error::Profile)?,
             expires_ns: *ingress_expiry,
@@ -302,6 +307,7 @@ impl<'a> Plan<'a> {
         if self.profile().manager.is_some() {
             return Err(Error::ManagerExchange);
         }
+
         self.authenticate_ingress(reference, prepared, method, arguments)
     }
 
@@ -327,6 +333,7 @@ impl<'a> Plan<'a> {
             method,
             arguments,
         )?;
+
         Ok(())
     }
     // The caller authenticates this owned request before resolving its result.
@@ -341,6 +348,7 @@ impl<'a> Plan<'a> {
         evidence.encode(a.result_bytes)?;
         self.certificate()
             .authenticate(&a, prepared, evidence, &self.profile().root_der)?;
+
         Ok(())
     }
 
@@ -359,6 +367,7 @@ impl<'a> Plan<'a> {
                 envelope_bytes: self.profile().request_bytes,
             },
         )?;
+
         Ok(())
     }
 

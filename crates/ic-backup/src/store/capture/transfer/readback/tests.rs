@@ -19,6 +19,7 @@ fn uploaded(source: &SnapshotMetadata) -> SnapshotMetadata {
     value.source = Some(SnapshotSource::MetadataUpload(Reserved));
     value.taken_at_timestamp = 0;
     value.canister_version = u64::MAX;
+
     value
 }
 
@@ -117,6 +118,7 @@ fn float_comparison_keeps_nan_payload_signaling_sign_and_signed_zero_bits() {
         Some(Global::F32(Float32Bits((0.0_f32).to_bits()))),
         Some(Global::F64(Float64Bits((0.0_f64).to_bits()))),
     ];
+
     for index in 0..2 {
         let mut destination = uploaded(&source);
         destination.globals[index] = Some(if index == 0 {
@@ -197,6 +199,7 @@ fn source_origin_each_region_and_certified_bytes_are_checked() {
             Err(ReadbackMetadataError::RegionSizes)
         );
     }
+
     for bytes in [vec![], vec![0, 255], vec![0, 255, 18]] {
         let mut destination = uploaded(&source);
         destination.certified_data = bytes;
@@ -218,6 +221,7 @@ fn timer_and_hook_require_exact_presence_variant_and_value() {
     for (source_index, timer) in timers.iter().enumerate().skip(1) {
         let mut source = metadata(1, 0, 0);
         source.global_timer = timer.clone();
+
         for (destination_index, timer) in timers.iter().enumerate() {
             let mut destination = uploaded(&source);
             destination.global_timer = timer.clone();
@@ -237,9 +241,11 @@ fn timer_and_hook_require_exact_presence_variant_and_value() {
         Some(LowMemoryHook::Ready),
         Some(LowMemoryHook::Executed),
     ];
+
     for (source_index, hook) in hooks.iter().enumerate().skip(1) {
         let mut source = metadata(1, 0, 0);
         source.on_low_wasm_memory_hook_status = hook.clone();
+
         for (destination_index, hook) in hooks.iter().enumerate() {
             let mut destination = uploaded(&source);
             destination.on_low_wasm_memory_hook_status = hook.clone();
@@ -288,10 +294,12 @@ fn exact_collection_caps_pass_and_excess_counts_refuse_through_shared_decoder() 
         .map(|i| {
             let mut hash = vec![0; 32];
             hash[..4].copy_from_slice(&i.to_le_bytes());
+
             SnapshotChunk { hash }
         })
         .collect();
     assert_eq!(check(&source, &uploaded(&source)), Ok(()));
+
     for field in 0..3 {
         let mut destination = uploaded(&source);
         match field {

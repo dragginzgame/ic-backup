@@ -35,6 +35,7 @@ impl CaptureTiming {
             max_age_ns,
             max_future_skew_ns: future,
         };
+
         Some(TimePolicy {
             certificate: window(self.certificate_max_age_ns),
             delegation: window(self.delegation_max_age_ns),

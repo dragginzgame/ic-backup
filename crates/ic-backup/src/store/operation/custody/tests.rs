@@ -43,6 +43,7 @@ impl<P> Recorder<P> {
         P: Intent,
     {
         let original = self.check()?;
+
         self.append(&original, fact, evidence)
     }
 
@@ -56,6 +57,7 @@ impl<P> Recorder<P> {
         P: Intent,
     {
         let original = self.check()?;
+
         self.append_with(&original, fact, evidence, write)
     }
 }
@@ -68,6 +70,7 @@ pub(in crate::store::operation) fn store(path: &Path) -> Directory {
             .create(path.join(name))
             .unwrap();
     }
+
     Directory::open(path, PRIVATE).unwrap().unwrap()
 }
 
@@ -75,6 +78,7 @@ fn fixture() -> (PathBuf, Directory, CaptureOperation) {
     let path = root("capture-recorder");
     let parent = store(&path);
     let recorder = CaptureOperation::create(&parent, selected()).unwrap();
+
     (path, parent, recorder)
 }
 
@@ -177,6 +181,7 @@ fn append_call(recorder: &mut CaptureOperation, step: Step, settle: bool) -> Pre
     if settle {
         settle_call(recorder, step, &evidence);
     }
+
     request
 }
 
@@ -220,6 +225,7 @@ fn replay(recorder: &CaptureOperation, materialized: bool) -> Result<Next, repla
             }
         },
     )?;
+
     Ok(flow.next()?)
 }
 
@@ -227,6 +233,7 @@ fn with_observations() -> CapturePlan {
     let intent = selected();
     let mut request = intent.plan().request().clone();
     request.limits.observations = 1;
+
     CapturePlan::new(request, intent.profile().clone()).unwrap()
 }
 
@@ -326,6 +333,7 @@ fn uncertain_full_reservations_stay_spent_and_partial_frames_refuse() {
             |file, frame| {
                 file.write_all(if partial { &frame[..7] } else { frame })?;
                 file.sync_all()?;
+
                 Err(io::Error::other("interrupted acknowledgement"))
             },
         );
@@ -509,6 +517,7 @@ fn changed_replaced_aliased_and_orphan_files_refuse_without_repair() {
         assert!(recorder.check().is_err(), "{mutation}");
         let id = recorder.intent.plan().request().operation_id.clone();
         drop(recorder);
+
         // An identical replacement before reopening has no persisted inode identity;
         // held custody must detect it during this session, not invent historical proof.
         if mutation != 1 {
@@ -772,6 +781,7 @@ fn old_store_marker_and_changed_target_custody_refuse_before_work() {
             .next()
             .is_none()
     );
+
     for missing_lock in [false, true] {
         let (path, parent, recorder) = fixture();
         let id = recorder.intent.plan().request().operation_id.clone();

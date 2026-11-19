@@ -116,6 +116,7 @@ impl BackupHttpTransport {
             policy.observation,
         )?;
         remaining(deadline)?;
+
         Ok(CaptureLookupEvidence {
             certificate,
             outcome,
@@ -176,6 +177,7 @@ impl BackupHttpTransport {
         call: CaptureCall,
     ) -> Result<StatusEvidence, BackupHttpError> {
         let arguments = call.arguments(plan).map_err(BackupHttpError::Admission)?;
+
         self.submit_expected(
             crate::store::capture::advance::IngressRequirements {
                 target: plan.request().target,

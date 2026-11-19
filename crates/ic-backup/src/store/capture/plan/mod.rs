@@ -33,6 +33,7 @@ pub(in crate::store) struct CapturePolicy {
 impl CapturePolicy {
     pub(in crate::store) fn new(request: CaptureRequest) -> Result<Self, OperationStoreError> {
         validate(&request)?;
+
         Ok(Self { request })
     }
 
@@ -44,6 +45,7 @@ impl CapturePolicy {
     pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
         let r: serde_json::Value = serde_json::from_slice(bytes)?;
         let text = |key: &str| r[key].as_str().ok_or(OperationStoreError::InvalidPlan);
+
         Self::new(CaptureRequest {
             operation_id: text("operation_id")?.into(),
             target: BackupTarget {
@@ -68,6 +70,7 @@ fn validate(request: &CaptureRequest) -> Result<(), OperationStoreError> {
     if !lower_hex(&request.operation_id, 32) || !request.limits.valid() {
         return Err(OperationStoreError::InvalidPlan);
     }
+
     Ok(())
 }
 
@@ -76,6 +79,7 @@ pub(super) fn principal(text: &str) -> Result<Principal, OperationStoreError> {
     if p.to_text() != text {
         return Err(OperationStoreError::InvalidPlan);
     }
+
     Ok(p)
 }
 
@@ -83,5 +87,6 @@ pub(super) fn hash(text: &str) -> Result<BackupDigest, OperationStoreError> {
     if !lower_hex(text, 64) {
         return Err(OperationStoreError::InvalidPlan);
     }
+
     text.parse().map_err(|_| OperationStoreError::InvalidPlan)
 }

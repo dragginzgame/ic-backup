@@ -23,6 +23,7 @@ pub(in crate::store) fn fixture() -> (CapturePolicy, PreparedStatus, StatusEvide
         1,
         None,
     );
+
     (plan, prepared, evidence)
 }
 

@@ -28,6 +28,7 @@ impl RetainedServer {
         {
             retain(evidence, stopped);
         }
+
         Self {
             server: Some(result.unwrap()),
             evidence: evidence.to_owned(),
@@ -42,6 +43,7 @@ impl RetainedServer {
         let stopped = self.server.as_mut().unwrap().stop().unwrap();
         self.server = None;
         retain(&self.evidence, &stopped);
+
         stopped
     }
 }

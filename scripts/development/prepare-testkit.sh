@@ -3,7 +3,7 @@
 set -euo pipefail
 umask 077
 directory="$1"
-runner=(cargo run --manifest-path qualification/Cargo.toml -p ic-backup-qualification --example server --locked --offline --quiet --)
+runner=(cargo run --manifest-path qualification/Cargo.toml -p ic-backup-qualification --example server --locked --quiet --)
 if [[ -e "$directory/pocket-ic" || -L "$directory/pocket-ic" ]]; then
     "${runner[@]}" check "$directory"
     exit

@@ -14,10 +14,12 @@ pub(in crate::store) fn publish_manifest_file(
         verify_manifest_file(bundle, "manifest.json", &file, bytes)?;
         file.sync_all()?;
         bundle.sync()?;
+
         return Ok(());
     }
     let written = if let Some(file) = open_optional(bundle, "manifest.pending")? {
         verify_manifest_file(bundle, "manifest.pending", &file, bytes)?;
+
         bundle.admit_retained(
             OsStr::new("manifest.pending"),
             OsStr::new("manifest.json"),
@@ -46,9 +48,11 @@ pub(in crate::store) fn publish_manifest_file(
         let file =
             open_optional(bundle, "manifest.pending")?.ok_or(OperationStoreError::Incomplete)?;
         verify_manifest_file(bundle, "manifest.pending", &file, bytes)?;
+
         written
     };
     crate::store::commit(written.seal().map_err(StoreError::from)?)?;
+
     Ok(())
 }
 
@@ -66,5 +70,6 @@ pub(in crate::store) fn verify_manifest_file(
         return Err(OperationStoreError::Changed);
     }
     unchanged_file(bundle, name, file, &before)?;
+
     Ok(())
 }

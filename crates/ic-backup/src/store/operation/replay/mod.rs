@@ -58,6 +58,7 @@ impl Journal {
                 return Err(Error::History);
             }
             let effect = flow.effect()?;
+
             if let Some(result) = resolve_call(intent.view(), call, &effect, &mut read)? {
                 flow.accept(
                     result.rejected,
@@ -71,6 +72,7 @@ impl Journal {
                 {
                     return Err(Error::History);
                 }
+
                 return Ok(flow);
             }
         }
@@ -80,6 +82,7 @@ impl Journal {
         if self.completed_at_ns.is_some() && flow.next()? != Next::Publish {
             return Err(Error::History);
         }
+
         Ok(flow)
     }
 }
@@ -120,6 +123,7 @@ pub(in crate::store) fn resolve_call(
                 &read(call, Role::ObservationRequest)?,
             )?;
         }
+
         if o.result.is_some() {
             terminal = match intent.observe(
                 o.reference_ns,
@@ -161,9 +165,11 @@ pub(in crate::store) fn resolve_call(
                 "snapshot_lookup",
                 binding.lookup(),
             )?;
+
             if lookup.result.is_some() {
                 let evidence = StatusEvidence::decode(&read(call, Role::ManagerLookupResult)?)?;
                 intent.authenticate_result(lookup.reference_ns, &signed, &evidence)?;
+
                 if let Some(result) =
                     original.result(RootExchange::Lookup, evidence.rejected, evidence.response)?
                 {
@@ -175,6 +181,7 @@ pub(in crate::store) fn resolve_call(
             }
         }
     }
+
     Ok(inner.map(|(rejected, response)| Applied {
         request_id: prepared.request_id,
         rejected,

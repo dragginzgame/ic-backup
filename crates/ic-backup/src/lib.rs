@@ -1,6 +1,6 @@
 //! Host-side Internet Computer capture, same-canister restore and local inventory.
 //!
-//! The Unix [`store`] API binds immutable approvals to a direct or Root-managed route and
+//! The Unix `store` API binds immutable approvals to a direct or Root-managed route and
 //! retains original signed/certified evidence with finite one-shot spending.
 //! Fixed capture and source-bound restore procedures share the same recorder,
 //! explicit recovery and historical replay. Canic supplies the Root adapter. Integrations

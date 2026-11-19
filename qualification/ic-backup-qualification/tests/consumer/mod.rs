@@ -20,7 +20,6 @@ impl Consumer {
         tree.args([
             "tree",
             "--locked",
-            "--offline",
             "--edges",
             "normal",
             "-p",
@@ -41,7 +40,6 @@ impl Consumer {
             .args([
                 "build",
                 "--locked",
-                "--offline",
                 "-p",
                 "ic-backup-consumer",
                 "--manifest-path",
@@ -49,6 +47,7 @@ impl Consumer {
             .arg(workspace.join("Cargo.toml"))
             .env("CARGO_TARGET_DIR", workspace.join("target"));
         command(build, evidence, "consumer-build");
+
         Self {
             binary: workspace.join("target/debug/ic-backup-consumer"),
             evidence: evidence.to_owned(),
@@ -90,6 +89,7 @@ fn command(mut command: Command, evidence: &Path, label: &str) {
     ));
     let mut child = Held(command.spawn().unwrap());
     let deadline = Instant::now() + Duration::from_secs(180);
+
     loop {
         if let Some(status) = child.0.try_wait().unwrap() {
             assert!(

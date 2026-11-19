@@ -69,10 +69,12 @@ pub(in crate::store) fn observe_authenticated_request(
         super::authenticate(certificate, root_key_der, authority.canister, policy.time)?;
     let tree = authenticated.tree();
     let path = [b"request_status".as_slice(), &request_id, b"status"];
+
     Ok(match tree.lookup_path(path) {
         LookupResult::Found(b"replied" | b"rejected") => {
             let (rejected, response) =
                 super::terminal_response(tree, &request_id, maximum - certificate.len() - 5)?;
+
             if rejected {
                 CaptureObservation::Rejected(response)
             } else {

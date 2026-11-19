@@ -62,6 +62,7 @@ impl Fixture {
         for (name, bytes) in contents {
             write_file(&payload.join(name), &bytes);
         }
+
         Self {
             store,
             folder,
@@ -134,6 +135,7 @@ fn short_and_grown_files_return_exact_length_failures() {
         match fixture.verify().unwrap_err() {
             StoreError::Payload { member, source } => {
                 assert_eq!(member, "module.wasm");
+
                 if bytes.len() < 8 {
                     assert!(matches!(
                         source,
@@ -202,6 +204,7 @@ fn missing_extra_nested_linked_and_nonprivate_payload_members_refuse() {
             }
             _ => {
                 fs::rename(&module, &retained).unwrap();
+
                 match case {
                     "nested" => DirBuilder::new().mode(0o700).create(&module).unwrap(),
                     "symlink" => symlink(&retained, &module).unwrap(),
@@ -226,6 +229,7 @@ fn missing_extra_nested_linked_and_nonprivate_payload_members_refuse() {
             )),
             _ => assert!(matches!(error, StoreError::InvalidLayout)),
         }
+
         if retained.exists() {
             assert_eq!(fs::read(retained).unwrap(), b"\0asm\x01\0\0\0");
         }
@@ -329,6 +333,7 @@ fn legacy_same_bytes_file_replacement_during_read_is_refused() {
                 write_file(&path, b"\0asm\x01\0\0\0");
                 changed = true;
             }
+
             Ok(identity)
         },
     );
@@ -360,6 +365,7 @@ fn legacy_extra_entry_after_opening_scan_is_refused_without_cleanup() {
                 write_file(&extra, b"retained unexpected bytes");
                 changed = true;
             }
+
             Ok(identity)
         },
     );
@@ -404,9 +410,11 @@ fn changed_manifest_during_payload_read_cannot_return_original_success() {
                     }
                     changed = true;
                 }
+
                 Ok(identity)
             },
         );
+
         if replace {
             assert!(
                 matches!(result, Err(StoreError::CustodyChanged)),
@@ -453,6 +461,7 @@ fn legacy_replaced_child_directories_during_read_are_refused() {
                     DirBuilder::new().mode(0o700).create(&path)?;
                     changed = true;
                 }
+
                 Ok(identity)
             },
         );
@@ -496,6 +505,7 @@ fn legacy_extent_change_after_hash_is_refused() {
                     .write_all(b"x")?;
                 changed = true;
             }
+
             Ok(identity)
         },
     );
@@ -552,6 +562,7 @@ fn legacy_fifo_replacement_after_hash_refuses_and_retains_original() {
                 assert!(status.success(), "native FIFO fixture creation failed");
                 changed = true;
             }
+
             Ok(identity)
         },
     );

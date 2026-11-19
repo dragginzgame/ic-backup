@@ -17,16 +17,14 @@ const INNER: &[u8] = include_bytes!("fixtures/inner-reply.bin");
 const EXECUTE_REFERENCE: u64 = 1_794_996_924_874_121_711;
 const LOOKUP_REFERENCE: u64 = 1_794_996_925_316_189_214;
 
+///
+/// RetainedCodec
+/// Recognizes the original take request from the retained Root exchange.
+///
+
 #[derive(Debug)]
 struct RetainedCodec;
-struct Bound(Vec<u8>, Vec<u8>);
-fn frame(bytes: &[u8]) -> Vec<u8> {
-    let Content::Call { arg, .. } = decode_envelope(bytes, bytes.len()).unwrap().value.content
-    else {
-        panic!("fixture update")
-    };
-    arg
-}
+
 impl RootCodec for RetainedCodec {
     fn protocol(&self) -> [u8; 32] {
         [84; 32]
@@ -43,9 +41,18 @@ impl RootCodec for RetainedCodec {
         {
             return None;
         }
+
         Some(Box::new(Bound(frame(EXECUTE), frame(LOOKUP))))
     }
 }
+
+///
+/// Bound
+/// Holds the execute and lookup frames for the retained request.
+///
+
+struct Bound(Vec<u8>, Vec<u8>);
+
 impl RootBinding for Bound {
     fn execute(&self) -> &[u8] {
         &self.0
@@ -60,6 +67,15 @@ impl RootBinding for Bound {
             && payload == StatusEvidence::decode(RESULT).unwrap().response)
             .then(|| RootOutcome::Reply(INNER.to_vec()))
     }
+}
+
+fn frame(bytes: &[u8]) -> Vec<u8> {
+    let Content::Call { arg, .. } = decode_envelope(bytes, bytes.len()).unwrap().value.content
+    else {
+        panic!("fixture update")
+    };
+
+    arg
 }
 
 #[test]
@@ -89,6 +105,7 @@ fn cold_lookup_authenticates_both_real_ingresses_and_applies_only_the_original_i
         observation: None,
     };
     let effect = (effect, 512);
+
     for fault in [
         None,
         Some(Role::Request),
@@ -106,6 +123,7 @@ fn cold_lookup_authenticates_both_real_ingresses_and_applies_only_the_original_i
             if fault.is_some_and(|f| std::mem::discriminant(&f) == std::mem::discriminant(&role)) {
                 *bytes.last_mut().unwrap() ^= 1;
             }
+
             Ok(bytes)
         });
         if fault.is_some() {

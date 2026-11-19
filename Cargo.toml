@@ -30,7 +30,7 @@ ic-platform-protocol = { version = "0.3.3", default-features = false, features =
 tokio = { version = "1.53.3", default-features = false, features = ["time"] }
 
 # Tests and tooling
-toko-tooling = "=0.45.16"
+toko-tooling = "=0.45.21"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"
@@ -52,6 +52,7 @@ broken_intra_doc_links = "deny"
 invalid_markdown_table = "deny"
 
 [workspace.lints.clippy]
+empty_line_after_doc_comments = "allow"
 all = { level = "warn", priority = -2 }
 correctness = { level = "deny", priority = -1 }
 redundant_clone = "warn"

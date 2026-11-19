@@ -1,6 +1,16 @@
 # Current handoff — 2026-11-19
 
-## 0.105.11 operation test layout
+## Cargo network policy
+
+Development and publication commands inherit Cargo network settings. Prepared CI qualification steps select offline Cargo explicitly, including the child consumer build. Platform tracks the corresponding Makefile change in [issue #35](https://github.com/dragginzgame/ic-platform/issues/35).
+
+## Toko Tooling 0.45.21 adopted locally
+
+Both workspaces select 0.45.21 and inherit the shared Clippy setting for spaced type headers. Rust return expressions are separated from preceding statements, and the retained Root codec and qualification authority adapters use named headers. Backup exports no canister endpoints and has no Wasm-specific guards. The Unix store depends on Unix metadata and directory operations in Host FS. For `wasm32-unknown-unknown`, the library compiles with an empty normal dependency graph and the crate documentation builds with warnings denied. Wasm checks are under `target/evidence/tooling-0.45.19/`; hygiene checks are under `target/evidence/tooling-0.45.21/`.
+
+## 0.105.11 published
+
+[ic-backup 0.105.11](https://crates.io/crates/ic-backup/0.105.11) shipped from tag `v0.105.11` at `4377bf9`. All 247 native tests, five doctests and 11 PocketIC journeys passed. Registry readback matched the checksum, commit, license and all 181 tracked package files. A consumer built against the published version. [Backup #4](https://github.com/dragginzgame/ic-backup/issues/4) is closed. Evidence is under `target/evidence/release-0.105.11/`.
 
 The procedure suite now lives under `operation::tests::procedure_tests`. All 64 operation test cases remain in the inventory; only the five procedure case paths changed. Before and after lists are under `target/evidence/issue-4/`.
 

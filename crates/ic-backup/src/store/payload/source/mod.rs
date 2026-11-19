@@ -94,6 +94,7 @@ impl BackupStore {
                 original: metadata,
                 blocks: reader.blocks,
             };
+
             Ok((identity, held))
         })?;
         let source = PayloadSource {
@@ -104,6 +105,7 @@ impl BackupStore {
         // Earlier files stay held while later files are scanned. Check their
         // original names again before returning this longer-lived capability.
         source.check_files()?;
+
         Ok(source)
     }
 }
@@ -150,6 +152,7 @@ impl PayloadSource<'_> {
         self.active = false;
         let result = self.read_selected(index, offset, size)?;
         self.active = true;
+
         Ok(result)
     }
 
@@ -181,6 +184,7 @@ impl PayloadSource<'_> {
                         .try_into()
                         .map_err(|_| PayloadReadError::Request)?,
                 );
+
                 (format!("chunk-{hash}.bin"), None)
             }
         };
@@ -201,6 +205,7 @@ impl PayloadSource<'_> {
         {
             return Err(PayloadReadError::Request);
         }
+
         Ok((index, offset, size as usize))
     }
 
@@ -214,6 +219,7 @@ impl PayloadSource<'_> {
                 &held.original,
             )?;
         }
+
         Ok(())
     }
 
@@ -232,6 +238,7 @@ impl PayloadSource<'_> {
             let first = offset / BLOCK_BYTES as u64;
             let last = (end - 1) / BLOCK_BYTES as u64;
             let mut block = Vec::with_capacity(BLOCK_BYTES);
+
             for ordinal in first..=last {
                 let start = ordinal * BLOCK_BYTES as u64;
                 let length = (member.bytes - start).min(BLOCK_BYTES as u64) as usize;
@@ -253,6 +260,7 @@ impl PayloadSource<'_> {
             }
         }
         self.check_files()?;
+
         Ok(output)
     }
 }
@@ -281,11 +289,13 @@ impl Read for IndexingReader<'_> {
             let take = remaining.len().min(BLOCK_BYTES - self.pending.len());
             self.pending.extend_from_slice(&remaining[..take]);
             remaining = &remaining[take..];
+
             if self.pending.len() == BLOCK_BYTES {
                 self.blocks.push(BackupDigest::compute(&self.pending));
                 self.pending.clear();
             }
         }
+
         Ok(count)
     }
 }

@@ -167,6 +167,7 @@ impl Invocation {
         if reference_ns == 0 {
             return Err(LedgerError::Transition);
         }
+
         Ok(Self {
             reference_ns,
             request: None,
@@ -181,6 +182,7 @@ impl Invocation {
             return Err(LedgerError::Transition);
         }
         self.request = Some(request.clone());
+
         Ok(())
     }
 
@@ -189,6 +191,7 @@ impl Invocation {
             return Err(LedgerError::Transition);
         }
         self.submitted = true;
+
         Ok(())
     }
 
@@ -197,6 +200,7 @@ impl Invocation {
             return Err(LedgerError::Transition);
         }
         self.result = Some(result.clone());
+
         Ok(())
     }
 }
@@ -242,6 +246,7 @@ impl Journal {
     pub(in crate::store) fn allowance(intent: &impl Intent) -> Allowance {
         let limits = intent.view().limits();
         let profile = intent.view().profile();
+
         Allowance {
             manager_reply_bytes: profile.manager.as_ref().map(|manager| manager.reply_bytes),
             signatures: limits.signing_requests,
@@ -271,6 +276,7 @@ impl Journal {
         if bytes.len() as u64 > allowance.evidence {
             return Err(LedgerError::ByteLimit);
         }
+
         Ok(bytes)
     }
 
@@ -322,6 +328,7 @@ impl Journal {
         if state.count == 0 {
             return Err(LedgerError::Empty);
         }
+
         Ok(state)
     }
 
@@ -340,6 +347,7 @@ impl Journal {
         {
             return Err(LedgerError::ByteLimit);
         }
+
         Ok(frame)
     }
 
@@ -497,6 +505,7 @@ impl Journal {
         if self.frames_reserved > FRAMES {
             return Err(LedgerError::FrameCount);
         }
+
         Ok(())
     }
 
@@ -508,10 +517,12 @@ impl Journal {
             let slots = used
                 .checked_add(additional)
                 .ok_or(LedgerError::Transition)?;
+
             if slots > 64 || u64::from(slots) * u64::from(reply_bytes) > 16 * 1024 * 1024 {
                 return Err(LedgerError::Transition);
             }
         }
+
         Ok(())
     }
 
@@ -534,6 +545,7 @@ impl Journal {
         if call.update.result.is_some() {
             return Err(LedgerError::Transition);
         }
+
         call.observation.as_mut().ok_or(LedgerError::Transition)
     }
 
@@ -563,6 +575,7 @@ impl Journal {
             .evidence_reserved
             .checked_add(bytes)
             .ok_or(LedgerError::ByteLimit)?;
+
         Ok(())
     }
 
@@ -577,6 +590,7 @@ impl Journal {
         {
             return Err(LedgerError::Transition);
         }
+
         Ok(())
     }
 

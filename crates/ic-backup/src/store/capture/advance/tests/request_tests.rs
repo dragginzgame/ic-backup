@@ -148,6 +148,7 @@ fn complete_request_limits_and_original_content_are_checked_before_signatures() 
         authenticate_status_request(&plan, &exact, &prepared),
         Err(StatusRequestError::Admission(_))
     ));
+
     for case in 0..6 {
         let (plan, mut prepared) = fixture(Scheme::Ed25519);
         match case {
@@ -263,6 +264,7 @@ fn malformed_signature_scalars_and_public_points_refuse() {
     let plan = CapturePolicy::new(request).unwrap();
     change(&mut prepared, |envelope| {
         envelope.sender_pubkey = Some(bad_der);
+
         if let EnvelopeContent::Call { sender: caller, .. } = &mut envelope.content {
             *caller = sender.as_slice().try_into().unwrap();
         }

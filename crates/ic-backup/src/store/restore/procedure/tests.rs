@@ -31,6 +31,7 @@ fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8
             let mut status =
                 crate::store::capture::status::tests::status(source.capture.plan().plan());
             status.settings.controllers = vec![flow.plan.request().sender];
+
             encoded(&status)
         }
         Step::RestoreListSnapshots => encoded(&vec![Snapshot {
@@ -47,6 +48,7 @@ fn response(flow: &Procedure<'_>, source: &mut Source<'_>, step: Step) -> Vec<u8
             metadata.source = Some(SnapshotSource::MetadataUpload(Reserved));
             metadata.taken_at_timestamp += 1;
             metadata.canister_version += 1;
+
             encoded(&metadata)
         }
         Step::Readback(n) => encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
@@ -110,15 +112,18 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                 ("reused-initial-status", Step::BeforeLoadStatus) => {
                     request_id =
                         *crate::store::BackupDigest::compute(b"RestoreInitialStatus").as_bytes();
+
                     true
                 }
                 ("reused-preload-status", Step::AfterLoadStatus) => {
                     request_id =
                         *crate::store::BackupDigest::compute(b"BeforeLoadStatus").as_bytes();
+
                     true
                 }
                 ("rejected", Step::LoadSnapshot) => {
                     rejected = true;
+
                     true
                 }
                 ("running" | "wrong-controller", Step::BeforeLoadStatus) => {
@@ -131,6 +136,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                         status.settings.controllers.clear();
                     }
                     bytes = encoded(&status);
+
                     true
                 }
                 ("capacity", Step::RestoreListSnapshots) => {
@@ -146,6 +152,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                             total_size: 0,
                         },
                     ]);
+
                     true
                 }
                 (
@@ -160,20 +167,24 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                             _ => vec![8],
                         },
                     });
+
                     true
                 }
                 ("unit-arity", Step::Upload(0)) => {
                     bytes = frozen("unit-u8-argument");
+
                     true
                 }
                 ("metadata-origin", Step::ReadbackMetadata) => {
                     bytes = encoded(&source.metadata);
+
                     true
                 }
                 ("readback-bytes", Step::Readback(0)) => {
                     bytes = encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
                         chunk: vec![255u8; 3],
                     });
+
                     true
                 }
                 ("order", Step::Upload(0))
@@ -183,6 +194,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
                     bytes = encoded(&ic_platform_protocol::management_snapshots::SnapshotData {
                         chunk: vec![0; if fault == "short-readback" { 2 } else { 4 }],
                     });
+
                     true
                 }
                 _ => false,
@@ -205,6 +217,7 @@ fn exact_restore_policy_and_each_distinct_failure_boundary() {
         }
         assert_eq!(failed, fault != "none", "{fault}");
     }
+
     // Oversized and malformed allocation/unit inputs refuse before unbounded decoding.
     for bytes in [vec![], vec![0; 4097], b"DIDL\x00\x00trailing".to_vec()] {
         assert!(unit(&bytes).is_err());
@@ -262,8 +275,10 @@ fn actual_restore_cursor_owns_all_regions_chunks_routing_and_incomplete_coverage
         );
     }
     let n = source.transfer(&plan).unwrap().data_calls();
+
     for corrupt in 0..n {
         let mut flow = Procedure::new(&plan, &source).unwrap();
+
         while let Some(step) = flow.next().unwrap() {
             let (method, args) = flow.request(&mut source).unwrap();
             if let Step::Readback(ordinal) = step {

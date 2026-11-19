@@ -30,6 +30,7 @@ fn main() {
                     .completed
                     .is_some()
             );
+
             return;
         }
         "restore-inspect" => {
@@ -42,6 +43,7 @@ fn main() {
                     .completed
                     .is_some()
             );
+
             return;
         }
         _ => assert_eq!(args.len(), 8),
@@ -65,6 +67,7 @@ fn main() {
         match args[1].as_str() {
             "capture-step" | "capture-finish" => {
                 let mut operation = store.open_capture(&args[3], approval).unwrap();
+
                 for _ in 0..128 {
                     match operation.advance(&mut connection).await.unwrap() {
                         OperationProgress::Advanced if args[1] == "capture-step" => return,
@@ -78,6 +81,7 @@ fn main() {
             }
             "restore-step" | "restore-finish" => {
                 let mut operation = store.open_restore(&args[3], approval).unwrap();
+
                 for _ in 0..128 {
                     match operation.advance(&mut connection).await.unwrap() {
                         OperationProgress::Advanced if args[1] == "restore-step" => return,

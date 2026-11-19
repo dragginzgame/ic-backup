@@ -77,5 +77,6 @@ pub(in crate::store) fn authenticate_lookup_envelope(
         .map_err(|_| CaptureLookupError::Envelope)?;
     super::authenticate_direct_envelope(&envelope, sender.as_slice())
         .map_err(CaptureLookupError::Authentication)?;
+
     Ok(id)
 }

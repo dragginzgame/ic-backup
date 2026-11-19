@@ -148,6 +148,7 @@ impl BackupHttpTransport {
         if network != self.network || trust_root != BackupDigest::compute(&self.root_key_der) {
             return Err(BackupHttpError::Binding);
         }
+
         Ok(())
     }
 
@@ -161,6 +162,7 @@ impl BackupHttpTransport {
         bytes.extend_from_slice(BackupDigest::compute(&self.root_key_der).as_bytes());
         bytes.extend_from_slice(&(self.timeout.as_nanos() as u64).to_le_bytes());
         bytes.extend_from_slice(self.origin.as_str().as_bytes());
+
         *BackupDigest::compute(&bytes).as_bytes()
     }
 
@@ -202,6 +204,7 @@ impl BackupHttpTransport {
             .timeout(timeout)
             .build()
             .map_err(|_| BackupHttpError::Configuration)?;
+
         Ok(Self {
             client,
             origin,
@@ -235,6 +238,7 @@ impl BackupHttpTransport {
         let certificate = self
             .call_certificate(requirements.effective_canister(), admission, prepared)
             .await?;
+
         self.admit_received_certificate(&requirements, admission, prepared, certificate)
     }
 
@@ -267,6 +271,7 @@ impl BackupHttpTransport {
                 .encode(admission.result_bytes)
                 .map_err(BackupHttpError::Admission)?;
             remaining(deadline)?;
+
             Ok(())
         })();
         if let Err(error) = result {
@@ -276,6 +281,7 @@ impl BackupHttpTransport {
                 evidence.proof,
             ));
         }
+
         Ok(evidence)
     }
 
@@ -299,6 +305,7 @@ impl BackupHttpTransport {
         else {
             return Err(BackupHttpError::NoCertificate);
         };
+
         Ok(certificate)
     }
 
@@ -345,6 +352,7 @@ impl BackupHttpTransport {
                     BackupHttpError::Uncertain
                 }
             })?;
+
         Ok(bytes)
     }
 }
@@ -354,6 +362,7 @@ pub(super) fn remaining(deadline: u64) -> Result<Duration, BackupHttpError> {
         .duration_since(UNIX_EPOCH)
         .map_err(|_| BackupHttpError::Deadline)?;
     let now = u64::try_from(now.as_nanos()).map_err(|_| BackupHttpError::Deadline)?;
+
     deadline
         .checked_sub(now)
         .filter(|value| *value > 0)
@@ -398,9 +407,11 @@ fn origin(endpoint: &str) -> Result<Url, BackupHttpError> {
                 .next()
                 .ok_or(BackupHttpError::Configuration)?
         };
+
         if !host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback()) {
             return Err(BackupHttpError::Configuration);
         }
     }
+
     Ok(url)
 }

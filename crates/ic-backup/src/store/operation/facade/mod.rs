@@ -95,6 +95,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         codec: &'static dyn crate::store::RootCodec,
     ) -> Self {
         self.manager = Some((manager, codec));
+
         self
     }
 
@@ -112,6 +113,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         self.transport
             .admit_binding(request.target.network, request.trust_root)
             .map_err(|_| crate::store::OperationPlanError::Profile)?;
+
         CapturePlan::new(request, self.profile(options))
     }
 
@@ -148,6 +150,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         self.transport
             .admit_binding(request.target.network, request.trust_root)
             .map_err(|_| crate::store::RestorePlanError::SourceBinding)?;
+
         crate::store::RestorePlan::new(source, request, self.profile(options))
     }
 }
@@ -165,6 +168,7 @@ impl BackupStore {
         if plan.digest() != approval {
             return Err(OperationStoreError::ApprovalMismatch.into());
         }
+
         Ok(CaptureOperation::create(&self.root, plan)?)
     }
 
@@ -181,6 +185,7 @@ impl BackupStore {
             return Err(OperationStoreError::ApprovalMismatch.into());
         }
         operation.inspect()?;
+
         Ok(operation)
     }
 }
@@ -200,6 +205,7 @@ impl CaptureOperation {
             crate::store::capture::procedure::Next::Call(step) => Some(step),
             _ => None,
         };
+
         self.view(&journal, next_call, self.published(&journal, &flow)?)
     }
 
@@ -229,6 +235,7 @@ impl CaptureOperation {
         if summary.manifest_sha256 != expected {
             return Err(OperationStoreError::ApprovalMismatch.into());
         }
+
         Ok((summary, flow))
     }
 
@@ -271,6 +278,7 @@ impl CaptureOperation {
             } else {
                 crate::store::RootExchange::Execute
             };
+
             self.import_reply(&journal, &flow.effect()?, exchange, certificate)?
         };
         let Some(result) = result else {
@@ -285,6 +293,7 @@ impl CaptureOperation {
             result.request_id,
             &result.response,
         )?;
+
         Ok(())
     }
 }
@@ -311,6 +320,7 @@ impl<P: crate::store::operation::intent::Intent> super::custody::Recorder<P> {
                     .map(|r| r.request_id)
             })
             .transpose()?;
+
         Ok(OperationView {
             next_call,
             request_id,

@@ -239,6 +239,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         if current < reference || current >= deadline {
             return Err(Error::Deadline);
         }
+
         self.guard
             .admit(intent, action, &profile.application)
             .map_err(Error::Guard)
@@ -277,6 +278,7 @@ impl<S: Signer, G: Guard> Connection<S, G> {
         if envelope.len() > intent.profile().request_bytes as usize {
             return Err(Error::Binding);
         }
+
         Ok(envelope)
     }
 }
@@ -310,6 +312,7 @@ impl Journal {
                     4 * FRAME_RESERVATION + u64::from(a.request_bytes) + u64::from(a.result_bytes),
                 )?
                 .checked_add(local_bytes)?;
+
             Some(
                 self.signatures.checked_add(calls)? <= a.signatures
                     && self.network.checked_add(network)? <= a.network
@@ -318,6 +321,7 @@ impl Journal {
             )
         })()
         .unwrap_or(false);
+
         if fits {
             Ok(())
         } else {
@@ -344,6 +348,7 @@ impl<P: Intent> Recorder<P> {
         let reference = call
             .reference(role)
             .ok_or(OperationStoreError::Incomplete)?;
+
         self.read(&call.step.name(role), reference)
     }
     #[expect(
@@ -369,6 +374,7 @@ impl<P: Intent> Recorder<P> {
                 let call = call
                     .filter(|call| call.update.submitted)
                     .ok_or(Error::Resolved)?;
+
                 call.manager_lookup.as_ref()
             }
         };
@@ -385,6 +391,7 @@ impl<P: Intent> Recorder<P> {
         let (method, arguments, role, original_id) = match exchange {
             RootExchange::Execute => {
                 let (method, args) = original_call.execute();
+
                 (method, args, Role::Request, None)
             }
             RootExchange::Lookup => {
@@ -394,6 +401,7 @@ impl<P: Intent> Recorder<P> {
                 let call = call.ok_or(Error::Resolved)?;
                 let original = intent
                     .decode_request(execute_reference, self.read_role(call, Role::Request)?)?;
+
                 (
                     "snapshot_lookup",
                     binding.lookup(),
@@ -501,6 +509,7 @@ impl<P: Intent> Recorder<P> {
         if let Err(error) = retained {
             return Err(error.after_response(prepared.request_id, evidence.proof));
         }
+
         Ok(original_call
             .result(exchange, evidence.rejected, evidence.response)?
             .map(|(rejected, response)| Applied {
@@ -626,10 +635,12 @@ impl<P: Intent> Recorder<P> {
             )?;
 
             let _ = settled;
+
             Ok(observed)
         })();
         let observed =
             retained.map_err(|error| error.after_response(original.request_id, certificate))?;
+
         Ok(match observed {
             crate::store::capture::CaptureObservation::Replied(response) => Some(Applied {
                 request_id: original.request_id,
@@ -693,6 +704,7 @@ impl<P: Intent> Recorder<P> {
                 if request.request_id == original_id {
                     return Err(super::replay::Error::History);
                 }
+
                 (request, lookup)
             }
         };
@@ -721,6 +733,7 @@ impl<P: Intent> Recorder<P> {
             RootExchange::Lookup => FactRecord::ManagerLookupResult { step, result },
         };
         self.append(journal, fact, Some(&bytes))?;
+
         Ok(original_call
             .result(exchange, rejected, evidence.response)?
             .map(|(rejected, response)| Applied {
@@ -769,6 +782,7 @@ impl<P: Intent> Recorder<P> {
             },
             Some(certificate),
         )?;
+
         Ok(match observed {
             crate::store::capture::CaptureObservation::Replied(response) => Some(Applied {
                 request_id: original.request_id,

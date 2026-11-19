@@ -93,12 +93,14 @@ impl CaptureTransfer<'_> {
         if chunks != self.chunks {
             return Err(ReadbackMetadataError::ChunkStore);
         }
+
         Ok(destination)
     }
 }
 
 fn equal_global(left: &Global, right: &Global) -> bool {
     use Global::{F32, F64, I32, I64, V128};
+
     match (left, right) {
         (I32(left), I32(right)) => left == right,
         (I64(left), I64(right)) => left == right,

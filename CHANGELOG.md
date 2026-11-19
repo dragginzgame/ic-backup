@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.105.12] - 2026-11-19
+
+- Adopt Toko Tooling 0.45.21 and fix the crate documentation on targets where the Unix store is unavailable.
+- Apply return spacing across both workspaces and group fixture adapters with their implementations.
+- Honor Cargo network settings during development and publication. Prepared CI jobs explicitly select offline validation.
+
 ## [0.105.11] - 2026-11-19
 
 - Group operation procedure tests under the existing test module. All 64 operation cases are retained.

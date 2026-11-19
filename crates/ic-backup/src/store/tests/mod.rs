@@ -38,6 +38,7 @@ pub(super) fn root(label: &str) -> PathBuf {
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     DirBuilder::new().mode(0o700).create(&path).unwrap();
+
     path
 }
 
@@ -54,6 +55,7 @@ fn record(id: u64, capture: u64, complete: u64) -> ManifestRecord {
     record.operation_id = format!("{id:032x}");
     record.captured_at_ns = capture;
     record.completed_at_ns = complete;
+
     record
 }
 
@@ -75,6 +77,7 @@ fn bundle(root: &Path, record: &ManifestRecord) -> PathBuf {
         &path.join("manifest.json"),
         &serde_json::to_vec(record).unwrap(),
     );
+
     path
 }
 
@@ -140,8 +143,10 @@ fn competing_initializers_cannot_overwrite_each_other() {
         .map(|_| {
             let path = path.clone();
             let barrier = Arc::clone(&barrier);
+
             thread::spawn(move || {
                 barrier.wait();
+
                 BackupStore::initialize(&path).is_ok()
             })
         })
@@ -386,6 +391,7 @@ fn manifest_rejects_ambiguous_unsupported_and_inconsistent_records() {
         manifest::decode(id, &serde_json::to_vec(&r).unwrap()),
         Err(ManifestError::UnsupportedFormat)
     ));
+
     for mutate in [
         |r: &mut ManifestRecord| r.operation_id = "../escape".into(),
         |r: &mut ManifestRecord| r.network = "INVALID".into(),

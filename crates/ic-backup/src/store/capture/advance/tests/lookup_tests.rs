@@ -25,6 +25,7 @@ fn original(scheme: Scheme, call: CaptureCall) -> (CapturePolicy, PreparedStatus
         }
         envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
     });
+
     (p, r)
 }
 
@@ -40,6 +41,7 @@ fn lookup(p: &CapturePolicy, r: &PreparedStatus, scheme: Scheme) -> Vec<u8> {
         content.request_id().unwrap().as_slice(),
     ]
     .concat();
+
     encode_envelope(
         &Envelope {
             content,
@@ -56,6 +58,7 @@ fn modify(bytes: &[u8], scheme: Scheme, action: impl FnOnce(&mut EnvelopeContent
     let mut envelope = decode_envelope(bytes, 4096).unwrap().value;
     action(&mut envelope.content);
     envelope.sender_sig = Some(scheme.sign(&envelope.content.signable().unwrap()));
+
     encode_envelope(&envelope, 4096).unwrap()
 }
 
@@ -163,6 +166,7 @@ fn lookup_accepts_approved_request_ceilings_through_two_mib() {
             ),
             Err(CaptureLookupError::Bounds)
         ));
+
         for envelope_bytes in [0, bytes.len() as u32 - 1, 2 * 1024 * 1024 + 1] {
             assert!(matches!(
                 authenticate_lookup_envelope(
@@ -185,11 +189,13 @@ fn valid_lookup_signatures_cannot_expand_or_replace_the_original_status_path() {
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         let (p, r) = original(scheme, CaptureCall::Status);
         let bytes = lookup(&p, &r, scheme);
+
         for case in 0..8 {
             let changed = modify(&bytes, scheme, |content| {
                 let EnvelopeContent::ReadState { paths, .. } = content else {
                     panic!("read-state")
                 };
+
                 match case {
                     0 => paths.clear(),
                     1 => paths[0].clear(),
@@ -230,6 +236,7 @@ fn lookup_sender_expiry_kind_and_original_authentication_remain_exact() {
                 else {
                     panic!("read-state")
                 };
+
                 if case == 0 {
                     *sender = [4].as_slice().try_into().unwrap();
                 } else {
@@ -293,6 +300,7 @@ fn lookup_uses_the_existing_direct_key_signature_and_identity_profile() {
     for scheme in [Scheme::Ed25519, Scheme::Secp256k1] {
         let (p, r) = original(scheme, CaptureCall::Status);
         let bytes = lookup(&p, &r, scheme);
+
         for case in 0..7 {
             let mut envelope = decode_envelope(&bytes, 4096).unwrap().value;
             match case {

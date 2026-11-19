@@ -12,6 +12,7 @@ pub(in crate::store) fn settle(operation: &mut CaptureOperation, mixed: bool) {
     let intent = CapturePlan::decode(operation.plan().encoded()).unwrap();
     let mut flow = Procedure::new(&intent).unwrap();
     let mut ordinal = 0;
+
     loop {
         match flow.next().unwrap() {
             Next::Call(step) => {

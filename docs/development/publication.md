@@ -30,7 +30,7 @@ dependencies. Its generated unpublished manifest projects the qualification
 catalog; the isolated lock starts from the qualification lock. Testkit/PocketIC
 must not enter that consumer's normal graph. Each archive and command log is
 retained separately under `target/package-consumer/`; neither maintained lock
-is edited. This working-source check permits dirty packaging and does not prove
+is edited. Cargo inherits the caller’s network settings throughout verification, including the extracted-package consumer build. This working-source check permits dirty packaging and does not prove
 clean Git provenance or authorize upload.
 
 `publication-verify` runs offline tool admission, strict Clippy for both workspaces
@@ -50,7 +50,7 @@ make publish
 ```
 
 `publish-check` invokes Cargo's real `--dry-run`; `publish` can upload. Both use
-the installed Toko 0.45.16 publication adapter, the fixed `ic-backup` roster and
+the installed Toko 0.45.21 publication adapter, the fixed `ic-backup` roster and
 `crates-io` registry and exact versions from locked metadata. Unknown, duplicate,
 empty or private package selections refuse. Only a
 command-line `PACKAGE=ic-backup` may narrow the roster; qualification packages

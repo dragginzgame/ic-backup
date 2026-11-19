@@ -50,5 +50,6 @@ pub(in crate::store) fn replace_owner(f: &Fixture) -> (PathBuf, Vec<u8>) {
     let plan = f.replan(request);
     let bytes = super::super::owner(&plan).unwrap();
     fs::write(&path, &bytes).unwrap();
+
     (path, bytes)
 }

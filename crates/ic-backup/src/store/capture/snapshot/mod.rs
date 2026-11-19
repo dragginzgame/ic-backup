@@ -31,6 +31,7 @@ pub fn decode_snapshot_list(reply: &[u8]) -> Result<Vec<Snapshot>, SnapshotReply
     let snapshots =
         decode_list_snapshots(reply, limits(reply)?).map_err(SnapshotReplyError::Decode)?;
     validate_inventory(&snapshots)?;
+
     Ok(snapshots)
 }
 
@@ -54,6 +55,7 @@ pub fn decode_taken_snapshot(
     if prior.iter().any(|existing| existing.id == snapshot.id) {
         return Err(SnapshotReplyError::AlreadyExisted);
     }
+
     Ok(snapshot)
 }
 
@@ -86,6 +88,7 @@ impl CapturePolicy {
         if inventory.len() >= capacity as usize {
             return Err(SnapshotReplyError::NoCapacity);
         }
+
         Ok(TakeSnapshotArgs {
             canister_id: self.request().target.canister,
             replace_snapshot: None,
@@ -104,10 +107,12 @@ fn validate_inventory(snapshots: &[Snapshot]) -> Result<(), SnapshotReplyError> 
         if !(1..=MAX_ID_BYTES).contains(&snapshot.id.len()) {
             return Err(SnapshotReplyError::SnapshotId);
         }
+
         if !ids.insert(snapshot.id.as_slice()) {
             return Err(SnapshotReplyError::DuplicateSnapshotId);
         }
     }
+
     Ok(())
 }
 
@@ -115,6 +120,7 @@ fn limits(reply: &[u8]) -> Result<Limits, SnapshotReplyError> {
     if reply.len() > MAX_REPLY_BYTES {
         return Err(SnapshotReplyError::ReplyTooLarge);
     }
+
     Ok(Limits {
         bytes: MAX_REPLY_BYTES,
         header: 64 * 1024,

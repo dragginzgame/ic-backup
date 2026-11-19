@@ -23,6 +23,7 @@ fn plan() -> CapturePolicy {
 
 fn call_content() -> EnvelopeContent {
     let p = plan();
+
     EnvelopeContent::Call {
         nonce: Some(vec![0, 255, 7]),
         ingress_expiry: 21,
@@ -67,6 +68,7 @@ pub(in crate::store) fn reply(
         global_timer: Some(Timer::Inactive),
         on_low_wasm_memory_hook_status: Some(LowMemoryHook::ConditionNotSatisfied),
     };
+
     match step {
         super::OperationStep::InitialStatus | super::OperationStep::FinalStatus => {
             wire::encode(&super::status::tests::status(plan.plan()), 4096)
@@ -74,6 +76,7 @@ pub(in crate::store) fn reply(
         super::OperationStep::ListSnapshots => {
             let mut old = snapshot();
             old.id = vec![9];
+
             wire::encode(&vec![old], 4096)
         }
         super::OperationStep::TakeSnapshot => wire::encode(&snapshot(), 4096),
@@ -94,6 +97,7 @@ pub(in crate::store) fn reply(
                     }
                 }
             };
+
             wire::encode(
                 &SnapshotData {
                     chunk: bytes.to_vec(),

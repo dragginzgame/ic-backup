@@ -14,6 +14,7 @@ use ic_platform::{
 fn key(value: u8) -> PrivateKey {
     let mut bytes = [0; 32];
     bytes[31] = value;
+
     PrivateKey::deserialize(&bytes).unwrap()
 }
 
@@ -45,6 +46,7 @@ pub(in crate::store) fn signed(
     delegation: Option<Delegation>,
 ) -> Vec<u8> {
     let message = [b"\x0dic-state-root".as_slice(), &tree.digest()].concat();
+
     encode_certificate(
         &Certificate {
             tree,
@@ -105,6 +107,7 @@ pub(in crate::store) fn delegated(
         1,
         None,
     );
+
     signed(
         reply_tree(&r.request_id, &e.response, b"replied"),
         2,

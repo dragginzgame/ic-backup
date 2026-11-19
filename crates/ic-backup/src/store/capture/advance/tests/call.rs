@@ -38,6 +38,7 @@ impl CaptureCall {
                 let args = plan
                     .take_snapshot_arguments(&[], 1)
                     .map_err(|_| OperationStoreError::StatusAdmission)?;
+
                 (args)
                     .encode(512)
                     .map_err(|_| OperationStoreError::StatusAdmission)

@@ -27,6 +27,7 @@ fn names(directory: &Directory, limit: u64) -> Result<Vec<String>, OperationStor
         names.push(name.to_owned());
     }
     names.sort();
+
     Ok(names)
 }
 
@@ -61,5 +62,6 @@ pub(in crate::store) fn tree_members(
     if names(directory, limit)? != original {
         return Err(OperationStoreError::Changed);
     }
+
     Ok(members)
 }

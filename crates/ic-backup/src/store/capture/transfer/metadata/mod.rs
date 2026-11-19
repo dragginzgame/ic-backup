@@ -36,6 +36,7 @@ impl CapturePolicy {
     ) -> Result<SnapshotMetadata, TransferMetadataError> {
         let metadata = decode(reply)?;
         self.plan_transfer(snapshot_id, &metadata)?;
+
         Ok(metadata)
     }
 }
@@ -57,6 +58,7 @@ pub(super) fn decode(reply: &[u8]) -> Result<SnapshotMetadata, TransferMetadataE
         },
     )
     .map_err(TransferMetadataError::Decode)?;
+
     Ok(value)
 }
 

@@ -763,7 +763,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.105.11"
+version = "0.105.12"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -825,9 +825,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.34.17"
+version = "0.34.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "866eba5d2c1bf18457a3c2a5c1a306dab075626efbe9c83acf1eeb952d58a023"
+checksum = "b59c6bf641d9d87b4c7cac1012398998b1f4a6217b81bd580b3c84d421b43a2d"
 dependencies = [
  "crypto-bigint",
  "curve25519-dalek",
@@ -845,9 +845,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform-protocol"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34a9e427266040f66a8a1734942cb8adecfeee30ad84e186bbe155ed5eafcae6"
+checksum = "0d8b8e67643b3107f060b90f85d7e51ea136d4e498e791e090c4810434bab545"
 dependencies = [
  "ic-platform-types",
  "serde",
@@ -1257,9 +1257,9 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pin-project-lite"
-version = "0.2.17"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
+checksum = "c938015719552d665fd0553b90d96cd7ff58e83e4c061ca99e6bb78865a72752"
 
 [[package]]
 name = "pkg-config"
@@ -1963,9 +1963,9 @@ dependencies = [
 
 [[package]]
 name = "toko-tooling"
-version = "0.45.16"
+version = "0.45.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2095850545e0fd3c5580fab610cab78561242fc09c74221e27f3e7f654d5776"
+checksum = "af1ba8e16aaf1dae0951f08a228a4f00b928d09ff68997bd94ccc397ace5e4be"
 
 [[package]]
 name = "tower"

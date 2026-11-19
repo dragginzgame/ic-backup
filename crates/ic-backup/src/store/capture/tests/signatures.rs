@@ -42,6 +42,7 @@ impl Scheme {
         match self {
             Self::Ed25519 => {
                 use ed25519::Signer;
+
                 ed25519::SigningKey::from_bytes(&[17; 32])
                     .sign(message)
                     .to_bytes()
@@ -53,6 +54,7 @@ impl Scheme {
                     .unwrap()
                     .sign_prehash(BackupDigest::compute(message).as_bytes())
                     .unwrap();
+
                 signature.to_bytes().to_vec()
             }
         }
@@ -78,6 +80,7 @@ pub(in crate::store) fn fixture(scheme: Scheme) -> (CapturePolicy, PreparedStatu
         sender_sig: Some(scheme.sign(&message)),
         sender_delegation: None,
     };
+
     (
         plan,
         PreparedStatus {

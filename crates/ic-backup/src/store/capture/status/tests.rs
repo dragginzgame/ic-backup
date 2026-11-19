@@ -75,6 +75,7 @@ fn stopped_matching_status_preserves_input_order_and_original_plan() {
 #[test]
 fn running_and_stopping_are_refused_without_implicit_stop() {
     let p = plan();
+
     for state in [Status::Running, Status::Stopping] {
         let mut observed = status(&p);
         observed.status = state.clone();
@@ -109,6 +110,7 @@ fn module_hash_must_be_present_exact_length_and_exact_original_value() {
 #[test]
 fn empty_initiator_target_and_visible_status_do_not_grant_sender_authority() {
     let p = plan();
+
     for controllers in [
         vec![],
         vec![p.request().initiator],

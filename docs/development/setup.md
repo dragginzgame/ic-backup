@@ -39,11 +39,11 @@ make install-hooks
 make fetch-dependencies
 ```
 
-Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.45.16 is adopted from its registry
+Ordinary Cargo checks use the lockfile and may fetch missing dependencies. After preparing the cache, use `CARGO_NET_OFFLINE=true make check` to select offline validation. Hook activation is
+explicit through `make install-hooks`. Tooling 0.45.21 is adopted from its registry
 archive with SHA-256
-`a2095850545e0fd3c5580fab610cab78561242fc09c74221e27f3e7f654d5776`,
-source `8a3d7410a5f57e5f3631c19eb3872a9a89cc2088`. Both workspaces declare
+`af1ba8e16aaf1dae0951f08a228a4f00b928d09ff68997bd94ccc397ace5e4be`,
+source `76fb2f494d27e9b3d58442c8762a0b29c88392d6`. Both workspaces declare
 its exact pin and each member inherits the tooling dev-dependency.
 The canonical exporter installs twelve selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -83,10 +83,10 @@ checks; formatting and link checks remain repository-wide. For ordinary inventor
 changes, select the owning tests and lint/docs checks:
 
 ```bash
-cargo test --locked --offline -p ic-backup --lib store::
-cargo clippy --locked --offline -p ic-backup --all-targets -- -D warnings
-RUSTDOCFLAGS="-D warnings" cargo doc --locked --offline -p ic-backup --no-deps
-cargo test --locked --offline -p ic-backup --doc
+cargo test --locked -p ic-backup --lib store::
+cargo clippy --locked -p ic-backup --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings" cargo doc --locked -p ic-backup --no-deps
+cargo test --locked -p ic-backup --doc
 ```
 
 Check for active commands using this workspace's target before compilation or
@@ -506,7 +506,7 @@ unchanged runtime journeys. No release/support matrix or legacy test rerun is cl
 
 ### CI setup diagnostics
 
-Toko 0.45.16's `SetupDiagnostics.pm` owns command capture/status and redaction;
+Toko 0.45.21's `SetupDiagnostics.pm` owns command capture/status and redaction;
 `scripts/ci/setup.pl` owns the per-phase directory and exclusive artifact writer
 for host tools, Rust toolchain/tools, dependency fetches and the secret scanner.
 Only a failed command's bounded, sanitized excerpt is retained; successful phases

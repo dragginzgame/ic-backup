@@ -39,6 +39,7 @@ impl StatusRequirements {
             observed.module_hash.as_deref(),
             &observed.settings.controllers,
         )?;
+
         Ok(())
     }
 }
