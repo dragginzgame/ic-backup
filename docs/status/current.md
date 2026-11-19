@@ -1,6 +1,12 @@
 # Current handoff — 2026-11-19
 
-## Toko Tooling 0.45.16 and conditional compilation
+## 0.105.11 operation test layout
+
+The procedure suite now lives under `operation::tests::procedure_tests`. All 64 operation test cases remain in the inventory; only the five procedure case paths changed. Before and after lists are under `target/evidence/issue-4/`.
+
+## 0.105.10 published with Toko Tooling 0.45.16
+
+[ic-backup 0.105.10](https://crates.io/crates/ic-backup/0.105.10) shipped from tag `v0.105.10` at `f86088a`. All 247 native tests, five doctests and 11 PocketIC journeys passed. Registry readback matched the checksum, commit, license and all 181 tracked package files. A consumer built against the published version. Evidence is under `target/evidence/release-0.105.10/`.
 
 Both workspaces select 0.45.16. The Rust source has no Wasm target guards. The Unix store boundary and its Cargo dependency selectors are required by Host FS directory custody, which uses Unix metadata and file descriptors. Consolidating capture status and HTTP lookup test helpers reduced Rust `#[cfg(test)]` attributes from 92 to 75. Moving recorder fixture methods and legacy framing helpers into tests and removing transfer getters used only by tests brought the count to 66. Consolidating the remaining capture advance helpers under their test modules brought it to 32. Capture advance retains four module guards and one grouped test-only re-export. Local validation evidence is under `target/evidence/tooling-0.45.16/`.
 

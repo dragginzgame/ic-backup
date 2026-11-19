@@ -4,8 +4,8 @@
 
 use super::{
     super::{
-        procedure_tests::{expected_request, reply, selected},
         replay,
+        tests::procedure_tests::{expected_request, reply, selected},
     },
     *,
 };

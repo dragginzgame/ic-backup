@@ -4,6 +4,7 @@
 //! tests/http_boundary/mod.rs. The actual transport matrix remains with that owner.
 
 pub(in crate::store) mod fixtures;
+pub(in crate::store) mod procedure_tests;
 
 use super::*;
 

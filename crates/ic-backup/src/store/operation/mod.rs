@@ -10,8 +10,6 @@ mod facade;
 pub(in crate::store) mod framing;
 pub(in crate::store) mod intent;
 pub(in crate::store) mod manager;
-#[cfg(test)]
-mod procedure_tests;
 pub(in crate::store) mod replay;
 pub(in crate::store) mod runtime;
 #[cfg(test)]

@@ -1,7 +1,7 @@
 //! The real shared HTTP path with fixture signing/certificates; no IC effects.
 
 use super::{
-    super::procedure_tests::{expected_request, reply, selected},
+    super::tests::procedure_tests::{expected_request, reply, selected},
     *,
 };
 use crate::store::{

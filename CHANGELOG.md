@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.105.11] - 2026-11-19
+
+- Group operation procedure tests under the existing test module. All 64 operation cases are retained.
+
 ## [0.105.10] - 2026-11-19
 
 - Adopt Toko Tooling 0.45.16 and consolidate test-only capture and recorder helpers, reducing test compilation guards from 92 to 32.

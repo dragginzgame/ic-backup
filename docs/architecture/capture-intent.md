@@ -311,7 +311,7 @@ legacy source, state or cleanup behavior was imported.
 
 The new common recorder replaces phase catalogs, repeated lifecycle events and
 accepted/schedule/assembly digest records. Tests now live with
-`operation/{tests,procedure_tests}.rs`, custody/runtime/facade tests and the
+`operation/tests/{mod,procedure_tests}.rs`, custody/runtime/facade tests and the
 retained request/certificate/HTTP groups under `advance/tests/`.
 Repeated per-phase mechanics are covered once; phase policy stays in bounded
 status/snapshot/transfer/procedure tests. Removed fake-provider route cases supplied
