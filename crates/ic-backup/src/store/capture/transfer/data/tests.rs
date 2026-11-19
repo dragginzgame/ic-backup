@@ -200,5 +200,5 @@ fn decoding_is_effect_free_and_equal_length_region_bytes_are_not_authenticated()
         before
     );
     assert_eq!(transfer.data_calls(), 1);
-    assert_eq!(transfer.capture_calls(), 6);
+    assert_eq!(transfer.capture_calls, 6);
 }

@@ -1,20 +1,18 @@
 //! One bounded HTTP dispatch of already-retained direct management ingress.
 
 mod lookup;
+#[cfg(test)]
+pub(super) mod tests;
 
 use super::{
     OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
     StatusEvidence, StatusRequestError,
 };
 use crate::store::BackupDigest;
-#[cfg(test)]
-use crate::store::capture::CapturePolicy;
 use ic_platform::{
     certificate::PreparedRootKey,
     ingress::{CallResponse as TransportCallResponse, decode_call_response},
 };
-#[cfg(test)]
-pub use lookup::{CaptureLookupHttpError, CaptureLookupHttpPolicy};
 use reqwest::{Client, Url, header};
 use std::{
     net::IpAddr,
@@ -142,11 +140,6 @@ impl BackupHttpTransport {
         self.commitment()
     }
 
-    #[cfg(test)]
-    pub(super) fn admit_plan(&self, plan: &CapturePolicy) -> Result<(), BackupHttpError> {
-        self.admit_binding(plan.request().target.network, plan.request().trust_root)
-    }
-
     pub(in crate::store) fn admit_binding(
         &self,
         network: BackupDigest,
@@ -216,71 +209,6 @@ impl BackupHttpTransport {
             root_key_der,
             timeout,
         })
-    }
-
-    /// Send the original envelope once, then authenticate a retained terminal result.
-    ///
-    /// Call only from the live provider invocation backed by the operation's durable
-    /// submission reservation. Calling this helper directly does not prove that
-    /// reservation and never creates authority to replay a request. It does not
-    /// implement signing or application-continuity admission.
-    ///
-    /// The original network/root, exact status call and framed request bounds are
-    /// checked before dispatch, along with direct-key signature authentication through
-    /// [`super::authenticate_status_request`]. Effective routing uses the original target. The
-    /// request timeout is the lesser of the configured maximum, original submit
-    /// deadline and ingress expiry. That timeout spans connection and body reads;
-    /// absolute time is rechecked before returning authenticated evidence.
-    ///
-    /// Only HTTP 200 CBOR containing a certificate can settle. Raw body accumulation
-    /// is capped at the original result allowance before each copy; compressed
-    /// responses refuse. Original certificate/result limits still apply after decoding.
-    /// Headers and internal network buffers retain the HTTP supplier's bounds.
-    /// No redirects, proxies, connection reuse, decompression, retries, polling,
-    /// root fetching, re-signing or detached recovery occurs. Cancellation leaves
-    /// original spending intact; the server may still execute an accepted request.
-    ///
-    ///
-    /// # Errors
-    /// Refuses invalid bindings, exhausted time/bytes, nonterminal or malformed
-    /// responses and failed certificate authentication. Errors never refund spending.
-    ///
-    /// # Panics
-    /// The future requires a Tokio runtime with IO and timers enabled, as required
-    /// by the selected HTTP client. Polling without that runtime can panic.
-    #[cfg(test)]
-    pub(in crate::store) async fn submit_once(
-        &self,
-        plan: &CapturePolicy,
-        admission: &StatusAdmissionRecord,
-        prepared: &PreparedStatus,
-    ) -> Result<StatusEvidence, BackupHttpError> {
-        self.submit_call(plan, admission, prepared, super::CaptureCall::Status)
-            .await
-    }
-
-    #[cfg(test)]
-    pub(super) async fn submit_call(
-        &self,
-        plan: &CapturePolicy,
-        admission: &StatusAdmissionRecord,
-        prepared: &PreparedStatus,
-        call: super::CaptureCall,
-    ) -> Result<StatusEvidence, BackupHttpError> {
-        let arguments = call.arguments(plan).map_err(BackupHttpError::Admission)?;
-        self.submit_expected(
-            super::request::IngressRequirements {
-                target: plan.request().target,
-                sender: plan.request().sender,
-                recipient: ic_platform_types::Principal::management_canister(),
-                trust_root: plan.request().trust_root,
-            },
-            admission,
-            prepared,
-            call.method_name(),
-            &arguments,
-        )
-        .await
     }
 
     pub(in crate::store) async fn submit_expected(

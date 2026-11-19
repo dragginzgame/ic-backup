@@ -4,11 +4,7 @@
 pub(in crate::store) mod tests;
 mod wire;
 
-#[cfg(test)]
-use super::CapturePolicy;
 use crate::store::BackupDigest;
-#[cfg(test)]
-use ic_platform_protocol::management_snapshots::CaptureStatus;
 use ic_platform_protocol::management_snapshots::Status;
 use ic_platform_types::Principal;
 use thiserror::Error;
@@ -22,54 +18,7 @@ pub(in crate::store) struct StatusRequirements {
 
 const MAX_CONTROLLERS: usize = 10;
 
-#[cfg(test)]
-impl CapturePolicy {
-    /// Check decoded status against the original capture's module and management sender.
-    ///
-    /// Requires stopped state, the exact approved 32-byte module hash, and the
-    /// direct sender or Canic executor in a duplicate-free set of at most ten
-    /// controllers. The approving initiator and other controllers cannot stand in
-    /// for the actual management caller. Input order and original values are unchanged.
-    ///
-    /// This is pure validation of an already-decoded Platform DTO. The caller
-    /// must bound decoding and authenticate the status reply's exact network,
-    /// target, request and observation timing. Status contains no target identity.
-    /// Success proves neither continuous application custody nor settled external
-    /// obligations, and grants no reservation, dispatch or completion authority.
-    /// Resource statistics, migration readiness and canister-version continuity
-    /// are not evaluated by this check. It never stops or changes a canister.
-    ///
-    ///
-    /// # Errors
-    /// Refuses excessive/duplicate controllers, running/stopping state, an absent
-    /// or different module hash, or a controller set lacking the original sender.
-    #[cfg(test)]
-    pub fn validate_status(&self, observed: &CaptureStatus) -> Result<(), CaptureStatusError> {
-        self.status_requirements().validate_status(observed)
-    }
-
-    fn status_requirements(&self) -> StatusRequirements {
-        StatusRequirements {
-            module_sha256: self.request().module_sha256,
-            sender: self.request().sender,
-            sole_controller: false,
-        }
-    }
-}
-
 impl StatusRequirements {
-    #[cfg(test)]
-    pub(in crate::store) fn validate_status(
-        &self,
-        observed: &CaptureStatus,
-    ) -> Result<(), CaptureStatusError> {
-        self.validate_status_fields(
-            observed.status.clone(),
-            observed.module_hash.as_deref(),
-            &observed.settings.controllers,
-        )
-    }
-
     fn validate_status_fields(
         &self,
         status: Status,

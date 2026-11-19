@@ -143,30 +143,6 @@ impl CaptureTransfer<'_> {
         self.data_calls
     }
 
-    /// Whole-capture management calls: data reads plus the five fixed lifecycle reads/effects.
-    #[must_use]
-    #[cfg(test)]
-    pub const fn capture_calls(&self) -> u32 {
-        self.capture_calls
-    }
-
-    /// Minimum network requests: one hop per direct call, two per Canic call.
-    ///
-    /// Authentication, status polling and executor receipt lookup may require more.
-    /// This is a lower bound, not admission of a concrete provider or its costs.
-    #[must_use]
-    #[cfg(test)]
-    pub const fn minimum_network_requests(&self) -> u32 {
-        self.capture_calls
-    }
-
-    /// Exact region bytes plus one full extent allowance per unknown-length chunk.
-    #[must_use]
-    #[cfg(test)]
-    pub const fn payload_ceiling(&self) -> u64 {
-        self.payload_ceiling
-    }
-
     /// The unchanged borrowed metadata, retaining wire order, optional values and float bits.
     #[must_use]
     pub const fn metadata(&self) -> &SnapshotMetadata {

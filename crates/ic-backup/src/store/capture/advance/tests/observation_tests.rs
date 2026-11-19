@@ -115,7 +115,7 @@ fn original_calls_and_direct_keys_use_separate_observation_time_without_rewritin
             assert_eq!(r.encode(4096).unwrap(), before);
             assert_eq!(r.expires_ns, 150);
             assert!(matches!(
-                certificate::call_certificate_evidence(&p, &a, &r, &proof, &der(1), call),
+                certificate::tests::call_certificate_evidence(&p, &a, &r, &proof, &der(1), call),
                 Err(StatusCertificateError::Certificate(
                     ic_platform::certificate::VerifyError::TimeOutsideWindow
                 ))

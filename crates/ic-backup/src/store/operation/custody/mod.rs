@@ -221,11 +221,6 @@ impl<P: Intent> Recorder<P> {
         Self::read_intent(&child(&parent, id, false)?, id)
     }
 
-    #[cfg(test)]
-    pub(in crate::store) fn open(store: &Directory, id: &str) -> Result<Self, OperationStoreError> {
-        Self::open_with_codec(store, id, None)
-    }
-
     pub(in crate::store) fn open_with_codec(
         store: &Directory,
         id: &str,
@@ -513,29 +508,6 @@ impl<P: Intent> Recorder<P> {
         });
         self.usable = checked.is_ok();
         checked
-    }
-
-    // Synthetic histories and fault writers use the same closing admission as
-    // production; only fixtures request arbitrary facts without a procedure.
-    #[cfg(test)]
-    pub(in crate::store) fn append_fixture(
-        &mut self,
-        fact: FactRecord,
-        evidence: Option<&[u8]>,
-    ) -> Result<Journal, OperationStoreError> {
-        let original = self.check()?;
-        self.append(&original, fact, evidence)
-    }
-
-    #[cfg(test)]
-    fn append_fixture_with(
-        &mut self,
-        fact: FactRecord,
-        evidence: Option<&[u8]>,
-        write: impl FnOnce(&mut File, &[u8]) -> io::Result<()>,
-    ) -> Result<Journal, OperationStoreError> {
-        let original = self.check()?;
-        self.append_with(&original, fact, evidence, write)
     }
 }
 

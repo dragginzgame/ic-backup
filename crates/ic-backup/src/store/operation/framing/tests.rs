@@ -3,6 +3,16 @@
 use super::*;
 use std::io::Cursor;
 
+const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
+
+fn seed(plan: &[u8]) -> BackupDigest {
+    BackupDigest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
+}
+
+pub(in crate::store::operation) fn legacy_created_frame(plan: &[u8]) -> Vec<u8> {
+    encode_frame(seed(plan), CREATED).unwrap()
+}
+
 fn bounds() -> Bounds {
     Bounds {
         frame_bytes: FRAME_BYTES,
@@ -118,7 +128,7 @@ impl Read for ShortReads {
 
 #[test]
 fn interrupted_short_reads_and_original_io_errors_are_handled() {
-    let bytes = initial_bytes(b"approved intent", LEDGER_BYTES).unwrap();
+    let bytes = legacy_created_frame(b"approved intent");
     let mut frames = Frames::new(
         ShortReads {
             reader: Cursor::new(bytes),

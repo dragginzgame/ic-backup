@@ -97,8 +97,7 @@ fn created_bytes_and_domain_have_an_independent_vector() {
         Journal::read(bytes.as_slice(), b"different approval", allowance()),
         Err(LedgerError::Chain)
     ));
-    let previous =
-        crate::store::operation::framing::initial_bytes(INTENT, allowance().evidence).unwrap();
+    let previous = framing::tests::legacy_created_frame(INTENT);
     assert!(matches!(
         Journal::read(previous.as_slice(), INTENT, allowance()),
         Err(LedgerError::Chain)

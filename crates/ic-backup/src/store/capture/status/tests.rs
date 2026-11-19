@@ -1,8 +1,42 @@
 //! Re-authored legacy controller/status cases against the current plan boundary.
 
-use super::*;
+use super::{super::CapturePolicy, *};
 use ic_platform_protocol::management_snapshots::{CaptureStatus, Settings};
 use ic_platform_types::Principal;
+
+impl CapturePolicy {
+    fn status_requirements(&self) -> StatusRequirements {
+        StatusRequirements {
+            module_sha256: self.request().module_sha256,
+            sender: self.request().sender,
+            sole_controller: false,
+        }
+    }
+
+    fn validate_status(&self, observed: &CaptureStatus) -> Result<(), CaptureStatusError> {
+        self.status_requirements().validate_status(observed)
+    }
+
+    pub(in crate::store) fn validate_status_reply(
+        &self,
+        reply: &[u8],
+    ) -> Result<(), CaptureStatusReplyError> {
+        self.status_requirements().validate_status_reply(reply)
+    }
+}
+
+impl StatusRequirements {
+    pub(in crate::store) fn validate_status(
+        &self,
+        observed: &CaptureStatus,
+    ) -> Result<(), CaptureStatusError> {
+        self.validate_status_fields(
+            observed.status.clone(),
+            observed.module_hash.as_deref(),
+            &observed.settings.controllers,
+        )
+    }
+}
 
 pub(in crate::store) fn plan() -> CapturePolicy {
     CapturePolicy::decode(include_bytes!("../../tests/fixtures/capture-plan.json")).unwrap()

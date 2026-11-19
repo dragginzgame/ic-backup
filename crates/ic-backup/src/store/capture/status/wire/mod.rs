@@ -3,8 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
-use super::CapturePolicy;
 use super::{CaptureStatusError, StatusRequirements};
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
@@ -14,29 +12,6 @@ use thiserror::Error;
 
 const MAX_REPLY_BYTES: usize = 1024 * 1024;
 const MAX_SKIPPED_WORK: usize = 64 * 1024;
-
-#[cfg(test)]
-impl CapturePolicy {
-    /// Validate a raw status reply against the original capture preconditions.
-    ///
-    /// Reads only status, controllers and module hash through Platform's codec.
-    /// Other fields are skipped under a separate cumulative work limit; their
-    /// presence and semantics are not validated. Controller and hash sizes are
-    /// checked before allocation. Exact single-argument framing is required.
-    ///
-    /// This applies the same policy as [`Self::validate_status`]. The caller must
-    /// retain the original raw evidence and authenticate its exact request,
-    /// network, target and observation timing. Success authorizes no dispatch,
-    /// progress, reservation or settlement and does not authenticate a reply.
-    ///
-    ///
-    /// # Errors
-    /// Refuses excessive or malformed wire input, missing required fields,
-    /// exhausted decoding/skipping budgets and failed capture preconditions.
-    pub fn validate_status_reply(&self, reply: &[u8]) -> Result<(), CaptureStatusReplyError> {
-        self.status_requirements().validate_status_reply(reply)
-    }
-}
 
 impl StatusRequirements {
     pub(in crate::store) fn validate_status_reply(

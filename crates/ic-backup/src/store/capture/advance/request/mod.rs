@@ -1,13 +1,11 @@
 //! Direct-key authentication of original status ingress; no signing, clock or effects.
 
 mod lookup;
+#[cfg(test)]
+pub(super) mod tests;
 
 use super::{OperationStoreError, PreparedStatus};
 use crate::store::BackupDigest;
-#[cfg(test)]
-use crate::store::StatusAdmissionRecord;
-#[cfg(test)]
-use crate::store::capture::CapturePolicy;
 use ic_platform::{
     ecdsa,
     ecdsa::PrehashVerifier,
@@ -15,8 +13,6 @@ use ic_platform::{
     ingress::{Content as EnvelopeContent, Envelope, decode_envelope},
 };
 use ic_platform_types::Principal;
-#[cfg(test)]
-pub use lookup::authenticate_capture_lookup;
 pub(in crate::store) use lookup::authenticate_lookup_envelope;
 pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
 use thiserror::Error;
@@ -45,75 +41,6 @@ pub enum StatusRequestError {
     /// Missing, malformed or invalid signature, including a weak key or high-S ECDSA.
     #[error("invalid status request signature")]
     Signature,
-}
-
-/// Authenticate an externally signed status request for a direct host identity.
-///
-/// Checks original admission, complete framing bounds, exact call content and
-/// request ID before verifying the signature through Platform. Supports canonical
-/// Ed25519 and uncompressed secp256k1 SPKI keys only, with 64-byte signatures.
-/// Ed25519 verification is strict; secp256k1 requires low-S. Delegations (including
-/// an explicit empty chain), sender-info, anonymous, P-256, WebAuthn and canister
-/// signing identities are outside this profile. Original bytes are never changed.
-///
-/// This local, effect-free check reads no clock, so it can authenticate original
-/// requests during historical replay. A provider must separately admit live expiry,
-/// network/root/routing, original observation policy, application continuity and
-/// its own binding/costs. Success grants no signing, submission or retry authority.
-/// Use before retaining signer output, before live dispatch and during local replay;
-/// signing and durable execution remain with the owning operation.
-///
-///
-/// # Errors
-/// Refuses mismatched original content, malformed/bounded input, unsupported
-/// identities and failed signatures. Errors contain no envelope, key or signature bytes.
-#[cfg(test)]
-pub fn authenticate_status_request(
-    plan: &CapturePolicy,
-    admission: &StatusAdmissionRecord,
-    prepared: &PreparedStatus,
-) -> Result<(), StatusRequestError> {
-    authenticate_call_request(plan, admission, prepared, super::CaptureCall::Status)
-}
-
-#[cfg(test)]
-pub(super) fn authenticate_call_request(
-    plan: &CapturePolicy,
-    admission: &StatusAdmissionRecord,
-    prepared: &PreparedStatus,
-    call: super::CaptureCall,
-) -> Result<(), StatusRequestError> {
-    authenticate_expected_request(
-        plan,
-        admission,
-        prepared,
-        call.method_name(),
-        &call
-            .arguments(plan)
-            .map_err(StatusRequestError::Admission)?,
-    )
-}
-
-#[cfg(test)]
-pub(in crate::store) fn authenticate_expected_request(
-    plan: &CapturePolicy,
-    admission: &StatusAdmissionRecord,
-    prepared: &PreparedStatus,
-    method: &str,
-    arguments: &[u8],
-) -> Result<(), StatusRequestError> {
-    admission
-        .validate(plan)
-        .map_err(StatusRequestError::Admission)?;
-    let sender = plan.request().sender;
-    authenticate_direct_request(
-        sender,
-        Principal::management_canister(),
-        admission.request_bytes,
-        prepared,
-        method,
-        arguments,
-    )
 }
 
 pub(in crate::store) fn authenticate_direct_request(

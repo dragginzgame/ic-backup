@@ -67,15 +67,8 @@ fn exact_region_order_extents_and_original_request_identity() {
             "stable:4:1"
         ]
     );
-    assert_eq!(
-        (
-            transfer.data_calls(),
-            transfer.capture_calls(),
-            transfer.minimum_network_requests()
-        ),
-        (5, 10, 10)
-    );
-    assert_eq!(transfer.payload_ceiling(), 14);
+    assert_eq!((transfer.data_calls(), transfer.capture_calls), (5, 10));
+    assert_eq!(transfer.payload_ceiling, 14);
     assert_eq!(transfer.requests().len(), 5);
     for request in transfer.requests() {
         assert_eq!(request.canister_id, p.request().target.canister);
@@ -120,7 +113,7 @@ fn chunk_order_is_canonical_without_rewriting_metadata_and_empty_chunk_counts() 
         .collect();
     assert_eq!(chunks, expected);
     assert_eq!(transfer.data_calls(), 3);
-    assert_eq!(transfer.payload_ceiling(), 9);
+    assert_eq!(transfer.payload_ceiling, 9);
     assert_eq!(
         transfer
             .metadata()
@@ -152,7 +145,7 @@ fn conservative_chunk_payload_budget_is_not_reduced_for_known_empty_hash() {
     let mut r = p.request().clone();
     r.limits.payload_bytes = 5;
     let p = CapturePolicy::new(r).unwrap();
-    assert_eq!(p.plan_transfer(&[1], &m).unwrap().payload_ceiling(), 5);
+    assert_eq!(p.plan_transfer(&[1], &m).unwrap().payload_ceiling, 5);
 }
 
 #[test]
@@ -186,7 +179,7 @@ fn checked_size_overflow_and_large_fragmented_input_refuse_before_expansion() {
 fn exact_network_and_signing_limits_include_all_five_capture_calls() {
     let p = plan(1);
     let m = metadata(8187, 0, 0);
-    assert_eq!(p.plan_transfer(&[1], &m).unwrap().capture_calls(), 8192);
+    assert_eq!(p.plan_transfer(&[1], &m).unwrap().capture_calls, 8192);
     assert!(matches!(
         p.plan_transfer(&[1], &metadata(8188, 0, 0)),
         Err(TransferError::NetworkBudget {

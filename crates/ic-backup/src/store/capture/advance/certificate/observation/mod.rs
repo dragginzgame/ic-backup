@@ -1,12 +1,6 @@
 //! Pure original-request certificate observation. No lookup, reservation or settlement.
 
-#[cfg(test)]
-use super::super::CaptureCall;
-#[cfg(test)]
-use super::CapturePolicy;
 use super::{BackupDigest, LookupResult, StatusCertificateError, TimePolicy};
-#[cfg(test)]
-use super::{PreparedStatus, StatusAdmissionRecord};
 use crate::store::StatusRequestError;
 use thiserror::Error;
 
@@ -52,62 +46,6 @@ pub enum CaptureObservationError {
     /// Observation bounds, original trust, certificate or outcome fields refused.
     #[error(transparent)]
     Certificate(#[from] StatusCertificateError),
-}
-
-/// Authenticate a certificate for the original call under a separate observation policy.
-///
-/// Verifies the original direct-key signature and exact call content, then authenticates
-/// the certificate with the plan's original root/effective target and the supplied
-/// observation windows. Only `request_status/<original request ID>` is inspected.
-/// Original request bytes, expiry and retained certificate policy remain untouched.
-/// Reply and rejection projection share the original direct-call certificate decoder.
-/// Unsupported status values, malformed rejection fields and malformed lookup trees
-/// refuse; missing/pruned/pending/done states never become a success or retry decision.
-///
-/// This is a local provider helper, not the remote recovery workflow. The caller must
-/// separately prove observation authority, finite prior reservations, fresh admission,
-/// read-state request binding and retention of exact certificate/policy bytes. Passing
-/// new windows here cannot widen the original `settle_capture_result` acceptance.
-/// Neither a clock nor network, signer, application guard or journal is accessed.
-///
-///
-/// # Errors
-/// Refuses wrong call/sender/signature, malformed original policy, invalid observation
-/// bounds/windows, wrong root/delegation/target, malformed or unauthenticated certificates,
-/// unknown status labels and unavailable or oversized terminal fields.
-#[cfg(test)]
-pub fn observe_capture_certificate(
-    plan: &CapturePolicy,
-    admission: &StatusAdmissionRecord,
-    prepared: &PreparedStatus,
-    call: CaptureCall,
-    certificate: &[u8],
-    root_key_der: &[u8],
-    policy: CaptureObservationPolicy,
-) -> Result<CaptureObservation, CaptureObservationError> {
-    // Check limits before signature or certificate decoding/allocation.
-    let maximum = policy.evidence_bytes as usize;
-    if maximum == 0
-        || policy.evidence_bytes > admission.result_bytes
-        || certificate.len().checked_add(5).is_none_or(|n| n > maximum)
-    {
-        return Err(
-            StatusCertificateError::Admission(super::OperationStoreError::StatusAdmission).into(),
-        );
-    }
-    super::super::request::authenticate_call_request(plan, admission, prepared, call)?;
-    // Retain original policy validity, but never replace it with observation time.
-    super::observation(&prepared.observation)?;
-    observe_authenticated_request(
-        &super::CertificateRequirements {
-            canister: plan.request().target.canister,
-            trust_root: plan.request().trust_root,
-        },
-        prepared.request_id,
-        certificate,
-        root_key_der,
-        policy,
-    )
 }
 
 // Signature and exact derived call admission remain with the original request owner.

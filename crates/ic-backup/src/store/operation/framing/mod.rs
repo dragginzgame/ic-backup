@@ -1,14 +1,12 @@
 //! Bounded hash-chained framing shared by the capture recorder and retained restore status contract.
 
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;
 
 use crate::store::BackupDigest;
 use std::io::{self, Read};
 use thiserror::Error;
 
-#[cfg(test)]
-pub(in crate::store) const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
 pub(in crate::store) const FRAME_BYTES: usize = 16 * 1024;
 pub(in crate::store) const FRAMES: u32 = 65_536;
 pub(in crate::store) const LEDGER_BYTES: u64 = 128 * 1024 * 1024;
@@ -19,27 +17,8 @@ pub(in crate::store) struct Bounds {
     pub(in crate::store) bytes: u64,
 }
 
-#[cfg(test)]
-fn seed(plan: &[u8]) -> BackupDigest {
-    BackupDigest::compute(&[b"ic-backup/local-ledger/1\0".as_slice(), plan].concat())
-}
-
 fn chain(previous: BackupDigest, length: &[u8; 4], payload: &[u8]) -> BackupDigest {
     BackupDigest::compute(&[previous.as_bytes().as_slice(), length, payload].concat())
-}
-
-#[cfg(test)]
-pub(in crate::store) fn initial_bytes(
-    plan: &[u8],
-    evidence_bytes: u64,
-) -> Result<Vec<u8>, LedgerError> {
-    let length = (CREATED.len() as u32).to_le_bytes();
-    let digest = chain(seed(plan), &length, CREATED);
-    let bytes = [length.as_slice(), CREATED, digest.as_bytes().as_slice()].concat();
-    if bytes.len() as u64 > LEDGER_BYTES.min(evidence_bytes) {
-        return Err(LedgerError::ByteLimit);
-    }
-    Ok(bytes)
 }
 
 pub(in crate::store) fn encode_frame(

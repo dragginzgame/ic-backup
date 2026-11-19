@@ -9,11 +9,9 @@ use super::{
     TransferDataError, TransferError, TransferMetadataError, decode_snapshot_list,
     decode_taken_snapshot, intent::CapturePlan,
 };
-#[cfg(test)]
-use crate::store::PreparedStatus;
-#[cfg(test)]
-use crate::store::StatusEvidence;
 use crate::store::operation::{Step, effect::Effect, intent::Intent};
+#[cfg(test)]
+use crate::store::{PreparedStatus, StatusEvidence};
 use ic_platform_protocol::management_snapshots::{
     CanisterArgs, Extent, ReadKind, Snapshot, SnapshotMetadata,
 };

@@ -1,6 +1,12 @@
 # Current handoff — 2026-11-19
 
-## Backup 0.105.9 with Toko Tooling 0.45.15
+## Toko Tooling 0.45.16 and conditional compilation
+
+Both workspaces select 0.45.16. The Rust source has no Wasm target guards. The Unix store boundary and its Cargo dependency selectors are required by Host FS directory custody, which uses Unix metadata and file descriptors. Consolidating capture status and HTTP lookup test helpers reduced Rust `#[cfg(test)]` attributes from 92 to 75. Moving recorder fixture methods and legacy framing helpers into tests and removing transfer getters used only by tests brought the count to 66. Consolidating the remaining capture advance helpers under their test modules brought it to 32. Capture advance retains four module guards and one grouped test-only re-export. Local validation evidence is under `target/evidence/tooling-0.45.16/`.
+
+## 0.105.9 published with Toko Tooling 0.45.15
+
+[ic-backup 0.105.9](https://crates.io/crates/ic-backup/0.105.9) shipped from tag `v0.105.9` at `00449ce`. All 247 native tests, five doctests and 11 PocketIC journeys passed. Registry readback matched the checksum, commit, license and all 178 tracked package files. A consumer built against the published version. Evidence is under `target/evidence/release-0.105.9/`.
 
 Both workspaces select 0.45.15. The fixture macros implement traits for existing types and the host library has no Wasm-only canister state. Their packages inherit the tooling marker as an ordinary dev-dependency. Child module declarations precede imports throughout the Rust source. The manager capacity regression checks the precise refusal and remaining capacity, and the setup fixture exercises bare Bearer and JSON payload redaction. Validation logs are under `target/evidence/tooling-0.45.13/`.
 

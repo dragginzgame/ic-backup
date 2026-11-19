@@ -12,9 +12,93 @@ use super::*;
 pub(in crate::store) use crate::store::capture::tests as fixtures;
 use crate::store::{
     BackupDigest,
-    capture::status::tests::{plan, status},
+    capture::{
+        CapturePolicy,
+        status::tests::{plan, status},
+    },
 };
+pub(in crate::store) use call::CaptureCall;
 use ic_platform::ingress::Content as EnvelopeContent;
+use ic_platform_protocol::management_snapshots::CanisterArgs;
+
+impl PreparedStatus {
+    // Inspect the original bytes; never normalize or re-encode a signed envelope.
+    // Authentication metadata, routing, observation and freshness stay provider-owned.
+    pub(in crate::store) fn validate_call(
+        &self,
+        plan: &CapturePolicy,
+    ) -> Result<(), OperationStoreError> {
+        self.validate_call_for(plan, CaptureCall::Status)
+    }
+
+    pub(in crate::store) fn validate_call_for(
+        &self,
+        plan: &CapturePolicy,
+        call: CaptureCall,
+    ) -> Result<(), OperationStoreError> {
+        self.validate_expected_call(plan, call.method_name(), &call.arguments(plan)?)
+    }
+
+    pub(in crate::store) fn validate_expected_call(
+        &self,
+        plan: &CapturePolicy,
+        method: &str,
+        arguments: &[u8],
+    ) -> Result<(), OperationStoreError> {
+        let expected = plan.request().sender;
+        self.validate_direct_call(
+            expected,
+            ic_platform_types::Principal::management_canister(),
+            method,
+            arguments,
+        )
+    }
+
+    pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
+        if bytes.len() < 46 {
+            return Err(OperationStoreError::Changed);
+        }
+        let (envelope, observation) = split(&bytes[40..])?;
+        let expires_ns = u64::from_le_bytes(
+            bytes[32..40]
+                .try_into()
+                .map_err(|_| OperationStoreError::Changed)?,
+        );
+        if expires_ns == 0 {
+            return Err(OperationStoreError::Changed);
+        }
+        Ok(Self {
+            request_id: bytes[..32]
+                .try_into()
+                .map_err(|_| OperationStoreError::Changed)?,
+            expires_ns,
+            envelope,
+            observation,
+        })
+    }
+}
+
+pub(in crate::store) fn arguments(plan: &CapturePolicy) -> Result<Vec<u8>, OperationStoreError> {
+    (CanisterArgs {
+        canister_id: plan.request().target.canister,
+    })
+    .encode(256)
+    .map_err(|_| OperationStoreError::StatusAdmission)
+}
+
+impl StatusAdmissionRecord {
+    pub(in crate::store) fn validate(
+        &self,
+        plan: &CapturePolicy,
+    ) -> Result<(), OperationStoreError> {
+        let initial_bytes = 0;
+        self.validate_limits(
+            plan.request().limits.network_requests,
+            plan.request().limits.evidence_bytes,
+            initial_bytes,
+        )
+    }
+}
 
 pub(in crate::store) fn admission() -> StatusAdmissionRecord {
     StatusAdmissionRecord {

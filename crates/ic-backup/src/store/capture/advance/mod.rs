@@ -8,7 +8,14 @@ mod request;
 pub(in crate::store) mod tests;
 
 #[cfg(test)]
-use super::CapturePolicy;
+pub(in crate::store) use self::{
+    certificate::tests::{
+        authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,
+    },
+    http::tests::{CaptureLookupHttpError, CaptureLookupHttpPolicy},
+    request::tests::{authenticate_capture_lookup, authenticate_status_request},
+    tests::{CaptureCall, arguments},
+};
 use super::OperationStoreError;
 pub(in crate::store) use certificate::{
     CaptureObservation, CaptureObservationPolicy, CertificateRequirements,
@@ -17,27 +24,15 @@ pub(in crate::store) use certificate::{
 pub use certificate::{
     CaptureObservationError, StatusCertificateError, status_certificate_observation,
 };
-#[cfg(test)]
-pub(in crate::store) use certificate::{
-    authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,
-};
 pub use direct::CaptureTiming;
 pub use http::{BackupHttpError, BackupHttpTransport, ReceivedCertificate};
-#[cfg(test)]
-pub(in crate::store) use http::{CaptureLookupHttpError, CaptureLookupHttpPolicy};
 use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
-#[cfg(test)]
-use ic_platform_protocol::management_snapshots::CanisterArgs;
 pub use request::{CaptureLookupError, StatusRequestError};
 pub(in crate::store) use request::{
     CaptureLookupPolicy, IngressRequirements, authenticate_direct_request,
     authenticate_lookup_envelope,
 };
-#[cfg(test)]
-pub(in crate::store) use request::{authenticate_capture_lookup, authenticate_status_request};
 use serde::{Deserialize, Serialize};
-#[cfg(test)]
-pub(in crate::store) use tests::call::CaptureCall;
 
 /// Original finite call authority, retained before preparation.
 /// Capture derives this from its original profile; restore retains its status admission.
@@ -63,19 +58,6 @@ pub struct StatusAdmissionRecord {
     pub result_bytes: u32,
 }
 impl StatusAdmissionRecord {
-    #[cfg(test)]
-    pub(in crate::store) fn validate(
-        &self,
-        plan: &CapturePolicy,
-    ) -> Result<(), OperationStoreError> {
-        let initial_bytes = 0;
-        self.validate_limits(
-            plan.request().limits.network_requests,
-            plan.request().limits.evidence_bytes,
-            initial_bytes,
-        )
-    }
-
     pub(in crate::store) fn validate_limits(
         &self,
         network_requests: u32,
@@ -125,53 +107,9 @@ pub struct StatusEvidence {
     pub proof: Vec<u8>,
 }
 
-#[cfg(test)]
-pub(in crate::store) fn arguments(plan: &CapturePolicy) -> Result<Vec<u8>, OperationStoreError> {
-    (CanisterArgs {
-        canister_id: plan.request().target.canister,
-    })
-    .encode(256)
-    .map_err(|_| OperationStoreError::StatusAdmission)
-}
-
 // Private exact binary evidence formats. Bounds are checked before concatenation;
 // reopening reads at the committed length before parsing or allocating components.
 impl PreparedStatus {
-    // Inspect the original bytes; never normalize or re-encode a signed envelope.
-    // Authentication metadata, routing, observation and freshness stay provider-owned.
-    #[cfg(test)]
-    pub(in crate::store) fn validate_call(
-        &self,
-        plan: &CapturePolicy,
-    ) -> Result<(), OperationStoreError> {
-        self.validate_call_for(plan, CaptureCall::Status)
-    }
-
-    #[cfg(test)]
-    pub(in crate::store) fn validate_call_for(
-        &self,
-        plan: &CapturePolicy,
-        call: CaptureCall,
-    ) -> Result<(), OperationStoreError> {
-        self.validate_expected_call(plan, call.method_name(), &call.arguments(plan)?)
-    }
-
-    #[cfg(test)]
-    pub(in crate::store) fn validate_expected_call(
-        &self,
-        plan: &CapturePolicy,
-        method: &str,
-        arguments: &[u8],
-    ) -> Result<(), OperationStoreError> {
-        let expected = plan.request().sender;
-        self.validate_direct_call(
-            expected,
-            ic_platform_types::Principal::management_canister(),
-            method,
-            arguments,
-        )
-    }
-
     fn validate_direct_call(
         &self,
         expected: ic_platform_types::Principal,
@@ -221,30 +159,6 @@ impl PreparedStatus {
             &tail,
         ]
         .concat())
-    }
-
-    #[cfg(test)]
-    pub(in crate::store) fn decode(bytes: &[u8]) -> Result<Self, OperationStoreError> {
-        if bytes.len() < 46 {
-            return Err(OperationStoreError::Changed);
-        }
-        let (envelope, observation) = split(&bytes[40..])?;
-        let expires_ns = u64::from_le_bytes(
-            bytes[32..40]
-                .try_into()
-                .map_err(|_| OperationStoreError::Changed)?,
-        );
-        if expires_ns == 0 {
-            return Err(OperationStoreError::Changed);
-        }
-        Ok(Self {
-            request_id: bytes[..32]
-                .try_into()
-                .map_err(|_| OperationStoreError::Changed)?,
-            expires_ns,
-            envelope,
-            observation,
-        })
     }
 }
 impl StatusEvidence {

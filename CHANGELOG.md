@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.105.10] - 2026-11-19
+
+- Adopt Toko Tooling 0.45.16 and consolidate test-only capture and recorder helpers, reducing test compilation guards from 92 to 32.
+
 ## [0.105.9] - 2026-11-19
 
 - Adopt Toko Tooling 0.45.15. CI setup diagnostics redact bare Bearer credentials and labelled payload fields.
