@@ -1,4 +1,5 @@
 //! Real signatures over synthetic certificates; no remote observation is performed.
+
 use super::{
     fixtures::{
         certificates::{delegated, der, signed},

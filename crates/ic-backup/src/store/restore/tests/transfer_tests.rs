@@ -1,4 +1,5 @@
 //! Exact restore transfer bounds over authenticated sources; no restore effects.
+
 use crate::store::{
     BackupDigest, BackupSummary, RestoreTransferError, RestoreTransferRequest,
     capture::tests::{

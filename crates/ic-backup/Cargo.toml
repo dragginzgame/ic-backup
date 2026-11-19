@@ -1,6 +1,6 @@
 [package]
 name = "ic-backup"
-version = "0.105.8"
+version = "0.105.9"
 description = "Host-side capture, restore and local backup inventory for Internet Computer canisters"
 readme = "README.md"
 edition.workspace = true
@@ -23,9 +23,6 @@ sha2.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 
-[target.'cfg(any())'.dev-dependencies]
-toko-tooling.workspace = true
-
 [package.metadata.cargo-machete]
 ignored = ["toko-tooling"]
 
@@ -33,6 +30,9 @@ ignored = ["toko-tooling"]
 ic-platform = { workspace = true, features = ["certificate-fixture-signing"] }
 ic-platform-protocol = { workspace = true, features = ["management-snapshot-fixtures"] }
 tokio = { workspace = true, features = ["rt", "net"] }
+
+[dev-dependencies]
+toko-tooling.workspace = true
 
 [lints]
 workspace = true

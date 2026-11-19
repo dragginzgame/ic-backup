@@ -1,4 +1,7 @@
 //! Direct-key authentication of original status ingress; no signing, clock or effects.
+
+mod lookup;
+
 use super::{OperationStoreError, PreparedStatus};
 use crate::store::BackupDigest;
 #[cfg(test)]
@@ -12,6 +15,10 @@ use ic_platform::{
     ingress::{Content as EnvelopeContent, Envelope, decode_envelope},
 };
 use ic_platform_types::Principal;
+#[cfg(test)]
+pub use lookup::authenticate_capture_lookup;
+pub(in crate::store) use lookup::authenticate_lookup_envelope;
+pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
 use thiserror::Error;
 
 // Exact SPKI profiles from RFC 8410 / RFC 5480 and the IC signature specification.
@@ -19,8 +26,6 @@ use thiserror::Error;
 const ED25519_DER: &[u8] = b"\x30\x2a\x30\x05\x06\x03\x2b\x65\x70\x03\x21\x00";
 const SECP256K1_DER: &[u8] =
     b"\x30\x56\x30\x10\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x05\x2b\x81\x04\x00\x0a\x03\x42\x00";
-
-pub(in crate::store) use lookup::authenticate_lookup_envelope;
 
 /// Refusal to authenticate an original direct-key status request.
 #[derive(Debug, Error)]
@@ -196,11 +201,6 @@ fn verify_sender(der: &[u8], sender: &[u8]) -> Result<(), StatusRequestError> {
         Err(StatusRequestError::Sender)
     }
 }
-
-mod lookup;
-#[cfg(test)]
-pub use lookup::authenticate_capture_lookup;
-pub use lookup::{CaptureLookupError, CaptureLookupPolicy};
 
 /// Exact direct management identity selected by an original intent or native protocol fixture.
 pub(in crate::store) struct IngressRequirements {

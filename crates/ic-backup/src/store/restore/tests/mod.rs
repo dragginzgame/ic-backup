@@ -1,10 +1,11 @@
 //! Restore-specific source/approval/geometry regressions; call mechanics have one shared test owner.
+
+pub(in crate::store::restore) mod fixtures;
 mod persistence_tests;
 mod plan_tests;
 mod transfer_tests;
 
 use super::*;
-pub(in crate::store::restore) mod fixtures;
 
 #[test]
 fn original_restore_intent_has_an_independent_encoding_and_domain_vector() {

@@ -1,4 +1,5 @@
 //! Local materialization and exact publication under the same fixed procedure.
+
 use super::{
     FactRecord, Journal, Step,
     custody::{CaptureOperation, Role},

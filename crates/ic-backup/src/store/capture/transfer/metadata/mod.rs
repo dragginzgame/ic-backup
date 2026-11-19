@@ -1,4 +1,5 @@
 //! Bounded metadata field mappings over Platform's schema and owned decoder.
+
 #[cfg(test)]
 mod tests;
 

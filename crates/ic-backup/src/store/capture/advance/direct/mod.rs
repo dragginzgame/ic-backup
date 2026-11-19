@@ -1,6 +1,8 @@
 //! Shared exact historical certificate-window arithmetic.
+
 use super::StatusAdmissionRecord;
 use ic_platform::certificate::{TimePolicy, TimeWindow};
+
 const MAX_LIVE_WINDOW_NS: u64 = 300_000_000_000;
 /// Explicit original certificate policy; there are no implicit freshness defaults.
 #[derive(Clone, Copy, Debug)]

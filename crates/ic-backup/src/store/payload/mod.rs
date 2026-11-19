@@ -1,6 +1,6 @@
 //! Read-only payload checking; no operation replay or restore admission.
+
 mod source;
-pub use source::{PayloadReadError, PayloadSource};
 
 use super::{
     BackupStore, BackupSummary, MANIFEST_LIMIT, PRIVATE, StoreError, manifest, open_optional,
@@ -8,6 +8,7 @@ use super::{
 use crate::store::BackupDigest;
 use ic_host_artifacts::{Identity, Length};
 use ic_host_fs::{Directory, FileId, Kind as EntryKind};
+pub use source::{PayloadReadError, PayloadSource};
 use std::{
     collections::BTreeSet,
     ffi::OsStr,

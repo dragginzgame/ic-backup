@@ -1,4 +1,5 @@
 //! Backup commitment encoding; SHA-256 itself remains owned by `sha2`.
+
 #[cfg(test)]
 mod tests;
 

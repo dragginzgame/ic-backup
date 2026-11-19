@@ -1,4 +1,5 @@
 //! Semantic admission of retained call facts. No clock, signer, guard or network.
+
 use super::{Journal, Step, runtime::Applied};
 use crate::store::{
     capture::{

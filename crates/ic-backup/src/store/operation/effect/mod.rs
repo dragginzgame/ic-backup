@@ -1,5 +1,6 @@
 //! Inner management call selected by the fixed procedure. Live execution and
 //! replay derive this value from the same approved inputs and preceding replies.
+
 use ic_platform_protocol::management_snapshots::{
     CanisterArgs, LoadSnapshotArgs, ReadDataArgs, SnapshotArgs, TakeSnapshotArgs, UploadDataArgs,
     UploadMetadataArgs,

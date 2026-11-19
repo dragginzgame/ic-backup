@@ -28,26 +28,19 @@
 //! # }
 //! ```
 
-#[cfg(test)]
-mod tests;
-
+mod capture;
 mod digest;
 mod limits;
-pub use digest::{BackupDigest, DigestParseError};
-pub use limits::OperationLimits;
-mod capture;
 mod manifest;
 mod operation;
 mod payload;
 mod restore;
-pub use operation::intent::Plan as OperationPlan;
-pub use restore::{
-    RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError, RestorePolicyError,
-    RestoreRequest, persistence::LoadedStopped,
-};
+#[cfg(test)]
+mod tests;
 
 #[cfg(test)]
 pub(in crate::store) use capture::CapturePolicy;
+pub use capture::transfer::readback::ReadbackMetadataError;
 pub use capture::{
     BackupApplicationGuard, BackupConnection, BackupHttpError, BackupHttpTransport, BackupSigner,
     CaptureLookupError, CaptureObservationError, CaptureOperation, CapturePlan, CapturePolicyError,
@@ -59,17 +52,24 @@ pub use capture::{
     RestoreTransferError, RestoreTransferRequest, SnapshotReplyError, StatusCertificateError,
     StatusRequestError, TransferDataError, TransferError, TransferMetadataError,
 };
+pub(in crate::store) use capture::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};
+pub use digest::{BackupDigest, DigestParseError};
+use ic_host_artifacts::{Error as ArtifactError, Length};
+use ic_host_fs::{Access, Directory, FilePolicy, Kind as EntryKind};
+use ic_platform_types::Principal;
+pub use limits::OperationLimits;
 pub use manifest::ManifestError;
+pub use operation::intent::Plan as OperationPlan;
 pub use operation::{
     effect::Effect as SnapshotEffect,
     intent::ManagerRecord as RootManager,
     manager::{RootBinding, RootCodec, RootExchange, RootOutcome, RootRequest},
 };
 pub use payload::{PayloadReadError, PayloadSource};
-
-use ic_host_artifacts::{Error as ArtifactError, Length};
-use ic_host_fs::{Access, Directory, FilePolicy, Kind as EntryKind};
-use ic_platform_types::Principal;
+pub use restore::{
+    RestoreOperation, RestorePersistenceError, RestorePlan, RestorePlanError, RestorePolicyError,
+    RestoreRequest, persistence::LoadedStopped,
+};
 use std::{ffi::OsStr, fs::File, io, num::NonZeroUsize, path::Path};
 use thiserror::Error;
 
@@ -455,6 +455,3 @@ pub enum StoreError {
         actual: BackupDigest,
     },
 }
-
-pub use capture::transfer::readback::ReadbackMetadataError;
-pub(in crate::store) use capture::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};

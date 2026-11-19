@@ -1,4 +1,5 @@
 //! Shared declaration bounds; capture and restore retain independent approved values.
+
 use serde::{Deserialize, Serialize};
 
 // Complete envelopes/proofs include protocol overhead around a 1 MiB data extent.

@@ -1,7 +1,9 @@
 //! Finite supplier fixtures and independent retained wire inputs for owning tests.
+
 mod retained_tests;
 
 use ic_platform_protocol::management_snapshots::{self as management, fixtures};
+pub(in crate::store) use retained_tests::frozen;
 
 pub(in crate::store) trait EncodeFixture {
     fn encoded(&self, maximum: usize) -> Vec<u8>;
@@ -44,5 +46,3 @@ request!(
     management::UploadMetadataArgs,
     management::UploadDataArgs
 );
-
-pub(in crate::store) use retained_tests::frozen;

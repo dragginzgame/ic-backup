@@ -1,5 +1,6 @@
 //! Loopback fixture proxy: forward once, retain original wire bytes, optionally lose one reply.
 //! It is not a Backup transport or a production HTTP implementation.
+
 use ic_platform::ingress::{CallResponse, Content, decode_call_response, decode_envelope};
 use std::{
     fs,

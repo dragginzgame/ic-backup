@@ -1,4 +1,5 @@
 //! Original restore approval/source custody over the shared recorder.
+
 use super::{RestorePlan, RestorePlanError, procedure::Procedure};
 use crate::store::{
     BackupDigest, BackupStore, CaptureOperation, CapturePlan, CaptureSourceError,

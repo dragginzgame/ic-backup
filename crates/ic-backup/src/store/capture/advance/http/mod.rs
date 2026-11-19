@@ -1,4 +1,7 @@
 //! One bounded HTTP dispatch of already-retained direct management ingress.
+
+mod lookup;
+
 use super::{
     OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusCertificateError,
     StatusEvidence, StatusRequestError,
@@ -10,6 +13,8 @@ use ic_platform::{
     certificate::PreparedRootKey,
     ingress::{CallResponse as TransportCallResponse, decode_call_response},
 };
+#[cfg(test)]
+pub use lookup::{CaptureLookupHttpError, CaptureLookupHttpPolicy};
 use reqwest::{Client, Url, header};
 use std::{
     net::IpAddr,
@@ -471,7 +476,3 @@ fn origin(endpoint: &str) -> Result<Url, BackupHttpError> {
     }
     Ok(url)
 }
-
-mod lookup;
-#[cfg(test)]
-pub use lookup::{CaptureLookupHttpError, CaptureLookupHttpPolicy};

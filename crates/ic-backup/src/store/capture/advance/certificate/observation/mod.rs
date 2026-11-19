@@ -1,4 +1,5 @@
 //! Pure original-request certificate observation. No lookup, reservation or settlement.
+
 #[cfg(test)]
 use super::super::CaptureCall;
 #[cfg(test)]

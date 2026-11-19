@@ -1,4 +1,5 @@
 //! Fixed capture/restore dispatch over the common recorder.
+
 #[cfg(test)]
 mod tests;
 

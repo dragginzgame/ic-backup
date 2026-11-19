@@ -1,4 +1,7 @@
 //! Test-only public-API consumer, built alone without Testkit/PocketIC in its graph.
+
+mod authority;
+
 use ic_backup::store::{
     BackupConnection, BackupDigest, BackupHttpTransport, BackupStore, OperationProgress,
 };
@@ -10,7 +13,6 @@ use std::{
     },
     time::Duration,
 };
-mod authority;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();

@@ -1,4 +1,5 @@
 //! Re-authored frozen-legacy wire cases; goldens retain original bytes and hashes.
+
 use super::{super::status::tests::plan, *};
 use crate::store::{BackupDigest, capture::tests::wire::frozen};
 use serde::Deserialize;

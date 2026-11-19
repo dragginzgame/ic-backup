@@ -20,11 +20,25 @@ open my $success, '<', 'target/ci-setup/.attempt-success/diagnostic.txt' or die 
 my $receipt = do { local $/; <$success> };
 $receipt =~ /status=0/ && $receipt !~ /progress-sentinel/
     or die "success must retain status without raw command output\n";
-run('early', 'print STDERR "download failed: checksum mismatch\n$ENV{SETUP_TEST_ACCESS_KEY}\ncontext/$ENV{SETUP_TEST_ACCESS_KEY}/suffix\nAuthorization: Bearer fixture-secret-987654\nhttps://user:password\@host/path?token=abc\nBUILD_HINT=assigned-marker\nhttps://example.invalid/#fragment-marker\naccess\tkey: field-marker\n"; exit 23', 23);
+run('early', <<'PERL', 23);
+print STDERR <<END;
+download failed: checksum mismatch
+Bearer opaque-bearer-marker
+{"payload":"private-body-marker"}
+$ENV{SETUP_TEST_ACCESS_KEY}
+context/$ENV{SETUP_TEST_ACCESS_KEY}/suffix
+Authorization: Bearer fixture-secret-987654
+https://user:password\@host/path?token=abc
+BUILD_HINT=assigned-marker
+https://example.invalid/#fragment-marker
+access\tkey: field-marker
+END
+exit 23;
+PERL
 open my $log, '<', 'target/ci-setup/.attempt-early/diagnostic.txt' or die $!;
 my $text = do { local $/; <$log> };
 $text =~ /checksum mismatch/ && $text =~ /status=23/
-    && $text !~ /opaque-fixture-3519|fixture-secret|user:password|token=abc|assigned-marker|fragment-marker|field-marker/ or die "unsafe/missing diagnostic\n";
+    && $text !~ /opaque-bearer-marker|private-body-marker|opaque-fixture-3519|fixture-secret|user:password|token=abc|assigned-marker|fragment-marker|field-marker/ or die "unsafe/missing diagnostic\n";
 run('empty', 'exit 19', 19);
 run('collector', 'mkdir "target/ci-setup/.attempt-collector/diagnostic.txt"; exit 17', 17);
 run('collector-success', 'mkdir "target/ci-setup/.attempt-collector-success/diagnostic.txt"', 1);

@@ -1,4 +1,5 @@
 //! Fixture-only direct authority shared by the IC harness and isolated consumer.
+
 use ic_backup::store::{
     BackupApplicationGuard, BackupDigest, BackupSigner, OperationAction, OperationPlan,
     OperationSigningContent, OperationSigningRequest,

@@ -1,4 +1,5 @@
 //! Fixed capture dispatcher over the shared one-shot recorder.
+
 use super::{
     FactRecord, Journal, Step,
     custody::CaptureOperation,

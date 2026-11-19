@@ -1,4 +1,5 @@
 //! Source/readback regressions derived from the frozen metadata/upload contracts.
+
 use super::*;
 use crate::store::capture::{
     tests::wire::frozen,

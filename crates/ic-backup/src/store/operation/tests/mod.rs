@@ -2,6 +2,7 @@
 //! Replacement facts only: no fake IC effects, filesystem durability or certificate claims.
 //! frozen legacy 4ae087fad8c23de712aa60bf569bde4b2b932651, submission/mod.rs and
 //! tests/http_boundary/mod.rs. The actual transport matrix remains with that owner.
+
 pub(in crate::store) mod fixtures;
 
 use super::*;
@@ -528,7 +529,12 @@ fn manager_preflight_counts_original_slots_and_reserved_reply_capacity() {
         let mut bytes = Journal::initial(INTENT, a).unwrap();
         let original = append(&mut bytes, a, facts(Step::InitialStatus)[0].clone());
         original.check_manager_slots(maximum - 1).unwrap();
-        assert!(original.check_manager_slots(maximum).is_err());
-        assert!(original.check_manager_slots(u32::MAX).is_err());
+        for excess in [maximum, u32::MAX] {
+            assert!(matches!(
+                original.check_manager_slots(excess),
+                Err(LedgerError::Transition)
+            ));
+            original.check_manager_slots(maximum - 1).unwrap();
+        }
     }
 }

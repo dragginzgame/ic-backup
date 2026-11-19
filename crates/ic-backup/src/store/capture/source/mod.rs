@@ -1,5 +1,7 @@
 //! Authenticated capture evidence and held payload custody, without restore authority.
+
 pub(in crate::store) mod transfer;
+
 use super::{
     BackupStore, CaptureOperation, OperationReplayError, OperationStoreError, same_identity,
 };
@@ -8,6 +10,7 @@ use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use std::{fmt, num::NonZeroU64};
 use thiserror::Error;
 pub use transfer::{RestoreTransfer, RestoreTransferError, RestoreTransferRequest};
+
 /// Original capture lock and authenticated payload descriptors. No restore authority.
 pub struct CaptureSource<'capture, 'store> {
     _capture: &'capture CaptureOperation,

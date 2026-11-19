@@ -1,4 +1,5 @@
 //! Fixed source-bound allocation/upload/readback/load policy, without call mechanics.
+
 #[cfg(test)]
 mod tests;
 
@@ -16,12 +17,11 @@ use ic_platform_protocol::management_snapshots::{
     CanisterArgs, Extent, LoadSnapshotArgs, Offset, ReadDataArgs, ReadKind, Snapshot, SnapshotArgs,
     SnapshotChunk, SnapshotMetadata, UploadDataArgs, UploadMetadataArgs, WriteKind,
 };
-use ic_platform_types::Principal;
-
 use ic_platform_protocol::{
     candid::{Error as DecodeError, Limits},
     management_snapshots::{decode_empty_response, decode_snapshot_allocation},
 };
+use ic_platform_types::Principal;
 
 #[derive(Debug, thiserror::Error)]
 /// Original restore source, bounded reply or exact readback policy refused.

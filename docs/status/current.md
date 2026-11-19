@@ -1,6 +1,12 @@
 # Current handoff — 2026-11-19
 
-## Toko Tooling 0.45.10 adopted locally
+## Backup 0.105.9 with Toko Tooling 0.45.15
+
+Both workspaces select 0.45.15. The fixture macros implement traits for existing types and the host library has no Wasm-only canister state. Their packages inherit the tooling marker as an ordinary dev-dependency. Child module declarations precede imports throughout the Rust source. The manager capacity regression checks the precise refusal and remaining capacity, and the setup fixture exercises bare Bearer and JSON payload redaction. Validation logs are under `target/evidence/tooling-0.45.13/`.
+
+## 0.105.8 published with Toko Tooling 0.45.10
+
+[ic-backup 0.105.8](https://crates.io/crates/ic-backup/0.105.8) shipped from tag `v0.105.8` at `5eb580bac6c203e61e8f0af70e9224cb16a9b848`. Registry readback verified the checksum, commit, license and all 178 tracked package files. A consumer built against the registry release. Release evidence is under `target/evidence/release-0.105.8/`.
 
 Both workspace pins and locks select 0.45.10. Backup retains its Unix store boundary for directory-handle custody and file permissions. Testkit download failures use the shared bounded diagnostic reader, and the CI setup regression covers bare and embedded access-key values. The local gate passed both workspace Clippy checks, 247 native tests, five doctests, all 11 PocketIC journeys, archive consumer and publication caller checks. Evidence is under `target/evidence/tooling-0.45.10/`.
 

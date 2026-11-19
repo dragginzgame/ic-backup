@@ -1,9 +1,17 @@
 //! Bounded Platform-schema data replies and exact scheduled byte admission.
+
 #[cfg(test)]
 mod tests;
 
 use super::CaptureTransfer;
+use crate::store::BackupDigest;
 use ic_platform_protocol::management_snapshots::{Extent, SnapshotChunk};
+use ic_platform_protocol::{
+    candid::{Error as DecodeError, Limits},
+    management_snapshots::{ReadDataArgs, ReadKind, decode_snapshot_data},
+};
+use thiserror::Error;
+
 /// Data ordinal or bounded request encoding refused.
 #[derive(Debug, thiserror::Error)]
 pub enum DataReadError {
@@ -32,12 +40,6 @@ impl CaptureTransfer<'_> {
         })
     }
 }
-use crate::store::BackupDigest;
-use ic_platform_protocol::{
-    candid::{Error as DecodeError, Limits},
-    management_snapshots::{ReadDataArgs, ReadKind, decode_snapshot_data},
-};
-use thiserror::Error;
 
 const MAX_DATA_BYTES: usize = 1024 * 1024;
 const MAX_REPLY_BYTES: usize = 2 * 1024 * 1024;

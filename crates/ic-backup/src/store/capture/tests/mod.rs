@@ -1,11 +1,5 @@
 //! Shared owned cryptographic/native file fixtures. No IC-effect qualification.
-use super::{
-    BackupApplicationGuard, BackupConnection, BackupSigner, CaptureOperation, CapturePlan,
-    CapturePolicy, CaptureRequest, CaptureTiming, OperationAction, OperationOptions,
-    OperationSigningRequest, PreparedStatus, StatusAdmissionRecord, advance::*,
-};
-use crate::store::BackupDigest;
-use ic_platform::ingress::Content as EnvelopeContent;
+
 pub(in crate::store) mod certificates;
 pub(in crate::store) mod completion;
 pub(in crate::store) mod data;
@@ -14,6 +8,14 @@ pub(in crate::store) mod lookup;
 pub(in crate::store) mod signatures;
 pub(in crate::store) mod source;
 pub(in crate::store) mod wire;
+
+use super::{
+    BackupApplicationGuard, BackupConnection, BackupSigner, CaptureOperation, CapturePlan,
+    CapturePolicy, CaptureRequest, CaptureTiming, OperationAction, OperationOptions,
+    OperationSigningRequest, PreparedStatus, StatusAdmissionRecord, advance::*,
+};
+use crate::store::BackupDigest;
+use ic_platform::ingress::Content as EnvelopeContent;
 
 fn plan() -> CapturePolicy {
     super::status::tests::plan()

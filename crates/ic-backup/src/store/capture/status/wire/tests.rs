@@ -1,4 +1,5 @@
 //! Independently retained wire cases; see the transfer contract and fixture manifest.
+
 use super::{super::tests::plan, *};
 use crate::store::{BackupDigest, capture::tests::wire::frozen};
 use ic_platform_protocol::management_snapshots::Status;

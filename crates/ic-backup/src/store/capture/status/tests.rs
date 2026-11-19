@@ -1,4 +1,5 @@
 //! Re-authored legacy controller/status cases against the current plan boundary.
+
 use super::*;
 use ic_platform_protocol::management_snapshots::{CaptureStatus, Settings};
 use ic_platform_types::Principal;

@@ -1,6 +1,4 @@
 //! Fixed direct-host capture with immutable approval, original custody and one-shot calls.
-#[cfg(test)]
-pub(in crate::store) mod tests;
 
 pub(in crate::store) mod advance;
 mod arguments;
@@ -9,23 +7,25 @@ pub(in crate::store) mod completion;
 pub(in crate::store) mod intent;
 pub(in crate::store) mod plan;
 pub(in crate::store) mod procedure;
-pub(in crate::store) use advance::CaptureObservation;
-pub use arguments::MetadataReadError;
-pub(in crate::store) use transfer::CaptureTransfer;
 mod snapshot;
 pub(in crate::store) mod source;
 pub(in crate::store) mod status;
 mod succession;
+#[cfg(test)]
+pub(in crate::store) mod tests;
 pub(in crate::store) mod transfer;
+
 use super::{BackupStore, PRIVATE, manifest::lower_hex, open_optional, read_optional};
 use crate::store::BackupDigest;
 pub(in crate::store) use crate::store::OperationLimits;
+pub use crate::store::operation::custody::OperationStoreError;
 pub use crate::store::operation::{
     BackupApplicationGuard, BackupConnection, BackupSigner, CaptureOperation, OperationAction,
     OperationAdvanceError, OperationOptions, OperationProgress, OperationReplayError,
     OperationSigningContent, OperationSigningRequest, OperationStep, OperationView,
     framing::LedgerError, intent::Error as OperationPlanError,
 };
+pub(in crate::store) use advance::CaptureObservation;
 pub use advance::{
     BackupHttpError, BackupHttpTransport, CaptureLookupError, CaptureObservationError,
     CaptureTiming, ReceivedCertificate, StatusCertificateError, StatusRequestError,
@@ -33,6 +33,8 @@ pub use advance::{
 pub(in crate::store) use advance::{
     CertificateRequirements, authenticate_direct_request, certificate_observation,
 };
+pub(in crate::store) use advance::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};
+pub use arguments::MetadataReadError;
 use ic_host_fs::{Directory, Lock};
 pub use intent::CapturePlan;
 pub(in crate::store) use plan::CapturePolicy;
@@ -50,6 +52,7 @@ use std::{
     io::{self, Write},
 };
 pub use succession::CaptureSuccessionError;
+pub(in crate::store) use transfer::CaptureTransfer;
 pub use transfer::{DataReadError, TransferDataError, TransferError, TransferMetadataError};
 
 pub(in crate::store) fn child(
@@ -162,6 +165,3 @@ pub(in crate::store) fn owner_bytes(
         plan_sha256: digest.to_string(),
     })?)
 }
-pub use crate::store::operation::custody::OperationStoreError;
-
-pub(in crate::store) use advance::{PreparedStatus, StatusAdmissionRecord, StatusEvidence};

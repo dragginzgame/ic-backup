@@ -1,4 +1,5 @@
 //! Bounded projection; Platform owns wire traversal and management field labels.
+
 #[cfg(test)]
 mod tests;
 

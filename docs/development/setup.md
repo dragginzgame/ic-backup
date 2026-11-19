@@ -40,11 +40,11 @@ make fetch-dependencies
 ```
 
 Validation is locked and offline; it does not install tools. Hook activation is
-explicit through `make install-hooks`. Tooling 0.45.10 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.45.15 is adopted from its registry
 archive with SHA-256
-`690c847446a5edbf5e13c03996feee5a64daa4c28a9a1098ceb7d5ea64f820fc`,
-source `88b7cd83f292d5165f4585a861cd8c89b74397b3`. Both workspaces declare
-its exact pin and each member inherits the disabled development marker.
+`047d160b116c300b7dfadae595c5c7b1f184257937b7d8541b1abc3aac6b6a52`,
+source `26b16a10b90fdf41f65e5549b393fa8a95dfa0e8`. Both workspaces declare
+its exact pin and each member inherits the tooling dev-dependency.
 The canonical exporter installs twelve selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
 The shared publication adapter is selected; no producer regression suites or
@@ -506,7 +506,7 @@ unchanged runtime journeys. No release/support matrix or legacy test rerun is cl
 
 ### CI setup diagnostics
 
-Toko 0.45.10's `SetupDiagnostics.pm` owns command capture/status and redaction;
+Toko 0.45.15's `SetupDiagnostics.pm` owns command capture/status and redaction;
 `scripts/ci/setup.pl` owns the per-phase directory and exclusive artifact writer
 for host tools, Rust toolchain/tools, dependency fetches and the secret scanner.
 Only a failed command's bounded, sanitized excerpt is retained; successful phases

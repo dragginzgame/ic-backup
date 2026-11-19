@@ -1,4 +1,5 @@
 //! Certified rejection projection and durable terminal replay, without IC effects.
+
 use super::*;
 use ic_platform::certificate::construction::HashTree;
 

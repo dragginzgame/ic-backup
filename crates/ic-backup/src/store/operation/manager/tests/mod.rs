@@ -1,4 +1,7 @@
 //! Adapter-boundary policy only. No simulated transport or IC effects.
+
+mod retained;
+
 use super::*;
 
 struct Binding;
@@ -57,5 +60,3 @@ fn outer_rejection_is_unresolved_and_never_reaches_inner_decoder() {
         None
     );
 }
-
-mod retained;

@@ -1,4 +1,5 @@
 //! Build and run the isolated fixture consumer through its normal dependency graph.
+
 use ic_backup::store::BackupDigest;
 use std::{
     fs,

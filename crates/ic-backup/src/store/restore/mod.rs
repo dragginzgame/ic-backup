@@ -1,4 +1,7 @@
 //! Source-bound same-canister restore through the common direct recorder.
+
+pub(in crate::store) mod persistence;
+pub(in crate::store) mod procedure;
 #[cfg(test)]
 pub(in crate::store::restore) mod tests;
 
@@ -15,12 +18,11 @@ use crate::store::{
     },
 };
 use ic_platform_types::Principal;
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
-pub(in crate::store) mod persistence;
-pub(in crate::store) mod procedure;
 pub use persistence::{RestoreOperation, RestorePersistenceError};
 pub use procedure::Error as RestorePolicyError;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
 const PLAN_LIMIT: usize = 1024 * 1024;
 const FORMAT: &str = "ic-backup/restore-intent/1";
 const DOMAIN: &[u8] = b"ic-backup/restore-intent/1\0";

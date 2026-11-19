@@ -1,18 +1,9 @@
 //! Held original files for the common recorder. No caller-selected evidence paths.
+
 #[cfg(test)]
 pub(in crate::store) mod tests;
 
 use super::{Call, FactRecord, Journal, ReferenceRecord, Step};
-use crate::store::{CapturePlan, operation::intent::Intent};
-/// Held capture approval and original files over the shared recorder.
-pub type CaptureOperation = Recorder<CapturePlan>;
-impl<P> Recorder<P> {
-    /// Exact immutable original approval retained by this handle.
-    #[must_use]
-    pub fn plan(&self) -> &P {
-        &self.intent
-    }
-}
 use crate::store::{
     BackupDigest, LedgerError, PRIVATE, StoreError,
     capture::{
@@ -23,6 +14,7 @@ use crate::store::{
     payload::unchanged_file,
     read_optional,
 };
+use crate::store::{CapturePlan, operation::intent::Intent};
 use ic_host_fs::{Directory, Kind as EntryKind, Lock};
 use std::{
     collections::BTreeMap,
@@ -31,6 +23,16 @@ use std::{
     io::{self, Seek, SeekFrom, Write},
 };
 use thiserror::Error;
+
+/// Held capture approval and original files over the shared recorder.
+pub type CaptureOperation = Recorder<CapturePlan>;
+impl<P> Recorder<P> {
+    /// Exact immutable original approval retained by this handle.
+    #[must_use]
+    pub fn plan(&self) -> &P {
+        &self.intent
+    }
+}
 
 #[derive(Clone, Copy)]
 pub(in crate::store) enum Role {

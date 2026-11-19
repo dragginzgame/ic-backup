@@ -1,4 +1,5 @@
 //! Real signatures over external protocol envelopes; no signing service or IC effects.
+
 use super::*;
 use ic_platform::{
     ecdsa, ed25519,

@@ -1,4 +1,5 @@
 //! Shared bounded framing regressions retained from the original capture ledger.
+
 use super::*;
 use std::io::Cursor;
 

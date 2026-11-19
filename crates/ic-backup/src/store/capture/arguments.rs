@@ -1,7 +1,9 @@
 //! Fixed metadata request arguments; no independent acquisition workflow.
+
 use super::{CapturePolicy, OperationStoreError};
 use ic_platform_protocol::management_snapshots::{Snapshot, SnapshotArgs};
 use thiserror::Error;
+
 /// Metadata identity or bounded request encoding refused.
 #[derive(Debug, Error)]
 pub enum MetadataReadError {

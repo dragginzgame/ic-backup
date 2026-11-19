@@ -1,4 +1,5 @@
 //! Native held-source regressions; synthetic bytes do not qualify IC effects.
+
 use super::*;
 use ic_platform_protocol::management_snapshots::{
     Extent, LowMemoryHook, ReadDataArgs, ReadKind, Reserved, SnapshotChunk, SnapshotMetadata,

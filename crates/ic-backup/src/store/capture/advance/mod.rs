@@ -1,18 +1,15 @@
 //! Exact direct call, certificate and bounded HTTP primitives. The recorder owns execution.
+
+mod certificate;
+mod direct;
+mod http;
+mod request;
 #[cfg(test)]
 pub(in crate::store) mod tests;
 
 #[cfg(test)]
 use super::CapturePolicy;
 use super::OperationStoreError;
-use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
-#[cfg(test)]
-use ic_platform_protocol::management_snapshots::CanisterArgs;
-use serde::{Deserialize, Serialize};
-mod certificate;
-mod direct;
-mod http;
-mod request;
 pub(in crate::store) use certificate::{
     CaptureObservation, CaptureObservationPolicy, CertificateRequirements,
     observation as certificate_observation, observe_authenticated_request,
@@ -20,15 +17,28 @@ pub(in crate::store) use certificate::{
 pub use certificate::{
     CaptureObservationError, StatusCertificateError, status_certificate_observation,
 };
+#[cfg(test)]
+pub(in crate::store) use certificate::{
+    authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,
+};
 pub use direct::CaptureTiming;
 pub use http::{BackupHttpError, BackupHttpTransport, ReceivedCertificate};
+#[cfg(test)]
+pub(in crate::store) use http::{CaptureLookupHttpError, CaptureLookupHttpPolicy};
+use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
+#[cfg(test)]
+use ic_platform_protocol::management_snapshots::CanisterArgs;
 pub use request::{CaptureLookupError, StatusRequestError};
 pub(in crate::store) use request::{
     CaptureLookupPolicy, IngressRequirements, authenticate_direct_request,
     authenticate_lookup_envelope,
 };
 #[cfg(test)]
+pub(in crate::store) use request::{authenticate_capture_lookup, authenticate_status_request};
+use serde::{Deserialize, Serialize};
+#[cfg(test)]
 pub(in crate::store) use tests::call::CaptureCall;
+
 /// Original finite call authority, retained before preparation.
 /// Capture derives this from its original profile; restore retains its status admission.
 /// Bindings identify the provider protocol and continuous application maintenance witness.
@@ -285,12 +295,3 @@ fn split(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), OperationStoreError> {
     }
     Ok((bytes[4..4 + length].to_vec(), bytes[4 + length..].to_vec()))
 }
-
-#[cfg(test)]
-pub(in crate::store) use certificate::{
-    authenticate_status_evidence, observe_capture_certificate, status_certificate_evidence,
-};
-#[cfg(test)]
-pub(in crate::store) use http::{CaptureLookupHttpError, CaptureLookupHttpPolicy};
-#[cfg(test)]
-pub(in crate::store) use request::{authenticate_capture_lookup, authenticate_status_request};

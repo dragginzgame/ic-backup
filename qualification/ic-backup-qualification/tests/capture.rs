@@ -1,13 +1,19 @@
 //! All keys, application permissions, fixture memory and proxying remain test-only.
 //! Actual-IC public-API tests, including a separately built normal-dependency consumer.
+
+mod consumer;
+mod proxy;
+mod server;
+
+use authority::{FixtureGuard, FixtureSigner, der, now};
 use ic_backup::store::{
     BackupConnection, BackupDigest, BackupHttpTransport, BackupStore, BackupSummary, BackupTarget,
     CaptureRequest, CaptureTiming, OperationLimits, OperationOptions, OperationPlan,
     OperationProgress, OperationStep, RestoreRequest, ScanLimits,
 };
+use ic_backup_consumer::authority;
 use ic_platform_protocol::management_snapshots::{ReadDataArgs, ReadKind};
 use ic_platform_types::Principal;
-
 use ic_testkit::{
     pocket_ic::{CanisterSettings, PocketIcBuilder, common::rest::BlobCompression},
     server::PreparedServer,
@@ -22,12 +28,7 @@ use std::{
     },
     time::{Duration, SystemTime},
 };
-mod consumer;
-mod proxy;
-mod server;
 
-use authority::{FixtureGuard, FixtureSigner, der, now};
-use ic_backup_consumer::authority;
 type Connection = BackupConnection<FixtureSigner, FixtureGuard>;
 #[derive(Clone, Copy, Debug)]
 enum Mode {

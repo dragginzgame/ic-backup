@@ -1,6 +1,8 @@
 //! Pure status preconditions; observation authentication stays with the caller.
+
 #[cfg(test)]
 pub(in crate::store) mod tests;
+mod wire;
 
 #[cfg(test)]
 use super::CapturePolicy;
@@ -9,7 +11,6 @@ use crate::store::BackupDigest;
 use ic_platform_protocol::management_snapshots::CaptureStatus;
 use ic_platform_protocol::management_snapshots::Status;
 use ic_platform_types::Principal;
-mod wire;
 use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
 

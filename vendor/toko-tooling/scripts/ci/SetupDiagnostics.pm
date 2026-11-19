@@ -22,6 +22,8 @@ sub excerpt {
         $text =~ s/[^\x20-\x7e]/?/g;
         $pem = 1 if $text =~ /-----BEGIN /;
         my $sensitive = $pem || $text =~ /authorization|cookie|passwd|password|secret|token|credential|private[ _-]?key|(?:api|access)[ _-]?key/i
+            || $text =~ /\bBearer\s+\S+/i
+            || $text =~ /payload\s*["']?\s*[=:]/i
             || $text =~ /^\s*[A-Za-z_][A-Za-z0-9_]*=/
             || $text =~ m{https?://[^\s/]+\@|https?://\S*[?#]}i
             || $text =~ /(?:gh[pousr]_|github_pat_|AKIA|ASIA)[A-Za-z0-9_]+|eyJ[A-Za-z0-9_-]+\.|[A-Za-z0-9+\/=]{80,}/

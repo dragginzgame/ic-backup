@@ -1,4 +1,5 @@
 //! Strict original source-bound declaration; derived schedules are never persisted.
+
 use super::*;
 use crate::store::capture::{
     intent::tests::profile,

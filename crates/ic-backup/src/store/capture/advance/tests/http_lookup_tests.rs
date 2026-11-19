@@ -1,4 +1,5 @@
 //! Real loopback read-state with signed synthetic certificates; no IC effect simulation.
+
 use super::*;
 use crate::store::{
     BackupDigest,

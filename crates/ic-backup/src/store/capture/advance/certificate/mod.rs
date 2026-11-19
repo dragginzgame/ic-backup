@@ -1,4 +1,7 @@
 //! Local authentication of original status outcomes; no transport or clock.
+
+mod observation;
+
 use super::{OperationStoreError, PreparedStatus, StatusAdmissionRecord, StatusEvidence};
 use crate::store::BackupDigest;
 #[cfg(test)]
@@ -8,6 +11,10 @@ use ic_platform::certificate::{
     TimePolicy, TimeWindow, VerificationLimits, VerifyError,
     construction::{HashTree, LookupResult},
 };
+pub(in crate::store) use observation::observe_authenticated_request;
+#[cfg(test)]
+pub use observation::observe_capture_certificate;
+pub use observation::{CaptureObservation, CaptureObservationError, CaptureObservationPolicy};
 use thiserror::Error;
 
 const OBSERVATION: &[u8] = b"ic-backup/status-certificate/1\n";
@@ -17,8 +24,6 @@ const LIMITS: VerificationLimits = VerificationLimits {
     tree_depth: 64,
     canister_ranges: 1024,
 };
-
-pub(in crate::store) use observation::observe_authenticated_request;
 
 /// Refused historical status authentication. No failure grants retry authority.
 #[derive(Debug, Error)]
@@ -466,8 +471,3 @@ fn validate_window(window: TimeWindow) -> Result<(), StatusCertificateError> {
     }
     Ok(())
 }
-
-mod observation;
-#[cfg(test)]
-pub use observation::observe_capture_certificate;
-pub use observation::{CaptureObservation, CaptureObservationError, CaptureObservationPolicy};

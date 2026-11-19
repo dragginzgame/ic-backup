@@ -1,4 +1,5 @@
 //! Shared real BLS signatures over synthetic certificate trees; no IC effects.
+
 use crate::store::{PreparedStatus, StatusEvidence};
 use ic_platform::{
     certificate::{

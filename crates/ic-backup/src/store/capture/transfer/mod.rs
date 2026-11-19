@@ -1,18 +1,17 @@
 //! Pure bounded transfer planning over Platform metadata; no dispatch authority.
 
-#[cfg(test)]
-mod tests;
-
 pub(in crate::store) mod data;
 mod metadata;
 pub(in crate::store) mod readback;
-pub use data::{DataReadError, TransferDataError};
-pub use metadata::TransferMetadataError;
+#[cfg(test)]
+mod tests;
 
 use super::CapturePolicy;
+pub use data::{DataReadError, TransferDataError};
 use ic_platform_protocol::management_snapshots::{
     Extent, ReadDataArgs, ReadKind, SnapshotChunk, SnapshotMetadata, SnapshotSource,
 };
+pub use metadata::TransferMetadataError;
 use std::fmt;
 use thiserror::Error;
 

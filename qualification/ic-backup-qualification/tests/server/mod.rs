@@ -1,4 +1,5 @@
 //! Fixture-owned process evidence survives both explicit close and test unwinding.
+
 use ic_testkit::server::{self, PreparedServer, Server, Stopped};
 use std::{
     fs,

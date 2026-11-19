@@ -92,9 +92,9 @@ fixtures. Native core checks use root `target/` and do not run this separate
 qualification target implicitly. Shared formatting covers both workspaces.
 
 The configured native CI hosts are Linux x86-64 and macOS ARM64/x86-64; configuration
-alone does not prove hosted support. Ordinary work leaves staging, commits and
-remote delivery to the user unless specifically authorized. Update the handoff
-after meaningful work. Preserve the legacy checkout and its recovery evidence.
+alone does not prove hosted support. Follow Toko’s [scope and authorization](TOKO-TOOLING.md#scope-and-authorization)
+and the [Backup publication workflow](docs/development/publication.md) for releases.
+Update the handoff after meaningful work. Preserve the legacy checkout and its recovery evidence.
 
 ## Post-push review focus
 

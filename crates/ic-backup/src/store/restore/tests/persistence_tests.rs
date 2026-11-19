@@ -1,4 +1,5 @@
 //! Exact restore intent/source custody is shared with capture's one-shot recorder.
+
 use super::*;
 use crate::store::capture::{
     intent::tests::profile,

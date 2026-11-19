@@ -1,4 +1,5 @@
 //! Real BLS signatures over synthetic certificates. No network or IC effects.
+
 mod rejection_tests;
 
 use super::{

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.105.9] - 2026-11-19
+
+- Adopt Toko Tooling 0.45.15. CI setup diagnostics redact bare Bearer credentials and labelled payload fields.
+- Group Rust child modules before imports and test that a refused Root capacity check preserves the admitted capacity.
+
 ## [0.105.8] - 2026-11-19
 
 - Adopt Toko Tooling 0.45.10. Testkit download failures now print a redacted excerpt from at most 8 KiB of installer output and preserve the original curl status.

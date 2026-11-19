@@ -1,4 +1,5 @@
 //! Create-only exact manifest publication. The recorder owns completion policy.
+
 use super::{OperationStoreError, open_optional};
 use crate::store::{BackupDigest, MANIFEST_LIMIT, StoreError, payload::unchanged_file};
 use ic_host_artifacts::{Identity, Length};

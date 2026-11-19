@@ -7,7 +7,9 @@ workflow neither enables them nor migrates legacy stores or release state.
 
 The maintainer authorized the experimental 0.102.1 release on 2026-11-16. Only
 the root product workspace admits `crates-io`; both qualification packages remain
-`publish = false`. Later uploads still require release authority. Select the release version and
+`publish = false`. Toko’s [scope and authorization](../../TOKO-TOOLING.md#scope-and-authorization)
+governs delivery. For Backup, the publishable group contains only `ic-backup`.
+Select the release version and
 update the product manifest, both locks and qualification's Backup requirement
 together, preserve external supplier selections, and finalize the corresponding
 changelog entry. Commit and deliver that exact source under Git authorization.
@@ -48,7 +50,7 @@ make publish
 ```
 
 `publish-check` invokes Cargo's real `--dry-run`; `publish` can upload. Both use
-the installed Toko 0.45.10 publication adapter, the fixed `ic-backup` roster and
+the installed Toko 0.45.15 publication adapter, the fixed `ic-backup` roster and
 `crates-io` registry and exact versions from locked metadata. Unknown, duplicate,
 empty or private package selections refuse. Only a
 command-line `PACKAGE=ic-backup` may narrow the roster; qualification packages

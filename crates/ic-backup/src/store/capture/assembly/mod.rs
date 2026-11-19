@@ -1,4 +1,5 @@
 //! Closed payload-member hashing retained by completion.
+
 use super::{OperationStoreError, open_optional};
 use crate::store::{BackupDigest, StoreError, payload::unchanged_file};
 use ic_host_artifacts::Length;

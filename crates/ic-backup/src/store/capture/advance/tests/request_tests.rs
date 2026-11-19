@@ -1,4 +1,5 @@
 //! Direct-key request authentication regressions.
+
 use super::{
     fixtures::signatures::{Scheme, change, fixture},
     *,

@@ -1,4 +1,5 @@
 //! Pure exact-length restore transfer schedule; no destination or dispatch authority.
+
 use super::CaptureSource;
 use crate::store::{BackupDigest, BackupSummary, BackupTarget};
 use ic_platform_protocol::management_snapshots::ReadDataArgs;

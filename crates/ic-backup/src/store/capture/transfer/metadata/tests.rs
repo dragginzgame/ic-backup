@@ -1,5 +1,6 @@
 //! Re-authored cases from the frozen legacy metadata tests; fixture provenance
 //! is recorded in docs/architecture/capture-transfer.md.
+
 use super::{
     super::{
         MAX_GLOBALS,

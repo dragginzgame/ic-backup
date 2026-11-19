@@ -1,4 +1,5 @@
 //! One model consumer with real signatures and synthetic certificates; no IC or custody claim.
+
 use super::*;
 use crate::store::capture::{
     SnapshotReplyError,

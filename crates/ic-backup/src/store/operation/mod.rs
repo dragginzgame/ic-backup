@@ -1,16 +1,34 @@
 //! Common capture call/observation facts, not effect authority.
 //! The fixed procedure authenticates referenced evidence and applies policy before
 //! selecting another effect. An observation reference alone does not prove termination.
+
+mod completion;
+pub(in crate::store) mod custody;
+mod dispatch;
+pub(in crate::store) mod effect;
+mod facade;
+pub(in crate::store) mod framing;
+pub(in crate::store) mod intent;
+pub(in crate::store) mod manager;
 #[cfg(test)]
 mod procedure_tests;
+pub(in crate::store) mod replay;
+pub(in crate::store) mod runtime;
 #[cfg(test)]
 pub(in crate::store) mod tests;
 
-pub(in crate::store) mod framing;
-use framing::{Bounds, FRAME_BYTES, FRAMES, Frames, LEDGER_BYTES, LedgerError, encode_frame};
-pub(in crate::store) mod intent;
 use crate::store::BackupDigest;
+pub use Step as OperationStep;
+pub use custody::CaptureOperation;
+pub use facade::{OperationOptions, OperationView};
+use framing::{Bounds, FRAME_BYTES, FRAMES, Frames, LEDGER_BYTES, LedgerError, encode_frame};
 use intent::Intent;
+pub use replay::Error as OperationReplayError;
+pub use runtime::{
+    Action as OperationAction, Connection as BackupConnection, Error as OperationAdvanceError,
+    Guard as BackupApplicationGuard, Progress as OperationProgress, Signer as BackupSigner,
+    Signing as OperationSigningContent, SigningRequest as OperationSigningRequest,
+};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
@@ -572,22 +590,3 @@ impl Journal {
         serde_json::to_vec(&FrameRecord { sequence, fact }).map_err(|_| LedgerError::Transition)
     }
 }
-
-mod completion;
-pub(in crate::store) mod custody;
-mod dispatch;
-pub(in crate::store) mod effect;
-pub(in crate::store) mod manager;
-pub(in crate::store) mod replay;
-pub(in crate::store) mod runtime;
-
-mod facade;
-pub use Step as OperationStep;
-pub use custody::CaptureOperation;
-pub use facade::{OperationOptions, OperationView};
-pub use replay::Error as OperationReplayError;
-pub use runtime::{
-    Action as OperationAction, Connection as BackupConnection, Error as OperationAdvanceError,
-    Guard as BackupApplicationGuard, Progress as OperationProgress, Signer as BackupSigner,
-    Signing as OperationSigningContent, SigningRequest as OperationSigningRequest,
-};

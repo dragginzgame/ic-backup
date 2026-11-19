@@ -1,5 +1,6 @@
 //! Pure host boundary to the integration-owned Root protocol. No adapter method
 //! may sign, dispatch, observe a clock or access external state.
+
 #[cfg(test)]
 mod tests;
 

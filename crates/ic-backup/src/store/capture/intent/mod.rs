@@ -1,4 +1,5 @@
 //! Strict immutable capture intent; direct profile authentication has one shared owner.
+
 #[cfg(test)]
 pub(in crate::store) mod tests;
 
@@ -16,6 +17,7 @@ use crate::store::{
     },
 };
 use serde::{Deserialize, Serialize};
+
 const FORMAT: &str = "ic-backup/capture-intent/1";
 const DOMAIN: &[u8] = b"ic-backup/capture-intent/1\0";
 #[derive(Serialize, Deserialize)]

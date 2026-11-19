@@ -1,10 +1,12 @@
 //! Bounded hash-chained framing shared by the capture recorder and retained restore status contract.
+
 #[cfg(test)]
 mod tests;
 
 use crate::store::BackupDigest;
 use std::io::{self, Read};
 use thiserror::Error;
+
 #[cfg(test)]
 pub(in crate::store) const CREATED: &[u8] = b"{\"sequence\":0,\"kind\":\"created\"}";
 pub(in crate::store) const FRAME_BYTES: usize = 16 * 1024;

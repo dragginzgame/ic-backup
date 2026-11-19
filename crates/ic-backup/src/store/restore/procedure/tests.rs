@@ -1,5 +1,6 @@
 //! Re-authored fixed-policy cases from legacy 4ae087fad8c23de712aa60bf569bde4b2b932651,
 //! workflow/ic_snapshot_restore/tests/mod.rs::failure_boundaries_retain_pending_or_applied_and_never_repeat_provider; actual effects require qualification.
+
 use super::*;
 use crate::store::{
     capture::{

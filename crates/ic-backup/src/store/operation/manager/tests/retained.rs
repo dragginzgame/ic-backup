@@ -1,6 +1,7 @@
 //! Replay the lost-take slot from the installed Root/child host-restart witness.
 //! Canic independently prepared the binding and decoded the exact original inner
 //! reply. This fixture codec recognizes only that historical exchange.
+
 use super::super::*;
 use crate::store::{
     CapturePlan, StatusEvidence,
