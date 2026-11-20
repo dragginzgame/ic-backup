@@ -15,15 +15,21 @@ fn full_supplier_dto_and_minimal_projection_apply_the_same_original_policy() {
     }
 }
 
+///
+/// Case
+/// Deserializes the expected values for one frozen wire vector.
+///
+
+#[derive(Deserialize)]
+struct Case {
+    name: String,
+    status: String,
+    reply_hex: String,
+    payload_checksum: String,
+}
+
 #[test]
 fn frozen_legacy_vectors_keep_exact_bytes_and_do_not_gain_missing_module_authority() {
-    #[derive(Deserialize)]
-    struct Case {
-        name: String,
-        status: String,
-        reply_hex: String,
-        payload_checksum: String,
-    }
     let cases: Vec<Case> = serde_json::from_str(include_str!("golden.json")).unwrap();
 
     for case in cases {

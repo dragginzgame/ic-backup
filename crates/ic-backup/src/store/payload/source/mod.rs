@@ -14,17 +14,26 @@ use thiserror::Error;
 
 const BLOCK_BYTES: usize = 1024 * 1024;
 
+///
+/// PayloadSource
 /// Original payload descriptors and verified block commitments, not a restore handle.
 ///
 /// Keeps the manifest, directory chain and every payload file open. The caller
 /// must exclude namespace/content writers throughout its lifetime. Checks detect
 /// observed changes but cannot fence writers or prove point-in-time immutability.
 /// No plan, ledger, metadata evidence or application permission is admitted here.
+///
+
 pub struct PayloadSource<'store> {
     original: PayloadDirectory<'store>,
     members: Vec<HeldMember>,
     active: bool,
 }
+
+///
+/// HeldMember
+/// Retains the open file and evidence used to recheck its contents.
+///
 
 struct HeldMember {
     file: File,
@@ -276,11 +285,17 @@ impl fmt::Debug for PayloadSource<'_> {
 
 // Observe exactly the bytes consumed by Host's whole-member hash. Only its
 // successful digest admission can make these ephemeral block hashes trusted.
+///
+/// IndexingReader
+/// Computes block commitments as it reads the payload.
+///
+
 struct IndexingReader<'file> {
     file: &'file mut File,
     pending: Vec<u8>,
     blocks: Vec<BackupDigest>,
 }
+
 impl Read for IndexingReader<'_> {
     fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
         let count = self.file.read(output)?;
@@ -300,7 +315,11 @@ impl Read for IndexingReader<'_> {
     }
 }
 
+///
+/// PayloadReadError
 /// Source read refusal. Diagnostics contain no payload bytes or request contents.
+///
+
 #[derive(Debug, Error)]
 pub enum PayloadReadError {
     /// The request does not select an admitted source identity and bounded member range.

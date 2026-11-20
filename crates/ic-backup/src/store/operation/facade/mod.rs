@@ -36,7 +36,11 @@ use crate::store::{
     operation::intent::ProfileRecord,
 };
 
+///
+/// OperationOptions
 /// Per-invocation costs and timing to approve once with the capture declaration.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub struct OperationOptions {
     /// Integration-owned continuous application witness.
@@ -57,7 +61,11 @@ pub struct OperationOptions {
     pub result_bytes: u32,
 }
 
+///
+/// OperationView
 /// Authenticated local progress and conservative spending, never effect authority.
+///
+
 #[derive(Debug)]
 pub struct OperationView<T = BackupSummary> {
     /// Next fixed management call, if local work or completion is not next.

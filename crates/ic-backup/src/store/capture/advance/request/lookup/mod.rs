@@ -5,8 +5,12 @@ use crate::store::limits::REQUEST_BYTES;
 use ic_platform::ingress::{Content as EnvelopeContent, decode_envelope};
 use thiserror::Error;
 
+///
+/// CaptureLookupPolicy
 /// Explicit constraints for one lookup envelope, not remote attempt authority.
 /// The workflow must retain these separately from the original call's expiry.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub struct CaptureLookupPolicy {
     /// Exact nonzero lookup expiry in Unix nanoseconds, including historical replay.
@@ -16,7 +20,11 @@ pub struct CaptureLookupPolicy {
     pub envelope_bytes: u32,
 }
 
+///
+/// CaptureLookupError
 /// A lookup cannot be associated with the authenticated original request.
+///
+
 #[derive(Debug, Error)]
 pub enum CaptureLookupError {
     /// Invalid policy or lookup bytes outside its cap; checked before decoding.

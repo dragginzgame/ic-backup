@@ -20,13 +20,18 @@ use std::{
 };
 use thiserror::Error;
 
+///
+/// ReceivedCertificate
 /// Bounded original certificate received before a later failure. Not proof of success.
 /// Retain these sensitive bytes under the integration's original custody; replay
 /// must authenticate them again. Debug deliberately omits identity and contents.
+///
+
 pub struct ReceivedCertificate {
     pub(in crate::store) request_id: [u8; 32],
     pub(in crate::store) certificate: Vec<u8>,
 }
+
 impl ReceivedCertificate {
     /// Original management request, including when the certificate came from read-state.
     #[must_use]
@@ -40,6 +45,7 @@ impl ReceivedCertificate {
         &self.certificate
     }
 }
+
 impl std::fmt::Debug for ReceivedCertificate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ReceivedCertificate")
@@ -48,12 +54,16 @@ impl std::fmt::Debug for ReceivedCertificate {
     }
 }
 
+///
+/// BackupHttpTransport
 /// Fixed direct-host HTTP route and provisioned IC trust, with no mutable client escape.
 ///
 /// The fixed capture and restore operations use this transport
 /// after durable reservation. It authenticates exact retained direct-key envelopes;
 /// the integration supplies bounded signing and current application admission.
 /// No identity, root discovery, polling, retry or detached task is supplied here.
+///
+
 pub struct BackupHttpTransport {
     client: Client,
     origin: Url,
@@ -62,7 +72,11 @@ pub struct BackupHttpTransport {
     timeout: Duration,
 }
 
+///
+/// BackupHttpError
 /// Redacted transport refusal or uncertain dispatch. No variant grants a retry.
+///
+
 #[derive(Debug, Error)]
 pub enum BackupHttpError {
     /// A bounded certificate arrived, but authentication or closing admission failed.

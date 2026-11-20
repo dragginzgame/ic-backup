@@ -14,6 +14,11 @@ pub(super) const FORMAT: &str = "ic-backup/local-manifest/1";
 const MAX_MEMBERS: usize = 1027; // Three regions plus at most 1,024 whole chunks.
 const MAX_PAYLOAD: u64 = 1024 * 1024 * 1024;
 
+///
+/// ManifestRecord
+/// Stores the completion declaration and its evidence commitments.
+///
+
 #[derive(Deserialize, serde::Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ManifestRecord {
@@ -35,12 +40,22 @@ pub(super) struct ManifestRecord {
     pub members: Vec<MemberRecord>,
 }
 
+///
+/// CommitmentRecord
+/// Records the length and digest of referenced bytes.
+///
+
 #[derive(Deserialize, serde::Serialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub(super) struct CommitmentRecord {
     pub bytes: u64,
     pub sha256: String,
 }
+
+///
+/// MemberRecord
+/// Identifies one payload member by name, length and digest.
+///
 
 #[derive(Deserialize, serde::Serialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -49,6 +64,11 @@ pub(super) struct MemberRecord {
     pub bytes: u64,
     pub sha256: String,
 }
+
+///
+/// DecodedManifest
+/// Holds the validated summary and its payload declarations.
+///
 
 pub(super) struct DecodedManifest {
     pub summary: BackupSummary,
@@ -164,34 +184,46 @@ pub(super) fn decode(id: &str, bytes: &[u8]) -> Result<DecodedManifest, Manifest
     })
 }
 
-fn members<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<MemberRecord>, D::Error> {
-    struct Members;
-    impl<'de> Visitor<'de> for Members {
-        type Value = Vec<MemberRecord>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("at most 1027 payload members")
-        }
+///
+/// Members
+/// Limits the member count while deserializing the manifest.
+///
 
-        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-            let mut rows = Vec::new();
-            while rows.len() < MAX_MEMBERS {
-                let Some(row) = seq.next_element()? else {
-                    return Ok(rows);
-                };
-                rows.push(row);
-            }
-            if seq.next_element::<de::IgnoredAny>()?.is_some() {
-                return Err(de::Error::custom("payload member limit exceeded"));
-            }
+struct Members;
 
-            Ok(rows)
-        }
+impl<'de> Visitor<'de> for Members {
+    type Value = Vec<MemberRecord>;
+
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("at most 1027 payload members")
     }
 
+    fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
+        let mut rows = Vec::new();
+        while rows.len() < MAX_MEMBERS {
+            let Some(row) = seq.next_element()? else {
+                return Ok(rows);
+            };
+            rows.push(row);
+        }
+
+        if seq.next_element::<de::IgnoredAny>()?.is_some() {
+            return Err(de::Error::custom("payload member limit exceeded"));
+        }
+
+        Ok(rows)
+    }
+}
+
+fn members<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<MemberRecord>, D::Error> {
     deserializer.deserialize_seq(Members)
 }
 
+///
+/// ManifestError
 /// Manifest decoding/admission failure; successful decoding is still passive metadata.
+///
+
 #[derive(Debug, Error)]
 pub enum ManifestError {
     /// Invalid JSON, duplicate/unknown/missing fields, depth or collection limits.

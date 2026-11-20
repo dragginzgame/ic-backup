@@ -167,14 +167,20 @@ pub(in crate::store) fn frozen(name: &str) -> Vec<u8> {
     .to_vec()
 }
 
+///
+/// Case
+/// Deserializes the expected values for one frozen wire vector.
+///
+
+#[derive(serde::Deserialize)]
+struct Case {
+    name: String,
+    bytes: usize,
+    sha256: String,
+}
+
 #[test]
 fn retained_wire_vectors_match_original_lengths_and_commitments() {
-    #[derive(serde::Deserialize)]
-    struct Case {
-        name: String,
-        bytes: usize,
-        sha256: String,
-    }
     let cases: Vec<Case> =
         serde_json::from_str(include_str!("tests/fixtures/manifest.json")).unwrap();
 

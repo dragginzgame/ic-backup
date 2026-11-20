@@ -149,6 +149,11 @@ pub(in crate::store) fn same_directory(
     same_identity(&child(parent, name, false)?, held)
 }
 
+///
+/// OwnerRecord
+/// Binds an operation to its target.
+///
+
 #[derive(Serialize)]
 struct OwnerRecord<'a> {
     format: &'a str,

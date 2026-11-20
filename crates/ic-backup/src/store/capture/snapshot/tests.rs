@@ -25,6 +25,12 @@ fn hex(value: &str) -> Vec<u8> {
         .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
         .collect()
 }
+
+///
+/// Golden
+/// Deserializes an entry from the frozen snapshot vectors.
+///
+
 #[derive(Deserialize)]
 struct Golden {
     name: String,

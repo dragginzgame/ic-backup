@@ -111,7 +111,11 @@ fn equal_global(left: &Global, right: &Global) -> bool {
     }
 }
 
+///
+/// ReadbackMetadataError
 /// Uploaded metadata refusal; diagnostics never include payload or global values.
+///
+
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ReadbackMetadataError {
     /// The shared bounded metadata decoder refused the input.

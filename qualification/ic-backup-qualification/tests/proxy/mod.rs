@@ -15,6 +15,11 @@ use std::{
     time::Duration,
 };
 
+///
+/// Proxy
+/// Interposes on fixture traffic to exercise interrupted requests.
+///
+
 pub(super) struct Proxy {
     pub endpoint: String,
     pub calls: Arc<AtomicUsize>,
@@ -22,6 +27,7 @@ pub(super) struct Proxy {
     stop: Arc<AtomicBool>,
     worker: Option<thread::JoinHandle<()>>,
 }
+
 impl Proxy {
     pub fn start(
         backend: &str,
@@ -160,6 +166,7 @@ impl Proxy {
         self.worker.take().unwrap().join().unwrap();
     }
 }
+
 impl Drop for Proxy {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::SeqCst);

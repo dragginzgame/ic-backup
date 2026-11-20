@@ -132,7 +132,11 @@ fn limits(reply: &[u8]) -> Result<Limits, SnapshotReplyError> {
     })
 }
 
+///
+/// SnapshotReplyError
 /// Snapshot wire or non-destructive preflight refusal; no raw bytes in diagnostics.
+///
+
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum SnapshotReplyError {
     /// Raw input exceeds 1 MiB before decoding.

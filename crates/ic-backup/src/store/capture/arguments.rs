@@ -4,7 +4,11 @@ use super::{CapturePolicy, OperationStoreError};
 use ic_platform_protocol::management_snapshots::{Snapshot, SnapshotArgs};
 use thiserror::Error;
 
+///
+/// MetadataReadError
 /// Metadata identity or bounded request encoding refused.
+///
+
 #[derive(Debug, Error)]
 pub enum MetadataReadError {
     /// Empty or oversized snapshot identity.
@@ -14,6 +18,7 @@ pub enum MetadataReadError {
     #[error(transparent)]
     Admission(#[from] OperationStoreError),
 }
+
 impl CapturePolicy {
     /// Build the fixed metadata-read arguments for this target and exact snapshot ID.
     ///

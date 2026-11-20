@@ -12,7 +12,11 @@ use ic_platform_protocol::{
 };
 use thiserror::Error;
 
+///
+/// DataReadError
 /// Data ordinal or bounded request encoding refused.
+///
+
 #[derive(Debug, thiserror::Error)]
 pub enum DataReadError {
     /// Original argument allowance refused.
@@ -22,6 +26,7 @@ pub enum DataReadError {
     #[error(transparent)]
     Data(#[from] TransferDataError),
 }
+
 impl CaptureTransfer<'_> {
     /// Build one exact scheduled request without iterating preceding extents.
     ///
@@ -132,7 +137,11 @@ pub(in crate::store) fn decode_reply(reply: &[u8]) -> Result<Vec<u8>, TransferDa
     Ok(result.chunk)
 }
 
+///
+/// TransferDataError
 /// Typed data-reply refusal, without raw payloads or any new attempt authority.
+///
+
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum TransferDataError {
     /// The ordinal does not select one of the original scheduled data reads.

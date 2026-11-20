@@ -8,12 +8,18 @@ use std::{
     time::{Duration, Instant},
 };
 
+///
+/// Consumer
+/// Runs the independent backup consumer and retains its evidence.
+///
+
 pub struct Consumer {
     binary: PathBuf,
     evidence: PathBuf,
     endpoint: String,
     network: BackupDigest,
 }
+
 impl Consumer {
     pub fn build(workspace: &Path, evidence: &Path, endpoint: &str, network: BackupDigest) -> Self {
         let mut tree = Command::new("cargo");
@@ -73,20 +79,28 @@ impl Consumer {
     }
 }
 
-fn command(mut command: Command, evidence: &Path, label: &str) {
-    struct Held(std::process::Child);
-    impl Drop for Held {
-        fn drop(&mut self) {
-            let _ = self.0.kill();
-            let _ = self.0.wait();
-        }
+///
+/// Held
+/// Reaps the consumer subprocess when its command scope ends.
+///
+
+struct Held(std::process::Child);
+
+impl Drop for Held {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
     }
+}
+
+fn command(mut command: Command, evidence: &Path, label: &str) {
     command.stdout(Stdio::from(
         fs::File::create(evidence.join(format!("{label}.stdout"))).unwrap(),
     ));
     command.stderr(Stdio::from(
         fs::File::create(evidence.join(format!("{label}.stderr"))).unwrap(),
     ));
+
     let mut child = Held(command.spawn().unwrap());
     let deadline = Instant::now() + Duration::from_secs(180);
 
@@ -99,6 +113,7 @@ fn command(mut command: Command, evidence: &Path, label: &str) {
             );
             break;
         }
+
         assert!(Instant::now() < deadline, "{label} timed out");
         std::thread::sleep(Duration::from_millis(10));
     }

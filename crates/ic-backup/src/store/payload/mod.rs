@@ -97,6 +97,11 @@ impl BackupStore {
 }
 
 // Both one-shot verification and held readers use this exact admission/closing owner.
+///
+/// PayloadDirectory
+/// Holds directory custody while checking payload files.
+///
+
 struct PayloadDirectory<'store> {
     store: &'store BackupStore,
     bundles: Directory,

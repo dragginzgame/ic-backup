@@ -7,11 +7,17 @@ use ic_platform::{
 };
 use ic_platform_types::Principal;
 
+///
+/// Scheme
+/// Selects the signature scheme exercised by the fixture.
+///
+
 #[derive(Clone, Copy)]
 pub(in crate::store) enum Scheme {
     Ed25519,
     Secp256k1,
 }
+
 impl Scheme {
     pub(in crate::store) fn key(self) -> Vec<u8> {
         // Independently written standard SPKI prefixes; exact lengths/bytes are exercised.

@@ -7,7 +7,13 @@ use super::{
 use crate::store::{BackupHttpTransport, BackupStore, tests::root};
 use std::{convert::Infallible, path::PathBuf, time::Duration};
 
+///
+/// UnusedSigner
+/// Detects unexpected signing attempts.
+///
+
 pub(in crate::store) struct UnusedSigner;
+
 impl BackupSigner for UnusedSigner {
     type Error = Infallible;
     fn protocol(&self) -> [u8; 32] {
@@ -18,7 +24,14 @@ impl BackupSigner for UnusedSigner {
         panic!("native retained source never signs")
     }
 }
+
+///
+/// UnusedGuard
+/// Detects unexpected requests for live application authority.
+///
+
 pub(in crate::store) struct UnusedGuard;
+
 impl BackupApplicationGuard for UnusedGuard {
     type Error = Infallible;
     fn protocol(&self) -> [u8; 32] {
@@ -35,12 +48,19 @@ impl BackupApplicationGuard for UnusedGuard {
     }
 }
 pub(in crate::store) type FixtureConnection = BackupConnection<UnusedSigner, UnusedGuard>;
+
+///
+/// Fixture
+/// Holds the capture store, approved plan and operation for retained-evidence tests.
+///
+
 pub(in crate::store) struct Fixture {
     pub store: BackupStore,
     pub p: CapturePlan,
     pub op: CaptureOperation,
     pub root: PathBuf,
 }
+
 impl Fixture {
     pub fn replan(&self, request: CaptureRequest) -> CapturePlan {
         CapturePlan::new(request, self.p.profile().clone()).unwrap()

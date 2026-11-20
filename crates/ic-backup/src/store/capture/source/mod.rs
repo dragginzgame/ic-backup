@@ -11,13 +11,22 @@ use std::{fmt, num::NonZeroU64};
 use thiserror::Error;
 pub use transfer::{RestoreTransfer, RestoreTransferError, RestoreTransferRequest};
 
+///
+/// CaptureSource
 /// Original capture lock and authenticated payload descriptors. No restore authority.
+///
+
 pub struct CaptureSource<'capture, 'store> {
     _capture: &'capture CaptureOperation,
     payload: PayloadSource<'store>,
     metadata: ic_platform_protocol::management_snapshots::SnapshotMetadata,
 }
+
+///
+/// CaptureSourceError
 /// Source selection, original evidence or held byte custody refused without repair.
+///
+
 #[derive(Debug, Error)]
 pub enum CaptureSourceError {
     /// Caller-selected receipt differs from the original operation.
@@ -33,6 +42,7 @@ pub enum CaptureSourceError {
     #[error(transparent)]
     Store(#[from] StoreError),
 }
+
 impl BackupStore {
     /// Authenticate an exact completed receipt and retain its original source files.
     ///
@@ -78,6 +88,7 @@ impl BackupStore {
         })
     }
 }
+
 impl<'store> CaptureSource<'_, 'store> {
     // Restore retains the owning CaptureOperation beside these descriptors.
     pub(in crate::store) fn into_parts(
@@ -126,6 +137,7 @@ impl<'store> CaptureSource<'_, 'store> {
         self.payload.read_data(request)
     }
 }
+
 impl fmt::Debug for CaptureSource<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CaptureSource")

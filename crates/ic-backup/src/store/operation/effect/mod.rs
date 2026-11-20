@@ -6,7 +6,11 @@ use ic_platform_protocol::management_snapshots::{
     UploadMetadataArgs,
 };
 
+///
+/// Effect
 /// Typed snapshot operation selected by the fixed capture or restore procedure.
+///
+
 pub enum Effect {
     /// Inspect stopped state and controllers.
     Status(CanisterArgs),

@@ -29,6 +29,11 @@ use std::{
     io::{Read, Write},
 };
 
+///
+/// Member
+/// Represents a payload member during completion.
+///
+
 struct Member {
     name: String,
     ordinals: Vec<u32>,

@@ -763,7 +763,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.105.13"
+version = "0.105.14"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -825,9 +825,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform"
-version = "0.34.18"
+version = "0.34.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b59c6bf641d9d87b4c7cac1012398998b1f4a6217b81bd580b3c84d421b43a2d"
+checksum = "6372d2e30ba4e84ff47824dd1a4542e88215a18890afd9804fed99525bc35962"
 dependencies = [
  "crypto-bigint",
  "curve25519-dalek",
@@ -1963,9 +1963,9 @@ dependencies = [
 
 [[package]]
 name = "toko-tooling"
-version = "0.45.23"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34f25161ac689c2204ba923e506286b8dd06d0490d2f4143f1cd2e606e2c6067"
+checksum = "4601d2785aaa14e01fd8656d6b3a57653337b214e027810c953595f1d91d6a8d"
 
 [[package]]
 name = "tower"

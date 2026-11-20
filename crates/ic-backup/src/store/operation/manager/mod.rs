@@ -11,7 +11,11 @@ use super::{
 };
 use crate::store::BackupDigest;
 
+///
+/// RootRequest
 /// Original logical request from the fixed Backup procedure.
+///
+
 pub struct RootRequest<'a> {
     /// Original capture or restore approval, including caller, child and network.
     pub plan: Plan<'a>,
@@ -59,7 +63,11 @@ pub trait RootBinding: Send + Sync {
     fn decode(&self, exchange: RootExchange, payload: &[u8]) -> Option<RootOutcome>;
 }
 
+///
+/// RootExchange
 /// The separately signed Root ingress whose response is being interpreted.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RootExchange {
     /// Original outer execute update.
@@ -67,7 +75,12 @@ pub enum RootExchange {
     /// Explicit original-result lookup update.
     Lookup,
 }
+
+///
+/// RootOutcome
 /// Original inner outcome attested by Root.
+///
+
 pub enum RootOutcome {
     /// No terminal original result is available.
     Pending,
@@ -78,6 +91,11 @@ pub enum RootOutcome {
     /// Root retained a pre-dispatch refusal.
     Refused,
 }
+
+///
+/// Call
+/// Selects direct management arguments or the approved Root binding.
+///
 
 pub(in crate::store) enum Call {
     Direct(&'static str, Vec<u8>),

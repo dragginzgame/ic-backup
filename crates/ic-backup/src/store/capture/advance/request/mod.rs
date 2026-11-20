@@ -23,7 +23,11 @@ const ED25519_DER: &[u8] = b"\x30\x2a\x30\x05\x06\x03\x2b\x65\x70\x03\x21\x00";
 const SECP256K1_DER: &[u8] =
     b"\x30\x56\x30\x10\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x05\x2b\x81\x04\x00\x0a\x03\x42\x00";
 
+///
+/// StatusRequestError
 /// Refusal to authenticate an original direct-key status request.
+///
+
 #[derive(Debug, Error)]
 pub enum StatusRequestError {
     /// The original plan, call content or complete request bound differs.
@@ -133,7 +137,11 @@ fn verify_sender(der: &[u8], sender: &[u8]) -> Result<(), StatusRequestError> {
     }
 }
 
+///
+/// IngressRequirements
 /// Exact direct management identity selected by an original intent or native protocol fixture.
+///
+
 pub(in crate::store) struct IngressRequirements {
     pub target: crate::store::BackupTarget,
     pub sender: Principal,

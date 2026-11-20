@@ -23,8 +23,12 @@ use ic_platform_protocol::{
 };
 use ic_platform_types::Principal;
 
-#[derive(Debug, thiserror::Error)]
+///
+/// Error
 /// Original restore source, bounded reply or exact readback policy refused.
+///
+
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The fixed restore sequence is incomplete or blocked.
     #[error("restore sequence refused")]
@@ -73,6 +77,11 @@ pub enum Error {
     Capture(#[from] OperationStoreError),
 }
 
+///
+/// Procedure
+/// Tracks progress derived from the recorded calls.
+///
+
 pub(in crate::store) struct Procedure<'a> {
     plan: &'a RestorePlan,
     next: Option<Step>,
@@ -84,6 +93,7 @@ pub(in crate::store) struct Procedure<'a> {
     status_requests: Vec<[u8; 32]>,
     destination: Option<Vec<u8>>,
 }
+
 impl<'a> Procedure<'a> {
     pub(in crate::store) fn new(plan: &'a RestorePlan, source: &Source<'_>) -> Result<Self, Error> {
         Ok(Self {
@@ -364,6 +374,7 @@ fn limits() -> Limits {
 fn unit(reply: &[u8]) -> Result<(), Error> {
     decode_empty_response(reply, limits()).map_err(Error::from)
 }
+
 impl From<DecodeError> for Error {
     fn from(error: DecodeError) -> Self {
         Self::Reply(error)

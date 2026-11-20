@@ -18,7 +18,11 @@ use ic_platform::certificate::PreparedRootKey;
 use ic_platform_types::Principal;
 use serde::{Deserialize, Serialize};
 
+///
+/// ManagerRecord
 /// Immutable Root authority and per-slot limits from the original approval.
+///
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ManagerRecord {
@@ -37,6 +41,11 @@ pub struct ManagerRecord {
     /// Maximum retained inner reply or rejection per slot.
     pub reply_bytes: u32,
 }
+
+///
+/// ProfileRecord
+/// Records the authority and transport bindings approved for the operation.
+///
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -61,7 +70,11 @@ pub(in crate::store) struct ProfileRecord {
     pub result_bytes: u32,
 }
 
+///
+/// Plan
 /// Exact original approval supplied to signing and live application admission.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub enum Plan<'a> {
     /// Original stopped-canister capture.
@@ -69,6 +82,7 @@ pub enum Plan<'a> {
     /// Original source-bound same-canister restore.
     Restore(&'a RestorePlan),
 }
+
 impl<'a> Plan<'a> {
     /// Original operation ID, never renewed on continuation.
     #[must_use]
@@ -404,7 +418,11 @@ pub(in crate::store) trait Intent: Clone {
     ) -> Result<bool, OperationStoreError>;
 }
 
+///
+/// Error
 /// Original declaration, immutable profile or historical evidence refused.
+///
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The manager attested a definitive pre-dispatch refusal for the original slot.

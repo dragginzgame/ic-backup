@@ -7,7 +7,11 @@ pub(in crate::store) const REQUEST_BYTES: u32 = 2 * 1024 * 1024;
 pub(in crate::store) const RESULT_BYTES: u32 = 4 * 1024 * 1024;
 pub(in crate::store) const CERTIFICATE_BYTES: usize = 2 * 1024 * 1024;
 
+///
+/// OperationLimits
 /// Immutable finite operation ceilings. No defaults or inferred allowances.
+///
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct OperationLimits {

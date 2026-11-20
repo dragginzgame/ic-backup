@@ -34,6 +34,11 @@ impl<P> Recorder<P> {
     }
 }
 
+///
+/// Role
+/// Distinguishes the evidence files retained for each call.
+///
+
 #[derive(Clone, Copy)]
 pub(in crate::store) enum Role {
     Request,
@@ -118,8 +123,12 @@ impl Journal {
     }
 }
 
-#[derive(Debug)]
+///
+/// Recorder
 /// Held original capture intent and files. Dropping releases locks, never target ownership.
+///
+
+#[derive(Debug)]
 pub struct Recorder<P> {
     pub(in crate::store) store: Directory,
     parent: Directory,
@@ -526,7 +535,11 @@ impl<P: Intent> Recorder<P> {
     }
 }
 
+///
+/// OperationStoreError
 /// Original operation admission or local persistence refusal. No error authorizes retrying effects.
+///
+
 #[derive(Debug, Error)]
 pub enum OperationStoreError {
     /// Invalid identity, encoding generation or finite limits.

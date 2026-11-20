@@ -44,7 +44,11 @@ impl StatusRequirements {
     }
 }
 
+///
+/// CaptureStatusReplyError
 /// Bounded status wire refusal or an original capture precondition failure.
+///
+
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum CaptureStatusReplyError {
     /// The complete raw reply exceeds 1 MiB.

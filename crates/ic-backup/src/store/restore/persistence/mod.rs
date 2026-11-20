@@ -20,7 +20,11 @@ use ic_host_fs::Directory;
 use ic_platform_protocol::management_snapshots::SnapshotMetadata;
 use std::ffi::OsStr;
 
+///
+/// RestorePersistenceError
 /// Original immutable approval, source custody or local publication refused.
+///
+
 #[derive(Debug, thiserror::Error)]
 pub enum RestorePersistenceError {
     /// Original local custody or finite declaration refused.
@@ -48,12 +52,19 @@ pub enum RestorePersistenceError {
         cleanup: Option<ic_host_fs::Error>,
     },
 }
+
+///
+/// Source
+/// Holds the capture, its payload and its decoded snapshot metadata for restore.
+///
+
 #[derive(Debug)]
 pub(in crate::store) struct Source<'store> {
     pub capture: CaptureOperation,
     pub payload: PayloadSource<'store>,
     pub metadata: SnapshotMetadata,
 }
+
 impl Source<'_> {
     pub(in crate::store) fn check(&self) -> Result<(), OperationStoreError> {
         self.capture.check_custody()?;
@@ -72,13 +83,23 @@ impl Source<'_> {
         )
     }
 }
+
+///
+/// RestoreOperation
 /// Held restore approval and original source; dropping never erases ownership or evidence.
+///
+
 #[derive(Debug)]
 pub struct RestoreOperation<'store> {
     pub(in crate::store) record: Recorder<RestorePlan>,
     source: Source<'store>,
 }
+
+///
+/// LoadedStopped
 /// Exact local outcome derived from the closed original restore journal.
+///
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LoadedStopped {
     /// Original restore operation identity.
@@ -98,6 +119,7 @@ pub struct LoadedStopped {
     /// Closing hash-chain commitment to original calls and local completion.
     pub journal_sha256: BackupDigest,
 }
+
 impl RestoreOperation<'_> {
     /// Exact immutable original restore approval.
     #[must_use]
@@ -388,6 +410,7 @@ fn action(step: crate::store::OperationStep) -> Action {
         _ => Action::Inspect,
     }
 }
+
 impl BackupStore {
     fn restore_source<'s>(
         &'s self,

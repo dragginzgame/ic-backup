@@ -31,6 +31,11 @@ use std::{
     },
 };
 
+///
+/// ExternalSigner
+/// Records fixture signing calls.
+///
+
 struct ExternalSigner {
     calls: usize,
     refuse: bool,
@@ -39,6 +44,7 @@ struct ExternalSigner {
     revoke: Option<Arc<AtomicBool>>,
     acknowledge: Option<PathBuf>,
 }
+
 impl Signer for ExternalSigner {
     type Error = &'static str;
     fn protocol(&self) -> [u8; 32] {
@@ -99,10 +105,17 @@ impl Signer for ExternalSigner {
         .unwrap())
     }
 }
+
+///
+/// Application
+/// Supplies application authority for the runtime tests.
+///
+
 struct Application {
     allowed: Arc<AtomicBool>,
     actions: Mutex<Vec<Action>>,
 }
+
 impl Guard for Application {
     type Error = &'static str;
     fn protocol(&self) -> [u8; 32] {
@@ -786,20 +799,27 @@ fn certified_rejection_remains_settled_without_replacement_or_live_replay() {
     assert_eq!(connection.signer.calls, 1);
 }
 
+///
+/// ChildGuard
+/// Reaps the recorder subprocess when the test exits.
+///
+
+struct ChildGuard(std::process::Child);
+
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
 #[test]
 fn acknowledged_process_death_keeps_original_intent_claim_and_spending() {
     use std::{
-        process::{Child, Command, Stdio},
+        process::{Command, Stdio},
         thread,
         time::Instant,
     };
-    struct ChildGuard(Child);
-    impl Drop for ChildGuard {
-        fn drop(&mut self) {
-            let _ = self.0.kill();
-            let _ = self.0.wait();
-        }
-    }
     let control = root("recorder-process-death");
     let mut child = ChildGuard(
         Command::new(std::env::current_exe().unwrap())

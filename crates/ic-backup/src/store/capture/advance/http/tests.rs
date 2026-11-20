@@ -14,7 +14,11 @@ use crate::store::capture::{
 };
 use thiserror::Error;
 
+///
+/// CaptureLookupHttpPolicy
 /// Separately approved lookup bounds. These fields do not reserve any authority.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub struct CaptureLookupHttpPolicy {
     /// Exact signed lookup expiry and raw envelope cap.
@@ -26,8 +30,12 @@ pub struct CaptureLookupHttpPolicy {
     pub deadline_ns: u64,
 }
 
+///
+/// CaptureLookupEvidence
 /// Exact authenticated certificate and its original-request projection, not settlement.
 /// Contains sensitive bytes and deliberately has no Debug implementation.
+///
+
 pub struct CaptureLookupEvidence {
     /// Exact original certificate bytes, retained by the caller for historical replay.
     pub certificate: Vec<u8>,
@@ -35,7 +43,11 @@ pub struct CaptureLookupEvidence {
     pub outcome: CaptureObservation,
 }
 
+///
+/// CaptureLookupHttpError
 /// Lookup refusal or uncertain observation; no variant grants another attempt.
+///
+
 #[derive(Debug, Error)]
 pub enum CaptureLookupHttpError {
     /// Invalid observation bounds or time policy, refused before dispatch.

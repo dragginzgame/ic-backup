@@ -51,7 +51,7 @@ Current adoption (2026-11-17) is complete: Platform 0.34.11 owns ingress,
 direct-key and certificate verification; Protocol 0.3.3 owns management request
 encoding and reply decoding; Types 0.21.2 owns public identities. Old Platform
 and Types versions are removed from both locks and test dependencies. The
-[handoff](../status/current.md#current-platform-adoption--2026-11-17) owns current
+[handoff](../status/current.md#local-tooling-and-current-suppliers) owns current
 consumer qualification; the following probes are historical.
 
 Registry trial of **Platform 0.34.7 / Protocol 0.2.6 / Types 0.21.2** passed.
@@ -648,4 +648,4 @@ trusted, pure integration code. Its protocol commitment belongs in the original
 approval along with the provisioned authority policy. Root-signed statements
 do not establish the deployed Wasm identity by themselves. The signer uses
 `OperationPlan::ingress_recipient`; the guard can inspect `root_manager()`.
-The live witness and supplier hashes are recorded in the [handoff](../status/current.md).
+The live witness and supplier hashes are recorded in the [release handoff](https://github.com/dragginzgame/ic-backup/blob/6ae096f/docs/status/current.md#root-execute-and-original-result-recovery--local-qualification).

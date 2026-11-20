@@ -18,6 +18,11 @@ use ic_platform_protocol::management_snapshots::{
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
+///
+/// Next
+/// Selects the next capture procedure action.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::store) enum Next {
     /// Sign the exact derived management call; never submit it.
@@ -25,6 +30,11 @@ pub(in crate::store) enum Next {
     Materialize,
     Publish,
 }
+
+///
+/// Procedure
+/// Tracks progress derived from the recorded calls.
+///
 
 pub(in crate::store) struct Procedure<'a> {
     intent: &'a CapturePlan,
@@ -37,8 +47,12 @@ pub(in crate::store) struct Procedure<'a> {
     module: Option<(Sha256, u64)>,
 }
 
-#[derive(Debug, Error)]
+///
+/// Error
 /// Authenticated call results cannot advance the fixed capture procedure.
+///
+
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     /// Original retained intent or evidence failed authentication.

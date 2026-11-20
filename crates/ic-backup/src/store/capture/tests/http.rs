@@ -100,6 +100,12 @@ pub(in crate::store) fn http(status: u16, headers: &str, body: &[u8]) -> Vec<u8>
 }
 
 type ComputedResponse = dyn Fn(&[u8], usize) -> Option<Vec<u8>> + Send;
+
+///
+/// Response
+/// Selects the reply sent by the fixture server.
+///
+
 pub(in crate::store) enum Response {
     Computed(Box<ComputedResponse>),
     Bytes(Vec<u8>),
@@ -107,6 +113,11 @@ pub(in crate::store) enum Response {
     HoldBody,
     ObserveCancellation(Arc<AtomicBool>),
 }
+
+///
+/// Server
+/// Serves scripted HTTP responses for the transport tests.
+///
 
 pub(in crate::store) struct Server {
     pub(in crate::store) endpoint: String,

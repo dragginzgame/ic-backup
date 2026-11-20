@@ -40,10 +40,10 @@ make fetch-dependencies
 ```
 
 Ordinary Cargo checks use the lockfile and may fetch missing dependencies. After preparing the cache, use `CARGO_NET_OFFLINE=true make check` to select offline validation. Hook activation is
-explicit through `make install-hooks`. Tooling 0.45.23 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.46.0 is adopted from its registry
 archive with SHA-256
-`34f25161ac689c2204ba923e506286b8dd06d0490d2f4143f1cd2e606e2c6067`,
-source `6009b5584039807c1748a9262946edf8f8dcac11`. Both workspaces declare
+`4601d2785aaa14e01fd8656d6b3a57653337b214e027810c953595f1d91d6a8d`,
+source `b95958a0710fd9aea5952d2654f67710dc5b1c6d`. Both workspaces declare
 its exact pin and each member inherits the tooling dev-dependency.
 The canonical exporter installs twelve selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).

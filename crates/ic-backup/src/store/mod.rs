@@ -81,7 +81,11 @@ const FILE_POLICY: FilePolicy = FilePolicy {
 };
 const MANIFEST_LIMIT: usize = 1024 * 1024;
 
+///
+/// BackupTarget
 /// An exact network instance and canister, independent of display names.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BackupTarget {
     /// Application-provisioned commitment to the network instance and trust binding.
@@ -90,7 +94,11 @@ pub struct BackupTarget {
     pub canister: Principal,
 }
 
+///
+/// ScanLimits
 /// Explicit scan limits; exceeding any limit returns an error, never partial success.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub struct ScanLimits {
     /// Maximum bundle-directory entries visited, including unfinished bundles.
@@ -101,7 +109,11 @@ pub struct ScanLimits {
     pub results: NonZeroUsize,
 }
 
+///
+/// BackupSummary
 /// A completion declaration, not fresh verification or restore authority.
+///
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BackupSummary {
     /// Opaque capture operation identity, equal to its bundle directory name.
@@ -130,7 +142,11 @@ impl BackupSummary {
     }
 }
 
+///
+/// BackupStore
 /// A held local-store directory. No network client or background work is installed.
+///
+
 #[derive(Debug)]
 pub struct BackupStore {
     root: Directory,
@@ -361,7 +377,11 @@ fn commit(stage: ic_host_fs::Sealed) -> Result<(), StoreError> {
     }
 }
 
+///
+/// StoreError
 /// A local refusal, preserving original IO/publication errors and retained files.
+///
+
 #[derive(Debug, Error)]
 pub enum StoreError {
     /// Store root is absent; reads never create it.

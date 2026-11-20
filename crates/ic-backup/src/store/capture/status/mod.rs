@@ -10,6 +10,11 @@ use ic_platform_types::Principal;
 use thiserror::Error;
 pub use wire::CaptureStatusReplyError;
 
+///
+/// StatusRequirements
+/// Defines the status conditions required for admission.
+///
+
 pub(in crate::store) struct StatusRequirements {
     pub module_sha256: BackupDigest,
     pub sender: Principal,
@@ -50,7 +55,11 @@ impl StatusRequirements {
     }
 }
 
+///
+/// CaptureStatusError
 /// A decoded status fails an original capture or restore precondition; no effect is authorized.
+///
+
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum CaptureStatusError {
     /// A manager-controlled child must have Root as its only controller.

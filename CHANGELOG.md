@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.105.14] - 2026-11-20
+
+- Adopt Toko Tooling 0.46.0 and document handwritten Rust types across both workspaces.
+
 ## [0.105.13] - 2026-11-20
 
 - Adopt Toko Tooling 0.45.23. CI inherits Cargo network settings, and the root workspace owns the product version.

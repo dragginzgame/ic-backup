@@ -30,6 +30,12 @@ use std::{
 };
 
 type Connection = BackupConnection<FixtureSigner, FixtureGuard>;
+
+///
+/// Mode
+/// Selects the capture or recovery journey to qualify.
+///
+
 #[derive(Clone, Copy, Debug)]
 enum Mode {
     Complete,

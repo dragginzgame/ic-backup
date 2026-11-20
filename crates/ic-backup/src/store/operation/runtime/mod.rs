@@ -22,8 +22,12 @@ use std::{
 };
 use thiserror::Error;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+///
+/// Action
 /// Application permission required for the fixed next operation action.
+///
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Action {
     /// Inspect canister status or snapshot inventory; acquire no new application authority.
     Inspect,
@@ -39,7 +43,11 @@ pub enum Action {
     LoadSnapshot,
 }
 
+///
+/// Signing
 /// Exact derived content for one already-reserved sign-only invocation.
+///
+
 pub enum Signing<'a> {
     /// Sign the exact derived management call, without submission.
     Call {
@@ -55,7 +63,11 @@ pub enum Signing<'a> {
     },
 }
 
+///
+/// SigningRequest
 /// Original approval and finite costs for a single external signature.
+///
+
 pub struct SigningRequest<'a> {
     /// Original immutable operation approval.
     pub plan: Plan<'a>,
@@ -101,7 +113,11 @@ pub trait Guard {
     ) -> Result<(), Self::Error>;
 }
 
+///
+/// Connection
 /// One direct transport, external signer and action-aware application guard.
+///
+
 pub struct Connection<S, G> {
     pub(in crate::store) manager: Option<(
         crate::store::RootManager,
@@ -112,8 +128,12 @@ pub struct Connection<S, G> {
     pub(in crate::store) guard: G,
 }
 
-#[derive(Debug, Error)]
+///
+/// Error
 /// Operation refusal or uncertainty. No variant grants retry or renewed authority.
+///
+
+#[derive(Debug, Error)]
 pub enum Error<S, G> {
     /// Received evidence could not be retained under original custody. No retry is allowed.
     #[error("received certificate could not be recorded: {source}")]
@@ -180,8 +200,12 @@ impl<S, G> From<crate::store::capture::procedure::Error> for Error<S, G> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+///
+/// Progress
 /// Result of one fixed advance or explicit observation; spending is never refunded.
+///
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Progress<T = crate::store::BackupSummary> {
     /// One original management call or observation was durably recorded.
     Advanced,
@@ -199,6 +223,7 @@ pub(in crate::store) fn now() -> Option<u64> {
         .try_into()
         .ok()
 }
+
 impl<S: Signer, G: Guard> Connection<S, G> {
     pub(in crate::store) fn admit(
         &self,
@@ -329,6 +354,11 @@ impl Journal {
         }
     }
 }
+
+///
+/// Applied
+/// Carries the outcome of applying one procedure step.
+///
 
 pub(in crate::store) struct Applied {
     pub request_id: [u8; 32],

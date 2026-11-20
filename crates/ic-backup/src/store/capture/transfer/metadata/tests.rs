@@ -51,14 +51,20 @@ fn round_trip_metadata() -> SnapshotMetadata {
     m
 }
 
+///
+/// Case
+/// Deserializes the expected values for one frozen wire vector.
+///
+
+#[derive(Deserialize)]
+struct Case {
+    name: String,
+    reply_hex: String,
+    payload_checksum: String,
+}
+
 #[test]
 fn independent_legacy_vectors_preserve_promotions_absence_and_every_field() {
-    #[derive(Deserialize)]
-    struct Case {
-        name: String,
-        reply_hex: String,
-        payload_checksum: String,
-    }
     let cases: Vec<Case> = serde_json::from_str(include_str!("golden.json")).unwrap();
     let maximum = u128::MAX;
 

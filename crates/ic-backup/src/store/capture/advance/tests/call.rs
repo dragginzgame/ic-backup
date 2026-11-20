@@ -3,7 +3,11 @@
 use super::{CapturePolicy, OperationStoreError, arguments};
 use serde::{Deserialize, Serialize};
 
+///
+/// CaptureCall
 /// The management calls currently implemented by the capture workflow.
+///
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
@@ -15,6 +19,7 @@ pub enum CaptureCall {
     /// Take one new snapshot, without replacement or uninstalling code.
     TakeSnapshot,
 }
+
 impl CaptureCall {
     /// Exact external method name. This projection grants no dispatch authority.
     #[must_use]

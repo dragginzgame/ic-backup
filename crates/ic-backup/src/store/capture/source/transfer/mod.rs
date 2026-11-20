@@ -5,8 +5,12 @@ use crate::store::{BackupDigest, BackupSummary, BackupTarget};
 use ic_platform_protocol::management_snapshots::ReadDataArgs;
 use thiserror::Error;
 
+///
+/// RestoreTransferRequest
 /// Explicit same-target/release selection and bounds for a restore transfer calculation.
 /// These are calculation limits, not persisted spending or provider admission.
+///
+
 #[derive(Clone, Debug)]
 pub struct RestoreTransferRequest {
     /// Must equal the authenticated source network/canister.
@@ -21,11 +25,15 @@ pub struct RestoreTransferRequest {
     pub maximum_management_calls: u32,
 }
 
+///
+/// RestoreTransfer
 /// Deterministic source extents and base restore cost bound to one exact receipt.
 ///
 /// An owned calculation, not a durable restore plan or authenticated destination.
 /// Caller must retain/re-admit matching source custody. Metadata allocation,
 /// payload request digests, provider overhead and restore intent remain separate.
+///
+
 #[derive(Debug)]
 pub struct RestoreTransfer {
     source: BackupSummary,
@@ -38,7 +46,11 @@ pub struct RestoreTransfer {
     management_calls: u32,
 }
 
+///
+/// RestoreTransferError
 /// Pure restore transfer refusal; no attempt, record or file is changed.
+///
+
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RestoreTransferError {
     /// Target/network or release does not match the authenticated source.
@@ -75,6 +87,7 @@ pub enum RestoreTransferError {
         limit: u32,
     },
 }
+
 impl CaptureSource<'_, '_> {
     /// Calculate exact source extents and base restore management-call count.
     ///

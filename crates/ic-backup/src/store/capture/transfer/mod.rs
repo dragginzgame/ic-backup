@@ -18,12 +18,16 @@ use thiserror::Error;
 const MAX_CHUNKS: usize = 1024;
 const MAX_GLOBALS: usize = 4096;
 
+///
+/// CaptureTransfer
 /// Borrowed deterministic capture-data schedule, not authenticated snapshot evidence.
 ///
 /// Metadata and the original plan remain immutably borrowed. No bytes are read or
 /// written, attempts spent, providers called or external state authenticated.
 /// Provider overhead, raw metadata decoding and durable schedule binding remain separate.
 /// [`Self::decode_data`] validates individual data replies without recording progress.
+///
+
 pub struct CaptureTransfer<'a> {
     plan: &'a CapturePolicy,
     metadata: &'a SnapshotMetadata,
@@ -233,7 +237,11 @@ impl fmt::Debug for CaptureTransfer<'_> {
     }
 }
 
+///
+/// TransferError
 /// Pure transfer-planning refusal; no error consumes or replenishes an attempt.
+///
+
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum TransferError {
     /// Snapshot identity must contain 1 through 256 bytes.

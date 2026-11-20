@@ -23,7 +23,11 @@ const LIMITS: VerificationLimits = VerificationLimits {
     canister_ranges: 1024,
 };
 
+///
+/// StatusCertificateError
 /// Refused historical status authentication. No failure grants retry authority.
+///
+
 #[derive(Debug, Error)]
 pub enum StatusCertificateError {
     /// Original plan, call or complete evidence framing failed admission.
@@ -78,11 +82,16 @@ pub fn status_certificate_observation(time: TimePolicy) -> Result<Vec<u8>, Statu
     Ok(bytes)
 }
 
+///
+/// CertificateRequirements
 /// Original certificate authority only; callers admit request identity and full frame bounds.
+///
+
 pub(in crate::store) struct CertificateRequirements {
     pub canister: ic_platform_types::Principal,
     pub trust_root: BackupDigest,
 }
+
 impl CertificateRequirements {
     pub(in crate::store) fn authenticate(
         &self,

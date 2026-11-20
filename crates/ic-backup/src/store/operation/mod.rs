@@ -33,9 +33,13 @@ use std::io::Read;
 const DOMAIN: &[u8] = b"ic-backup/operation-journal/1\0";
 const FRAME_RESERVATION: u64 = FRAME_BYTES as u64 + 36;
 
+///
+/// Step
+/// Fixed capture/restore step for diagnostics and evidence identity, never a caller-selected command.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-/// Fixed capture/restore step for diagnostics and evidence identity, never a caller-selected command.
 pub enum Step {
     /// Authenticate stopped state, module and actual controller.
     InitialStatus,
@@ -69,12 +73,22 @@ pub enum Step {
     AfterLoadStatus,
 }
 
+///
+/// ReferenceRecord
+/// Binds journal evidence to its length and digest.
+///
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::store) struct ReferenceRecord {
     pub(in crate::store) bytes: u32,
     pub(in crate::store) sha256: [u8; 32],
 }
+
+///
+/// FactRecord
+/// Describes a single recorded operation transition.
+///
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -134,6 +148,11 @@ pub(in crate::store) enum FactRecord {
     },
 }
 
+///
+/// FrameRecord
+/// Associates one journal fact with its sequence number.
+///
+
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct FrameRecord {
@@ -143,6 +162,11 @@ struct FrameRecord {
 
 // These are projections of the immutable intent/profile, never per-call input or
 // a persisted mutable allowance. The immutable intent decoder owns their bounds.
+///
+/// Allowance
+/// Bounds the spending admitted by the immutable intent.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::store) struct Allowance {
     pub(in crate::store) manager_reply_bytes: Option<u32>,
@@ -155,6 +179,11 @@ pub(in crate::store) struct Allowance {
     pub(in crate::store) result_bytes: u32,
 }
 
+///
+/// Invocation
+/// Tracks the request, submission and result of one attempt.
+///
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(in crate::store) struct Invocation {
     pub(in crate::store) reference_ns: u64,
@@ -162,6 +191,7 @@ pub(in crate::store) struct Invocation {
     pub(in crate::store) submitted: bool,
     pub(in crate::store) result: Option<ReferenceRecord>,
 }
+
 impl Invocation {
     fn reserved(reference_ns: u64) -> Result<Self, LedgerError> {
         if reference_ns == 0 {
@@ -205,6 +235,11 @@ impl Invocation {
     }
 }
 
+///
+/// Call
+/// Groups a call with the evidence needed to recover its outcome.
+///
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(in crate::store) struct Call {
     pub(in crate::store) step: Step,
@@ -212,6 +247,7 @@ pub(in crate::store) struct Call {
     pub(in crate::store) observation: Option<Invocation>,
     pub(in crate::store) manager_lookup: Option<Invocation>,
 }
+
 impl Call {
     // This only establishes that evidence exists for semantic replay. It does not
     // infer a terminal outcome, or policy success, from an observation certificate.
@@ -226,6 +262,11 @@ impl Call {
                 .is_some_and(|o| o.result.is_some())
     }
 }
+
+///
+/// Journal
+/// Projects spending, calls and completion from admitted frames.
+///
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(in crate::store) struct Journal {
@@ -242,6 +283,7 @@ pub(in crate::store) struct Journal {
     pub(in crate::store) bytes: u64,
     pub(in crate::store) count: u32,
 }
+
 impl Journal {
     pub(in crate::store) fn allowance(intent: &impl Intent) -> Allowance {
         let limits = intent.view().limits();

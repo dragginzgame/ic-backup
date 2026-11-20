@@ -12,8 +12,12 @@ use crate::store::{
 };
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+///
+/// Error
 /// Original file custody, call authentication or fixed capture policy refused.
+///
+
+#[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
     /// Original local files, ownership or finite admission refused.

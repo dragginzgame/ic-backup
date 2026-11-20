@@ -4,8 +4,12 @@ use super::{BackupDigest, LookupResult, StatusCertificateError, TimePolicy};
 use crate::store::StatusRequestError;
 use thiserror::Error;
 
+///
+/// CaptureObservationPolicy
 /// Separately admitted observation limits, not replacement authority for the original call.
 /// A workflow must retain these exact values before performing a remote observation.
+///
+
 #[derive(Clone, Copy, Debug)]
 pub struct CaptureObservationPolicy {
     /// Explicit observation-certificate and delegation windows; no clock is read here.
@@ -15,11 +19,15 @@ pub struct CaptureObservationPolicy {
     pub evidence_bytes: u32,
 }
 
+///
+/// CaptureObservation
 /// Authenticated view of one original request at the admitted observation time.
 ///
 /// This is not a receipt or dispatch capability. The caller retains the exact input
 /// certificate and original observation authority separately. Raw replies/diagnostics
 /// are deliberately not exposed through Debug. No variant refunds original spending.
+///
+
 pub enum CaptureObservation {
     /// Exact original request reply. Application policy still needs validation.
     Replied(Vec<u8>),
@@ -37,7 +45,11 @@ pub enum CaptureObservation {
     Unknown,
 }
 
+///
+/// CaptureObservationError
 /// Refused original-request observation; no failure permits another management call.
+///
+
 #[derive(Debug, Error)]
 pub enum CaptureObservationError {
     /// The original exact signed call, sender, framing or admission is invalid.

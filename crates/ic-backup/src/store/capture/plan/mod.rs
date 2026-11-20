@@ -5,7 +5,12 @@ use crate::store::{BackupDigest, BackupTarget, manifest::lower_hex};
 use ic_platform_types::Principal;
 
 pub(in crate::store) const PLAN_LIMIT: usize = 1024 * 1024;
+
+///
+/// CaptureRequest
 /// Passive input for a single stopped-canister capture plan.
+///
+
 #[derive(Clone, Debug)]
 pub struct CaptureRequest {
     /// Caller-selected unique operation ID: exactly 32 lowercase hexadecimal characters.
@@ -26,10 +31,16 @@ pub struct CaptureRequest {
     pub limits: OperationLimits,
 }
 
+///
+/// CapturePolicy
+/// Holds the policy selected for capture planning.
+///
+
 #[derive(Clone, Debug)]
 pub(in crate::store) struct CapturePolicy {
     request: CaptureRequest,
 }
+
 impl CapturePolicy {
     pub(in crate::store) fn new(request: CaptureRequest) -> Result<Self, OperationStoreError> {
         validate(&request)?;

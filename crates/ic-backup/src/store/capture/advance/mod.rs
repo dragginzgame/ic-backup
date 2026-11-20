@@ -34,9 +34,13 @@ pub(in crate::store) use request::{
 };
 use serde::{Deserialize, Serialize};
 
+///
+/// StatusAdmissionRecord
 /// Original finite call authority, retained before preparation.
 /// Capture derives this from its original profile; restore retains its status admission.
 /// Bindings identify the provider protocol and continuous application maintenance witness.
+///
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StatusAdmissionRecord {
@@ -57,6 +61,7 @@ pub struct StatusAdmissionRecord {
     /// Maximum retained result/proof file size, including framing (at most 4 MiB).
     pub result_bytes: u32,
 }
+
 impl StatusAdmissionRecord {
     pub(in crate::store) fn validate_limits(
         &self,
@@ -85,9 +90,13 @@ impl StatusAdmissionRecord {
     }
 }
 
+///
+/// PreparedStatus
 /// Exact signed request and its original observation binding. Contains sensitive bytes.
 /// Backup checks immutable call content; the provider must authenticate the envelope,
 /// routing, observation binding and original admission.
+///
+
 pub struct PreparedStatus {
     /// Original ingress request identity.
     pub request_id: [u8; 32],
@@ -98,7 +107,12 @@ pub struct PreparedStatus {
     /// Provider-owned bounded information needed to authenticate the original result.
     pub observation: Vec<u8>,
 }
+
+///
+/// StatusEvidence
 /// Raw original response and retained authentication proof. Contains sensitive bytes.
+///
+
 pub struct StatusEvidence {
     /// True only for an authenticated remote rejection of this exact request.
     pub rejected: bool,
@@ -164,6 +178,7 @@ impl PreparedStatus {
         .concat())
     }
 }
+
 impl StatusEvidence {
     pub(in crate::store) fn encode(&self, limit: u32) -> Result<Vec<u8>, OperationStoreError> {
         let tail = pair(&self.response, &self.proof, limit.saturating_sub(1))?;

@@ -11,7 +11,11 @@ use crate::store::{
 use std::ffi::OsStr;
 use thiserror::Error;
 
+///
+/// CaptureSuccessionError
 /// Succession never removes predecessor evidence or refunds its original authority.
+///
+
 #[derive(Debug, Error)]
 pub enum CaptureSuccessionError {
     /// Original intent, exclusion or local custody refused.
@@ -24,6 +28,7 @@ pub enum CaptureSuccessionError {
     #[error(transparent)]
     Restore(Box<crate::store::RestorePersistenceError>),
 }
+
 impl BackupStore {
     /// Create fresh capture intent after an exact published predecessor on the same target.
     ///

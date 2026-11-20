@@ -10,6 +10,12 @@ use thiserror::Error;
 pub(in crate::store) const FRAME_BYTES: usize = 16 * 1024;
 pub(in crate::store) const FRAMES: u32 = 65_536;
 pub(in crate::store) const LEDGER_BYTES: u64 = 128 * 1024 * 1024;
+
+///
+/// Bounds
+/// Limits the size and count of admitted journal frames.
+///
+
 #[derive(Clone, Copy)]
 pub(in crate::store) struct Bounds {
     pub(in crate::store) frame_bytes: usize,
@@ -38,6 +44,11 @@ pub(in crate::store) fn encode_frame(
     .concat())
 }
 
+///
+/// Frames
+/// Reads bounded journal frames in order.
+///
+
 pub(in crate::store) struct Frames<R> {
     reader: R,
     pub(in crate::store) head: BackupDigest,
@@ -45,6 +56,7 @@ pub(in crate::store) struct Frames<R> {
     pub(in crate::store) bytes: u64,
     bounds: Bounds,
 }
+
 impl<R: Read> Frames<R> {
     pub(in crate::store) fn new(reader: R, head: BackupDigest, bounds: Bounds) -> Self {
         Self {
@@ -112,7 +124,11 @@ fn read_exact(reader: &mut impl Read, bytes: &mut [u8]) -> Result<(), LedgerErro
     })
 }
 
+///
+/// LedgerError
 /// Original ledger admission failed. No error grants fresh attempt authority.
+///
+
 #[derive(Debug, Error)]
 pub enum LedgerError {
     /// No created frame was retained.

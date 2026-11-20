@@ -3,6 +3,11 @@ mod source_tests;
 use super::*;
 use std::num::NonZeroU64;
 
+///
+/// Fixture
+/// Provides the local store and payload evidence used by payload tests.
+///
+
 struct Fixture {
     store: BackupStore,
     folder: PathBuf,

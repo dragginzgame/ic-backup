@@ -18,6 +18,7 @@ fn action(step: Step) -> Result<Action, OperationStoreError> {
         _ => return Err(OperationStoreError::Changed),
     })
 }
+
 impl CaptureOperation {
     pub(in crate::store) fn project<'a>(
         &self,

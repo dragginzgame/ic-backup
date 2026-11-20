@@ -62,7 +62,11 @@ pub(super) fn decode(reply: &[u8]) -> Result<SnapshotMetadata, TransferMetadataE
     Ok(value)
 }
 
+///
+/// TransferMetadataError
 /// Bounded metadata decoding or original-plan admission refusal.
+///
+
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum TransferMetadataError {
     /// The complete raw reply exceeds 1 MiB.

@@ -4,7 +4,13 @@ mod retained;
 
 use super::*;
 
+///
+/// Binding
+/// Supplies fixed execute and lookup bytes for the manager tests.
+///
+
 struct Binding;
+
 impl RootBinding for Binding {
     fn execute(&self) -> &[u8] {
         &[80]

@@ -20,6 +20,12 @@ use serde::{Deserialize, Serialize};
 
 const FORMAT: &str = "ic-backup/capture-intent/1";
 const DOMAIN: &[u8] = b"ic-backup/capture-intent/1\0";
+
+///
+/// IntentRecord
+/// Encodes the inputs committed by capture approval.
+///
+
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct IntentRecord {
@@ -36,8 +42,12 @@ struct IntentRecord {
     profile: ProfileRecord,
 }
 
-#[derive(Clone, Debug)]
+///
+/// CapturePlan
 /// Immutable capture approval bound to one direct connection, trust and finite limits.
+///
+
+#[derive(Clone, Debug)]
 pub struct CapturePlan {
     // Reuse the existing pure policy view, not its old encoding or approval digest.
     plan: CapturePolicy,

@@ -27,9 +27,16 @@ fn frame(head: BackupDigest, payload: &[u8]) -> (Vec<u8>, BackupDigest) {
 
     (bytes, digest)
 }
+
+///
+/// HeaderOnly
+/// Detects body reads before a frame header is admitted.
+///
+
 struct HeaderOnly {
     bytes: Cursor<[u8; 4]>,
 }
+
 impl Read for HeaderOnly {
     fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
         assert!(
@@ -113,10 +120,16 @@ fn production_frame_count_limit_accepts_exactly_its_bound() {
     assert!(matches!(frames.next(), Err(LedgerError::FrameCount)));
 }
 
+///
+/// ShortReads
+/// Splits input across reads to exercise frame assembly.
+///
+
 struct ShortReads {
     reader: Cursor<Vec<u8>>,
     interrupt: bool,
 }
+
 impl Read for ShortReads {
     fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
         self.interrupt = !self.interrupt;
@@ -126,6 +139,19 @@ impl Read for ShortReads {
         let len = into.len().min(2);
 
         self.reader.read(&mut into[..len])
+    }
+}
+
+///
+/// Refusal
+/// Returns a permission error to exercise journal read failures.
+///
+
+struct Refusal;
+
+impl Read for Refusal {
+    fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
+        Err(io::ErrorKind::PermissionDenied.into())
     }
 }
 
@@ -142,12 +168,6 @@ fn interrupted_short_reads_and_original_io_errors_are_handled() {
     );
     assert_eq!(frames.next().unwrap().unwrap(), CREATED);
     assert!(frames.next().unwrap().is_none());
-    struct Refusal;
-    impl Read for Refusal {
-        fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
-            Err(io::ErrorKind::PermissionDenied.into())
-        }
-    }
     assert!(
         matches!(Frames::new(Refusal, seed(b"approved intent"), bounds()).next(), Err(LedgerError::Io(e)) if e.kind() == io::ErrorKind::PermissionDenied)
     );

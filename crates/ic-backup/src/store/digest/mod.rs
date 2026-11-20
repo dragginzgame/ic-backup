@@ -6,9 +6,13 @@ mod tests;
 use sha2::{Digest, Sha256};
 use std::{fmt, str::FromStr};
 
+///
+/// BackupDigest
 /// A Backup SHA-256 commitment, encoded as exactly 64 lowercase hexadecimal digits.
 ///
 /// This value identifies bytes; it grants no provenance, custody or effect authority.
+///
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct BackupDigest([u8; 32]);
 
@@ -53,11 +57,6 @@ impl fmt::Display for BackupDigest {
     }
 }
 
-/// A commitment was not exactly 64 lowercase hexadecimal digits.
-#[derive(Debug, thiserror::Error)]
-#[error("expected 64 lowercase hexadecimal SHA-256 digits")]
-pub struct DigestParseError;
-
 impl FromStr for BackupDigest {
     type Err = DigestParseError;
 
@@ -74,3 +73,12 @@ impl FromStr for BackupDigest {
         Ok(Self(bytes))
     }
 }
+
+///
+/// DigestParseError
+/// A commitment was not exactly 64 lowercase hexadecimal digits.
+///
+
+#[derive(Debug, thiserror::Error)]
+#[error("expected 64 lowercase hexadecimal SHA-256 digits")]
+pub struct DigestParseError;

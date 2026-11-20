@@ -7,10 +7,16 @@ use std::{
     time::Duration,
 };
 
+///
+/// RetainedServer
+/// Keeps the qualification server and its diagnostic evidence together.
+///
+
 pub struct RetainedServer {
     server: Option<Server>,
     evidence: PathBuf,
 }
+
 impl RetainedServer {
     pub fn start(prepared: PreparedServer, evidence: &Path, lifetime: Duration) -> Self {
         let result = Server::start(
@@ -47,6 +53,7 @@ impl RetainedServer {
         stopped
     }
 }
+
 impl Drop for RetainedServer {
     fn drop(&mut self) {
         if let Some(server) = self.server.as_mut() {

@@ -27,7 +27,11 @@ const PLAN_LIMIT: usize = 1024 * 1024;
 const FORMAT: &str = "ic-backup/restore-intent/1";
 const DOMAIN: &[u8] = b"ic-backup/restore-intent/1\0";
 
+///
+/// RestoreRequest
 /// Exact same-target/release direct-host restore selection; not live authority.
+///
+
 #[derive(Clone, Debug)]
 pub struct RestoreRequest {
     /// Unique 32-character lowercase hexadecimal ID, distinct from the source capture.
@@ -46,7 +50,11 @@ pub struct RestoreRequest {
     pub limits: OperationLimits,
 }
 
+///
+/// RestorePlan
 /// Immutable restore approval bound to one authenticated source and direct profile.
+///
+
 #[derive(Clone, Debug)]
 pub struct RestorePlan {
     request: RestoreRequest,
@@ -55,6 +63,12 @@ pub struct RestorePlan {
     bytes: Vec<u8>,
     digest: BackupDigest,
 }
+
+///
+/// SourceRecord
+/// Identifies the capture selected for restore.
+///
+
 #[derive(Clone, Debug)]
 struct SourceRecord {
     operation_id: String,
@@ -62,6 +76,12 @@ struct SourceRecord {
     manifest: BackupDigest,
     module: BackupDigest,
 }
+
+///
+/// PlanRecord
+/// Encodes the approved restore inputs.
+///
+
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PlanRecord {
@@ -80,7 +100,12 @@ struct PlanRecord {
     limits: OperationLimits,
     profile: ProfileRecord,
 }
+
+///
+/// RestorePlanError
 /// Restore declaration/profile/source refusal; no failure grants new effect authority.
+///
+
 #[derive(Debug, Error)]
 pub enum RestorePlanError {
     /// Invalid identity, schema or finite limits.
@@ -110,6 +135,7 @@ pub enum RestorePlanError {
     #[error("restore arguments exceed original request capacity")]
     RequestCapacity,
 }
+
 impl RestorePlan {
     pub(in crate::store) fn new(
         source: &CaptureSource<'_, '_>,
@@ -311,6 +337,7 @@ impl RestorePlan {
         &self.profile
     }
 }
+
 impl Intent for RestorePlan {
     fn attach_codec(&mut self, codec: Option<&'static dyn crate::store::RootCodec>) {
         self.profile.codec = codec;
