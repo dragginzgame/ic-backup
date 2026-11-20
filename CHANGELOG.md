@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.105.13] - 2026-11-20
+
+- Adopt Toko Tooling 0.45.23. CI inherits Cargo network settings, and the root workspace owns the product version.
+
 ## [0.105.12] - 2026-11-19
 
 - Adopt Toko Tooling 0.45.21 and fix the crate documentation on targets where the Unix store is unavailable.

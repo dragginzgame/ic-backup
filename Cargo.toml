@@ -4,6 +4,7 @@ members = ["crates/ic-backup"]
 exclude = ["qualification"]
 
 [workspace.package]
+version = "0.105.13"
 edition = "2024"
 rust-version = "1.100.0"
 license-file = "LICENSE.md"
@@ -30,7 +31,7 @@ ic-platform-protocol = { version = "0.3.3", default-features = false, features =
 tokio = { version = "1.53.3", default-features = false, features = ["time"] }
 
 # Tests and tooling
-toko-tooling = "=0.45.21"
+toko-tooling = "=0.45.23"
 
 [workspace.lints.cargo]
 unused_dependencies = "deny"

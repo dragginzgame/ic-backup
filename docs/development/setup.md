@@ -40,10 +40,10 @@ make fetch-dependencies
 ```
 
 Ordinary Cargo checks use the lockfile and may fetch missing dependencies. After preparing the cache, use `CARGO_NET_OFFLINE=true make check` to select offline validation. Hook activation is
-explicit through `make install-hooks`. Tooling 0.45.21 is adopted from its registry
+explicit through `make install-hooks`. Tooling 0.45.23 is adopted from its registry
 archive with SHA-256
-`af1ba8e16aaf1dae0951f08a228a4f00b928d09ff68997bd94ccc397ace5e4be`,
-source `76fb2f494d27e9b3d58442c8762a0b29c88392d6`. Both workspaces declare
+`34f25161ac689c2204ba923e506286b8dd06d0490d2f4143f1cd2e606e2c6067`,
+source `6009b5584039807c1748a9262946edf8f8dcac11`. Both workspaces declare
 its exact pin and each member inherits the tooling dev-dependency.
 The canonical exporter installs twelve selected entrypoints, including the shared
 pre-commit formatter hook, with derived companions, and owns [.toko-tooling.snapshot](../../.toko-tooling.snapshot).
@@ -506,7 +506,7 @@ unchanged runtime journeys. No release/support matrix or legacy test rerun is cl
 
 ### CI setup diagnostics
 
-Toko 0.45.21's `SetupDiagnostics.pm` owns command capture/status and redaction;
+Toko 0.45.23's `SetupDiagnostics.pm` owns command capture/status and redaction;
 `scripts/ci/setup.pl` owns the per-phase directory and exclusive artifact writer
 for host tools, Rust toolchain/tools, dependency fetches and the secret scanner.
 Only a failed command's bounded, sanitized excerpt is retained; successful phases

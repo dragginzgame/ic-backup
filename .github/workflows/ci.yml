@@ -45,8 +45,6 @@ jobs:
       - name: Prepare publication fixture dependencies
         run: perl scripts/ci/setup.pl dependencies make fetch-dependencies
       - name: Qualify publication caller wiring
-        env:
-          CARGO_NET_OFFLINE: "true"
         run: make test-publication-adapter
       - name: Prepare the pinned secret scanner
         shell: bash
@@ -113,26 +111,19 @@ jobs:
         run: make toko-tooling-check
       - name: Prepare locked dependencies
         run: perl scripts/ci/setup.pl dependencies make fetch-dependencies
-      - name: Qualify native scaffold offline
-        env:
-          CARGO_NET_OFFLINE: "true"
+      - name: Qualify native scaffold
         run: make clippy rustdoc test
-      - name: Lint qualification callers offline
-        run: cargo clippy --manifest-path qualification/Cargo.toml --locked --offline --all-targets -- -D warnings
+      - name: Lint qualification callers
+        run: cargo clippy --manifest-path qualification/Cargo.toml --locked --all-targets -- -D warnings
       - name: Prepare locked Testkit server
-        env:
-          CARGO_NET_OFFLINE: "true"
         if: matrix.os == 'ubuntu-24.04'
         run: perl scripts/ci/setup.pl testkit-server make install-testkit-server
       - name: Admit installed Testkit server offline
-        env:
-          CARGO_NET_OFFLINE: "true"
         if: matrix.os == 'ubuntu-24.04'
         run: make testkit-server-check
-      - name: Qualify actual-IC capture and recovery offline
+      - name: Qualify actual-IC capture and recovery
         if: matrix.os == 'ubuntu-24.04'
         env:
-          CARGO_NET_OFFLINE: "true"
           IC_BACKUP_TESTKIT_DIRECTORY: ${{ github.workspace }}/.tools/testkit-server
         run: cargo test --release --manifest-path qualification/Cargo.toml --locked -p ic-backup-qualification --test capture
       - name: Retain sanitized setup diagnostics

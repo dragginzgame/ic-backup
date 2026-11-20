@@ -229,6 +229,20 @@ fn malformed_unproven_and_compressed_responses_remain_uncertain() {
     assert_eq!(server.finish().len(), 1);
 }
 
+fn chunked_response(chunks: &[&[u8]]) -> Vec<u8> {
+    let mut response = b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\n\
+        Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        .to_vec();
+    for chunk in chunks {
+        response.extend_from_slice(format!("{:x}\r\n", chunk.len()).as_bytes());
+        response.extend_from_slice(chunk);
+        response.extend_from_slice(b"\r\n");
+    }
+    response.extend_from_slice(b"0\r\n\r\n");
+
+    response
+}
+
 #[test]
 fn declared_and_streamed_body_limits_refuse_before_decoding() {
     let rt = runtime();
@@ -237,7 +251,7 @@ fn declared_and_streamed_body_limits_refuse_before_decoding() {
         let (p, r, a, _) = input();
         let body = vec![0; a.result_bytes as usize + 1];
         let response = if chunked {
-            [format!("HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n{:x}\r\n",body.len()).as_bytes(),body.as_slice(),b"\r\n0\r\n\r\n"].concat()
+            chunked_response(&[&body])
         } else {
             http(200, "", &body)
         };
@@ -363,7 +377,7 @@ fn chunked_certificate_authenticates_but_tampering_and_truncation_do_not() {
     let rt = runtime();
     let (p, r, a, mut body) = input();
     let mid = body.len() / 2;
-    let response=[b"HTTP/1.1 200 OK\r\nContent-Type: application/cbor\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n".as_slice(),format!("{mid:x}\r\n").as_bytes(),&body[..mid],format!("\r\n{:x}\r\n",body.len()-mid).as_bytes(),&body[mid..],b"\r\n0\r\n\r\n"].concat();
+    let response = chunked_response(&[&body[..mid], &body[mid..]]);
     let server = Server::new(Response::Bytes(response));
     let evidence = rt
         .block_on(

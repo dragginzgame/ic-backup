@@ -471,7 +471,16 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         assert_eq!(fs::read(&ledger_path).unwrap(), original);
         assert_eq!(calls.load(Ordering::SeqCst), signatures);
         assert_eq!(replay.network_requests_reserved as usize, requests);
-        fs::write(evidence.join("qualified.txt"),b"actual original management ingress; explicit authenticated recovery; cold replay without server or live authority; no resubmission\n").unwrap();
+        fs::write(
+            evidence.join("qualified.txt"),
+            concat!(
+                "actual original management ingress; ",
+                "explicit authenticated recovery; ",
+                "cold replay without server or live authority; ",
+                "no resubmission\n",
+            ),
+        )
+        .unwrap();
 
         return;
     }
@@ -757,7 +766,15 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         assert_eq!(fs::read(&restore_path).unwrap(), closed);
         assert_eq!(calls.load(Ordering::SeqCst), signatures);
         assert_eq!(observed_requests.load(Ordering::SeqCst), requests);
-        fs::write(evidence.join("qualified.txt"),b"actual original allocation/mid-upload/load effect; exact original terminal certificate settled after shutdown; no renewed signing/submission after cold reopen or revoked authority\n").unwrap();
+        fs::write(
+            evidence.join("qualified.txt"),
+            concat!(
+                "actual original allocation/mid-upload/load effect; ",
+                "exact original terminal certificate settled after shutdown; ",
+                "no renewed signing/submission after cold reopen or revoked authority\n",
+            ),
+        )
+        .unwrap();
 
         return;
     }
@@ -861,5 +878,16 @@ async fn exercise(evidence: &Path, prepared: PreparedServer, mode: Mode) {
         );
         child.call("restore-inspect", &restore_id, restore_approval, false);
     }
-    fs::write(evidence.join("qualified.txt"),b"actual multi-extent module/heap/stable/chunks capture; exact publication; authenticated target succession; older held source; actual source-bound allocation/upload/metadata and byte readback/load/stopped completion; offline terminal replay and history\n").unwrap();
+    fs::write(
+        evidence.join("qualified.txt"),
+        concat!(
+            "actual multi-extent module/heap/stable/chunks capture; ",
+            "exact publication; ",
+            "authenticated target succession; ",
+            "older held source; ",
+            "actual source-bound allocation/upload/metadata and byte readback/load/stopped completion; ",
+            "offline terminal replay and history\n",
+        ),
+    )
+    .unwrap();
 }

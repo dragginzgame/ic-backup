@@ -1,10 +1,20 @@
-# Current handoff — 2026-11-19
+# Current handoff — 2026-11-20
+
+## Toko Tooling 0.45.23, CI network settings and product version ownership
+
+Both workspaces select 0.45.23. The shared lint audit covered all five manifests and reported zero discrepancies. The dependency-pin and inheritance audit passed. The hygiene pass consolidated the chunked HTTP fixture builder and split long qualification evidence messages for readability.
+
+CI inherits the caller’s Cargo network settings after preparing the locked dependency cache. Testkit independently verifies the installed simulator. The root workspace owns the published product version through `workspace.package.version`; the private qualification workspace keeps its own package identities.
+
+## 0.105.12 published
+
+[ic-backup 0.105.12](https://crates.io/crates/ic-backup/0.105.12) shipped from tag `v0.105.12` at `19e4240`. All 247 native tests, five doctests and 11 PocketIC journeys passed. Registry readback verified the checksum, commit, license and all 181 tracked package files. A consumer built against the published version. Evidence is under `target/evidence/release-0.105.12/`.
 
 ## Cargo network policy
 
-Development and publication commands inherit Cargo network settings. Prepared CI qualification steps select offline Cargo explicitly, including the child consumer build. Platform tracks the corresponding Makefile change in [issue #35](https://github.com/dragginzgame/ic-platform/issues/35).
+Development and publication commands inherit Cargo network settings. In 0.105.12, prepared CI qualification steps selected offline Cargo explicitly, including the child consumer build. Platform tracks the corresponding Makefile change in [issue #35](https://github.com/dragginzgame/ic-platform/issues/35).
 
-## Toko Tooling 0.45.21 adopted locally
+## Toko Tooling 0.45.21
 
 Both workspaces select 0.45.21 and inherit the shared Clippy setting for spaced type headers. Rust return expressions are separated from preceding statements, and the retained Root codec and qualification authority adapters use named headers. Backup exports no canister endpoints and has no Wasm-specific guards. The Unix store depends on Unix metadata and directory operations in Host FS. For `wasm32-unknown-unknown`, the library compiles with an empty normal dependency graph and the crate documentation builds with warnings denied. Wasm checks are under `target/evidence/tooling-0.45.19/`; hygiene checks are under `target/evidence/tooling-0.45.21/`.
 

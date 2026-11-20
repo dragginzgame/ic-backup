@@ -10,7 +10,7 @@ the root product workspace admits `crates-io`; both qualification packages remai
 `publish = false`. Toko’s [scope and authorization](../../TOKO-TOOLING.md#scope-and-authorization)
 governs delivery. For Backup, the publishable group contains only `ic-backup`.
 Select the release version and
-update the product manifest, both locks and qualification's Backup requirement
+update `workspace.package.version` in the root manifest, both locks and qualification's Backup requirement
 together, preserve external supplier selections, and finalize the corresponding
 changelog entry. Commit and deliver that exact source under Git authorization.
 No version bump, Git commit/tag/push or registry mutation is hidden in these
@@ -50,7 +50,7 @@ make publish
 ```
 
 `publish-check` invokes Cargo's real `--dry-run`; `publish` can upload. Both use
-the installed Toko 0.45.21 publication adapter, the fixed `ic-backup` roster and
+the installed Toko 0.45.23 publication adapter, the fixed `ic-backup` roster and
 `crates-io` registry and exact versions from locked metadata. Unknown, duplicate,
 empty or private package selections refuse. Only a
 command-line `PACKAGE=ic-backup` may narrow the roster; qualification packages

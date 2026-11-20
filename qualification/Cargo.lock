@@ -231,9 +231,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.11.2"
+version = "1.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ef9e3e8154a45c7a95cff4c1299702106ad94062d7bb85fdc5d3a5afd91d45"
+checksum = "02f0e023adb368345ce0ca6cdfc0f24a06554468d0e8503e14a0841de79bfa69"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -965,7 +965,7 @@ dependencies = [
 
 [[package]]
 name = "ic-backup"
-version = "0.105.12"
+version = "0.105.13"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -1020,9 +1020,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-artifacts"
-version = "0.80.5"
+version = "0.80.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "814abdb7bbdfc539465ae8c2eafdfe07e53b3b4a4a53a96c360f96662dd0aee7"
+checksum = "72ce4d058e0c7d95236311ac00bf274feefff7820dcbf70ad9528559db6ca491"
 dependencies = [
  "sha2 0.11.1",
  "thiserror 2.0.18",
@@ -1030,9 +1030,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-fs"
-version = "0.80.5"
+version = "0.80.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ead8b959e065345dff20ce129f79af0877b8123a893517a5eec4e3738b93e9f"
+checksum = "cbb8bec15385be7577cae7630b6852744c1150993ef56931ec38c763ff1fc90f"
 dependencies = [
  "ic-host-artifacts",
  "rustix",
@@ -1041,9 +1041,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-http"
-version = "0.80.1"
+version = "0.80.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2254da4d06cb421c2c91f4146d25bb7a9279a856c5404d52d341d7ded896147d"
+checksum = "053ccca4c99994e2cfa7d6849ac31bf5fe690b075a02beb1e6af3e57a383a7ba"
 dependencies = [
  "reqwest",
  "thiserror 2.0.18",
@@ -1051,9 +1051,9 @@ dependencies = [
 
 [[package]]
 name = "ic-host-process"
-version = "0.81.2"
+version = "0.81.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14eb81da7376ef220b5c3c1ba231f5e129de622bea47b977bd734357c2571102"
+checksum = "1b9e94a55e898dc6d6df8b156dd183eb299f136e8f848f139fbfd6151f0e02ed"
 dependencies = [
  "errno",
  "libproc",
@@ -1104,9 +1104,9 @@ dependencies = [
 
 [[package]]
 name = "ic-platform-types"
-version = "0.21.3"
+version = "0.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ebaae959b3a485c68803aa242a967568ed15411208670de5a858da84324dba0"
+checksum = "986979a988616a18e4e4e85bebe838a3142192e54290fcdabbffa1e5c441953b"
 dependencies = [
  "crc32fast",
  "data-encoding",
@@ -1118,9 +1118,9 @@ dependencies = [
 
 [[package]]
 name = "ic-testkit"
-version = "0.110.2"
+version = "0.110.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a099c0ffe0b615664ad66484e4796e09a574a91153635c93dfa8fc37cec60f31"
+checksum = "0b04e07e411ea98842fedb02173150d51869c9c4a6c105dede249369322d7b2c"
 dependencies = [
  "ic-host-artifacts",
  "ic-host-fs",
@@ -2630,9 +2630,9 @@ dependencies = [
 
 [[package]]
 name = "toko-tooling"
-version = "0.45.21"
+version = "0.45.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af1ba8e16aaf1dae0951f08a228a4f00b928d09ff68997bd94ccc397ace5e4be"
+checksum = "34f25161ac689c2204ba923e506286b8dd06d0490d2f4143f1cd2e606e2c6067"
 
 [[package]]
 name = "tower"
